@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在服务器上安装 Postgres 和 Redis — LingCode 教程</title>
+  <meta name="description" content="在自己的 Linux 服务器上安装 Postgres 和 Redis，并配置默认未启用的身份验证与绑定设置。同时提供自托管与托管方案的诚实对比。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/install-postgres-and-redis-on-your-server.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/install-postgres-and-redis-on-your-server.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/install-postgres-and-redis-on-your-server.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/install-postgres-and-redis-on-your-server.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "在服务器上安装 Postgres 和 Redis",
+  "description": "两者的默认安装配置在笔记本上很方便，但在公网服务器上却相当危险。本教程介绍安装流程、将其变得安全可用的身份验证与绑定调整，以及何时应该放弃自托管、转而选择托管服务的客观分析。",
+  "url": "https://lingcode.dev/zh/tutorials/install-postgres-and-redis-on-your-server.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/install-postgres-and-redis-on-your-server.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "在服务器上安装 Postgres 和 Redis"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "在服务器上安装 Postgres 和 Redis",
+      "item": "https://lingcode.dev/zh/tutorials/install-postgres-and-redis-on-your-server.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/install-postgres-and-redis-on-your-server.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>在服务器上安装 Postgres 和 Redis</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>在服务器上安装 Postgres 和 Redis</h1>
+      <p class="intro">两者的默认安装配置在笔记本上很方便，但在公网服务器上却相当危险。本教程介绍安装流程、将其变得安全可用的身份验证与绑定调整，以及何时应该放弃自托管、转而选择托管服务的客观分析。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>"自托管还是托管服务"是比敲安装命令更重要的前置问题。托管 Postgres（AWS RDS、Supabase、Neon、Crunchy）和托管 Redis（ElastiCache、Upstash）每 GB 的费用更高，但它们提供备份、故障转移、版本升级、监控以及与 IAM 集成的身份验证，无需你自己跑定时任务。在同一台 VPS 上自托管几乎不花钱，对个人项目来说完全够用；一旦宕机会造成损失，或者数据集大到你不希望丢失，这种方式就不再适合了。诚实的判断标准是："数据库升级期间六小时的停机可以接受吗？"——如果不行，就选托管服务。</p>
+      <p>本教程涉及的两个服务在默认安全性上各有不同。<strong>Postgres</strong> 在 Ubuntu 上的默认配置绑定到 <code>127.0.0.1</code>，并使用 <em>peer</em> 认证（Unix 用户名必须与 Postgres 角色匹配），这在默认情况下确实是安全的。<strong>Redis</strong> 的默认配置同样绑定到本地，但如果你修改了绑定地址却没有设置密码，就会出现最糟糕的情况：一个暴露在公网 IP 上的 Redis 实例——这是互联网上被利用最多的错误配置之一。两者的配置步骤也因此有所不同：Postgres 只需为你的应用创建数据库和用户；Redis 则必须在触碰任何网络相关设置之前先配置好身份验证。</p>
+      <p>本教程假设你的服务器已经完成了<a href="/zh/tutorials/prepare-a-fresh-linux-server-for-production.html">基础安全加固清单</a>——非 root 用户、sudo 权限、防火墙开启、仅 SSH 密钥登录。没有这些基础，再多的数据库配置也帮不上忙。完成本教程的所有步骤后，你将拥有：一个配有应用专属用户的 Postgres 数据库、一个启用了身份验证的 Redis 实例，两者均只绑定到本地（应用与数据库在同一台机器），以及一个用于备份重要数据的脚本。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>自托管与托管服务的选择（附数据参考）</li>
+        <li>在 Ubuntu 上安装 Postgres，并创建应用专属角色与数据库</li>
+        <li><code>pg_hba.conf</code> 的各种认证方式、含义及使用场景</li>
+        <li>一个可以直接放入 cron 的 <code>pg_dump</code> 到 S3 的备份脚本</li>
+        <li>从一开始就为 Redis 配置身份验证（而非事后补救）</li>
+        <li>Redis 持久化方案：RDB 快照 vs AOF 追加日志，以及如何选择</li>
+        <li>何时该放弃自托管、迁移到 RDS / ElastiCache / Supabase</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前置条件：</strong>一台经过安全加固的 Ubuntu 22.04 或 24.04 服务器（<a href="/zh/tutorials/prepare-a-fresh-linux-server-for-production.html">清单见此</a>）、以具有 sudo 权限的非 root 用户访问的 shell、运行在同一台机器上的应用（或者你愿意完成可选章节中的网络绑定配置）。如果数据库需要与应用分开部署在不同机器上，安全配置会复杂很多——这种情况会在每个安装步骤的末尾单独说明。
+      </div>
+
+      <h2>步骤一：决策——自托管还是托管服务？</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>"六小时停机可以接受吗？"这个问题</h3>
+          <p>适合自托管的情况：</p>
+          <ul>
+            <li>个人项目、兴趣网站，或早期阶段的低流量 SaaS。</li>
+            <li>你宁愿每月花 $0 自己跑备份脚本，也不想每月多花 $20+ 用托管实例。</li>
+            <li>数据集在几 GB 以内，即使发生灾难性情况也能从备份重建。</li>
+          </ul>
+          <p>适合选择托管服务的情况：</p>
+          <ul>
+            <li>你有付费用户，他们的数据必须能经受单机故障的考验。</li>
+            <li>你不想在凌晨三点跑时间点恢复脚本。</li>
+            <li>你希望主版本升级不需要自己安排维护窗口。</li>
+            <li>你已经在 AWS / GCP 上，同区域托管实例的延迟与本地实例完全相当。</li>
+          </ul>
+          <p>小规模的大概费用：Supabase 免费套餐（Postgres）支持最多 500 MB 的项目；Upstash 免费 Redis 支持 256 MB。超出后，最便宜的托管 Postgres 约 $10–25/月；最便宜的托管 Redis 约 $5–10/月。在已有的 VPS 上自托管则是免费的。</p>
+        </div>
+      </div>
+
+      <h2>步骤二：安装 Postgres</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>一条 apt 命令，然后验证</h3>
+          <pre><code>sudo apt update
+sudo apt install -y postgresql postgresql-contrib
+
+# Postgres 会自动启动。验证：
+sudo systemctl status postgresql
+# Active: active (exited) 是正常现象——包装单元显示 "exited"，
+# 但实际集群（postgresql@&lt;ver&gt;-main.service）正在运行。
+
+# 检查安装的版本：
+psql --version</code></pre>
+          <p>Ubuntu 22.04 附带 Postgres 14；Ubuntu 24.04 附带 Postgres 16。如需更新版本，可添加官方 Postgres apt 源（<code>apt.postgresql.org</code>）并改为安装 <code>postgresql-17</code>。以下配置步骤适用于任何 >= 12 的版本。</p>
+        </div>
+      </div>
+
+      <h2>步骤三：创建应用角色和数据库</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>每个应用一个角色、一个数据库；永远不要使用 postgres 超级用户</h3>
+          <p>Postgres 自带一个 Unix 用户 <code>postgres</code>，通过 "peer" 认证拥有完整的数据库超级用户权限——你的 Unix 用户名必须匹配。切换到该用户以管理集群：</p>
+          <pre><code>sudo -u postgres psql</code></pre>
+          <p>你现在以超级用户身份进入了 <code>psql</code> 提示符。为你的应用创建一个角色和数据库：</p>
+          <pre><code>-- 替换 mybrand_app 和密码。
+CREATE ROLE mybrand_app WITH LOGIN PASSWORD 'long-random-password-from-pwgen';
+CREATE DATABASE mybrand_prod OWNER mybrand_app;
+
+-- 验证：
+\du
+\l
+\q</code></pre>
+          <p>使用 <code>pwgen -s 32 1</code> 或 <code>openssl rand -base64 24</code> 在本地生成密码——要长、要随机，存入你的密码管理器。应用将通过环境变量使用它，绝不手动输入。</p>
+        </div>
+      </div>
+
+      <h2>步骤四：在 <code>pg_hba.conf</code> 中配置身份验证</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Postgres 用什么方式验证"是谁在发请求"</h3>
+          <p>Ubuntu 上默认的 <code>pg_hba.conf</code> 有以下几条关键规则（已简化）：</p>
+          <pre><code># Unix socket（本地管道，非网络）——peer 认证（Unix 用户必须与角色匹配）
+local   all             postgres                                peer
+local   all             all                                     peer
+
+# 来自 127.0.0.1 的 TCP——scram-sha-256（密码认证）
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256</code></pre>
+          <p>对于在同一台机器上通过 <code>127.0.0.1:5432</code> 连接的应用，这已经是正确的配置——应用使用步骤三中的密码进行认证，无需修改任何内容。</p>
+          <p>如果你的应用通过 Unix socket（无密码）连接，则将 <code>local all all peer</code> 这行改为：</p>
+          <pre><code>local   all             mybrand_app                             scram-sha-256
+local   all             all                                     peer</code></pre>
+          <p>这表示：应用角色即使在 Unix socket 上也使用密码认证；其他人使用 peer 认证。修改此文件后需重新加载 Postgres：<code>sudo systemctl reload postgresql</code>。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>应用连接字符串：</strong> <code>postgresql://mybrand_app:&lt;password&gt;@127.0.0.1:5432/mybrand_prod</code>。将其放入应用读取的 <code>.env</code> 文件，不要提交到代码仓库。在 Node 中：<code>process.env.DATABASE_URL</code>；<code>pg</code> 驱动会自动解析该 URL。
+      </div>
+
+      <h2>步骤五：设置定时备份</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>没有备份的数据库，就是你根本没有的生产数据库</h3>
+          <p>通过 <code>pg_dump</code> 进行每日快照，压缩后传输到 S3（或任何对象存储）。保存为 <code>/usr/local/bin/pg-backup.sh</code>：</p>
+          <pre><code>#!/usr/bin/env bash
+set -e
+DB=mybrand_prod
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+BACKUP_DIR=/var/backups/postgres
+S3_BUCKET=s3://mybrand-backups/postgres
+
+mkdir -p "$BACKUP_DIR"
+sudo -u postgres pg_dump -Fc "$DB" | gzip &gt; "$BACKUP_DIR/$DB-$TIMESTAMP.dump.gz"
+
+# 传输到 S3。请先以部署用户身份配置 AWS CLI（aws configure）。
+aws s3 cp "$BACKUP_DIR/$DB-$TIMESTAMP.dump.gz" "$S3_BUCKET/$DB-$TIMESTAMP.dump.gz"
+
+# 本地保留 14 天；S3 保留策略通过存储桶的生命周期规则设置。
+find "$BACKUP_DIR" -type f -mtime +14 -delete</code></pre>
+          <p>对脚本执行 <code>chmod +x</code>。以部署用户身份添加 cron 任务：</p>
+          <pre><code>crontab -e
+# 添加：
+30 3 * * * /usr/local/bin/pg-backup.sh &gt;&gt; /var/log/pg-backup.log 2&gt;&amp;1</code></pre>
+          <p>更重要也更难的第二步：<strong>实际演练一次恢复流程</strong>。在另一台机器上，用 <code>aws s3 cp</code> 下载一份最近的备份，<code>gunzip</code> 解压，<code>pg_restore</code> 还原，验证行数是否正确。从未实际恢复过的备份只是一种期望，而不是真正的备份。</p>
+        </div>
+      </div>
+
+      <h2>步骤六：安装 Redis</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>安装的同时立即设置身份验证</h3>
+          <pre><code>sudo apt install -y redis-server
+# 服务会自动启动，默认绑定到 127.0.0.1。很好。
+
+# 在做任何网络相关操作之前，先设置密码。
+# 生成一个密码：
+REDIS_PASSWORD=$(openssl rand -base64 24)
+echo "$REDIS_PASSWORD"
+# 保存到你的密码管理器。稍后也需要将其设置为应用的环境变量。</code></pre>
+          <p>编辑 Redis 配置：</p>
+          <pre><code>sudo nano /etc/redis/redis.conf
+
+# 找到并设置：
+requirepass &lt;THE_PASSWORD_FROM_ABOVE&gt;
+# （确保这行开头没有 #。）
+
+# 确认 bind 行为：
+bind 127.0.0.1 -::1
+# （这是默认值。除非你绝对确定要将 Redis 暴露到网络，
+#  并且防火墙和身份验证都已正确配置，否则不要改为 0.0.0.0。）
+
+# 在生产环境中禁用 COMMAND 命令（可选，偏执级别）：
+rename-command CONFIG ""
+rename-command FLUSHALL ""</code></pre>
+          <p>重新加载：</p>
+          <pre><code>sudo systemctl restart redis-server
+redis-cli
+# 在 redis-cli 中：
+AUTH &lt;the password&gt;
+PING    # → PONG
+exit</code></pre>
+          <p>应用的连接字符串：<code>redis://default:&lt;password&gt;@127.0.0.1:6379</code>。（只设置 <code>requirepass</code> 时，<code>default</code> 是隐式用户名；如果你使用 Redis ACL 并配置了命名用户，用户名就很重要了。）</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>不要在没有 TLS + ACL 的情况下将 Redis 暴露到公网。</strong>公网 IP 上只有 <code>requirepass</code> 保护的 Redis 会被迅速暴力破解。如果应用和 Redis 在不同机器上，请使用私有 VPC IP、建立 SSH 隧道，或使用带客户端证书的 TLS（Redis 6+）。对大多数项目来说：直接将 Redis 和应用放在同一台机器上，并绑定到 <code>127.0.0.1</code>，是最简单可靠的方案。
+      </div>
+
+      <h2>步骤七：选择 Redis 持久化模式</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>RDB 做快照，AOF 做写日志，或者纯缓存模式不持久化</h3>
+          <p>Redis 有三种使用方式，各有不同的持久化方案：</p>
+          <ul>
+            <li><strong>纯缓存模式</strong>——会话、查询缓存、可以重新生成的临时数据。禁用持久化以避免磁盘开销：在 <code>redis.conf</code> 中设置 <code>save ""</code>，并设置 <code>appendonly no</code>。重启后 Redis 从空状态开始，由应用重新填充数据。</li>
+            <li><strong>快照持久化（RDB，默认）</strong>——Redis 按计划将二进制快照写入磁盘。默认的 <code>save 3600 1 300 100 60 10000</code> 含义是："在一小时内有 1 次变更、5 分钟内有 100 次变更，或 1 分钟内有 10000 次变更时写入磁盘。"恢复时会丢失最后一次快照之后的数据。适合"希望数据能在重启后保留，但可以接受丢失几分钟数据"的场景。</li>
+            <li><strong>追加日志（AOF）</strong>——Redis 将每条命令写入日志；重启时重放日志。在 <code>redis.conf</code> 中设置 <code>appendonly yes</code>。恢复时最多丢失 1 秒的命令（默认 fsync 策略为 <code>everysec</code>）。当 Redis 是主要数据存储而非缓存时使用。</li>
+          </ul>
+          <p>对大多数应用缓存：RDB 默认设置就够了，无需修改。对于会话存储或队列：同时设置 <code>appendonly yes</code>。重新加载：<code>sudo systemctl restart redis-server</code>。</p>
+        </div>
+      </div>
+
+      <h2>步骤八：端对端验证整个链路</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>从应用端到数据库端，全链路验证</h3>
+          <pre><code># 验证 Postgres 连接（替换为实际的凭据）：
+psql "postgresql://mybrand_app:PASSWORD@127.0.0.1:5432/mybrand_prod" -c "SELECT version();"
+
+# 验证 Redis 连接：
+redis-cli -a "REDIS_PASSWORD" ping    # → PONG
+
+# 验证防火墙没有泄漏（从你的笔记本执行，而不是服务器）：
+nc -zv &lt;SERVER_IP&gt; 5432    # → Connection refused（正常——Postgres 未对外开放）
+nc -zv &lt;SERVER_IP&gt; 6379    # → Connection refused（正常——Redis 未对外开放）</code></pre>
+          <p>如果从笔记本执行 <code>nc</code> 能<em>成功连接</em>到其中某个端口，说明有问题——该服务绑定到了 <code>0.0.0.0</code>，或者防火墙缺少拒绝规则。请立即修复；暴露的 Redis 会在数小时内被利用。</p>
+        </div>
+      </div>
+
+      <h2>何时该放弃自托管</h2>
+      <p><strong>数据库已达到多 GB 规模且还在增长。</strong>备份开始无法在夜间时间窗口内完成。PITR（时间点恢复）开始变得重要。将 Postgres 迁移到 <strong>RDS</strong>（AWS）、<strong>Supabase</strong>（Postgres 风格的开发体验）或 <strong>Neon</strong>（无服务器，低流量时费用很低）。</p>
+      <p><strong>你需要复制或故障转移能力。</strong>手动配置 Postgres 流复制或 Redis Sentinel 是一个真实的工程项目。托管实例只需一个配置开关。</p>
+      <p><strong>同一个数据库上跑着多个应用。</strong>当多个服务争抢连接时，单 VPS 的模式就不够用了。迁移到专用的托管实例，让你的应用服务器保持简单。</p>
+      <p><strong>运维负担令人痛苦。</strong>如果"Postgres 在凌晨两点磁盘满了"发生过一次，它还会再发生。托管实例能自动扩展磁盘容量，并主动发出告警。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/prepare-a-fresh-linux-server-for-production.html" class="tutorial-next-card">
+            <h3>为生产环境准备一台全新的 Linux 服务器</h3>
+            <p>应在本教程之前完成的服务器加固步骤</p>
+          </a>
+          <a href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>在 Lightsail 上运行 Node API</h3>
+            <p>与这些数据库对接的应用的部署方案</p>
+          </a>
+          <a href="/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html" class="tutorial-next-card">
+            <h3>将容器部署到 ECS Fargate</h3>
+            <p>当应用超出单机承载能力时，搭配托管 Postgres（RDS）使用</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为希望快速交付的创业者和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · 专为交付而生</span>
+    <span>原生 · 快速 · 诚实</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

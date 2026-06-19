@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I use LingCode Cloud in my own app? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Wire LingCode Cloud into any web app — load the SDK, set the backend URL + anon key, and call from('table').select(). Learn the auth, storage, and realtime calls, plus the table-CRUD patterns (no JOINs, no upserts) so you integrate without 400s.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/use-lingcode-cloud-in-your-own-app.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/use-lingcode-cloud-in-your-own-app.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-10T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-10T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/use-lingcode-cloud-in-your-own-app.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Use LingCode Cloud in your own app",
+  "description": "Integrate a LingCode Cloud managed backend into any web app: load the official SDK, point it at your backend URL and anon key, and use data, auth, storage, realtime, and vector search. Includes the table-CRUD patterns (no JOINs, no upserts, 200-row pages) so your code works the first time.",
+  "url": "https://lingcode.dev/tutorials/use-lingcode-cloud-in-your-own-app.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-10",
+  "dateModified": "2026-06-10",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/tutorials/use-lingcode-cloud-in-your-own-app.html" },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Use LingCode Cloud in your own app"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Search", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "Backend integrations", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Use LingCode Cloud in your own app", "item": "https://lingcode.dev/tutorials/use-lingcode-cloud-in-your-own-app.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Use LingCode Cloud in your own app</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-06-10</span>
+      </div>
+      <h1>How do I use LingCode Cloud in my own app?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Load the SDK with <code>&lt;script src="https://lingcode.dev/sdk/lingcode-v1.js"&gt;&lt;/script&gt;</code>, create a client with your backend's <strong>data URL</strong> and <strong>anon key</strong> (copy both from <a href="/backends.html">lingcode.dev/backends</a> → your backend → <em>Settings / connection details</em>), then call <code>lingcode.from('todos').select()</code>, <code>.auth.signIn(...)</code>, <code>.storage</code>, and realtime. Inside <a href="/try.html">/try</a> the client is pre-injected as <code>window.lingcode</code>; in your own app you wire those two values yourself. One rule to remember: the data API is <strong>per-table CRUD, not raw SQL</strong> — no JOINs, no upserts, 200 rows per page.</p>
+      <p class="intro">If you built an app in <a href="/try.html">/try</a> or the Mac IDE, the backend client was handed to you — <code>window.lingcode</code> just existed. The moment you take that app somewhere else — your own Next.js project, a plain HTML page, a Vite build — you have to wire the backend up by hand. It's two values and one script tag, and this tutorial walks the whole thing, including the one design constraint that trips people coming from raw SQL.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>A LingCode Cloud backend is a private Postgres database (plus auth, storage, realtime, and vector search) that you reach over HTTPS. You don't open a database connection or run SQL from the browser — you talk to a small data gateway through the official client SDK, which is shaped like Supabase or Firebase so the calls feel familiar. Everything below is that SDK.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The two values you need (and why the anon key is safe to ship to the browser)</li>
+        <li>How to load the SDK and create a client outside <code>/try</code></li>
+        <li>The core calls: data, auth, storage, realtime, vector</li>
+        <li>The one constraint to design around — it's table-CRUD, not raw SQL</li>
+      </ul>
+
+      <h2>The two values you need</h2>
+      <p>Every backend has exactly two things a client needs:</p>
+      <ul>
+        <li><strong>The data URL</strong> — e.g. <code>https://lingcode.dev/api/cloud/be/&lt;your-backend-id&gt;</code>. This is the gateway for <em>this</em> backend.</li>
+        <li><strong>The anon key</strong> — a public token that identifies the backend and grants the anonymous role. It is <em>meant</em> to ship in your client bundle. It can't read or write anything a signed-out visitor shouldn't, because access is enforced by row-level security on the server, not by hiding the key.</li>
+      </ul>
+      <p>Find both at <a href="/backends.html">lingcode.dev/backends</a> — open your backend, and copy the connection details from Settings (the same pair you'd paste into another MCP client). In a framework, store them as public config — for Next.js, <code>NEXT_PUBLIC_LINGCODE_BACKEND_URL</code> and <code>NEXT_PUBLIC_LINGCODE_BACKEND_ANON_KEY</code>; for a bundler, whatever your <code>import.meta.env</code> / <code>process.env</code> convention is. They're public, so they belong in client config, not in a server-only secret.</p>
+
+      <div class="warn-box">
+        <strong>Anon key vs. secret key:</strong> the anon key is public by design. Your <em>private</em> secrets (a Stripe secret key, a third-party API key) never go in the browser — put them in the backend's <strong>Secrets</strong> and use them from a <strong>function</strong> (<code>lingcode.functions.invoke(...)</code>), which runs server-side. Anything the client can see, treat as public.
+      </div>
+
+      <h2>Load the SDK and create a client</h2>
+      <p>The SDK is a single zero-dependency file served from the CDN. The plain-HTML version:</p>
+      <pre><code>&lt;script src="https://lingcode.dev/sdk/lingcode-v1.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const lingcode = LingCode.createClient(
+    'https://lingcode.dev/api/cloud/be/&lt;your-backend-id&gt;',
+    '&lt;your-anon-key&gt;'
+  );
+&lt;/script&gt;</code></pre>
+      <p>In a module/bundler app, load the same file and call <code>LingCode.createClient(url, key)</code> with your env values. (Inside <code>/try</code> and the Mac preview you skip this entirely — the client is already there as <code>window.lingcode</code>, pre-wired to that project's backend. Never re-create it or hardcode keys there.)</p>
+      <p>Wait for the client to settle once on load before reading auth state — it finalizes any sign-in redirect first:</p>
+      <pre><code>await lingcode.ready;
+const user = lingcode.auth.getUser(); // { id, email } | null</code></pre>
+
+      <h2>Read and write data</h2>
+      <p>Every call returns <code>{ data, error }</code> — check <code>error</code> before using <code>data</code>. Filters chain before the verb:</p>
+      <pre><code>// read
+const { data, error } = await lingcode
+  .from('todos')
+  .eq('done', false)
+  .order('created_at', { ascending: false })
+  .limit(50)
+  .select();
+
+// write
+await lingcode.from('todos').insert({ title: 'Buy milk' });
+await lingcode.from('todos').eq('id', 1).update({ done: true });  // filter REQUIRED
+await lingcode.from('todos').eq('id', 1).delete();                // filter REQUIRED</code></pre>
+      <p>Filter operators: <code>.eq .neq .gt .gte .lt .lte .like .ilike .in(col,[…]) .is(col,null)</code>, and <code>.match({a:1,b:2})</code> for several equals at once. Multiple filters AND together. <code>update</code> and <code>delete</code> refuse to run without a filter, so you can't wipe a table by accident.</p>
+
+      <h2>Auth, storage, realtime, vector</h2>
+      <ul>
+        <li><strong>Auth</strong> — <code>lingcode.auth.signUp({email,password})</code> / <code>signIn(...)</code>; passwordless <code>sendMagicLink({email})</code> (the SDK auto-finalizes the returned link); email codes <code>sendOtp</code> + <code>verifyOtp</code>; social <code>getProviders()</code> then <code>signInWithOAuth('google')</code>. The SDK stores the session and attaches it to later calls, so subsequent <code>.from()</code> reads run as the signed-in user and RLS keys off their id.</li>
+        <li><strong>Storage</strong> — <code>await lingcode.storage.from('public').upload('avatars/me.png', file)</code> → <code>data.url</code>; <code>getPublicUrl(path)</code>; <code>download(path)</code>.</li>
+        <li><strong>Realtime</strong> — <code>const off = lingcode.from('todos').subscribe(({type,row}) =&gt; { /* INSERT|UPDATE|DELETE */ })</code>; call <code>off()</code> on teardown. Events are RLS-filtered, so a signed-in user only receives their own rows. Use it instead of polling.</li>
+        <li><strong>Vector</strong> — store an <code>embedding</code> column and rank by similarity with <code>lingcode.vector.search({ table, column, embedding, limit, metric:'cosine' })</code> for semantic search / RAG.</li>
+      </ul>
+
+      <h2>The one thing to know: it's table-CRUD, not raw SQL</h2>
+      <p>This is the constraint that surprises people coming from a SQL client or PostgREST, and it's the difference between code that works the first time and code that 400s. The runtime data API operates on <strong>one table at a time</strong>. So:</p>
+      <ul>
+        <li><strong>No JOINs.</strong> Fetch each table separately and join in your code (or denormalize the schema so you don't need to). Want a todo with its author? Read the todos, collect the <code>user_id</code>s, read those users, stitch them together client-side.</li>
+        <li><strong>No upserts / <code>ON CONFLICT</code>.</strong> Insert, and if you get a duplicate-key error, fetch the row and <code>update</code> it instead.</li>
+        <li><strong>Pages of 200.</strong> <code>.select()</code> returns at most 200 rows — page with <code>.limit()</code> / <code>.offset()</code>, and compute counts and sums in your code.</li>
+      </ul>
+      <p>Anything genuinely relational or heavy — a multi-table report, an index, a constraint, a generated column, seed data — belongs in the <strong>schema</strong>, not in a runtime call. Create a <code>VIEW</code> (then <code>select()</code> from it like a table), add the index, or run the migration from the console's <strong>SQL</strong> tab or the <code>apply_migration</code> tool. The gateway stays a thin, safe CRUD layer on purpose; the full power of Postgres lives one level down, in your migrations.</p>
+
+      <div class="info-box">
+        <h3>Migrating from Supabase?</h3>
+        <p>The SDK is intentionally Supabase-shaped, so most call sites map one-to-one. The two that don't are the two rules above: rewrite <code>.select('*, author(*)')</code> JOINs into separate fetches, and <code>.upsert()</code> into insert-then-update. In the Mac IDE or <code>/try</code>, just ask the agent to "migrate my Supabase project to LingCode and deploy it" — the migration skill does the schema, the data, and these rewrites for you.</p>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>Connect a managed backend</h3>
+            <p>Provision a per-project backend from the Mac IDE in one click</p>
+          </a>
+          <a href="/tutorials/scan-your-backend-with-advisors.html" class="tutorial-next-card">
+            <h3>Scan your backend with advisors</h3>
+            <p>Catch missing RLS and schema issues before you ship</p>
+          </a>
+          <a href="/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>Supabase database and auth</h3>
+            <p>The opt-in path — when you'd bring your own Supabase instead</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

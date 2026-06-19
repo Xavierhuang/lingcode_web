@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create a custom SF Symbol — LingCode Tutorials</title>
+  <meta name="description" content="SF Symbols ships with 6,000+ glyphs, but sometimes you need your own logo to behave like one. Learn the template SVG format, how to import a symbol into the asset catalog, and the gotcha that swaps Image(systemName:) for Image() everywhere.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/create-a-custom-sf-symbol.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/create-a-custom-sf-symbol.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/create-a-custom-sf-symbol.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605171400">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-17T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/create-a-custom-sf-symbol.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Create a custom SF Symbol",
+  "description": "SF Symbols ships with 6,000+ glyphs that scale, weight, and color exactly like text. Sometimes the one you need isn't in the set — usually your own logo or a domain-specific glyph. The fix is to make your own that behaves the same way: scales with Dynamic Type, picks up .foregrou",
+  "url": "https://lingcode.dev/tutorials/create-a-custom-sf-symbol.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-17",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/create-a-custom-sf-symbol.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Create a custom SF Symbol"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Create a custom SF Symbol",
+      "item": "https://lingcode.dev/tutorials/create-a-custom-sf-symbol.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/create-a-custom-sf-symbol.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Create a custom SF Symbol</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-17</span>
+      </div>
+      <h1>Create a custom SF Symbol</h1>
+      <p class="intro">SF Symbols ships with 6,000+ glyphs that scale, weight, and color exactly like text. Sometimes the one you need isn't in the set — usually your own logo or a domain-specific glyph. The fix is to make your own that behaves the same way: scales with Dynamic Type, picks up <code>.foregroundColor</code>, swaps weights with the system font. Here's the whole pipeline.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The thing that makes SF Symbols special isn't that they're vectors — it's that they're <em>indexed</em> against the system font. When the user picks an XL Dynamic Type size, every system symbol scales with them. When you switch to a bold font weight, the symbol's strokes thicken. Your custom one can do this too, but only if you ship it in the right template format and import it into the asset catalog as a "Symbol Image" — not just any old SVG.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Why "custom SF Symbol" is a specific file format, not just an SVG</li>
+        <li>How to get a starting template from the SF Symbols app</li>
+        <li>The three coordinate guides every symbol template has (and what they mean)</li>
+        <li>How to ask the agent to generate a valid template SVG from a logo</li>
+        <li>The one-line API difference vs. system symbols</li>
+      </ul>
+
+      <h2>Step 1: The mental model</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>It's an SVG, but with required IDs and guides</h3>
+          <p>A "custom symbol" SVG is a regular SVG file with specific layer IDs, three horizontal guide lines, and (usually) nine pre-drawn variants — three sizes (Small, Regular, Large) × three weights (Ultralight, Regular, Black). The SF Symbols app expects exactly this structure, and Xcode's "Symbol Image" asset type knows how to read it.</p>
+          <p>You don't draw all nine variants from scratch. The standard workflow is:</p>
+          <ol>
+            <li>Pick a system symbol close to what you want.</li>
+            <li>Export it as a template from the SF Symbols app — that gives you the SVG scaffold with all the IDs and guides in place.</li>
+            <li>Replace the artwork in each variant (or just one if you don't need the full set).</li>
+            <li>Save and drop into the asset catalog.</li>
+          </ol>
+          <p>Once it's there, your custom symbol behaves like a system one — <code>Image("custom-name")</code> in SwiftUI, <code>.font(.title)</code> to scale it, <code>.foregroundStyle(.red)</code> to color it.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Get the template from SF Symbols.app</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Export a similar symbol as a starting point</h3>
+          <p>Open the <a href="https://developer.apple.com/sf-symbols/" target="_blank" rel="noopener noreferrer">SF Symbols app</a> (free from Apple). Find a system symbol with a shape and proportion similar to what you want to draw. Right-click it and choose <strong>Export Symbol…</strong> — the dialog asks where to save and which template version to use (pick the latest your minimum-OS target supports).</p>
+          <p>The exported file opens in any vector tool — Figma, Illustrator, Sketch, even Inkscape. What you'll see:</p>
+          <ul>
+            <li><strong>Three rows</strong> (top to bottom): Small, Regular, Large size variants</li>
+            <li><strong>Three columns</strong> (left to right): Ultralight, Regular, Black weight variants</li>
+            <li><strong>Three horizontal guides</strong> on each glyph: Cap Height, Baseline, Descender — borrowed from font typography</li>
+          </ul>
+          <p>The guides matter. They're what align your symbol with the surrounding text when you put it inline. If your glyph's vertical extents don't match the guides, the symbol will look misaligned next to a word.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>You don't have to draw all nine variants.</strong> The minimum is one — the "Regular Regular" cell in the center. Xcode will derive Small/Large by scaling, and Ultralight/Black by reusing your Regular. Quality is best with all nine drawn, but for an internal tool or a v0 ship, one is enough.
+      </div>
+
+      <div class="tip-box">
+        <strong>Need a starting glyph? Use chat image generation.</strong> LingCode's chat has a built-in <code>generate_image</code> tool wired to Gemini. Ask "<em>generate a 1024×1024 monochrome glyph: a stylized compass rose, black on transparent, suitable for an icon</em>" and the agent saves the result to <code>&lt;project&gt;/assets/</code>. The output won't be template-formatted yet — but it gives you a clean reference shape to trace in Figma or import directly into Step 4's agent prompt as the source artwork. Treat it as a sketch tool, not the final asset.
+      </div>
+
+      <h2>Step 3: Replace the artwork</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Swap glyphs without disturbing IDs or guides</h3>
+          <p>In your vector tool, select the center "Regular Regular" glyph and replace it with your artwork. The constraints:</p>
+          <ul>
+            <li><strong>Don't move or rename layers</strong> outside the glyph cell. The IDs <code>Symbols</code>, <code>Notes</code>, <code>Guides</code>, and the variant-cell names are what the SF Symbols importer reads. Renaming them breaks import.</li>
+            <li><strong>Stay between the Cap Height and Baseline guides</strong> for the visual body of the glyph. Anything below the Baseline (like a descender) needs to land above the Descender guide.</li>
+            <li><strong>Use strokes or filled paths, not both freely</strong>. Symbols rendered in <code>.symbolRenderingMode(.hierarchical)</code> color paths by layer order; if your shapes are inconsistent the colors land in the wrong place.</li>
+          </ul>
+          <p>For the other variants: copy the Regular cell into Small and Large (Xcode will scale these from the center cell anyway, but providing pre-scaled versions gives crisper results). For weights, duplicate Regular into Ultralight (thinner strokes) and Black (heavier strokes) if you have the time. If not, leave them and Xcode falls back to the Regular weight.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Let the agent generate the template</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Faster than hand-editing if you have a logo SVG</h3>
+          <p>If your logo is already a clean SVG, the agent can usually wrap it in a valid symbol template without you opening Figma. Open a Claude chat in your project and ask:</p>
+          <pre><code>I have a logo at ~/Desktop/brand-mark.svg. Generate a custom SF Symbol
+template (Symbol 4.0, 9-variant) that uses this logo as the Regular Regular
+cell and scales it for the other 8 cells. Save it as
+MyApp/Assets.xcassets/BrandMark.symbolset/BrandMark.svg with the matching
+Contents.json.</code></pre>
+          <p>The agent will produce two files: the template SVG (with all nine cells, correct IDs, correct guides) and a small <code>Contents.json</code> that registers it as a Symbol Image. Verify by opening the asset catalog in Xcode — the new symbol should appear under the <strong>Symbol Image</strong> category, with a preview at each weight.</p>
+          <p>If the agent's first attempt looks off — usually because your source logo's proportions don't match font-glyph proportions — paste a screenshot of the asset-catalog preview back and ask it to adjust the scale or vertical position.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Use it in SwiftUI</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>One argument changes — <code>systemName</code> becomes the bare name</h3>
+          <p>System symbols use <code>systemName</code>. Custom symbols don't:</p>
+          <pre><code>// System symbol
+Image(systemName: "star.fill")
+    .font(.title)
+    .foregroundStyle(.yellow)
+
+// Custom symbol — same modifiers, different initializer
+Image("BrandMark")
+    .font(.title)
+    .foregroundStyle(.yellow)</code></pre>
+          <p>That's the entire API difference. Once your custom symbol is in the asset catalog, every SF Symbols modifier — <code>.font()</code>, <code>.foregroundStyle()</code>, <code>.symbolRenderingMode()</code>, <code>.symbolEffect()</code> — works on it identically. You can put your logo and <code>"star.fill"</code> in the same <code>HStack</code> and they'll align, scale, and color together.</p>
+          <p>UIKit equivalent is <code>UIImage(named: "BrandMark", in: nil, with: nil)</code> for custom vs. <code>UIImage(systemName:)</code> for system.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>If your custom symbol shows as a solid rectangle, the import failed silently.</strong> Almost always one of: a non-SVG file (a PNG with a <code>.svg</code> extension counts), missing layer IDs in the template, or the asset catalog entry is a regular Image Set rather than a Symbol Image Set. Delete the entry, drag the SVG in again — Xcode's "<em>New Symbol Image Set</em>" creates the correct entry type. If you got there via "<em>New Image Set</em>" you're in the wrong slot.
+      </div>
+
+      <h2>Step 6: When to use a custom symbol vs. an image</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Heuristic: would it sit next to text?</h3>
+          <p>Custom symbols are worth the overhead when:</p>
+          <ul>
+            <li>The glyph sits <strong>inline with text</strong> — buttons, list rows, navigation items, badges. Dynamic Type scaling matters here.</li>
+            <li>It needs to <strong>match the system font's weight</strong> — your bold headline shouldn't have a regular-weight icon next to it.</li>
+            <li>You want it to <strong>pick up <code>.foregroundStyle</code></strong> automatically rather than ship multiple color variants.</li>
+          </ul>
+          <p>Skip the custom-symbol pipeline and use a regular vector or PNG image when:</p>
+          <ul>
+            <li>The image is <strong>large and standalone</strong> — onboarding hero, empty-state illustration, splash content. Symbols are designed for inline use; they look thin and lifeless at hero scale.</li>
+            <li>It needs <strong>multiple intrinsic colors</strong> that don't follow the symbol-rendering modes (hierarchical, palette, multicolor). For a brand mark that's always a specific gradient, just ship a PDF asset.</li>
+            <li>You don't need Dynamic Type scaling. A static-size product photo doesn't benefit from symbol semantics.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/create-an-ios-or-mac-app-icon.html" class="tutorial-next-card">
+            <h3>Create an iOS or Mac app icon</h3>
+            <p>App icons are a different beast — one square PNG, no transparency</p>
+          </a>
+          <a href="/tutorials/create-an-android-adaptive-icon.html" class="tutorial-next-card">
+            <h3>Create an Android adaptive icon</h3>
+            <p>The Android analog: two layers, launcher-masked</p>
+          </a>
+          <a href="/tutorials/add-a-favicon-to-a-try-project.html" class="tutorial-next-card">
+            <h3>Add a favicon to a /try project</h3>
+            <p>Browser tab icons live in a different world entirely</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

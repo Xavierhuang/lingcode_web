@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>从手机控制 Claude Code - LingCode</title>
+  <meta name="description" content="从 iPad 或手机控制 Claude Code。LingCode iPad 内置远程控制（Termius 风格主机列表），或使用 Termius/SSH + tmux。">
+  <meta name="keywords" content="远程控制 Claude Code, iPad SSH, tmux 远程, Tailscale, 远程 AI 编程, LingCode 移动端">
+  <link rel="canonical" href="https://lingcode.dev/zh/remote-control.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/remote-control.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/remote-control.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/remote-control.html">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/remote-control.html">
+  <meta property="og:title" content="从手机控制 Claude Code — LingCode">
+  <meta property="og:description" content="通过 SSH + tmux 或 LingCode 内置的远程控制，从 iPad 或手机控制 Claude Code。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="从手机控制 Claude Code">
+  <meta name="twitter:description" content="SSH + tmux 或内置远程控制。在 Mac 上跑 Claude Code，从 iPad 控制。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <style>
+    .page-hero { padding: 140px 32px 60px; text-align: center; }
+    .page-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .page-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .page-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .page-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .page-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .page-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .page-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .page-content ul, .page-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .page-content li { margin-bottom: 8px; }
+    .page-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .step-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin: 20px 0; }
+    .step-card h4 { margin: 0 0 12px; font-size: 1rem; color: var(--text); }
+    .step-card pre { background: var(--bg); padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; margin: 12px 0; }
+    .step-card p { margin: 0 0 8px; }
+    .step-card p:last-child { margin-bottom: 0; }
+    .page-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .page-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .page-cta a:hover { text-decoration: underline; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <header class="nav-bar">
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-hidden="true">
+    <div class="nav-inner">
+      <a href="/zh/" class="nav-logo">灵码</a>
+      <label for="nav-toggle" class="nav-burger" aria-label="切换菜单">
+        <span class="nav-burger-line" aria-hidden="true"></span>
+        <span class="nav-burger-line" aria-hidden="true"></span>
+        <span class="nav-burger-line" aria-hidden="true"></span>
+      </label>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="/zh/#demos">演示</a>
+        <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+        <a href="/zh/blog.html">技能参考</a>
+        <a href="/remote-control.html" class="nav-cta">English</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">远程访问</p>
+        <h1>从 iPad 或手机控制 Claude Code</h1>
+        <p>LingCode iPad 内置远程控制（主机列表、点击即连）。也可以用 Termius 通过 SSH 登录你的 Mac，再用 tmux 附加会话。离开桌面时也能做出快速改动。</p>
+      </div>
+    </section>
+
+    <article class="page-content">
+      <h2>概览</h2>
+      <p>LingCode 会在有 tmux 的情况下把 Claude Code 放进 tmux。这样你就能从 iPad 或手机 SSH 登录你的 Mac，附加到同一个会话——看同一个终端、输入提示词、远程控制 Claude Code。</p>
+      <p><strong>iPad 用户：</strong>LingCode 内置 Termius 风格的主机列表。添加你的 Mac、保存、点击即连。不需要额外的 SSH 应用。</p>
+
+      <h2>前置条件</h2>
+      <p><strong>Tailscale</strong> 让你的 Mac 从手机上通过互联网可达。同一 Wi-Fi 下可以跳过 Tailscale，改用 Mac 的本地 IP。<strong>SSH 客户端：</strong>用 LingCode iPad 内置的远程控制，或 Termius / Blink / JuiceSSH。</p>
+      <ul>
+        <li>打开了 Claude Code 标签的 LingCode</li>
+        <li>Mac 上已安装 tmux：<code>brew install tmux</code></li>
+        <li>Mac 和手机上同一个 Tailscale 账号——或同 Wi-Fi + 本地 IP</li>
+        <li>Mac 上开启了远程登录（SSH）</li>
+        <li>LingCode iPad（内置远程控制）或 SSH 客户端（Termius、Blink、JuiceSSH）</li>
+      </ul>
+
+      <h2>步骤 1：在 Mac 上安装 Tailscale</h2>
+      <div class="step-card">
+        <h4>下载并登录</h4>
+        <p>从 <a href="https://tailscale.com/download/mac" rel="noopener noreferrer">tailscale.com/download/mac</a> 下载 Mac 应用。打开并登录。验证：</p>
+        <pre>tailscale status</pre>
+        <p>你应看到你的 Mac。获取它的 IP：</p>
+        <pre>tailscale ip -4</pre>
+        <p>例如：<code>100.116.50.10</code></p>
+      </div>
+
+      <h2>步骤 2：在手机上安装 Tailscale</h2>
+      <div class="step-card">
+        <h4>同一账号</h4>
+        <p>从 App Store（iOS）或 Play Store（Android）安装 Tailscale。用与 Mac 相同的账号登录。手机和 Mac 就处于同一个虚拟网络里。</p>
+      </div>
+
+      <h2>步骤 3：在 Mac 上开启远程登录（SSH）</h2>
+      <div class="step-card">
+        <h4>系统设置</h4>
+        <p>打开 <strong>系统设置 → 通用 → 共享</strong>。打开 <strong>远程登录</strong>。确保你的用户（或"所有用户"）在允许列表中。</p>
+      </div>
+
+      <h2>步骤 4：从手机连接</h2>
+      <div class="step-card">
+        <h4>LingCode iPad（内置）</h4>
+        <p>如果你用 iPad，<a href="https://apps.apple.com/us/app/lingcode/id6757243830" rel="noopener noreferrer">LingCode 应用</a> 内置 Termius 风格的远程控制主机列表，不需要单独的 SSH 客户端。</p>
+        <ul>
+          <li>在 iPad 上打开 LingCode，点击菜单，选 <strong>远程控制</strong></li>
+          <li>点击 <strong>添加主机</strong>，填入：主机（Tailscale IP）、端口（22）、用户名、密码</li>
+          <li>点击主机连接。左滑可编辑或删除已保存主机。</li>
+        </ul>
+      </div>
+      <div class="step-card">
+        <h4>或者用 Termius / Blink / JuiceSSH</h4>
+        <p>安装 <a href="https://apps.apple.com/app/termius-ssh-client/id1176074088" rel="noopener noreferrer">Termius</a>（iOS/Android）或其他 SSH 客户端。添加新主机：</p>
+        <ul>
+          <li><strong>主机：</strong>Mac 的 Tailscale IP（如 <code>100.116.50.10</code>）</li>
+          <li><strong>用户名：</strong>Mac 用户名（如 <code>weijiahuang</code>）</li>
+          <li><strong>端口：</strong>22</li>
+        </ul>
+        <p>免密登录可用 SSH Key（见 <a href="/zh/support.html">支持</a>）。</p>
+      </div>
+
+      <h2>步骤 5：安装 tmux 并打开 Claude Code</h2>
+      <div class="step-card">
+        <h4>在 Mac 上</h4>
+        <pre>brew install tmux</pre>
+        <p>打开 LingCode，再打开一个 Claude Code 标签（或新建一个）。标签头会显示：</p>
+        <pre>Remote: tmux attach -t lingcode-12345678</pre>
+        <p>记下会话名（如 <code>lingcode-12345678</code>）。如果显示"Remote: brew install tmux"，说明 tmux 还没装。</p>
+      </div>
+
+      <h2>步骤 6：SSH 并附加会话</h2>
+      <div class="step-card">
+        <h4>LingCode iPad</h4>
+        <p>点击保存的主机连接。你会拿到一个 shell。附加到 Claude Code：输入 <code>tmux attach -t lingcode-12345678</code>（用 Mac 上 Claude Code 标签里的会话名）。用 <strong>分离</strong> 按钮或 <code>Ctrl+b</code> 再 <code>d</code> 分离。</p>
+      </div>
+      <div class="step-card">
+        <h4>Termius / 其他 SSH 客户端</h4>
+        <p>连接到 Mac。提示主机密钥时点 <strong>继续</strong>。输入 Mac 密码（或用 SSH Key）。连上后运行（把会话名换成 LingCode 显示的那个）：</p>
+        <pre>tmux attach -t lingcode-12345678</pre>
+        <p>你会看到同一个 Claude Code 会话。输入提示词、运行命令。<code>Ctrl+b</code> 再 <code>d</code> 分离，让它继续在 Mac 上跑。</p>
+      </div>
+
+      <h2>故障排查</h2>
+      <div class="step-card">
+        <h4>Tailscale："failed to connect to local Tailscale service"</h4>
+        <p>Tailscale 没在跑。用 tailscale.com/download/mac 的官方 Mac 应用，不要用 Homebrew。打开应用并登录。</p>
+      </div>
+      <div class="step-card">
+        <h4>SSH："Authentication failed (password)"</h4>
+        <p>用 Mac 登录密码（不是 Apple ID）。或配置 SSH Key：运行 <code>ssh-keygen -t ed25519 -f ~/.ssh/phone_key -N ""</code>，把公钥加到 <code>~/.ssh/authorized_keys</code>，然后把私钥加到 Termius。</p>
+      </div>
+      <div class="step-card">
+        <h4>远程登录："requires Full Disk Access"</h4>
+        <p>用 系统设置 → 通用 → 共享 → 远程登录，不要用命令行。</p>
+      </div>
+      <div class="step-card">
+        <h4>附加时提示 "no such session"</h4>
+        <p>确认 LingCode 里开着一个 Claude Code 标签且 tmux 已安装。装完 tmux 后关闭并重新打开 Claude Code 标签。</p>
+      </div>
+
+      <div class="page-cta">
+        <p><a href="/zh/claude-sessions.html">多 Claude Code 会话</a> | <a href="/zh/support.html">支持</a></p>
+        <a href="/LingCode-v2.7.0-Installer.dmg" download class="btn btn-primary">下载 LingCode</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-logo">灵码</span>
+      <nav class="footer-links">
+        <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+        <a href="/zh/blog.html">技能参考</a>
+        <a href="/zh/claude-sessions.html">Claude 会话</a>
+        <a href="/zh/remote-control.html">远程控制</a>
+        <a href="/zh/support.html">支持</a>
+        <a href="/LingCode-v2.7.0-Installer.dmg" download>下载 Mac 版</a>
+        <a href="https://apps.apple.com/us/app/lingcode/id6757243830" rel="noopener noreferrer">App Store</a>
+      </nav>
+      <span class="footer-copy">100% Swift · 无 Electron · 为 Mac 打造</span>
+    </div>
+  </footer>
+
+  <script src="../nav.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

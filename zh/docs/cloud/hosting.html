@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在 LingCode Cloud 上托管应用 —— 部署静态前端与全栈 Worker 应用 | 文档</title>
+  <meta name="description" content="托管你在 LingCode 里构建的应用：把静态前端部署到 lingcode.dev/apps/，把全栈 Worker/SSR 应用部署到 *.run.lingcode.dev。限制、V8 隔离环境运行时、自定义域名，以及服务端逻辑该放在哪里。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/hosting.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/hosting.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/hosting.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/hosting.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/hosting.html">
+  <meta property="og:title" content="在 LingCode Cloud 上托管应用">
+  <meta property="og:description" content="从 LingCode IDE 部署静态前端与全栈 Worker/SSR 应用——运行时、限制、自定义域名，以及服务端逻辑该放在哪里。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .hosting-table { width: 100%; border-collapse: collapse; margin: 22px 0; font-size: 0.9rem; }
+    .hosting-table th, .hosting-table td { text-align: left; padding: 12px 14px; border: 1px solid var(--border); vertical-align: top; }
+    .hosting-table th { background: var(--bg-card); font-weight: 600; color: var(--text); }
+    .hosting-table td { color: var(--text-dim); line-height: 1.5; }
+    .hosting-table td strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/hosting.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>应用托管</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● 部署</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>应用托管</h1>
+      <p class="tldr"><strong>一句话：</strong>LingCode Cloud 托管你构建的应用，因此没有服务器需要你来运维。部署分两种：<strong>静态前端</strong>（构建好的 Vite/React 打包产物），通过 <code>https://lingcode.dev/apps/&lt;app-id&gt;/</code> 提供；以及<strong>全栈 Worker/SSR 应用</strong>，通过 <code>https://&lt;app-id&gt;.run.lingcode.dev/</code> 提供。两者都能在 IDE 里一键发布——<strong>Deploy to LingCode Cloud</strong>。Worker 运行时是 <strong>Cloudflare V8 隔离环境（不是 Node.js）</strong>，这是开始之前最值得弄清楚的那一条约束。</p>
+      <p class="intro">本页讲的是<em>你构建好的应用最终住在哪里</em>——你交付给用户的前端，以及在需要时为他们渲染或路由请求的那台服务器。它说的不是托管后端（数据库、认证、存储、函数）；那是另一件互补的事，而且大多数服务端工作都该放到那边。我们会把两种部署目标、那个让人踩坑的运行时约束、自定义域名，以及——说实话——托管<em>不</em>适合干什么，都讲清楚。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>为什么要托管在这里</h2>
+      <p>当你在 LingCode 里构建一个应用时，产出的是一些文件：一个 <code>index.html</code> 加上若干带哈希的 JS/CSS，也许还有一份服务端打包产物。这些文件必须住在某个有公网 URL 和 HTTPS 的地方，别人才能用上它。常规的做法——租一台机器、装好运行时、配好 Web 服务器、续期证书——为了「把我的应用放上互联网」这件事，要做一大堆没有差异化价值的杂活。</p>
+      <p>LingCode Cloud 把这一切收敛成一个动作。你点一下 <strong>Deploy to LingCode Cloud</strong>，IDE 就会构建并上传应用，服务端再把它发布到自动 HTTPS 之后。你拿回一个上线的 URL。没有服务器需要你打补丁，也没有证书需要你续期。</p>
+
+      <h2>两种部署</h2>
+      <p>LingCode 会看你构建出了什么，然后挑选合适的目标。区别归根结底就是一个问题：<strong>你的应用是否需要为每个请求在服务端运行代码？</strong></p>
+
+      <table class="hosting-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>静态前端</th>
+            <th>全栈 Worker / SSR 应用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>它是什么</strong></td>
+            <td>构建好的 Vite/React（或类似）打包产物——<code>index.html</code> 加上带哈希的资源。没有服务端渲染。</td>
+            <td>一个在服务端渲染或路由的 TanStack Start、OpenNext，或 Cloudflare Workers 应用。</td>
+          </tr>
+          <tr>
+            <td><strong>提供地址</strong></td>
+            <td><code>https://lingcode.dev/apps/&lt;app-id&gt;/</code>——基于路径，带 SPA 回退。</td>
+            <td><code>https://&lt;app-id&gt;.run.lingcode.dev/</code>——独立子域名。</td>
+          </tr>
+          <tr>
+            <td><strong>运行时</strong></td>
+            <td>没有——文件直接从边缘提供。</td>
+            <td>一个 <strong>Cloudflare Worker</strong>（V8 隔离环境），<em>不是</em> Node.js。</td>
+          </tr>
+          <tr>
+            <td><strong>限制</strong></td>
+            <td>总计 ≤100 MB，单文件 ≤25 MB，≤2000 个文件。每小时 12 次部署。</td>
+            <td>打包产物 ≤60 MB。每小时 12 次部署。最多 10 个 worker 应用。</td>
+          </tr>
+          <tr>
+            <td><strong>自定义域名</strong></td>
+            <td>—</td>
+            <td>支持，并配有完整的自动 TLS。</td>
+          </tr>
+          <tr>
+            <td><strong>何时选它</strong></td>
+            <td>你的应用是一个单页应用，从浏览器里和后端（或第三方 API）对话。</td>
+            <td>你需要在请求时进行服务端渲染，或一条自定义的服务端路由。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>对于静态前端，速率限制是<strong>每个用户每小时 12 次部署</strong>，且打包产物必须保持在总计 100 MB、单文件 25 MB、2000 个文件以内。对于 Worker 应用，你同样有每小时 12 次部署，打包产物必须保持在 60 MB 以内，而且最多能同时运行 <strong>10 个 worker 应用</strong>——尝试发布第 11 个，部署就会返回 <code>cap_reached</code>。</p>
+
+      <h2>真正要紧的运行时约束</h2>
+      <p>这是最大的一个坑，所以值得说精确。LingCode Cloud 上的全栈应用以 <strong>Cloudflare Worker</strong> 的形式运行——是一个 <strong>V8 隔离环境</strong>，而不是一个 Node.js 进程。V8 隔离环境是一个沙箱化的 JavaScript 运行时，它在毫秒级内启动，底层没有操作系统。这让它在边缘上运行得既快又省，但也意味着 Node 标准库里有一大块根本就不存在。</p>
+      <p>实际上，在一个 Worker 里你<strong>没有</strong>：</p>
+      <ul>
+        <li><code>fs</code>——不能在本地磁盘上读写文件（根本没有磁盘）。</li>
+        <li><code>path</code>——文件系统路径相关的辅助函数用不了。</li>
+        <li><code>child_process</code>——你不能派生子进程或调起 shell。</li>
+        <li><strong>原生模块</strong>——任何针对 Node 的 C++ ABI 编译出来的东西都加载不了。</li>
+      </ul>
+      <p>具体后果是：<strong>一个普通的 Express/Node 服务器没法原样运行。</strong>如果你的全栈应用是「一个 Express 应用」，它就得被移植到面向 Worker 运行时的东西上——<strong>Hono</strong>、<strong>TanStack Start</strong>，或者通过 <strong>OpenNext</strong> 适配器接上的某个框架。这些都给你同样的请求/响应处理器模型，而不依赖只有 Node 才有的 API。</p>
+
+      <div class="info-box">
+        <h3>心智模型：请求进来，响应出去</h3>
+        <p>一个 Worker 就是一个接收 <code>Request</code> 并返回 <code>Response</code> 的函数。整个形态就这么简单。任何能套进这个形态的东西——渲染一个页面、处理一次表单 POST、校验一个 webhook——都跑得漂亮。任何<em>套不进</em>它的东西（保持一条连接常开、在后台跑一个循环、碰磁盘）都该放到别处去。脑子里揣着这幅图，下面绝大多数约束就不再让你意外了。</p>
+      </div>
+
+      <h2>你怎么部署</h2>
+      <p>部署是一个 <strong>Mac 应用的动作</strong>，不是一个 agent 或 MCP 工具——你不用让 agent 去做，你点一个按钮。在 LingCode IDE 里，打开你构建好的应用，点 <strong>Deploy to LingCode Cloud</strong>。从那一刻起 IDE 会：</p>
+      <ul>
+        <li><strong>构建</strong>应用（跑你的生产构建）。</li>
+        <li>把产出<strong>上传</strong>到 LingCode Cloud 服务端。</li>
+        <li>把它<strong>发布</strong>出去。对于静态应用，这意味着在 <code>/apps/&lt;app-id&gt;/</code> 提供这些文件。对于 Worker 应用，服务端会把这次部署跑到 Cloudflare 的 Workers-for-Platforms，并挂上 <code>&lt;app-id&gt;.run.lingcode.dev</code> 这个主机名，HTTPS 会自动配置好。</li>
+      </ul>
+      <p>完成后，你会拿回一个可以打开或分享的<strong>上线 URL</strong>。想看带截图的完整演练，参见<a href="/zh/tutorials/deploy-to-lingcode-cloud.html">部署到 LingCode Cloud</a>。</p>
+
+      <h2>构建必须产出什么</h2>
+      <p>部署发布的是你的构建<em>产出</em>，所以产出必须是每个层级所期望的形态。你很少需要手写它——一份标准的 Vite/框架配置就会产生它——但了解这个形态，正是你看懂一次失败部署的方式。</p>
+
+      <h3>静态应用</h3>
+      <p>一次普通的生产构建，输出到一个 <code>dist/</code> 文件夹：一个 <code>index.html</code> 加上 <code>dist/assets/</code> 下带哈希的资源。单页应用可以正常工作——未知路径会回退到 <code>index.html</code>。保持在上限之内（总计 100&nbsp;MB，单文件 25&nbsp;MB，2000 个文件）。不需要任何特殊处理；<code>vite build</code> 或你框架的静态导出就够了。</p>
+      <pre><code>dist/
+  index.html
+  assets/
+    index-a1b2c3.js
+    index-d4e5f6.css</code></pre>
+
+      <h3>全栈 Worker / SSR 应用</h3>
+      <p>一次 Worker 部署期望的是 Cloudflare 的构建布局——一个 <code>dist/server/</code>，并在服务端入口旁边放一个 <strong><code>wrangler.json</code></strong>。那个文件由 <strong>Cloudflare Vite 插件</strong>产出；如果它缺失，部署会以 <code>no_build_config</code> 失败（参见<a href="/zh/docs/cloud/troubleshooting.html">排错</a>）。一份能产出它的最小 Vite 配置：</p>
+      <pre><code>// vite.config.ts
+import { defineConfig } from 'vite';
+import { cloudflare } from '@cloudflare/vite-plugin';
+
+export default defineConfig({
+  plugins: [cloudflare()],
+});</code></pre>
+      <p>构建随后会产出两半——客户端资源，以及服务端打包产物加上它的 <code>wrangler.json</code>：</p>
+      <pre><code>dist/
+  client/        # 静态资源，从边缘提供
+  server/
+    index.js     # 你的 Worker（V8 隔离环境——不是 Node）
+    wrangler.json</code></pre>
+      <p>对于 <strong>Next.js</strong>，用 OpenNext 的 Cloudflare 适配器（<code>@opennextjs/cloudflare</code>），而不是 Node 输出——它会产出部署能看懂的、同样的 Worker 形态构建。无论哪种方式，上一节那条规则依然成立：它以 V8 隔离环境运行，所以没有 <code>fs</code>、<code>path</code> 或原生模块。</p>
+
+      <div class="info-box">
+        <h3>读懂一次失败的部署</h3>
+        <p><code>no_build_config</code> 意味着没有产出 Worker 布局——你的构建跑成了一个普通的 Node/静态构建，所以加上 Cloudflare 插件（或 OpenNext 适配器）再重新构建。<code>bundle_too_large</code> 意味着服务端打包产物超过了 60&nbsp;MB——精简依赖。<code>cap_reached</code> / <code>rate_limited</code> 是账户限制（10 个应用，每小时 12 次部署）。完整列表见<a href="/zh/docs/cloud/troubleshooting.html">排错</a>。</p>
+      </div>
+
+      <h2>自定义域名</h2>
+      <p>你可以在一个托管应用前面放上自己的域名，替代默认的 <code>*.run.lingcode.dev</code> URL。配置就是一次指向 LingCode 边缘的 DNS 改动：</p>
+      <ul>
+        <li>一条指向 <code>apps.lingcode.dev</code> 的 <strong>CNAME</strong> 记录，或者</li>
+        <li>一条指向 <code>138.197.107.228</code> 的 <strong>A</strong> 记录。</li>
+      </ul>
+      <p>把这条记录保持为 <strong>DNS-only / 不走代理</strong>（如果你的 DNS 服务商提供代理开关，把它关掉），这样边缘才能完成 TLS 握手。证书随后会<strong>自动、按需</strong>签发——没有什么需要你上传或续期。一步步的操作说明在<a href="/zh/tutorials/connect-a-custom-domain.html">绑定自定义域名</a>里。</p>
+
+      <div class="warn-box">
+        <strong>托管<em>不</em>适合干什么。</strong>Worker 模型是请求/响应，它有实打实的边界。这些事不该交给托管：<strong>长时间运行的进程</strong>、<strong>后台任务队列</strong>、<strong>常驻的 WebSocket 服务器</strong>，或者<strong>任何运行超过约 30 秒的单个请求</strong>。那些需要一台你自己运维的服务器。除此之外的一切，请求/响应式的 Worker——配合托管后端来处理数据、函数和存储——都能搞定。
+      </div>
+
+      <h2>服务端逻辑该放在哪里</h2>
+      <div class="info-box">
+        <h3>优先用后端；只有非用不可时才动用 Worker</h3>
+        <p>对于大多数服务端工作，托管后端是更好的归处：把密钥放进<a href="/zh/docs/cloud/secrets.html">保险库</a>，把厂商调用和受信逻辑放进<a href="/zh/docs/cloud/functions.html">函数</a>，把数据放进<a href="/zh/docs/cloud/database.html">数据库</a>。这覆盖了「我需要这个跑在服务器上，而不是浏览器里」绝大多数的情况，而且你不必拥有任何基础设施。</p>
+        <p>只有在你需要<strong>请求时的服务端渲染</strong>或一条<strong>自定义服务端路由</strong>时，才专门动用全栈 <strong>Worker 应用</strong>。举个例子：一个必须校验<em>原始</em>请求体的 Stripe webhook 处理器，就该作为一条路由放在你托管的 Worker 应用<em>内部</em>——它需要那个未经解析的请求，而内置函数不会把它交到你手上。这就是那条分界线。服务端渲染和自定义请求处理 → Worker 应用；密钥、厂商调用和数据访问 → 后端。</p>
+      </div>
+
+      <h2>把它们拼在一起</h2>
+      <p>一个典型上线的 LingCode 应用会同时用到平台的两半。前端——无论是 <code>/apps/&lt;id&gt;/</code> 上的静态 SPA，还是 <code>&lt;id&gt;.run.lingcode.dev</code> 上的服务端渲染应用——是用户加载的东西。在它背后，<a href="/zh/docs/cloud/database.html">数据库</a>、<a href="/zh/docs/cloud/functions.html">函数</a>和存储做着数据和受信的活儿。托管把你的应用放上互联网；后端给它一件能做的事。构建，点 <strong>Deploy to LingCode Cloud</strong>，再（可选地）把一个域名指向它——整个闭环就是这样。</p>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/functions.html">
+            <span class="card-eyebrow">计算</span>
+            <h3>函数 →</h3>
+            <p>大多数服务端逻辑该放的地方：内置和自定义的无服务器函数，在服务端读取密钥、调用厂商。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/database.html">
+            <span class="card-eyebrow">数据</span>
+            <h3>数据库 →</h3>
+            <p>你托管的应用读写的那个托管 Postgres——表、查询构造器、迁移和 RLS。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/tutorials/connect-a-custom-domain.html">
+            <span class="card-eyebrow">教程</span>
+            <h3>绑定自定义域名 →</h3>
+            <p>把自己的域名放到托管应用前面的确切 DNS 记录和步骤，配有自动 TLS。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

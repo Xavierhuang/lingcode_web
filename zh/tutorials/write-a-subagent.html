@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何为 LingCode 编写子代理？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="子代理是主代理可以委派任务的专家。当任务边界清晰、需要不同的系统提示或独立上下文窗口时，使用子代理最为合适。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/write-a-subagent.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/write-a-subagent.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/write-a-subagent.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/write-a-subagent.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "编写子代理",
+  "description": "子代理是主代理可以委派任务的专家——拥有独立的系统提示、独立的工具集和独立的上下文窗口。当任务边界清晰、工作假设与当前对话不同，或者你不希望其污染主上下文时，应使用子代理。",
+  "url": "https://lingcode.dev/zh/tutorials/write-a-subagent.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/write-a-subagent.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "编写子代理"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "编写子代理",
+      "item": "https://lingcode.dev/zh/tutorials/write-a-subagent.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/write-a-subagent.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>编写子代理</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何为 LingCode 编写子代理？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>在 <code>.claude/agents/&lt;your-agent&gt;.md</code> 中创建一个 Markdown 文件，添加 frontmatter（<code>name</code>、<code>description</code>，可选 <code>tools</code>）以及下方的系统提示。主代理可通过 <code>Agent</code> 工具将任务委派给它——非常适合需要隔离上下文的场景。</p>
+      <p class="intro">子代理是主代理可以委派任务的专家——拥有独立的系统提示、独立的工具集和独立的上下文窗口。当任务边界清晰、工作假设与当前对话不同，或者你不希望其污染主上下文时，子代理是最佳选择。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>与代理协作的默认方式是一段持续增长的对话。每一条提示、每一次工具调用结果、代理读取的每一个文件——全都积累在同一个上下文窗口中。对于短任务来说这没什么问题，但对于长任务来说却很糟糕，因为两种失败模式会同时出现。第一种是稀释：对话越长，模型需要平衡的指令越多，重要内容越容易漂移。第二种是泄漏：一个本应只读的调研任务，最终代理却开始建议代码修改——因为主上下文已处于"写"模式，而它还没到该写的时候。</p>
+      <p>子代理可以同时解决这两个问题。它是一个全新的代理实例，拥有独立的系统提示和工具集，由主代理像调用工具一样调用。子代理在隔离环境中完成任务，返回一个结构化结果后消失——它产生的两万个 token 的中间过程永远不会进入父对话。只有摘要会被返回。</p>
+      <p>使用子代理的艺术在于判断哪些任务值得用它。错误答案是"所有任务"——把琐碎的工作委派给子代理只会增加延迟和混乱。正确答案是"边界清晰且需要不同思维模式的任务"：代码审查、测试生成、代码库探索——任何工作量大但结果紧凑的事情。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>子代理文件格式（带 frontmatter 的 Markdown）</li>
+        <li>描述如何引导委派决策</li>
+        <li>限制子代理可用的工具</li>
+        <li>什么时候写子代理，什么时候写技能，什么时候写斜线命令</li>
+        <li>常用模式：代码审查、测试编写、文档摘要</li>
+      </ul>
+
+      <h2>第一步：文件格式</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>每个子代理对应一个 Markdown 文件</h3>
+          <p>子代理文件存放在 <code>.claude/agents/&lt;name&gt;.md</code>（项目级）或 <code>~/.claude/agents/&lt;name&gt;.md</code>（用户级）。每个文件是带有 YAML frontmatter 的 Markdown：</p>
+          <pre><code>---
+name: code-reviewer
+description: Use this for in-depth code review of staged or unstaged changes. Invoke when the user says "review this," "look over this diff," or before they push.
+tools: [Read, Grep, Glob, Bash]
+---
+
+# Code reviewer
+
+You are a senior code reviewer. Read the staged diff with `git diff --staged`,
+and the unstaged diff with `git diff`. For each meaningful change:
+
+- Note what was changed and whether it accomplishes the stated goal.
+- Flag bugs, race conditions, and security issues.
+- Flag missing tests for non-trivial logic.
+- Flag style violations only if egregious.
+
+Do NOT propose fixes — that's the main agent's job. Report findings only.
+</code></pre>
+          <p>frontmatter 包含三个有意义的字段：<strong>name</strong>（调用时使用）、<strong>description</strong>（用于路由决策），以及可选的 <strong>tools</strong>（限定工具白名单）。</p>
+        </div>
+      </div>
+
+      <h2>第二步：描述引导委派</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>描述即路由逻辑</h3>
+          <p>当主代理决定是否要委派时，它会读取所有可用子代理的描述，并选择描述与当前情境最匹配的那个。描述模糊（"帮助处理代码"）的会被忽略；描述具体（"用于对已暂存或未暂存的变更进行代码审查"）的会被选中。</p>
+          <p>描述应采用"<em>在 [任务] 时使用</em>"或"<em>当用户 [说/想/需要] [某事] 时调用</em>"的形式。想象未来的你冷读这段描述——你能知道什么时候该派发吗？</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>描述是给模型看的，不是给人看的。</strong>要具体说明触发条件，而非花哨地描述能力。"当用户要求写测试时使用"远比"擅长编写全面测试套件、深谙测试模式的专家"更有效。
+      </div>
+
+      <h2>第三步：限制工具</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>子代理应只做它该做的事</h3>
+          <p>默认情况下，子代理可以使用主代理能用的任何工具。通过 frontmatter 中的 <code>tools</code> 字段将其限制为完成任务所需的最小工具集：</p>
+          <ul>
+            <li><strong>代码审查</strong>子代理需要 <code>Read</code>、<code>Grep</code>、<code>Glob</code>，以及用于 git 命令的 <code>Bash</code>——但不应拥有 <code>Edit</code>、<code>Write</code> 或任何破坏性工具。它只审查，不修复。</li>
+            <li><strong>调研</strong>子代理需要读取类工具和 <code>WebFetch</code>。明确不应拥有 <code>Edit</code> 或 <code>Write</code>。</li>
+            <li><strong>测试编写</strong>子代理需要 <code>Read</code>、<code>Grep</code>、<code>Edit</code>、<code>Write</code>、<code>Bash</code>。完整的编辑工具集，但通过系统提示将其范围限定在测试文件内。</li>
+          </ul>
+          <p>工具列表是策略，不是偏好。缺少 <code>Edit</code> 的子代理就真的无法编辑，无论模型"想"做什么。这正是代码审查子代理所需要的：即便模型想"顺手修一下这个小问题"，它也做不到。</p>
+        </div>
+      </div>
+
+      <h2>第四步：调用方式——隐式与显式</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>主代理委派的两种方式</h3>
+          <p>子代理有两种调用方式：</p>
+          <ul>
+            <li><strong>隐式：</strong>主代理判断当前情境，发现匹配的子代理描述，无需指示便自行委派。这是描述清晰的子代理最常见的触发方式。你会看到它以名为"Agent"的工具调用形式出现，参数中包含子代理的名称。</li>
+            <li><strong>显式：</strong>你说"用 code-reviewer 子代理审查这个 diff"。主代理按指示派发。当你知道该用哪个子代理且不想把路由交给模型自行判断时，这种方式很有用。</li>
+          </ul>
+          <p>无论哪种方式，子代理都会获得全新的上下文窗口，完成任务，返回摘要，然后消失。主对话继续，只有摘要进入其上下文。</p>
+        </div>
+      </div>
+
+      <h2>第五步：不该用子代理的情况</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>三个警示信号</h3>
+          <ul>
+            <li><strong>任务是对话性的。</strong>来回互动的对话不适合子代理——它们只返回一次摘要，而不是持续聊天。如果需要迭代，让主代理处理。</li>
+            <li><strong>结果就是全部过程产物。</strong>子代理只返回摘要；详细的中间工作会丢失。如果你需要看代理实际的 diff 探索过程，子代理会把它藏起来。改在主上下文中运行。</li>
+            <li><strong>任务只需一行操作。</strong>"格式化这个文件"不需要子代理。启动子代理的开销比任务本身还大。子代理应留给真正需要独立上下文窗口的工作。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第六步：子代理 vs. 技能 vs. 斜线命令</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>三种定制工具，三种不同用途</h3>
+          <ul>
+            <li><strong><a href="/zh/tutorials/write-a-custom-skill.html">技能（Skill）</a></strong>——教代理<em>如何</em>做某件事。主代理读取技能并在当前上下文中应用。没有隔离。</li>
+            <li><strong>子代理（Subagent）</strong>——将任务委派给拥有独立上下文的全新代理。有隔离。只返回摘要。</li>
+            <li><strong>斜线命令（Slash command）</strong>——用户手动输入的快捷方式，触发已知的提示模板。提供便利，但没有隔离。</li>
+          </ul>
+          <p>经验法则：想要隔离，写子代理。想要在同一上下文中改变行为，写技能。想要快速触发，写斜线命令。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>子代理只能以摘要形式看到主对话内容。</strong>主代理派发时，会传递一份简报——"审查已暂存的 diff 并报告发现"。子代理看不到完整的聊天历史。编写子代理的提示时，要假设它从冷上下文开始工作。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/write-a-custom-skill.html" class="tutorial-next-card">
+            <h3>编写自定义技能</h3>
+            <p>当你想影响代理的行为而不进行委派时</p>
+          </a>
+          <a href="/zh/tutorials/add-custom-hooks.html" class="tutorial-next-card">
+            <h3>添加自定义钩子</h3>
+            <p>硬策略层；子代理是软委派，钩子是主权层</p>
+          </a>
+          <a href="/zh/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>安装和配置插件</h3>
+            <p>与团队共享子代理的正确方式</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · 为发布而生</span>
+    <span>原生 · 快速 · 诚实</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

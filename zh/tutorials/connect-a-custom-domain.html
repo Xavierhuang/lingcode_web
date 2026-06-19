@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何将自定义域名连接到我的 LingCode Cloud 应用？ | 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="将您自己的域名指向部署在 LingCode Cloud 上的应用。只需添加一条 DNS 记录（CNAME 或 A 记录），HTTPS 将自动签发——无需配置证书。涵盖根域名与 www、注册商操作步骤，以及 Cloudflare 仅 DNS 模式的注意事项。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/connect-a-custom-domain.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-a-custom-domain.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-a-custom-domain.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-31T00:00:00Z">
+  <meta name="article:published_time" content="2026-05-31T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/connect-a-custom-domain.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "将自定义域名连接到您的 LingCode Cloud 应用",
+  "description": "在您自己的域名上提供已部署到 LingCode Cloud 的应用。在 Mac IDE 中绑定域名，添加一条 DNS 记录（CNAME 指向 apps.lingcode.dev，或 A 记录），HTTPS 将在首次请求时自动签发。",
+  "url": "https://lingcode.dev/zh/tutorials/connect-a-custom-domain.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-05-31",
+  "dateModified": "2026-05-31",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/zh/tutorials/connect-a-custom-domain.html" },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "将自定义域名连接到您的 LingCode Cloud 应用"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "教程", "item": "https://lingcode.dev/zh/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "搜索", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "发布与基础设施", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "连接自定义域名", "item": "https://lingcode.dev/zh/tutorials/connect-a-custom-domain.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/connect-a-custom-domain.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">发布与基础设施</a>
+      <span>/</span>
+      <span>连接自定义域名</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-31</span>
+      </div>
+      <h1>如何将自定义域名连接到我的 LingCode Cloud 应用？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>通过 Mac IDE 中的 <strong>Cloud</strong>（工具栏按钮）将应用部署到 LingCode Cloud。在成功面板中展开 <strong>Custom domain</strong>，输入 <code>app.yoursite.com</code>，然后点击 <strong>Attach</strong>。接着在您的域名注册商处添加<em>一条</em>记录——子域名使用 <code>CNAME</code> 指向 <code>apps.lingcode.dev</code>，根域名使用 <code>A</code> 记录指向 <code>138.197.107.228</code>。首次访问时 HTTPS 将自动签发。IDE 会显示 <strong>Pending DNS → Verified ✓</strong> 表示配置已生效。</p>
+      <p class="intro">您已将应用部署到 LingCode Cloud，它现在运行在 <code>lingcode.dev/apps/&lt;id&gt;/</code> 这个 URL 上。（还没部署？先看 <a href="/zh/tutorials/deploy-to-lingcode-cloud.html">部署应用到 LingCode Cloud</a>——一键 Cloud 按钮——再回来这里。）用默认 URL 测试没问题，但真正的产品需要 <code>yourbrand.com</code> 这样的域名。好消息是：为 Cloud 应用配置自定义域名只需两分钟，而且您完全不用管 TLS 证书——只要 DNS 指向 LingCode，边缘节点就会自动为您签发和续期 HTTPS。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>"自定义域名"就是一扇友好的大门。您的应用已经运行在 LingCode 的基础设施上；绑定域名就是在告诉边缘节点："当收到 <code>yourbrand.com</code> 的请求时，提供<em>这个</em>应用。"让应用正常工作的一切——HTML、哈希过的 JavaScript 文件、客户端路由——都会在您的域名下以完全相同的方式提供，只是换上了您的品牌名称和您的小锁头。</p>
+      <p>整个过程分为两个部分，值得分开来看，因为它们在两个不同的地方完成：<strong>绑定</strong>域名（在 IDE 中——告诉 LingCode 这个域名属于您）和<strong>指向</strong>域名（在您的注册商处——告诉互联网域名在哪里）。两者都满足后，站点才能正常加载。本教程将逐一讲解，解释 DNS 的选择方式，并介绍两个常见的坑。</p>
+
+      <h2>您将学到什么</h2>
+      <ul>
+        <li>自定义域名如何到达您的 Cloud 应用——以及为什么 HTTPS 是自动的</li>
+        <li>完整步骤：在 IDE 中绑定，然后添加一条 DNS 记录</li>
+        <li>何时使用 <code>CNAME</code>，何时使用 <code>A</code> 记录（子域名 vs 根域名）</li>
+        <li>一步同时添加根域名和 <code>www</code></li>
+        <li>Cloudflare"橙云"会导致证书签发失败的注意事项</li>
+        <li>读懂 <strong>Pending → Verified</strong> 状态，以及如何解绑域名</li>
+      </ul>
+
+      <h2>工作原理（30 秒版本）</h2>
+      <p>LingCode 在您的应用前面运行一个边缘节点。当您绑定一个域名时，LingCode 会记录 <code>yourbrand.com</code> 属于您的应用。当浏览器访问 <code>yourbrand.com</code> 时，边缘节点会确认该域名已注册，<em>按需</em>申请一个免费的 Let's Encrypt 证书，然后通过 HTTPS 提供您的应用——包括每个 <code>/assets/…</code> 文件和单页应用的所有深层链接。您永远不需要生成、上传或续期证书。</p>
+      <p>"按需"这个细节解释了为什么顺序有点重要：证书是在 DNS 指向 LingCode <em>之后</em>，第一次有人访问该域名时签发的。所以您先绑定，再设置 DNS，几分钟后第一次访问就会让它正式上线。</p>
+
+      <h2>第 1 步——在 IDE 中绑定域名</h2>
+      <ol>
+        <li>在 Mac IDE 中<strong>登录</strong>您的 LingCode 账号——应用归此账号所有。</li>
+        <li>如果还没部署，先<strong>部署应用</strong>：打开项目，点击工具栏中的 <strong>Cloud</strong> 按钮（<span aria-hidden="true">⛅︎</span>），设置构建命令和输出目录，然后点击 Deploy。您会得到一个 <code>lingcode.dev/apps/&lt;id&gt;/</code> 的在线 URL。</li>
+        <li>在成功面板中展开 <strong>Custom domain</strong>，输入您的域名（例如 <code>app.yourbrand.com</code> 或 <code>yourbrand.com</code>），然后点击 <strong>Attach</strong>。</li>
+        <li>如果输入的是根域名或 <code>www</code> 域名，保持勾选 <strong>"Also add &lt;the other&gt;"</strong> 以同时注册两者。</li>
+      </ol>
+      <p>IDE 随后会显示您需要添加的 DNS 记录，以及每个域名的状态指示点——橙色（<strong>Pending DNS</strong>）表示 DNS 记录尚未生效，绿色（<strong>Verified</strong>）表示已成功指向 LingCode。</p>
+
+      <h2>第 2 步——将域名指向 LingCode</h2>
+      <p>前往您域名的 DNS 管理处（注册商，或负责您名称服务器的服务商），添加以下<strong>其中一条</strong>记录。IDE 会显示两种选项，选择适合您的那种：</p>
+      <ul>
+        <li><strong>子域名</strong>（如 <code>app.yourbrand.com</code>）→ <code>CNAME</code> 记录，指向 <code>apps.lingcode.dev</code>。这是推荐选项——即使 IP 地址变更，它也会自动跟踪我们的边缘节点。</li>
+        <li><strong>根域名 / 顶级域名</strong>（如 <code>yourbrand.com</code>，没有子域名前缀）→ <code>A</code> 记录，指向 <code>138.197.107.228</code>。顶级域名无法使用 <code>CNAME</code>，这就是为什么需要 <code>A</code> 记录。</li>
+      </ul>
+      <p>如果您同时绑定了根域名和 <code>www</code>，需要为每个分别添加对应记录：根域名添加 <code>A</code> 记录，<code>www</code> 添加 <code>CNAME</code> 记录（指向 <code>apps.lingcode.dev</code>）——这是最常见的组合。</p>
+
+      <div class="info-box">
+        <h3>不确定您的 DNS 在哪里管理？</h3>
+        <p>通常在您购买域名的地方。我们提供了常见注册商的分步指南——<a href="/zh/tutorials/buy-a-domain-from-namecheap.html">Namecheap</a>、<a href="/zh/tutorials/buy-a-domain-from-cloudflare.html">Cloudflare</a>、<a href="/zh/tutorials/buy-a-domain-from-godaddy.html">GoDaddy</a>、<a href="/zh/tutorials/buy-a-domain-from-porkbun.html">Porkbun</a> 等——另外还有一份通用教程 <a href="/zh/tutorials/connect-domain-to-server-with-dns.html">通过 DNS 连接域名</a>。无论在哪里添加记录，记录类型和目标值都是一样的。</p>
+      </div>
+
+      <h2>第 3 步——等待生效</h2>
+      <p>DNS 变更的生效时间从几分钟到（少数情况下）一小时不等。当您的记录解析到 LingCode 边缘节点时，IDE 的状态点会变绿；此后第一次访问会签发证书，站点就正式通过 HTTPS 上线了。您也可以直接在浏览器中打开 <code>https://yourbrand.com</code>——第一次加载可能稍有延迟（证书正在签发），之后就会瞬间响应。</p>
+
+      <div class="warn-box">
+        <strong>Cloudflare 用户——唯一真正的坑：</strong>如果您的 DNS 在 Cloudflare 上，请将记录设置为<strong>仅 DNS</strong>（灰云），<em>而不是</em>代理模式（橙云）。启用代理后，Cloudflare 会自己终止 TLS，导致 LingCode 的边缘节点永远收不到用于签发证书的请求——站点会显示 TLS 错误。改为灰云模式就正常了。（如果您确实<em>需要</em> Cloudflare 在前面，那是另一种配置——参见<a href="/zh/tutorials/put-cloudflare-in-front-of-any-host.html">将 Cloudflare 放在任意主机前面</a>。）
+      </div>
+
+      <h2>后续域名管理</h2>
+      <p>随时重新打开 <strong>Custom domain</strong> 区域，查看绑定到某个应用的所有域名及其实时状态。要移除某个域名，点击旁边的 <strong>✕</strong>——立即解绑（您的应用继续在默认 URL 和其他绑定域名上运行）。使用同一项目重新部署应用<em>不会</em>影响已绑定的域名：部署会原地更新文件，域名仍然指向同一个应用。</p>
+      <p>几点值得知道的事：一个域名同时只能绑定到一个应用（绑定已被使用的域名会被拒绝）；<code>*.lingcode.dev</code> 名称为系统保留；域名归属于 IDE 当前登录的 LingCode 账号。</p>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>连接托管后端</h3>
+            <p>为应用添加数据库、身份验证和存储——无需管理任何凭据</p>
+          </a>
+          <a href="/zh/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>通过 DNS 连接域名</h3>
+            <p>A 记录、CNAME 和名称服务器记录的通用心智模型</p>
+          </a>
+          <a href="/zh/tutorials/magic-deploy-a-website.html" class="tutorial-next-card">
+            <h3>Magic Deploy 部署网站</h3>
+            <p>更喜欢自己的服务器？通过 SSH 部署，而不是 Cloud 托管</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要发布产品的创业者和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">路演</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

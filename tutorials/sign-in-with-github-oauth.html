@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in with GitHub (OAuth) — LingCode Tutorials</title>
+  <meta name="description" content="GitHub OAuth is the same shape as Google OAuth, with one developer-friendly twist: registering the app is twelve clicks, not a dozen Google Cloud pages.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/sign-in-with-github-oauth.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/sign-in-with-github-oauth.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/sign-in-with-github-oauth.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/sign-in-with-github-oauth.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Sign in with GitHub (OAuth)",
+  "description": "If your audience is developers, GitHub OAuth is the right second sign-in option (or the only one). It's the same flow as Google OAuth — but registering the app is one form on GitHub instead of a tour through Google Cloud Console, and the user identity comes with their existing de",
+  "url": "https://lingcode.dev/tutorials/sign-in-with-github-oauth.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/sign-in-with-github-oauth.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Sign in with GitHub (OAuth)"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Sign in with GitHub (OAuth)",
+      "item": "https://lingcode.dev/tutorials/sign-in-with-github-oauth.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/sign-in-with-github-oauth.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Sign in with GitHub (OAuth)</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Sign in with GitHub (OAuth)</h1>
+      <p class="intro">If your audience is developers, GitHub OAuth is the right second sign-in option (or the only one). It's the same flow as Google OAuth — but registering the app is one form on GitHub instead of a tour through Google Cloud Console, and the user identity comes with their existing developer reputation attached.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The right set of OAuth providers depends on who's signing in. A consumer-facing app picks Google first because everyone has a Google account. A B2B app picks Microsoft because that's where the work accounts live. A developer-facing app picks GitHub — it's their professional identity, they're already logged in there for code work, and "the GitHub username on file" carries social proof that an arbitrary email doesn't. If your product touches code, devops, or developer workflows, GitHub OAuth is table stakes.</p>
+      <p>Mechanically, it's the same OAuth 2.0 flow as the <a href="/tutorials/sign-in-with-google-oauth.html">Google version</a>: redirect, consent screen, callback with auth code, server-side exchange for access token, user lookup. The differences are surface-level. GitHub's app registration is a single form on github.com/settings. There's no "verification process" — your app works for any GitHub user the moment you create it. GitHub's user object includes the username (which is meaningful in a way emails aren't), the avatar URL, and optionally the public email (private by default; you have to request the user:email scope to get something usable).</p>
+      <p>This tutorial covers the registration form, the scopes worth requesting, and the one-place-it-trips-up-first-timers: getting a stable email address out of the response.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Where to register a GitHub OAuth app</li>
+        <li>The scopes — <code>user:email</code> and why you almost always want it</li>
+        <li>The redirect callback flow</li>
+        <li>Getting a verified primary email from the GitHub API</li>
+        <li>OAuth Apps vs. GitHub Apps — when to use which</li>
+      </ul>
+
+      <h2>Step 1: Register a new OAuth App</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>github.com/settings/developers</h3>
+          <p>Go to your GitHub settings, scroll to <strong>Developer settings</strong> (left sidebar at the bottom), click <strong>OAuth Apps → New OAuth App</strong>. Fill in:</p>
+          <ul>
+            <li><strong>Application name:</strong> what users see on the consent screen.</li>
+            <li><strong>Homepage URL:</strong> your app's landing page.</li>
+            <li><strong>Authorization callback URL:</strong> where GitHub sends users after they approve. Format: <code>https://yourapp.com/api/auth/callback/github</code>. For local dev, register a second app or use <code>http://localhost:3000/api/auth/callback/github</code> — exact match required.</li>
+            <li><strong>Application description:</strong> optional; helpful to your future self.</li>
+          </ul>
+          <p>Click <strong>Register application</strong>. GitHub shows your <strong>Client ID</strong> immediately. Click <strong>Generate a new client secret</strong> to get the secret; <strong>copy it now</strong>, you only see it once.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Multiple environments — one app or many</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>GitHub only allows one callback URL per app</h3>
+          <p>Unlike Google, GitHub OAuth Apps accept exactly one callback URL. To support dev + production, the easiest approach is to register two apps:</p>
+          <ul>
+            <li><strong>App #1:</strong> "MyApp (dev)" → callback <code>http://localhost:3000/...</code></li>
+            <li><strong>App #2:</strong> "MyApp (prod)" → callback <code>https://yourapp.com/...</code></li>
+          </ul>
+          <p>Each gets its own Client ID + Secret. Your dev env points at app #1; production at app #2. The user-visible names can differ — your dev users see "MyApp (dev)" on the consent screen, which is actually nice for debugging.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Workaround for "one callback URL":</strong> GitHub allows callback URLs to share a prefix. If the registered callback is <code>https://yourapp.com/auth/callback/github</code>, GitHub accepts callbacks to any subpath under that — so you can include state in the path. Most libraries don't take advantage of this; just remember the rule when debugging "why does this redirect URL not work."
+      </div>
+
+      <h2>Step 3: Add the credentials to your code</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Env vars, same pattern as everything else</h3>
+          <pre><code>GITHUB_CLIENT_ID=Iv1.xxxxxxxxx
+GITHUB_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxx</code></pre>
+          <p>In Auth.js / NextAuth, the config is the standard:</p>
+          <pre><code>import GitHubProvider from "next-auth/providers/github";
+
+export const authOptions = {
+  providers: [
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),
+  ],
+};</code></pre>
+          <p>If you've already configured a Google provider, add GitHub alongside — the library lets you stack providers, and your sign-in UI shows buttons for each.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Request the right scopes</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>For sign-in: <code>user:email</code></h3>
+          <p>By default, GitHub OAuth only grants access to the user's public profile, which may not include an email address (most users keep their primary email private). To get a usable email, request the <code>user:email</code> scope.</p>
+          <p>Auth.js does this by default. Manually constructed auth URLs need <code>&amp;scope=user:email</code> in the query string. The user sees this on the consent screen ("Access your email addresses").</p>
+          <p>Other scopes exist for advanced use cases:</p>
+          <ul>
+            <li><code>read:user</code> — fetch profile info beyond the public defaults.</li>
+            <li><code>repo</code> — read/write the user's repositories (only if your app does that).</li>
+            <li><code>read:org</code> — see which orgs they belong to.</li>
+          </ul>
+          <p>The rule: request only what you'll use. Each additional scope is a friction point on the consent screen and a privacy implication for the user.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Get a real email from the response</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>The thing that breaks most often</h3>
+          <p>After a successful auth, GitHub's <code>/user</code> endpoint returns the user's profile. The <code>email</code> field on this response is the user's <em>public</em> email — often <code>null</code>, because many users keep their email private.</p>
+          <p>To get a usable email, hit <code>/user/emails</code> instead, which (with <code>user:email</code> scope) returns all the user's email addresses including the verified primary one:</p>
+          <pre><code>const emailsRes = await fetch('https://api.github.com/user/emails', {
+  headers: { Authorization: `Bearer ${accessToken}` },
+});
+const emails = await emailsRes.json();
+const primary = emails.find(e =&gt; e.primary &amp;&amp; e.verified)?.email;</code></pre>
+          <p>Always pick the verified primary; that's the one GitHub itself trusts for communication. Auth.js handles this automatically; manual implementations have to do it themselves and frequently don't.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Store the GitHub user ID, not just the username</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Usernames can change; IDs don't</h3>
+          <p>The <code>/user</code> response includes both <code>login</code> (the username, e.g., <code>octocat</code>) and <code>id</code> (a stable numeric ID, e.g., <code>583231</code>). Store both, but use the ID as the foreign key.</p>
+          <p>GitHub allows users to change their username; if you key on <code>login</code>, a user changing their username breaks your records. Key on <code>id</code> and store the current <code>login</code> as a separate field that you update on each sign-in.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: OAuth Apps vs. GitHub Apps</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Two products that sound similar but aren't</h3>
+          <p>GitHub has two app types:</p>
+          <ul>
+            <li><strong>OAuth Apps</strong> — what this tutorial is about. Best for "let users sign in." Acts on behalf of a user. Standard OAuth 2.0 flow.</li>
+            <li><strong>GitHub Apps</strong> — more sophisticated. Can act on behalf of an installation (a user or org); has fine-grained permissions; uses short-lived tokens. Best for "an app that integrates with repos as a first-class GitHub citizen" — bots, CI tools, code-review automation.</li>
+          </ul>
+          <p>For sign-in only, OAuth Apps is right and simpler. For anything that interacts with code (creating PRs, posting checks, accessing repo content), GitHub Apps is the modern path. They can coexist — many products ship an OAuth App for sign-in and a separate GitHub App for the repo-integration features.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Rate limits matter.</strong> OAuth App auth requests count against the app's rate limit (5,000 requests/hour at the app level). High-traffic sign-in pages can hit this. If you're approaching the limit, consider GitHub Apps (which have separate, larger limits) or cache the user profile aggressively.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>Sign in with Google (OAuth)</h3>
+            <p>The other side of the standard auth pair</p>
+          </a>
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-car d">
+            <h3>Set up Sentry error tracking</h3>
+            <p>Once people are signing in, know when their auth flow breaks</p>
+          </a>
+          <a href="/tutorials/connect-linear-and-github-via-mcp.html" class="tutorial-next-card">
+            <h3>Connect Linear and GitHub via MCP</h3>
+            <p>Once your app talks to GitHub for auth, the agent can talk to GitHub too</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

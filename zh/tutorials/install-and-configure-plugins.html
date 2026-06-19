@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>安装与配置插件 — LingCode 教程</title>
+  <meta name="description" content="使用 Claude Code 格式的插件扩展 LingCode。技能、代理、钩子和 MCP 服务器——按用户或按项目安装，通过命名空间避免冲突。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/install-and-configure-plugins.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/install-and-configure-plugins.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/install-and-configure-plugins.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/install-and-configure-plugins.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "安装与配置插件",
+  "description": "插件将你希望每个项目都具备的习惯和能力打包在一起——比如"tdd"技能、"lint-before-push"钩子，或者与 Linear 通信的 MCP 服务器。安装一次，代理下次就会自动识别并使用。",
+  "url": "https://lingcode.dev/zh/tutorials/install-and-configure-plugins.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/install-and-configure-plugins.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "安装与配置插件"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "安装与配置插件",
+      "item": "https://lingcode.dev/zh/tutorials/install-and-configure-plugins.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/install-and-configure-plugins.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>安装与配置插件</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>安装与配置插件</h1>
+      <p class="intro">插件将你希望每个项目都具备的习惯和能力打包在一起——比如"tdd"技能、"lint-before-push"钩子，或者与 Linear 通信的 MCP 服务器。安装一次，代理下次就会自动识别并使用。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>开箱即用，LingCode 已经提供了一个可正常运行的代理。但每位开发者最终都会有一些相似的个性化需求：一个了解团队 TDD 风格的技能、一个在提交前运行代码检查的钩子、一个让代理查询 Linear 或 PagerDuty 的 MCP 服务器。你可以把这些指令粘贴到每个项目的 <code>CLAUDE.md</code> 里，但它们本不属于那里——它们是<em>你的</em>个人习惯，而非项目本身的配置。正确的做法是使用插件：一个由技能、代理、钩子和 MCP 配置组成的小目录，安装一次，在你想用的地方随处生效。</p>
+      <p>LingCode 遵循 Claude Code 插件规范，这意味着插件只是一个文件夹，顶层有一个 <code>.claude-plugin/plugin.json</code> 清单文件，各组件按约定放在对应的子目录中。无需构建步骤、无需运行时、无需编译。代理在加载时读取插件内容，对其命名空间化处理，并像对待普通上下文一样使用它。</p>
+      <p>本教程涵盖两种安装范围（按用户和按项目）、新手常遇到的静默失败问题（缺少 <code>plugin.json</code>），以及当插件包含任何可能执行 shell 命令的内容时会出现的授权提示——而大多数实用插件都会触发这个提示。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>插件内部包含什么（技能、代理、钩子、MCP 配置）</li>
+        <li>两种安装位置及各自的适用场景</li>
+        <li>命名空间如何防止两个插件发生冲突</li>
+        <li>包含钩子或可执行文件的插件的授权提示机制</li>
+        <li>如何在不卸载插件的情况下禁用其对模型可见的功能</li>
+      </ul>
+
+      <h2>第 1 步：插件里面究竟有什么</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>一个带有清单文件的文件夹</h3>
+          <p>插件是一个具有如下结构的目录：</p>
+          <pre><code>my-plugin/
+├── .claude-plugin/
+│   └── plugin.json         ← 必需；这是让它成为插件的关键文件
+├── skills/
+│   └── &lt;name&gt;/SKILL.md     ← 可选；每个技能一个文件夹
+├── agents/
+│   └── &lt;name&gt;.md           ← 可选；子代理定义
+├── hooks/
+│   └── hooks.json          ← 可选；UserPromptSubmit / PreToolUse 等
+├── commands/
+│   └── &lt;name&gt;.md           ← 可选；斜杠命令
+└── mcp/
+    └── *.json              ← 可选；MCP 服务器配置
+</code></pre>
+          <p>这些子目录都不是必需的。唯一必须存在的文件是 <code>.claude-plugin/plugin.json</code>——它的存在告诉 LingCode"这个文件夹是一个插件"。没有清单文件的裸文件夹会被静默忽略，这也是刚安装的插件"没有出现"的最常见原因。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：选择安装范围</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>全局安装还是项目本地安装</h3>
+          <p>LingCode 会在两个路径中查找插件：</p>
+          <ul>
+            <li><strong>全局安装：</strong><code>~/.claude/plugins/&lt;plugin-name&gt;/</code> — 适用于本机上的所有项目。适合存放个人习惯（你的 TDD 风格、个人代码检查钩子等）。</li>
+            <li><strong>项目本地安装：</strong>在项目根目录或任意祖先目录的 <code>.claude/plugins/&lt;plugin-name&gt;/</code> 中——仅在该项目（及其子目录）中生效。适合存放项目专属工具（"deploy-staging"命令、限定于本产品的 Linear MCP 等）。</li>
+          </ul>
+          <p>无论哪种方式，只需将插件文件夹放进去即可。无需注册步骤，无需重启。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：通过 CLI 安装</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>一条命令，复制而非符号链接</h3>
+          <p>如果你已经<a href="/zh/tutorials/install-and-use-the-lingcode-cli.html">安装了 CLI</a>，标准安装命令为：</p>
+          <pre><code>lingcode plugin install &lt;name-or-url-or-git-spec&gt;</code></pre>
+          <p>你可以传入：市场中的插件名称（在已注册的市场中查找）、git URL（克隆并复制），或本地文件系统路径。LingCode 会将插件复制到 <code>~/.claude/plugins/&lt;name&gt;/</code>——而不是创建符号链接。这样做有充分的理由：当源目录是 git 克隆产生的临时目录时，符号链接会悬空，下次磁盘清理后插件就会丢失。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>插件市场：</strong>市场是发布在 <code>~/.claude/marketplaces/&lt;name&gt;/.claude-plugin/marketplace.json</code> 中的精选插件列表。运行 <code>lingcode plugin search</code> 可查看已添加市场中的所有可用插件。注意：目前没有更新流程——<code>marketplace add</code> 会在安装时创建快照。如需刷新，请移除后重新添加。
+      </div>
+
+      <h2>第 4 步：通过授权提示</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>为什么插件需要授权</h3>
+          <p>如果插件包含 <code>hooks/hooks.json</code> 或 <code>bin/</code> 目录，它就能在代理正常工作流程中执行 shell 命令——这正是插件的价值所在。LingCode 在安装任何此类插件前都会弹出授权提示，因为"我把这个插件放进去了"不应该等同于"我把这个脚本复制到了 <code>~/.local/bin</code>"的威胁等级。</p>
+          <p>交互式 shell 会收到一个 Y/N 提示，并附有插件将执行操作的摘要。非交互式环境（CI、脚本）将拒绝安装，除非你传入 <code>--yes</code>。这是刻意设计的阻力——之所以存在，是因为另一种做法会让插件悄悄安装键盘记录器。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：命名空间——冲突如何被避免</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>插件加载的条目与项目本地条目</h3>
+          <p>两个插件都可以各自包含一个名为 <code>tdd</code> 的技能，而不会发生冲突。通过插件加载的技能以 <code>&lt;plugin&gt;:&lt;skill&gt;</code> 的形式呈现——所以一个变成 <code>jane:tdd</code>，另一个变成 <code>acme:tdd</code>，代理会根据上下文选择合适的那个。</p>
+          <p>有一个例外：直接在项目中定义的技能（<code>.claude/skills/&lt;name&gt;/SKILL.md</code>，不在插件子目录下）保留其简短名称。项目本地的 <code>tdd</code> 会覆盖任何插件的 <code>tdd</code>。这是有意为之的设计：项目本地的配置始终优先，因为项目作者最了解自己的需求。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：在不卸载的情况下禁用对模型可见的功能</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3><code>disable-model-invocation</code> 逃生舱口</h3>
+          <p>有时你希望某个技能可以通过用户手动输入斜杠命令调用，但不希望模型自动触发它。只需在 SKILL.md 的 frontmatter 中添加 <code>disable-model-invocation: true</code>。这样模型就不会在系统提示中看到该技能；但你仍然可以在斜杠菜单中看到并手动调用它。</p>
+          <p>这适用于"我想保留这个技能备用，但不信任模型会在正确时机自动使用它"的场景——常见于涉及外部调用、不可逆操作或你希望每次运行前都审核的第三方 API 的技能。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>彻底卸载：</strong><code>lingcode plugin uninstall &lt;name&gt;</code> 会删除插件目录及所有注册信息。如果你是手动安装的（直接放入文件夹），使用 <code>rm -rf</code> 删除该文件夹即可——没有数据库需要清理。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>连接 MCP 服务器</h3>
+            <p>大多数实用插件都内置了一个——深入了解该协议</p>
+          </a>
+          <a href="/zh/tutorials/install-and-use-the-lingcode-cli.html" class="tutorial-next-card">
+            <h3>安装并使用 lingcode CLI</h3>
+            <p>所有插件命令都在这里</p>
+          </a>
+          <a href="/zh/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>权限模式</h3>
+            <p>了解控制插件钩子安装的授权系统</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速交付的创始人和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资材料</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

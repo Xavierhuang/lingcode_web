@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I add semantic and hybrid search to my LingCode Cloud backend? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Add meaning-based (semantic) and hybrid full-text + vector search to a LingCode Cloud backend using built-in pgvector and managed embeddings — no external vector DB, no embedding API to wire up.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/semantic-and-hybrid-search.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/semantic-and-hybrid-search.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/semantic-and-hybrid-search.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-02T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-02T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/semantic-and-hybrid-search.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Add semantic and hybrid search",
+  "description": "Use the LingCode Cloud backend's built-in pgvector and managed embeddings to add semantic search and hybrid (full-text + vector) ranking — no external vector database or embedding API setup.",
+  "url": "https://lingcode.dev/tutorials/semantic-and-hybrid-search.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-02",
+  "dateModified": "2026-06-02",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/tutorials/semantic-and-hybrid-search.html" },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Add semantic and hybrid search"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Search", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "Backend integrations", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Semantic and hybrid search", "item": "https://lingcode.dev/tutorials/semantic-and-hybrid-search.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/semantic-and-hybrid-search.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Semantic and hybrid search</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-06-02</span>
+      </div>
+      <h1>How do I add semantic and hybrid search to my backend?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Your managed backend ships with <strong>pgvector</strong> and <strong>managed embeddings</strong>. Add a <code>vector(1536)</code> column, embed your text with <code>client.vector.embed(text)</code> and store it, then search by meaning with <code>client.search.text(...)</code> (full-text), <code>client.vector.search(...)</code> (pure vector), or <code>client.search.hybrid(...)</code> (full-text + vector fused). No external vector DB, no embedding API key to manage.</p>
+      <p class="intro">Keyword search (<code>LIKE '%cat%'</code>) finds the word "cat"; it doesn't find "kitten" or "feline." Semantic search does, because it compares <em>meaning</em> — encoded as a vector — instead of characters. The catch has always been the plumbing: an embedding model, somewhere to store the vectors, and a similarity query. A LingCode Cloud backend includes all three, so "search my notes by meaning" is a few lines, not a new service.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>This assumes a <a href="/tutorials/connect-a-managed-backend.html">connected managed backend</a>. The honest fastest path: tell the agent <em>"add semantic search over my notes"</em> and it will add the column, embed on insert, and wire the query. This tutorial explains the moving parts so you know what it built.</p>
+
+      <h2>The three search modes</h2>
+      <ul>
+        <li><strong>Full-text</strong> — fast keyword/phrase matching with ranking (Postgres FTS). Great default; no embeddings needed.</li>
+        <li><strong>Semantic (vector)</strong> — ranks rows by meaning using embeddings + pgvector. Finds paraphrases and related concepts.</li>
+        <li><strong>Hybrid</strong> — fuses full-text and vector results (reciprocal rank fusion), so an exact keyword hit and a conceptual match both surface. Usually the best of both.</li>
+      </ul>
+
+      <h2>Step 1 — add a vector column</h2>
+      <p>Embeddings are arrays of numbers stored in a <code>vector(N)</code> column (N = the model's dimension; the built-in embeddings are 1536-dim). Ask the agent, or run a migration from the console SQL tab:</p>
+      <pre><code class="mono">ALTER TABLE notes ADD COLUMN embedding vector(1536);</code></pre>
+
+      <h2>Step 2 — embed your text and store it</h2>
+      <p>Managed embeddings mean you don't bring an embedding API key. When you create or edit a row, embed its text and save the vector:</p>
+      <pre><code class="mono">const { data } = await client.vector.embed(note.body);   // → { embedding: [...] }
+await client.from('notes').eq('id', note.id).update({ embedding: data.embedding });</code></pre>
+
+      <h2>Step 3 — search</h2>
+      <p>Full-text needs no embedding:</p>
+      <pre><code class="mono">const { data } = await client.search.text({ table: 'notes', column: 'body', query: 'budget planning' });</code></pre>
+      <p>Hybrid embeds the query, then fuses keyword + vector ranking:</p>
+      <pre><code class="mono">const { embedding } = (await client.vector.embed('how do I save money')).data;
+const { data } = await client.search.hybrid({
+  table: 'notes', text_column: 'body', vector_column: 'embedding',
+  query: 'how do I save money', embedding,
+});</code></pre>
+      <p>Results come back ranked, and (for the tenant-scoped data API) only include rows the signed-in user is allowed to see — your <a href="/tutorials/connect-a-managed-backend.html">RLS policies</a> still apply.</p>
+
+      <div class="info-box">
+        <h3>Try it from the console</h3>
+        <p>In <a href="/backends.html">lingcode.dev/backends</a> → <strong>Database</strong>, open a table and click <strong>Search</strong>. Type a query, pick Full-text or Hybrid, and the console embeds it for you and shows the ranked rows — a quick way to sanity-check relevance before wiring it into the app.</p>
+      </div>
+
+      <h2>Make it fast</h2>
+      <p>For larger tables, add an index so vector search doesn't scan every row, and a generated <code>tsvector</code> column for full-text. The agent will add these when you mention scale; the gist is an HNSW/IVF index on the vector column and a GIN index on the text. Until then, on modest data it's already plenty quick.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>Connect a managed backend</h3>
+            <p>The Postgres + pgvector this runs on</p>
+          </a>
+          <a href="/tutorials/call-external-apis-from-your-backend.html" class="tutorial-next-card">
+            <h3>Call external APIs</h3>
+            <p>Bring your own embedding/model provider if you prefer</p>
+          </a>
+          <a href="/tutorials/scan-your-backend-with-advisors.html" class="tutorial-next-card">
+            <h3>Scan with Advisors</h3>
+            <p>Catch a missing index before it slows search down</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col"><h4>Product</h4><ul><li><a href="/try.html">Web (/try)</a></li><li><a href="/cli.html">CLI</a></li><li><a href="/features.html">Mac IDE</a></li><li><a href="/pricing.html">Pricing</a></li><li><a href="/changelog.html">Changelog</a></li></ul></div>
+    <div class="footer-col"><h4>Developers</h4><ul><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li><li><a href="/getting-started.html">Getting started</a></li><li><a href="/cli.html">CLI reference</a></li><li><a href="/why-not-cursor.html">Why not Cursor</a></li></ul></div>
+    <div class="footer-col"><h4>Community</h4><ul><li><a href="/community.html">Friday workshops</a></li><li><a href="/community.html">For universities</a></li><li><a href="/examples.html">Showcase</a></li><li><a href="/blog.html">Blog</a></li><li><a href="/support.html">Support</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="/manifesto.html">Manifesto</a></li><li><a href="/pitch.html">Pitch</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/signin.html">Sign in</a></li><li><a href="/signup.html">Sign up</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Remote Coding — LingCode</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --border:#30363d; --fg:#e6edf3; --muted:#8b949e; --accent:#2f81f7; --green:#3fb950; --red:#f85149; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--fg); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  body { display:flex; flex-direction:column; height:100vh; }
+  header { display:flex; align-items:center; gap:12px; padding:10px 16px; border-bottom:1px solid var(--border); background:var(--panel); }
+  header h1 { font-size:15px; margin:0; font-weight:600; }
+  header .spacer { flex:1; }
+  header .who { color:var(--muted); font-size:12px; }
+  .wrap { flex:1; display:flex; min-height:0; }
+  .sidebar { width:240px; border-right:1px solid var(--border); background:var(--panel); overflow:auto; padding:8px; }
+  .sidebar h2 { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:8px 6px; }
+  .host { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:6px; cursor:pointer; }
+  .host:hover { background:#21262d; }
+  .host.active { background:#1f6feb33; }
+  .host .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); flex:none; }
+  .host.online .dot { background:var(--green); }
+  .host .name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .host .badge { font-size:10px; color:var(--muted); }
+  .main { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .transcript { flex:1; overflow:auto; padding:16px; }
+  .msg { margin:0 0 14px; white-space:pre-wrap; word-break:break-word; }
+  .msg .role { font-size:11px; color:var(--muted); margin-bottom:2px; }
+  .msg.user .role { color:var(--accent); }
+  .msg.tool { color:var(--muted); font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
+  .msg.error { color:var(--red); }
+  .perm { border:1px solid var(--border); border-radius:8px; padding:12px; margin:0 0 14px; background:var(--panel); }
+  .perm .tool { font-family:ui-monospace,monospace; font-size:12px; color:var(--muted); margin:6px 0; }
+  .perm button { margin-right:8px; }
+  .composer { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--border); background:var(--panel); }
+  .composer textarea { flex:1; resize:none; height:44px; background:var(--bg); color:var(--fg); border:1px solid var(--border); border-radius:8px; padding:10px; font:inherit; }
+  .composer select { background:var(--bg); color:var(--fg); border:1px solid var(--border); border-radius:8px; padding:0 8px; font:inherit; cursor:pointer; }
+  button { background:var(--accent); color:#fff; border:0; border-radius:6px; padding:8px 14px; font:inherit; font-weight:600; cursor:pointer; }
+  button.ghost { background:#21262d; color:var(--fg); }
+  button:disabled { opacity:.5; cursor:default; }
+  .empty { color:var(--muted); padding:40px 16px; text-align:center; }
+  a { color:var(--accent); }
+
+  /* ── Mobile: stack the panes (host list on top, chat fills the rest) ────────
+     The desktop layout is a fixed 240px sidebar beside the chat; on a phone that
+     squeezes the chat to a sliver and pushes Send/Stop off-screen. Below 640px we
+     switch to a vertical stack, cap the host list height, use dynamic viewport
+     height (so the composer isn't hidden behind the browser chrome), and respect
+     the notch / home-indicator safe areas. */
+  @media (max-width: 640px) {
+    body { height:100dvh; }
+    header { flex-wrap:wrap; gap:4px 10px; padding:10px 14px; padding-top:calc(10px + env(safe-area-inset-top)); }
+    header h1 { font-size:14px; }
+    header .spacer { display:none; }
+    header .who { font-size:11px; }
+    .wrap { flex-direction:column; }
+    .sidebar { width:100%; max-height:34vh; border-right:0; border-bottom:1px solid var(--border); padding:6px; }
+    .host { padding:11px 12px; }              /* larger tap targets */
+    .transcript { padding:12px; }
+    .composer { gap:6px; padding:10px 12px; padding-bottom:calc(10px + env(safe-area-inset-bottom)); }
+    .composer textarea { height:40px; padding:9px; }
+    .composer button { padding:9px 12px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>LingCode · Remote Coding</h1>
+  <span id="conn" class="who"></span>
+  <span class="spacer"></span>
+  <span id="who" class="who"></span>
+</header>
+<div class="wrap">
+  <aside class="sidebar">
+    <h2>Your hosts <a href="#" id="refresh" style="float:right;font-size:11px;">refresh</a></h2>
+    <div id="hosts"></div>
+  </aside>
+  <main class="main">
+    <div id="modebar" style="display:none;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);align-items:center;">
+      <button id="mode-agent" class="ghost" style="padding:5px 12px;">New agent</button>
+      <button id="mode-live" class="ghost" style="padding:5px 12px;">Live sessions</button>
+      <span id="mode-hint" class="who" style="margin-left:auto;"></span>
+    </div>
+    <div id="transcript" class="transcript"><div class="empty">Pick an online host to start coding remotely.</div></div>
+    <div class="composer">
+      <select id="provider" title="Model provider" disabled>
+        <option value="lingmodel">LingModel</option>
+        <option value="claude">Claude</option>
+      </select>
+      <textarea id="input" placeholder="Ask the agent to do something… (⌘/Ctrl+Enter to send)" disabled></textarea>
+      <button id="send" disabled>Send</button>
+      <button id="cancel" class="ghost" disabled>Stop</button>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const transcript = $('transcript');
+  const api = (p, opts={}) => fetch(p, { credentials: 'include', ...opts });
+  const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
+
+  let ws = null, currentHost = null, queryId = null, sseBuf = '', curAssistantEl = null;
+  let mode = 'agent';          // 'agent' (headless) | 'live' (mirror an open tab)
+  let attachedDocId = null;    // documentId of the live session being mirrored
+  let liveAwaitingList = false; // true while waiting for the host's session list
+  const pending = new Map(); // requestId → perm element
+
+  function addMsg(role, text, cls) {
+    const el = document.createElement('div');
+    el.className = 'msg ' + (cls || role);
+    if (role) { const r = document.createElement('div'); r.className = 'role'; r.textContent = role; el.appendChild(r); }
+    const body = document.createElement('span'); body.textContent = text || ''; el.appendChild(body);
+    transcript.appendChild(el);
+    transcript.scrollTop = transcript.scrollHeight;
+    return body;
+  }
+  function clearTranscript() { transcript.innerHTML = ''; }
+
+  // ── auth + host list ──────────────────────────────────────────────────────
+  async function loadMe() {
+    const r = await api('/api/account/me');
+    if (r.status === 401) { $('who').innerHTML = '<a href="/account.html">Sign in</a> to use remote coding'; return false; }
+    const j = await r.json();
+    $('who').textContent = j.email || '';
+    return true;
+  }
+  async function loadHosts() {
+    const r = await api('/api/remote/hosts');
+    if (!r.ok) return;
+    const j = await r.json();
+    const box = $('hosts'); box.innerHTML = '';
+    if (!j.hosts || !j.hosts.length) { box.innerHTML = '<div class="empty" style="font-size:12px">No hosts yet. Turn on “Enable Remote Coding” in the LingCode Mac app.</div>'; return; }
+    for (const h of j.hosts) {
+      const el = document.createElement('div');
+      el.className = 'host' + (h.online ? ' online' : '') + (currentHost === h.id ? ' active' : '');
+      el.innerHTML = `<span class="dot"></span><span class="name"></span><span class="badge">${h.online ? 'online' : 'offline'}</span>`;
+      el.querySelector('.name').textContent = h.name;
+      el.onclick = () => h.online ? connect(h) : alert('That host is offline. Open the LingCode app on that Mac.');
+      box.appendChild(el);
+    }
+  }
+
+  // ── connect to a host's serve tunnel over the collab relay ─────────────────
+  async function connect(host) {
+    const r = await api(`/api/remote/hosts/${host.id}/room`);
+    if (!r.ok) { alert('Could not get room for that host.'); return; }
+    const j = await r.json();
+    if (ws) { try { ws.close(); } catch (_) {} ws = null; }
+    currentHost = host.id;
+    clearTranscript();
+    addMsg('', `Connecting to ${host.name}…`, 'tool');
+    loadHosts();
+    ws = new WebSocket(j.wsUrl);
+    ws.binaryType = 'arraybuffer';
+    ws.onopen = () => {
+      $('conn').textContent = '● connected';
+      $('input').disabled = false; $('send').disabled = false; $('provider').disabled = false;
+      $('modebar').style.display = 'flex';
+      setMode(mode);
+    };
+    ws.onclose = () => { $('conn').textContent = '○ disconnected'; $('input').disabled = true; $('send').disabled = true; $('provider').disabled = true; };
+    ws.onerror = () => addMsg('', 'Connection error.', 'error');
+    ws.onmessage = (ev) => {
+      let text;
+      if (typeof ev.data === 'string') text = ev.data;
+      else text = new TextDecoder().decode(new Uint8Array(ev.data));
+      if (!text || text[0] !== '{') return; // ignore Yjs binary
+      let f; try { f = JSON.parse(text); } catch { return; }
+      onFrame(f);
+    };
+  }
+
+  function sendFrame(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+
+  // ── serve-tunnel frames → SSE events ───────────────────────────────────────
+  function onFrame(f) {
+    switch (f.type) {
+      case 'lc-serve-response-head':
+        if (f.status && f.status !== 200) addMsg('', `Server returned HTTP ${f.status}`, 'error');
+        sseBuf = '';
+        break;
+      case 'lc-serve-response-chunk':
+        sseBuf += f.text || '';
+        drainSSE();
+        break;
+      case 'lc-serve-close':
+        finishQuery();
+        break;
+      case 'lc-serve-error':
+        addMsg('', f.message || 'tunnel error', 'error');
+        finishQuery();
+        break;
+      // ── live-session mirror ──
+      // Host live-pushes this on tab open/close/rename/state change. Only re-render
+      // the list when the user is actually viewing it — never clobber an attached
+      // session's transcript or "New agent" mode.
+      case 'lc-agent-list-result': if (mode === 'live' && !attachedDocId) renderSessionList(f.sessions); break;
+      case 'lc-agent-state': if (f.documentId === attachedDocId) renderSnapshot(f.snapshot || {}); break;
+      case 'lc-agent-detached': addMsg('', 'Session ended.', 'tool'); attachedDocId = null; break;
+      case 'lc-agent-error': addMsg('', f.message || 'agent error', 'error'); break;
+    }
+  }
+
+  // ── live-session mode: discover / attach / render / drive ────────────────────
+  function setMode(m) {
+    mode = m; attachedDocId = null;
+    $('mode-agent').style.fontWeight = m === 'agent' ? '700' : '400';
+    $('mode-live').style.fontWeight = m === 'live' ? '700' : '400';
+    if ($('provider')) $('provider').style.display = m === 'agent' ? '' : 'none';
+    clearTranscript();
+    if (m === 'live') {
+      $('mode-hint').textContent = '';
+      if (ws && ws.readyState === 1) {
+        liveAwaitingList = true;
+        addMsg('', 'Loading your open Claude Code tabs…', 'tool');
+        sendFrame({ type: 'lc-agent-list' });
+        setTimeout(() => {
+          if (liveAwaitingList && mode === 'live') {
+            addMsg('', 'No response from your Mac. Live Sessions needs the host running a LingCode build with the live-session mirror (coming). "New agent" mode works now.', 'tool');
+          }
+        }, 4000);
+      }
+    } else {
+      $('mode-hint').textContent = '';
+      addMsg('', 'New agent — ask anything; it runs a fresh agent in your project.', 'tool');
+    }
+  }
+
+  function renderSessionList(sessions) {
+    liveAwaitingList = false;
+    attachedDocId = null;
+    clearTranscript();
+    if (!sessions || !sessions.length) {
+      addMsg('', 'No open Claude Code tabs on this Mac. Open one in LingCode, then tap Live sessions again.', 'tool');
+      return;
+    }
+    addMsg('', 'Open Claude Code tabs — tap one to drive it:', 'tool');
+    for (const s of sessions) {
+      const el = document.createElement('div');
+      el.className = 'host' + (s.isStreaming ? ' online' : '');
+      el.innerHTML = '<span class="dot"></span><span class="name"></span><span class="badge"></span>';
+      el.querySelector('.name').textContent = s.displayName || s.documentId;
+      el.querySelector('.badge').textContent = s.needsInput ? 'needs input' : (s.isStreaming ? 'running' : 'idle');
+      el.onclick = () => attachSession(s.documentId, s.displayName);
+      transcript.appendChild(el);
+    }
+  }
+
+  function attachSession(docId, name) {
+    attachedDocId = docId;
+    clearTranscript();
+    addMsg('', 'Attaching to ' + (name || docId) + '…', 'tool');
+    $('mode-hint').textContent = name || '';
+    sendFrame({ type: 'lc-agent-attach', documentId: docId });
+  }
+
+  function liveCmd(cmd, extra) {
+    if (!attachedDocId) return;
+    sendFrame(Object.assign({ type: 'lc-agent-cmd', documentId: attachedDocId, cmd }, extra || {}));
+  }
+
+  function blockEl(role, b) {
+    if (b.type === 'text') { if (b.text) addMsg(role === 'user' ? 'you' : 'assistant', b.text, role === 'user' ? 'user' : 'assistant'); }
+    else if (b.type === 'thinking') { if (b.text) addMsg('', '🧠 ' + b.text, 'tool'); }
+    else if (b.type === 'toolUse') { addMsg('', ('→ ' + (b.name || 'tool') + ' ' + (typeof b.input === 'string' ? b.input : JSON.stringify(b.input || {}))).slice(0, 400), 'tool'); }
+    else if (b.type === 'toolResult') { addMsg('', ((b.isError ? '⚠ ' : '✓ ') + String(b.content || '')).slice(0, 400), 'tool'); }
+  }
+
+  // Full re-render of the mirrored session from a snapshot (pushed on-change).
+  function renderSnapshot(s) {
+    clearTranscript();
+    const msgs = (s.messages || []).slice();
+    if (s.inFlight) msgs.push(s.inFlight);
+    for (const m of msgs) for (const b of (m.content || [])) blockEl(m.role, b);
+    if (s.pendingApproval) renderLiveApproval(s.pendingApproval);
+    if (s.pendingUserInput) renderLiveUserInput(s.pendingUserInput);
+    $('mode-hint').textContent = s.isStreaming ? 'running…' : (s.title || '');
+  }
+
+  function renderLiveApproval(p) {
+    const el = document.createElement('div'); el.className = 'perm';
+    el.innerHTML = '<div><b>Approve tool call?</b></div><div class="tool"></div>';
+    el.querySelector('.tool').textContent = ((p.title || p.toolName || 'tool') + '\n' + (typeof p.input === 'string' ? p.input : JSON.stringify(p.input || {}, null, 2))).slice(0, 600);
+    const allow = document.createElement('button'); allow.textContent = 'Allow';
+    const deny = document.createElement('button'); deny.textContent = 'Deny'; deny.className = 'ghost';
+    allow.onclick = () => { liveCmd('approve', { id: p.id }); allow.disabled = deny.disabled = true; };
+    deny.onclick = () => { liveCmd('deny', { id: p.id }); allow.disabled = deny.disabled = true; };
+    el.appendChild(allow);
+    if (p.hasSessionAllowSuggestion) {
+      const always = document.createElement('button'); always.textContent = 'Always'; always.className = 'ghost';
+      always.onclick = () => { liveCmd('approve', { id: p.id, alwaysAllow: true }); allow.disabled = deny.disabled = always.disabled = true; };
+      el.appendChild(always);
+    }
+    el.appendChild(deny);
+    transcript.appendChild(el); transcript.scrollTop = transcript.scrollHeight;
+  }
+
+  function renderLiveUserInput(u) {
+    for (const q of (u.questions || [])) {
+      const el = document.createElement('div'); el.className = 'perm';
+      const head = document.createElement('div'); const b = document.createElement('b');
+      b.textContent = q.question || q.header || 'Question'; head.appendChild(b); el.appendChild(head);
+      for (const opt of (q.options || [])) {
+        const btn = document.createElement('button'); btn.className = 'ghost'; btn.textContent = opt.label;
+        btn.style.cssText = 'margin:4px 4px 0 0';
+        btn.onclick = () => { liveCmd('submitUserInput', { id: u.id, answers: { [q.question]: opt.label } }); el.querySelectorAll('button').forEach((x) => x.disabled = true); };
+        el.appendChild(btn);
+      }
+      transcript.appendChild(el);
+    }
+  }
+  $('mode-agent').onclick = () => setMode('agent');
+  $('mode-live').onclick = () => setMode('live');
+
+  function drainSSE() {
+    let i;
+    while ((i = sseBuf.indexOf('\n\n')) >= 0) {
+      const block = sseBuf.slice(0, i); sseBuf = sseBuf.slice(i + 2);
+      let event = 'message', data = '';
+      for (const line of block.split('\n')) {
+        if (line.startsWith('event:')) event = line.slice(6).trim();
+        else if (line.startsWith('data:')) data += line.slice(5).trim();
+      }
+      if (!data && event === 'message') continue;
+      let payload = {}; try { payload = JSON.parse(data || '{}'); } catch (_) {}
+      handleEvent(event, payload);
+    }
+  }
+
+  function handleEvent(event, p) {
+    switch (event) {
+      case 'query_started': queryId = p.queryId || queryId; $('cancel').disabled = false; break;
+      case 'assistant_text':
+        if (!curAssistantEl) curAssistantEl = addMsg('assistant', '');
+        curAssistantEl.textContent += (p.text || '');
+        transcript.scrollTop = transcript.scrollHeight;
+        break;
+      case 'thinking': addMsg('thinking', p.text || '', 'tool'); break;
+      case 'tool_use': addMsg('', `→ ${p.name || 'tool'} ${typeof p.input === 'string' ? p.input : JSON.stringify(p.input || {})}`.slice(0, 400), 'tool'); break;
+      case 'tool_result': break; // keep transcript clean for v1
+      case 'permission_request': renderPermission(p); break;
+      case 'token_usage': break;
+      case 'query_finished': finishQuery(); break;
+      case 'query_cancelled': addMsg('', 'Cancelled.', 'tool'); finishQuery(); break;
+      case 'query_failed': addMsg('', p.message || 'Query failed.', 'error'); finishQuery(); break;
+    }
+  }
+
+  function renderPermission(p) {
+    const el = document.createElement('div'); el.className = 'perm';
+    el.innerHTML = `<div><b>Approve tool call?</b></div><div class="tool"></div>`;
+    el.querySelector('.tool').textContent = `${p.title || p.toolName}\n${typeof p.input === 'string' ? p.input : JSON.stringify(p.input || {}, null, 2)}`.slice(0, 600);
+    const allow = document.createElement('button'); allow.textContent = 'Allow';
+    const deny = document.createElement('button'); deny.textContent = 'Deny'; deny.className = 'ghost';
+    const resolve = (behavior) => {
+      sendFrame({ type: 'lc-serve-request', streamId: uuid(), method: 'POST', path: `/v1/agent/permission/${p.requestId}`, body: { behavior } });
+      el.querySelector('.tool').insertAdjacentText('beforeend', `\n— ${behavior}`);
+      allow.disabled = deny.disabled = true;
+    };
+    allow.onclick = () => resolve('allow'); deny.onclick = () => resolve('deny');
+    el.appendChild(allow); el.appendChild(deny);
+    transcript.appendChild(el); transcript.scrollTop = transcript.scrollHeight;
+  }
+
+  function finishQuery() { curAssistantEl = null; $('cancel').disabled = true; }
+
+  // ── composer ───────────────────────────────────────────────────────────────
+  function ask() {
+    const ta = $('input'); const prompt = ta.value.trim();
+    if (!prompt || !ws || ws.readyState !== 1) return;
+    // Live mode: inject the prompt into the attached open tab's session.
+    if (mode === 'live') {
+      if (!attachedDocId) { addMsg('', 'Pick a live session first.', 'tool'); return; }
+      ta.value = '';
+      liveCmd('send', { text: prompt });
+      return;
+    }
+    ta.value = '';
+    addMsg('you', prompt, 'user');
+    curAssistantEl = null;
+    queryId = uuid();
+    const provider = ($('provider') && $('provider').value) || 'lingmodel';
+    // LingModel's upstream model requires thinking.type=enabled (it rejects the
+    // SDK's default otherwise); raw Claude accepts it either way, so only force it
+    // on for lingmodel.
+    sendFrame({ type: 'lc-serve-request', streamId: uuid(), method: 'POST', path: '/v1/agent/ask', body: { prompt, provider, queryId, permissionMode: 'default', thinking: provider === 'lingmodel' } });
+  }
+  $('send').onclick = ask;
+  $('input').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); ask(); } });
+  $('cancel').onclick = () => {
+    if (mode === 'live') { liveCmd('stop'); return; }
+    if (queryId) sendFrame({ type: 'lc-serve-request', streamId: uuid(), method: 'POST', path: `/v1/agent/cancel/${queryId}`, body: {} });
+  };
+  $('refresh').onclick = (e) => {
+    e.preventDefault();
+    loadHosts();
+    // In Live Sessions mode, refresh must also re-query the host's open tabs
+    // (loadHosts only refreshes the host list / online status). Re-entering
+    // live mode clears the list and re-sends lc-agent-list.
+    if (mode === 'live') setMode('live');
+  };
+
+  // ── boot ─────────────────────────────────────────────────────────────────
+  (async () => { if (await loadMe()) { await loadHosts(); setInterval(loadHosts, 10000); } })();
+})();
+</script>
+</body>
+</html>

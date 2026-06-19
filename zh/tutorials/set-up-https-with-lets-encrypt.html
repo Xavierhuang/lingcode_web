@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何使用 Let's Encrypt 配置 HTTPS？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="HTTPS 是 DNS 之上的加密层。使用 Let's Encrypt + certbot，只需两条命令即可免费获取真实的 TLS 证书，并实现永久自动续期。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-https-with-lets-encrypt.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-https-with-lets-encrypt.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-https-with-lets-encrypt.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/set-up-https-with-lets-encrypt.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Let's Encrypt 配置 HTTPS",
+  "description": "DNS 负责路由流量，HTTPS 负责加密传输。Let's Encrypt 是一个免费、自动化、受浏览器信任的证书颁发机构，近十年来一直是"在 Linux 服务器上配置 TLS"的默认答案。两条命令获取真实证书，一个定时任务让证书永久有效。",
+  "url": "https://lingcode.dev/zh/tutorials/set-up-https-with-lets-encrypt.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/set-up-https-with-lets-encrypt.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 Let's Encrypt 配置 HTTPS"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "使用 Let's Encrypt 配置 HTTPS",
+      "item": "https://lingcode.dev/zh/tutorials/set-up-https-with-lets-encrypt.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/set-up-https-with-lets-encrypt.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>使用 Let's Encrypt 配置 HTTPS</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何使用 Let's Encrypt 配置 HTTPS？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>在 Ubuntu 上：先运行 <code>sudo apt install certbot python3-certbot-nginx</code>，再运行 <code>sudo certbot --nginx -d yourdomain.com</code>。certbot 会自动修改 nginx 配置，并每 60 天自动续期。证书免费，全面启用 TLS，全程仅需 5 分钟。</p>
+      <p class="intro">DNS 负责路由流量，HTTPS 负责加密传输。Let's Encrypt 是一个免费、自动化、受浏览器信任的证书颁发机构，近十年来一直是"在 Linux 服务器上配置 TLS"的默认答案。两条命令获取真实证书，一个定时任务让证书永久有效。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>HTTPS 是任何面向公网的站点的最低门槛。浏览器对缺少 HTTPS 的网站会发出醒目警告——地址栏里一个大大的"不安全"标记，会瞬间摧毁你精心设计所建立的信任感。用户已经学会正确解读这个信号：一个在 2026 年仍然只有 HTTP 的网站，看上去要么坏掉了，要么被遗弃了，要么暗藏风险。没有任何理由发布这样的网站，反而有很多理由不这么做。</p>
+      <p>HTTPS 之所以让人觉得麻烦，是因为历史上你需要从 Comodo、DigiCert 等厂商购买 TLS 证书，价格从每年 50 到 500 美元不等，还要通过繁琐的邮件和 DNS 验证流程来证明域名所有权，最后再手动将证书安装到 Web 服务器。续期是一件你有时会忘记的日历事项，整个流程是一笔不小但真实存在的持续成本。</p>
+      <p>Let's Encrypt 彻底改变了这一切。它是由互联网安全研究组（ISRG，Mozilla、EFF、Cisco 等联合资助）运营的免费、自动化、受浏览器信任的证书颁发机构。其 ACME 协议允许服务器上的脚本在几秒内证明对域名的所有权，并获取 90 天有效期的证书。配套工具——通常是 <code>certbot</code>——自动化了证书的签发、安装和续期。最终结果是：HTTPS 开箱即用、零成本、自动续期。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>两种验证方式（HTTP-01 与 DNS-01）及各自的适用场景</li>
+        <li>在服务器上安装 certbot（适用于 Nginx 或 Caddy）</li>
+        <li>一条命令获取真实证书</li>
+        <li>自动续期的工作原理（以及需要检查什么）</li>
+        <li>什么情况下不适合使用 Let's Encrypt</li>
+      </ul>
+
+      <h2>第 1 步：前置条件</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>配置 TLS 前需要满足的条件</h3>
+          <p>配置 HTTPS 需要以下三个条件已经具备：</p>
+          <ul>
+            <li><strong>域名已指向你的服务器。</strong>DNS 中的 A 记录和/或 AAAA 记录需解析到服务器的 IP 地址。参见<a href="/zh/tutorials/connect-domain-to-server-with-dns.html">将域名连接到服务器</a>。</li>
+            <li><strong>服务器的 80 端口可从公网访问</strong>（这是最常见的验证方式所必需的）。如果你有防火墙，请放行 80 端口。云 VPS 通常还需要在云服务商的防火墙中开放（AWS 的安全组、Hetzner 的 Cloud Firewall 等）。</li>
+            <li><strong>已安装 Web 服务器</strong>（Nginx、Caddy 或 Apache）。对于放在负载均衡器后面的纯 API 服务器情况有所不同；对于独立 VPS，Nginx 或 Caddy 是标准路径。</li>
+          </ul>
+          <p>如果上述任一条件尚未满足，请先解决。否则 Let's Encrypt 会以令人困惑的方式失败。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：选择工具</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Caddy 只需一条命令；certbot + Nginx 需要两条</h3>
+          <p>两种合理的方案：</p>
+          <ul>
+            <li><strong>Caddy。</strong>现代 Web 服务器，原生内置 Let's Encrypt 支持——无需额外工具，无需额外配置。在 Caddyfile 里写上 <code>example.com { ... }</code>，Caddy 自动搞定证书。适合从零开始的新服务器。</li>
+            <li><strong>Nginx + certbot。</strong>经典组合，两个组件但文档极为完善，互联网上几乎所有教程都以此为前提。适合已有 Nginx 配置或需要精细控制的场景。</li>
+          </ul>
+          <p>如果是全新服务器且没有 Nginx 历史包袱，Caddy 更简单。如果"Nginx 已经在跑，只是想加上 HTTPS"，certbot 更合适。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：Caddy 方案（零配置）</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>安装、配置，完成</h3>
+          <pre><code># Install Caddy on Ubuntu
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | \
+    sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | \
+    sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update &amp;&amp; sudo apt install caddy
+
+# Configure: edit /etc/caddy/Caddyfile
+sudo nano /etc/caddy/Caddyfile</code></pre>
+          <p>将文件内容替换为：</p>
+          <pre><code>example.com {
+    reverse_proxy localhost:3000
+    # Or root * /var/www/html ; file_server for static files
+}</code></pre>
+          <p>重启 Caddy：<code>sudo systemctl restart caddy</code>。在收到第一个请求时，Caddy 会联系 Let's Encrypt，验证你的域名（DNS 必须已解析到此服务器），获取证书并提供 HTTPS 服务。之后会自动续期。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：Nginx + certbot 方案</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>已安装 Nginx 的情况</h3>
+          <p>假设 Nginx 已在运行，且你已有 <code>example.com</code> 的 server block：</p>
+          <pre><code># Install certbot and the Nginx plugin
+sudo apt install -y certbot python3-certbot-nginx
+
+# Issue a cert and edit your Nginx config to use it
+sudo certbot --nginx -d example.com -d www.example.com</code></pre>
+          <p>certbot 会提示你输入邮箱（用于续期失败通知，不会用于其他用途）并同意 Let's Encrypt 服务条款。随后它会与 Let's Encrypt 通信，通过 HTTP-01 方式（在 <code>/.well-known/acme-challenge/...</code> 放置临时文件供 LE 服务器验证）验证域名所有权，获取证书，并自动修改 Nginx 配置以使用该证书。</p>
+          <p>测试 HTTPS 站点：<code>curl -I https://example.com</code> 应返回 200（或你的应用实际返回的状态码）。浏览器中的"不安全"标记消失。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>HTTP-01 与 DNS-01 验证的区别。</strong>HTTP-01（默认方式）需要 80 端口可从公网访问。DNS-01 则要求你在 DNS 中添加一条 TXT 记录——适用于 80 端口被封锁、主机尚不可达，或需要申请通配符证书（<code>*.example.com</code> 必须使用 DNS-01）的情况。使用 certbot 进行 DNS-01 验证时，添加 <code>--manual --preferred-challenges dns</code>，或使用针对特定 DNS 服务商的插件（如 <code>python3-certbot-dns-cloudflare</code> 等）。
+      </div>
+
+      <h2>第 5 步：续期——已自动配置</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>确认定时任务正在运行</h3>
+          <p>Caddy 和 certbot 均内置自动续期。证书有效期为 90 天；续期任务每天运行，并在证书到期前 30 天内自动续期。无需手动设置 cron 任务，软件包的 systemd 定时器已自动安装。</p>
+          <p>检查是否正常运行：</p>
+          <pre><code># For certbot:
+sudo systemctl list-timers | grep certbot
+sudo certbot renew --dry-run  # simulates a renewal without changing anything
+
+# For Caddy: there's nothing to check — Caddy logs renewals to journalctl
+journalctl -u caddy | grep -i renew</code></pre>
+          <p>如果你希望在续期失败时收到邮件通知：certbot 在签发失败时会自动向你提供的邮箱发送通知。对于 Caddy，请在你的监控系统中配置失败告警。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：验证证书</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>一条 curl 命令，一个在线检测工具</h3>
+          <pre><code># From your Mac:
+curl -I https://example.com
+# Expected: 200 OK (or whatever your app returns), with no SSL errors
+
+# Show the cert details:
+echo | openssl s_client -showcerts -servername example.com -connect example.com:443 2>/dev/null \
+  | openssl x509 -inform pem -noout -text \
+  | grep -E "Subject:|Issuer:|Not After"</code></pre>
+          <p>Issuer 应为"Let's Encrypt"或"ISRG"；Subject 应与你的域名匹配；Not After 应为 90 天后的日期。</p>
+          <p>如需全面检测，可将你的域名提交到 <code>https://www.ssllabs.com/ssltest/</code>。评级应为 A 或 A+。如果更低，报告会说明需要修复的内容（通常是仍然启用的旧 TLS 版本或弱加密套件）。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：Let's Encrypt 不适用的情况</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>三种例外情况</h3>
+          <ul>
+            <li><strong>你使用的托管平台已自动处理 TLS。</strong>Vercel、Netlify、Cloudflare Pages 以及所有现代 PaaS 平台都会自动签发和续期证书。不必自行配置 Let's Encrypt，它们的 CDN 处理得比你更好。</li>
+            <li><strong>你需要扩展验证（EV）证书。</strong>某些企业场景要求带有法律实体验证的 EV 证书（商业 CA 每年收费 200–500 美元）。Let's Encrypt 仅提供域名验证（DV）证书。</li>
+            <li><strong>你的域名仅用于内网。</strong>Let's Encrypt 需要验证域名所有权；如果你的域名是内部域名（不在公共 DNS 中），请改用私有 CA。mkcert 是本地开发的好选择。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>存在频率限制。</strong>Let's Encrypt 对每个注册域名每周最多签发 50 张证书，重复证书每周最多 5 张。正常使用完全够用；但如果脚本失控反复签发，你会触及限制并被封锁一周。测试时请使用演练环境（certbot 加 <code>--staging</code> 参数）。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/put-cloudflare-in-front-of-any-host.html" class="tutorial-next-card">
+            <h3>将 Cloudflare 放在任意主机前面</h3>
+            <p>"自行运行 Let's Encrypt"的替代方案——Cloudflare 的代理为你处理 TLS</p>
+          </a>
+          <a href="/zh/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>将域名连接到服务器</h3>
+            <p>HTTPS 之下的 DNS 层</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-next-card">
+            <h3>从 DigitalOcean 购买服务器</h3>
+            <p>如果你还没有服务器，从这里开始</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

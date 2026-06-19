@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deploy with AWS Amplify Hosting — LingCode Tutorials</title>
+  <meta name="description" content="Amplify Hosting is AWS's git-push-to-deploy service. Connect a repo, set build settings, get a deploy. The Vercel-equivalent on AWS, with honest tradeoffs.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-with-aws-amplify-hosting.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-with-aws-amplify-hosting.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-with-aws-amplify-hosting.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/deploy-with-aws-amplify-hosting.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Deploy with AWS Amplify Hosting",
+  "description": "Amplify Hosting is AWS's \"connect a git repo, get a deployed site\" service. It's a wrapper around S3, CloudFront, ACM, and CodeBuild — same primitives as the manual setup, packaged into a single dashboard. The result is closer to Vercel than to raw S3 + CloudFront , with the AWS",
+  "url": "https://lingcode.dev/tutorials/deploy-with-aws-amplify-hosting.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/deploy-with-aws-amplify-hosting.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Deploy with AWS Amplify Hosting"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Deploy with AWS Amplify Hosting",
+      "item": "https://lingcode.dev/tutorials/deploy-with-aws-amplify-hosting.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/deploy-with-aws-amplify-hosting.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Deploy with AWS Amplify Hosting</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Deploy with AWS Amplify Hosting</h1>
+      <p class="intro">Amplify Hosting is AWS's "connect a git repo, get a deployed site" service. It's a wrapper around S3, CloudFront, ACM, and CodeBuild — same primitives as the manual setup, packaged into a single dashboard. The result is closer to Vercel than to <a href="/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">raw S3 + CloudFront</a>, with the AWS bill and the AWS integrations that come with that.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Two things share the "Amplify" name and they're frequently confused. <strong>Amplify Hosting</strong> is what this tutorial covers: a git-driven web hosting service that builds your site, deploys it to a CloudFront-backed CDN, gives you a free TLS cert, and re-deploys on every push. <strong>Amplify Studio (and the Amplify libraries)</strong> are a different product — a full backend platform with generated DataStore APIs, auth flows, and React components. They're related (Amplify Hosting can be paired with Amplify Studio), but Amplify Hosting alone works fine with any backend or no backend. We'll stay on the Hosting side.</p>
+      <p>The honest pitch: Amplify Hosting is what AWS built when it noticed Vercel and Netlify existed. It does the same things — git connection, branch deploys, environment variables, preview URLs, custom domains. The UX is meaningfully behind Vercel's; the build logs are dense; the CLI exists but most flows assume the console. What you get in exchange is that everything lives in your AWS account: same IAM, same billing, same VPC if you need it, same support contract. For teams that have a "must be on AWS" policy, Amplify Hosting is the path of least resistance.</p>
+      <p>This tutorial walks the connect-a-repo-to-live-URL flow, points out where Amplify's defaults will surprise you, and shows what the second deploy looks like (which is the deploy-loop you'll live in). We'll also cover when to skip Amplify Hosting entirely — there are a few cases where the manual S3 + CloudFront pipeline ends up cleaner.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>What Amplify Hosting wraps (and doesn't)</li>
+        <li>Connecting GitHub / Bitbucket / GitLab / CodeCommit repos</li>
+        <li>Build settings: auto-detect vs <code>amplify.yml</code></li>
+        <li>Branch deploys and preview URLs</li>
+        <li>Custom domains with the built-in <a href="/tutorials/use-route-53-for-your-domain.html">Route 53</a> wiring</li>
+        <li>When manual S3 + CloudFront is the better answer</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> An AWS account, a git repository with a buildable static or SSR site (Next.js, Vite, Astro, Hugo, plain HTML — Amplify auto-detects most), and a custom domain if you want one (optional — Amplify gives you a free <code>*.amplifyapp.com</code> URL).
+      </div>
+
+      <h2>Step 1: Pick the build framework first</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Auto-detect works, but knowing the answer in advance helps</h3>
+          <p>Amplify will try to detect your framework on the first connection. For the common ones it works without intervention — Next.js, Nuxt, Vite, Create React App, Hugo, plain HTML. For less-common ones (SvelteKit edge runtime, Remix, Astro with adapters), the auto-detect picks defaults that may or may not match your config.</p>
+          <p>Before connecting, confirm:</p>
+          <ul>
+            <li>Your build command (<code>npm run build</code>, <code>pnpm build</code>, <code>hugo</code>, etc.).</li>
+            <li>The output directory (<code>./dist</code>, <code>./out</code>, <code>./public</code>, <code>./.next</code>).</li>
+            <li>Whether you need server-side rendering (Amplify supports SSR for Next.js and Nuxt; static export is simpler everywhere).</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 2: Connect the repository</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>GitHub is the smoothest path; the others work</h3>
+          <p>In the AWS console, open Amplify → <strong>Create new app</strong> → <strong>Host a web app</strong>. Pick your git provider:</p>
+          <ul>
+            <li><strong>GitHub:</strong> redirects to GitHub for OAuth; you grant the Amplify GitHub App access to specific repos (or all). Most polished flow.</li>
+            <li><strong>Bitbucket / GitLab:</strong> similar OAuth; works fine.</li>
+            <li><strong>AWS CodeCommit:</strong> AWS's own git hosting — uses IAM, no OAuth needed. Picking CodeCommit only makes sense if you already use it; otherwise GitHub is faster.</li>
+          </ul>
+          <p>After granting access, pick the repo and branch (usually <code>main</code> for production). Click Next.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Review or override the build settings</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>The <code>amplify.yml</code> file Amplify writes for you</h3>
+          <p>Amplify shows a YAML file describing the build. For an auto-detected Vite project it looks like:</p>
+          <pre><code>version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*</code></pre>
+          <p>If the detection looks right, accept and move on. If the output directory is wrong (most common error — Amplify guesses <code>dist</code> when yours is <code>build</code>, or vice versa), fix <code>baseDirectory</code> here. You can also commit this as <code>amplify.yml</code> at the repo root to keep the build config in source control.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Environment variables go here, not in the repo.</strong> In the same setup screen, expand <strong>Advanced settings</strong> → <strong>Environment variables</strong>. Add <code>API_KEY</code>, <code>DATABASE_URL</code>, etc. They're available at build time and (for SSR apps) at request time. Never put secrets in <code>amplify.yml</code>.
+      </div>
+
+      <h2>Step 4: First deploy</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Five phases; you watch them turn green</h3>
+          <p>Click <strong>Save and deploy</strong>. Amplify runs the pipeline:</p>
+          <ol>
+            <li><strong>Provision</strong> — spinning up a CodeBuild container.</li>
+            <li><strong>Build</strong> — running your build commands.</li>
+            <li><strong>Deploy</strong> — uploading artifacts to the CloudFront-backed CDN.</li>
+            <li><strong>Verify</strong> — sanity check that the deployment is live.</li>
+            <li><strong>Test</strong> — runs end-to-end tests if configured (skipped by default).</li>
+          </ol>
+          <p>Total time: 2–5 minutes for small projects, longer for large dependency installs. When Deploy turns green, Amplify shows the live URL — <code>https://main.d1234abcde.amplifyapp.com</code>. Click it; your site should load. This URL is HTTPS-enabled, cached on CloudFront edges, and ready before you wire up a custom domain.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Wire up a custom domain</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>One click if your DNS is at Route 53; manual CNAMEs otherwise</h3>
+          <p>App → <strong>Domain management</strong> → <strong>Add domain</strong>. Enter <code>mybrand.com</code>. Amplify shows you the subdomain mapping:</p>
+          <ul>
+            <li><code>mybrand.com</code> → main branch</li>
+            <li><code>www.mybrand.com</code> → main branch (with redirect to apex, or vice versa — pick the canonical)</li>
+          </ul>
+          <p>Click <strong>Save</strong>. Amplify provisions an ACM cert (in <code>us-east-1</code>, handled internally — you don't have to think about it) and requests DNS validation:</p>
+          <ul>
+            <li><strong>If DNS is at Route 53 in the same account:</strong> Amplify drops the validation records into your hosted zone automatically. Wait 5–15 minutes; the domain shows as Active.</li>
+            <li><strong>If DNS is elsewhere:</strong> Amplify shows you the CNAME records to add at your DNS provider. Add them, wait for validation, return to the Amplify console to confirm.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 6: Branch deploys and preview URLs</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>One branch = one URL</h3>
+          <p>In the app overview, <strong>Connect branch</strong>. Pick a feature branch — Amplify creates a separate deployment at <code>https://&lt;branch-name&gt;.d1234abcde.amplifyapp.com</code>. Pushes to that branch trigger preview deploys; the main branch is unaffected.</p>
+          <p>For PR-based previews: <strong>App settings</strong> → <strong>Previews</strong> → enable. Amplify watches the connected GitHub/GitLab repo for open pull requests and creates ephemeral preview URLs per PR. Useful for review; the URL goes away when the PR closes.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: The deploy loop after setup</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3><code>git push</code> is the deploy command</h3>
+          <p>That's it. Push to <code>main</code> → Amplify builds → deploys → invalidates the CloudFront cache → you see the new version at <code>mybrand.com</code> within a few minutes. The CLI exists (<code>amplify push</code> for the Amplify Studio side; <code>amplify pull</code> for syncing config) but for hosting alone you'll rarely use it.</p>
+          <p>Build logs are at App → branch → build number. Failed builds send an email by default; configure Slack / Discord via <strong>App settings</strong> → <strong>Notifications</strong> if you want richer alerting.</p>
+        </div>
+      </div>
+
+      <h2>When Amplify Hosting isn't the right call</h2>
+      <p><strong>You don't already use AWS.</strong> Vercel and Netlify have a noticeably better UX, faster build cold-starts (Amplify's CodeBuild containers warm slowly), and friendlier free tiers. The only reason Amplify wins is AWS-account integration — without that, the trade-off doesn't pay.</p>
+      <p><strong>Your project has unusual build steps that Amplify's CodeBuild image doesn't support well.</strong> The CodeBuild Linux image is general-purpose but not exhaustive. If your build needs system-level dependencies, custom <code>apt-get</code> packages, or specific Node versions Amplify hasn't updated to, you'll spend time fighting the image. <a href="/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">Manual S3 + CloudFront</a> with your own CI gives you full control over the build environment.</p>
+      <p><strong>Sub-$1/month static sites.</strong> Amplify Hosting starts billing at the first build minute — typically 1¢/build-minute, plus CDN data transfer and serve-request costs. A static site with infrequent deploys is cheaper on raw S3 + CloudFront because you skip the build-minute charge. The line is around 50 deploys/month or so; below that, manual S3 is cheaper.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html" class="tutorial-next-card">
+            <h3>Deploy a static site to S3 + CloudFront</h3>
+            <p>The manual version of this — more control, less build automation</p>
+          </a>
+          <a href="/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>Run a Node API on Lightsail</h3>
+            <p>The simplest path to a real backend for the site you just deployed</p>
+          </a>
+          <a href="/tutorials/use-route-53-for-your-domain.html" class="tutorial-next-card">
+            <h3>Use Route 53 for your domain</h3>
+            <p>Makes Step 5's custom-domain flow auto-validate</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

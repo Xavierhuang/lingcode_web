@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I write a custom skill for LingCode? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="A skill is a markdown file that teaches the agent a small reusable habit. Write one for your team's style, your repo's conventions, your one weird trick.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/write-a-custom-skill.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/write-a-custom-skill.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/write-a-custom-skill.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/write-a-custom-skill.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Write a custom skill",
+  "description": "A skill is the smallest, lowest-ceremony way to teach the agent something. Drop a single markdown file in .claude/skills/ , name it, write instructions in plain English. The agent picks it up next turn and remembers your way of doing things forever.",
+  "url": "https://lingcode.dev/tutorials/write-a-custom-skill.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/write-a-custom-skill.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Write a custom skill"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Write a custom skill",
+      "item": "https://lingcode.dev/tutorials/write-a-custom-skill.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/write-a-custom-skill.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Write a custom skill</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I write a custom skill for LingCode?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Create a markdown file in <code>.claude/skills/&lt;your-skill&gt;/SKILL.md</code> with YAML frontmatter (<code>name</code>, <code>description</code>) and the instructions below. The agent auto-discovers it and invokes it when a matching task comes up.</p>
+      <p class="intro">A skill is the smallest, lowest-ceremony way to teach the agent something. Drop a single markdown file in <code>.claude/skills/</code>, name it, write instructions in plain English. The agent picks it up next turn and remembers your way of doing things forever.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Every codebase has unwritten rules. Names go like this, errors get handled like that, this kind of file always needs this extra step. New contributors spend their first few weeks bumping into these conventions; the agent — at every fresh chat — does the same. The cost of re-explaining "we use snake_case for table names, not camelCase" five times a day is not zero, and the embarrassing failure mode is when the agent gets it wrong four times in a row because no one wrote it down.</p>
+      <p>The instinct to put these rules in <code>CLAUDE.md</code> is correct for project-wide invariants. But many habits aren't project-wide. They're situational: "when you're writing a test, do it like this." "When you're about to push, run this first." "When the user says 'ship it,' don't just deploy — also tag the release first." A 200-line <code>CLAUDE.md</code> full of "in this specific situation, do this specific thing" is hard for any reader (model or human) to use. The agent ends up loading everything every turn.</p>
+      <p>A skill is the smaller-grained alternative: one markdown file per situation, loaded only when relevant. The format is dead simple — frontmatter with a name and description, prose body with the instructions, optional supporting files alongside. The agent reads the description to decide whether the skill applies; if it does, it loads the body. Multiple skills coexist without fighting; you can write one in two minutes and forget about it for months until the situation comes up again.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The skill file format: <code>SKILL.md</code> with frontmatter</li>
+        <li>How the agent decides when to load a skill</li>
+        <li>Where to put project-local skills vs. user-wide ones</li>
+        <li>How to invoke a skill manually with a slash command</li>
+        <li>When to suppress model auto-invocation with <code>disable-model-invocation</code></li>
+      </ul>
+
+      <h2>Step 1: The file layout</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>One folder, one file, one optional helper</h3>
+          <p>Create a folder under <code>.claude/skills/</code> named after your skill. Inside, put <code>SKILL.md</code>:</p>
+          <pre><code>.claude/
+└── skills/
+    └── tdd/
+        ├── SKILL.md         ← required
+        └── examples.md      ← optional; supporting material</code></pre>
+          <p>That's the whole structure. The folder name is the skill name. <code>SKILL.md</code> is the required entry point. Anything else next to it is fair game for the skill body to reference.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Write the frontmatter</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Name + description matter most</h3>
+          <p>Open <code>SKILL.md</code> and start with YAML frontmatter:</p>
+          <pre><code>---
+name: tdd
+description: Use this when the user asks for a test, when adding a new function, or when fixing a bug — write the test FIRST, then implement.
+---
+
+# Body goes here
+
+When working in TDD mode:
+1. Read the existing tests in the same module.
+2. Write a failing test for the new behavior.
+...
+</code></pre>
+          <p>The <strong>description</strong> is the single most important field. The agent reads descriptions of all available skills and decides which ones to load based on what the user said. A vague description ("helps with tests") gets ignored; a specific one ("when the user asks for a test or to fix a bug, write the test first") gets matched.</p>
+          <p>Write descriptions in the form "<em>Use this when [trigger]</em>" or "<em>For [situation], do [thing]</em>." The phrasing carries more weight than you'd expect.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Write the body</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Imperative, concrete, short</h3>
+          <p>The body of <code>SKILL.md</code> is the actual instruction set. Aim for under 200 lines. Use imperative voice ("write the test before the implementation"), concrete examples, and explicit "do this, not that" pairs where the wrong answer is tempting.</p>
+          <p>You can refer to other files in the skill folder via relative path. The agent reads them when the skill is loaded. Good use of helper files: a long code example, a checklist, a reference table.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Smell test:</strong> if a future-you opened the skill and read it cold, would you know when to use it and what to do? If yes, the skill is good. If the description leaves you guessing, rewrite it.
+      </div>
+
+      <h2>Step 4: Project-local vs. user-wide</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Pick the scope that matches the rule</h3>
+          <p>Two places to drop the skill folder:</p>
+          <ul>
+            <li><strong>Project-local:</strong> <code>.claude/skills/&lt;name&gt;/</code> inside the project root or any ancestor. Right for codebase conventions ("in this repo we use snake_case table names").</li>
+            <li><strong>User-wide:</strong> <code>~/.claude/skills/&lt;name&gt;/</code>. Right for personal habits across all projects ("always run my lint check before suggesting a commit").</li>
+          </ul>
+          <p>Project-local skills keep their bare name. User-wide skills bundled inside a <a href="/tutorials/install-and-configure-plugins.html">plugin</a> get namespaced as <code>&lt;plugin&gt;:&lt;skill&gt;</code> — two plugins can each ship a <code>tdd</code> skill without colliding. A project-local <code>tdd</code> shadows any plugin's <code>tdd</code>.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Manual invocation</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Slash commands and direct asks</h3>
+          <p>Skills aren't only model-invoked. Two ways to trigger one manually:</p>
+          <ul>
+            <li><strong>Slash command:</strong> in the chat panel, type <code>/&lt;skill-name&gt;</code> (or <code>/&lt;plugin&gt;:&lt;skill&gt;</code> for namespaced ones) and the skill loads immediately. Useful when the agent's auto-match didn't trigger.</li>
+            <li><strong>Mention it:</strong> "use the tdd skill" in your prompt biases the agent strongly toward loading it. Less precise but more conversational.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 6: When you want the skill available to humans but not the model</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>The <code>disable-model-invocation</code> escape hatch</h3>
+          <p>Some skills are powerful enough that you don't want the model picking the moment to use them — destructive ones, expensive ones, third-party-API ones. Add this to the frontmatter:</p>
+          <pre><code>---
+name: deploy-to-prod
+description: Build, sign, and deploy to production.
+disable-model-invocation: true
+---</code></pre>
+          <p>The model now never sees this skill in its system prompt — it can't auto-invoke. But the slash menu still shows it, so a human can run it deliberately. This is the right setting for "I want this on hand but I want to be the one who decides when."</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Skills aren't tools.</strong> A skill teaches the agent <em>how</em> to do something using existing tools. It doesn't add new capabilities — for that, see <a href="/tutorials/connect-an-mcp-server.html">Connect an MCP server</a>. If you find yourself writing "and then call this REST API," that's an MCP server, not a skill.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>Install and configure plugins</h3>
+            <p>How to bundle a set of skills for distribution to a team</p>
+          </a>
+          <a href="/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>Connect an MCP server</h3>
+            <p>When the skill needs new capabilities, not just new instructions</p>
+          </a>
+          <a href="/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>Permission modes</h3>
+            <p>Skills run under the same consent system; pick the right mode</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

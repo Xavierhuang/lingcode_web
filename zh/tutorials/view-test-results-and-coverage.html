@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>查看测试结果与覆盖率 — LingCode 教程</title>
+  <meta name="description" content="测试结果标签把一次测试运行变成可筛选的通过/失败列表,其中失败的堆栈帧是直达准确源代码行的可点击链接——外加一个覆盖率开关,叠加显示你的测试实际跑到了哪些行。这里教你如何读懂它。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/view-test-results-and-coverage.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/view-test-results-and-coverage.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/view-test-results-and-coverage.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605171400">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-16T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-16T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/view-test-results-and-coverage.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "查看测试结果与覆盖率",
+  "description": "测试结果标签把一次测试运行变成可筛选的通过/失败列表,其中失败的堆栈帧是直达源代码行的可点击链接,外加一个覆盖率开关叠加显示测试跑到了哪些行。",
+  "url": "https://lingcode.dev/zh/tutorials/view-test-results-and-coverage.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-16",
+  "dateModified": "2026-06-16",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/view-test-results-and-coverage.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "查看测试结果与覆盖率"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "查看测试结果与覆盖率",
+      "item": "https://lingcode.dev/zh/tutorials/view-test-results-and-coverage.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a></li>
+    <li><a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/view-test-results-and-coverage.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>查看测试结果与覆盖率</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-06-16</span>
+      </div>
+      <h1>查看测试结果与覆盖率</h1>
+      <p class="intro">一次测试运行会产出两样你关心的东西:哪些测试失败了,以及在哪里。一堵终端输出的墙给了你第一样,却逼你去翻找第二样。LingCode 的<strong>测试结果</strong>标签把两样一并给你——一个可筛选的通过/失败列表,其中每个失败的堆栈帧都是直达源代码行的<em>可点击链接</em>,外加一个覆盖率开关,显示你的测试实际跑到了哪些行。本文教你如何读懂它。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>在底部面板里找到 <strong>测试结果</strong>(印章带对勾的图标)。如果你想先了解全貌,<a href="/zh/tutorials/the-bottom-panel-explained.html">底部面板总览</a>会把它放在其他八个标签之中一起讲。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>一次测试运行如何填充这个标签</li>
+        <li>按状态筛选结果并显示实时计数</li>
+        <li>从失败信息直接跳到出错的那一行</li>
+        <li>打开覆盖率叠加</li>
+      </ul>
+
+      <h2>第 1 步:运行测试来填充它</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>首次运行前是空的</h3>
+          <p>在你运行任何东西之前,这个标签显示一个占位提示:"<em>No test results yet</em>",并附带提示 "<em>Run tests from the Test Explorer</em>"。从测试浏览器(Test Explorer)发起一次运行,随着结果陆续返回,标签会填充成每个测试一行。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步:按状态筛选</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>全部 · 通过 · 失败 · 跳过</h3>
+          <p>顶部是一个筛选栏,有四个按钮——<strong>All</strong>、<strong>Passed</strong>、<strong>Failed</strong>、<strong>Skipped</strong>——每个都显示实时计数(通过为绿、失败为红、跳过为橙)。被选中的筛选项以更粗的字重显示,再次点击它会取消。右侧有一行汇总重申总数(例如 "<em>5 passed, 2 failed</em>")。当一次运行变红时,点一下 <strong>Failed</strong>,你就一键隐藏了所有通过的测试。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步:读懂一行结果</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>状态、名称、耗时——以及失败信息</h3>
+          <p>每一行带有一个<strong>状态图标</strong>(通过为对勾、失败为 ✕、跳过为短横),等宽显示的<strong>测试名称</strong>,以及右侧以毫秒计的<strong>耗时</strong>。通过的测试就只有这三样。失败的测试会在下方补上它的<strong>失败信息</strong>——爆掉的那个断言和堆栈追踪。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步:跳到出错的那一行</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>可点击的堆栈帧</h3>
+          <p>这是最省时间的部分。在失败信息里,任何指向你工作区文件的堆栈帧——形如 <code>/path/to/MyTests.swift:42:15</code>——都会渲染成<strong>蓝色带下划线的链接</strong>。点击它,编辑器就跳到那个确切的文件、行和列。行的右侧还有一个<strong>跳转箭头</strong>,一键带你到第一个可解析的帧。</p>
+          <p>那些无法解析到工作区文件的帧(例如系统框架内部)保持为灰色纯文本,并带有 "<em>File not found in workspace</em>" 的提示,所以你永远不会被引去追一条不属于你的路径。在底层,这个跳转复用了调试器用的同一套源代码定位机制,因此能把你精准带到执行失败的地方。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>自上而下读失败信息。</strong> 一个失败里第一个可点击的帧几乎总是你的测试代码(那个断言)。它下面的帧是进入被测代码的调用链。先点第一个帧看看你断言了什么,然后顺着帧往下走,跟踪执行是怎么走到那里的。
+      </div>
+
+      <h2>第 5 步:打开覆盖率</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>覆盖率开关</h3>
+          <p>筛选栏的右侧有一个<strong>代码覆盖率</strong>按钮——一个眼睛图标,在"显示"(强调色、睁眼)和"隐藏"(划掉的眼睛)之间切换。打开它,标签就会呈现上一次运行的覆盖率汇总,叠加显示你的测试实际执行了哪些行。用它来回答绿色对勾回答不了的问题:<em>我的测试真的跑到了我以为它跑到的代码吗?</em> 一个测试可以通过,却从未触及你本想覆盖的那个分支。</p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/the-bottom-panel-explained.html" class="tutorial-next-card">
+            <h3>看懂底部面板</h3>
+            <p>测试结果在哪里,以及它与"输出"和"调试控制台"有何不同</p>
+          </a>
+          <a href="/zh/tutorials/test-apis-with-the-rest-client.html" class="tutorial-next-card">
+            <h3>用 REST 客户端测试 API</h3>
+            <p>在写下固定它的测试之前,先手动调一调接口</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发工具。为想要快速发布的创始人和追求真实工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

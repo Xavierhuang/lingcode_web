@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control Claude Code from Your Phone - LingCode</title>
+  <meta name="description" content="Control Claude Code from your iPad or phone. LingCode iPad has built-in Remote Control (Termius-style host list). Or use Termius/SSH + tmux.">
+  <link rel="canonical" href="https://lingcode.dev/remote-control.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/remote-control.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/remote-control.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/remote-control.html">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/remote-control.html">
+  <meta property="og:title" content="Control Claude Code from Your Phone — LingCode">
+  <meta property="og:description" content="Control Claude Code from iPad or phone via SSH + tmux or LingCode's built-in Remote Control.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Control Claude Code from Your Phone">
+  <meta name="twitter:description" content="SSH + tmux or built-in Remote Control. Run Claude Code on your Mac, control it from iPad.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .page-hero { padding: 140px 32px 60px; text-align: center; }
+    .page-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .page-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .page-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .page-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .page-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .page-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .page-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .page-content ul, .page-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .page-content li { margin-bottom: 8px; }
+    .page-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .step-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin: 20px 0; }
+    .step-card h4 { margin: 0 0 12px; font-size: 1rem; color: var(--text); }
+    .step-card pre { background: var(--bg); padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; margin: 12px 0; }
+    .step-card p { margin: 0 0 8px; }
+    .step-card p:last-child { margin-bottom: 0; }
+    .page-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .page-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .page-cta a:hover { text-decoration: underline; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="page-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Remote Access</p>
+        <h1>Control Claude Code from Your iPad or Phone</h1>
+        <p>LingCode iPad has built-in Remote Control (host list, tap to connect). Or SSH into your Mac with Termius and attach via tmux. Make quick changes when you're away from your desk.</p>
+      </div>
+    </section>
+
+    <article class="page-content">
+      <h2>Overview</h2>
+      <p>LingCode runs Claude Code inside tmux when available. That lets you SSH into your Mac from your iPad or phone and attach to the same session. You see the same terminal, type prompts, and control Claude Code remotely.</p>
+      <p><strong>iPad users:</strong> LingCode has built-in Remote Control with a Termius-style host list. Add your Mac, save it, tap to connect. No separate SSH app needed.</p>
+
+      <h2>Prerequisites</h2>
+      <p><strong>Tailscale</strong> makes your Mac reachable from your phone over the internet. Same Wi-Fi? You can skip Tailscale and use your Mac's local IP instead. <strong>SSH client:</strong> Use LingCode iPad's built-in Remote Control, or Termius / Blink / JuiceSSH.</p>
+      <ul>
+        <li>LingCode with a Claude Code tab open</li>
+        <li>tmux installed on your Mac: <code>brew install tmux</code></li>
+        <li>Tailscale on Mac and phone (same account) — or same Wi-Fi + local IP</li>
+        <li>Remote Login (SSH) enabled on your Mac</li>
+        <li>LingCode iPad app (built-in Remote Control) or SSH client (Termius, Blink, JuiceSSH)</li>
+      </ul>
+
+      <h2>Step 1: Install Tailscale on your Mac</h2>
+      <div class="step-card">
+        <h4>Download and sign in</h4>
+        <p>Get the Mac app from <a href="https://tailscale.com/download/mac" rel="noopener noreferrer">tailscale.com/download/mac</a>. Open it and sign in. Verify with:</p>
+        <pre>tailscale status</pre>
+        <p>You should see your Mac listed. Get its IP:</p>
+        <pre>tailscale ip -4</pre>
+        <p>Example: <code>100.116.50.10</code></p>
+      </div>
+
+      <h2>Step 2: Install Tailscale on your phone</h2>
+      <div class="step-card">
+        <h4>Same account</h4>
+        <p>Install Tailscale from the App Store (iOS) or Play Store (Android). Sign in with the same account as your Mac. Your phone and Mac will be on the same virtual network.</p>
+      </div>
+
+      <h2>Step 3: Enable Remote Login (SSH) on your Mac</h2>
+      <div class="step-card">
+        <h4>System Settings</h4>
+        <p>Open <strong>System Settings → General → Sharing</strong>. Turn on <strong>Remote Login</strong>. Ensure your user (or "All users") is allowed.</p>
+      </div>
+
+      <h2>Step 4: Connect from your phone</h2>
+      <div class="step-card">
+        <h4>LingCode iPad (built-in)</h4>
+        <p>If you use an iPad, the <a href="https://apps.apple.com/us/app/lingcode/id6757243830" rel="noopener noreferrer">LingCode app</a> has built-in Remote Control with a Termius-style host list. No separate SSH client needed.</p>
+        <ul>
+          <li>Open LingCode on iPad, tap the menu, then <strong>Remote Control</strong></li>
+          <li>Tap <strong>Add host</strong> and enter: Host (Tailscale IP), Port (22), Username, Password</li>
+          <li>Tap a host to connect. Swipe to edit or delete saved hosts.</li>
+        </ul>
+      </div>
+      <div class="step-card">
+        <h4>Or use Termius / Blink / JuiceSSH</h4>
+        <p>Install <a href="https://apps.apple.com/app/termius-ssh-client/id1176074088" rel="noopener noreferrer">Termius</a> (iOS/Android) or another SSH client. Add a new host:</p>
+        <ul>
+          <li><strong>Host:</strong> Your Mac's Tailscale IP (e.g. <code>100.116.50.10</code>)</li>
+          <li><strong>Username:</strong> Your Mac username (e.g. <code>weijiahuang</code>)</li>
+          <li><strong>Port:</strong> 22</li>
+        </ul>
+        <p>For passwordless login, use SSH keys (see <a href="/support.html">Support</a> for key setup).</p>
+      </div>
+
+      <h2>Step 5: Install tmux and open Claude Code</h2>
+      <div class="step-card">
+        <h4>On your Mac</h4>
+        <pre>brew install tmux</pre>
+        <p>Open LingCode, then open a Claude Code tab (or create a new one). The tab header will show:</p>
+        <pre>Remote: tmux attach -t lingcode-12345678</pre>
+        <p>Note the session name (e.g. <code>lingcode-12345678</code>). If you see "Remote: brew install tmux" instead, tmux is not installed yet.</p>
+      </div>
+
+      <h2>Step 6: SSH and attach</h2>
+      <div class="step-card">
+        <h4>LingCode iPad</h4>
+        <p>Tap your saved host to connect. You get a shell. To attach to Claude Code, type <code>tmux attach -t lingcode-12345678</code> (session name from the Claude Code tab on your Mac). Detach with the <strong>Detach</strong> button or <code>Ctrl+b</code> then <code>d</code>.</p>
+      </div>
+      <div class="step-card">
+        <h4>Termius / other SSH clients</h4>
+        <p>Connect to your Mac. When prompted for the host key, tap <strong>Continue</strong>. Enter your Mac password (or use your SSH key). Once connected, run (replace with your session name from LingCode):</p>
+        <pre>tmux attach -t lingcode-12345678</pre>
+        <p>You'll see the same Claude Code session. Type prompts, run commands. Detach with <code>Ctrl+b</code> then <code>d</code> to leave it running on your Mac.</p>
+      </div>
+
+      <h2>Troubleshooting</h2>
+      <div class="step-card">
+        <h4>Tailscale: "failed to connect to local Tailscale service"</h4>
+        <p>Tailscale isn't running. Use the official Mac app from tailscale.com/download/mac instead of Homebrew. Open the app and sign in.</p>
+      </div>
+      <div class="step-card">
+        <h4>SSH: "Authentication failed (password)"</h4>
+        <p>Use your Mac's login password (not Apple ID). Or set up SSH keys: run <code>ssh-keygen -t ed25519 -f ~/.ssh/phone_key -N ""</code>, add the public key to <code>~/.ssh/authorized_keys</code>, then add the private key in Termius.</p>
+      </div>
+      <div class="step-card">
+        <h4>Remote Login: "requires Full Disk Access"</h4>
+        <p>Use System Settings → General → Sharing → Remote Login instead of the command line.</p>
+      </div>
+      <div class="step-card">
+        <h4>"no such session" when attaching</h4>
+        <p>Ensure a Claude Code tab is open in LingCode and tmux is installed. Close and reopen the Claude Code tab after installing tmux.</p>
+      </div>
+
+      <div class="page-cta">
+        <p><a href="/claude-sessions.html">Multiple Claude Code Sessions</a> | <a href="/support.html">Support</a></p>
+        <a href="/LingCode-Installer.dmg" download class="btn btn-primary">Download LingCode</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

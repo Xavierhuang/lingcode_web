@@ -1,0 +1,35 @@
+[Unit]
+Description=LingCode OAuth + admin API (Node)
+After=network.target
+
+[Service]
+Type=simple
+# Dedicated unprivileged user. Bootstrap once on the droplet:
+#   useradd --system --shell /usr/sbin/nologin --no-create-home lingcode
+#   usermod -aG adm lingcode
+#   chown -R lingcode:lingcode /opt/lingcode-api
+#   chmod 640 /opt/lingcode-api/.env
+User=lingcode
+Group=lingcode
+# `adm` group so the install-stats endpoint can read /var/log/nginx/access.log*.
+SupplementaryGroups=adm
+WorkingDirectory=/opt/lingcode-api
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/env node /opt/lingcode-api/index.js
+Restart=on-failure
+RestartSec=5
+
+# Hardening — keep an RCE in Node from becoming a droplet compromise.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/lingcode-api
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target

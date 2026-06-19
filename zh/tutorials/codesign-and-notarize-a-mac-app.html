@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>为 App Store 以外的渠道分发 Mac 应用：代码签名与公证</title>
+  <meta name="description" content="归档、代码签名、公证并装订 Mac 应用以实现直接分发——包括 macOS 26.2+ 中破坏 /Volumes 写入的 TCC 陷阱、errSecInternalComponent 完全磁盘访问陷阱，以及 DerivedData 被清除后 Sparkle sign_update 的恢复方法。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/codesign-and-notarize-a-mac-app.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/codesign-and-notarize-a-mac-app.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/codesign-and-notarize-a-mac-app.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/codesign-and-notarize-a-mac-app.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "为 App Store 以外的渠道分发 Mac 应用：代码签名与公证",
+  "description": "将 .app 直接分发给用户（绕过 App Store）意味着需要归档、代码签名、公证、装订和打包。流程本身并不复杂，但陷阱不少。",
+  "url": "https://lingcode.dev/zh/tutorials/codesign-and-notarize-a-mac-app.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/codesign-and-notarize-a-mac-app.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "为 App Store 以外的渠道分发 Mac 应用：代码签名与公证"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Mac 应用代码签名与公证",
+      "item": "https://lingcode.dev/zh/tutorials/codesign-and-notarize-a-mac-app.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/codesign-and-notarize-a-mac-app.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">发布与基础设施</a>
+      <span>/</span>
+      <span>Mac 应用代码签名与公证</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>为 App Store 以外的渠道分发 Mac 应用：代码签名与公证</h1>
+      <p class="intro">将 <code>.app</code> 直接分发给用户（绕过 App Store）意味着需要：归档、代码签名、公证、装订和打包。流程本身并不复杂，但陷阱不少。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么需要这篇教程</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>Apple 的公证文档只涵盖了顺利的情况，却没有说明实际最容易出错的三件事：</p>
+          <ul>
+            <li><strong>macOS 26.2+ 悄然撤销了未沙盒化进程对 <code>/Volumes</code> 的写入权限（需要完全磁盘访问）。</strong>所有将镜像挂载到 <code>/Volumes/MyApp/</code> 并尝试复制文件的 DMG 工具现在都会失败。错误表现为构建中途报告 <em>"internal error in Code Signing subsystem"</em>——没有任何关于 TCC 或磁盘的提示。你可能会花整整一个小时追查签名身份，最终才发现真正的原因。</li>
+            <li><strong><code>codesign</code> 报 <code>errSecInternalComponent</code> 意味着宿主进程无法读取 Keychain。</strong>不是证书损坏，不是私钥缺失——而是运行 <code>codesign</code> 的终端（或 LingCode 等工具）缺少完全磁盘访问权限。这个错误信息与其他至少六种故障模式完全相同，因此诊断起来并不直观。</li>
+            <li><strong>Sparkle 的 <code>sign_update</code> 工具在 DerivedData 被清除后就消失了。</strong>Xcode 会在下次归档时重新构建它，但如果你的发布脚本在重建之前运行，就会因为找不到二进制文件而失败。解决方法不是等待重建——而是直接从匹配版本的 Sparkle GitHub Release 下载预构建的 <code>sign_update</code>。</li>
+          </ul>
+          <p>LingCode 可以端到端地运行整个流程。以下步骤展示了它的工作方式，以及如何在每个故障出现时立刻识别它。</p>
+        </div>
+      </div>
+
+      <h2>LingCode 发布前的准备工作</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>有效的 Apple Developer Program 会员资格。</strong>免费 Apple ID 不够——公证需要付费账户。</li>
+            <li><strong>登录 Keychain 中的"Developer ID Application"证书。</strong>从 <code>developer.apple.com</code> &gt; 证书处申请。它有别于"Apple Development"（用于 Xcode 调试构建）和"Apple Distribution"（App Store）。</li>
+            <li><strong>用于 notarytool 的专用应用密码。</strong>在 <code>appleid.apple.com</code> &gt; 登录与安全 &gt; 专用应用密码处生成。请勿直接使用你的 Apple ID 密码。</li>
+            <li><strong>你的 Team ID。</strong>十位字符，可在 <code>developer.apple.com/account</code> 中查看。notarytool 需要明确指定它。</li>
+            <li><strong>与应用实际功能匹配的 entitlements 文件。</strong>公证强制要求启用 Hardened Runtime。沙盒化对于直接分发是可选的，但若将来上架 App Store 则为必须。</li>
+          </ul>
+          <p>将 notarytool 凭据一次性存入 Keychain，避免每次发布时都要粘贴密钥：</p>
+          <pre><code>xcrun notarytool store-credentials "AC_PASSWORD" \
+  --apple-id "you@example.com" \
+  --team-id "ABCDE12345" \
+  --password "xxxx-xxxx-xxxx-xxxx"</code></pre>
+          <p>此后所有 <code>notarytool</code> 命令都通过 <code>--keychain-profile "AC_PASSWORD"</code> 引用凭据，永远不用明文密码。</p>
+        </div>
+      </div>
+
+      <h2>第一阶段 — 归档</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>让 LingCode 从命令行归档你的应用。归档产物是一个包含调试符号的自包含构建结果——和 Xcode Organizer 产生的一致，只是脚本化了：</p>
+          <pre><code>xcodebuild archive \
+  -project MyApp.xcodeproj \
+  -scheme MyApp \
+  -configuration Release \
+  -archivePath build/MyApp.xcarchive \
+  -destination "generic/platform=macOS" \
+  CODE_SIGN_STYLE=Manual \
+  DEVELOPMENT_TEAM=ABCDE12345 \
+  CODE_SIGN_IDENTITY="Developer ID Application: Your Name (ABCDE12345)"</code></pre>
+          <p>这里刻意选择手动签名——在非交互式脚本中使用自动签名是最容易在 CI 环境中出问题的地方，也是最容易触发令人困惑的 Keychain 提示的根源。固定身份和 Team ID 可以让构建过程可复现。</p>
+          <div class="tip-box">
+            <strong>如果此步骤失败并提示 <em>"No signing certificate"</em>：</strong>说明你的 Developer ID Application 证书不在登录 Keychain 中，或已过期。<code>security find-identity -v -p codesigning</code> 可列出所有可用证书；如果证书缺失，请从 <code>developer.apple.com</code> 重新下载。
+          </div>
+        </div>
+      </div>
+
+      <h2>第二阶段 — 导出</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>将归档文件导出为普通的 <code>.app</code> Bundle。这一步中导出选项 plist 至关重要——直接分发使用 <code>developer-id</code>，App Store 使用 <code>app-store</code>：</p>
+          <pre><code># ExportOptions.plist
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+  &lt;key&gt;method&lt;/key&gt;
+  &lt;string&gt;developer-id&lt;/string&gt;
+  &lt;key&gt;teamID&lt;/key&gt;
+  &lt;string&gt;ABCDE12345&lt;/string&gt;
+  &lt;key&gt;signingStyle&lt;/key&gt;
+  &lt;string&gt;manual&lt;/string&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;
+
+xcodebuild -exportArchive \
+  -archivePath build/MyApp.xcarchive \
+  -exportPath build/export \
+  -exportOptionsPlist ExportOptions.plist</code></pre>
+          <p>完成后，<code>build/export/MyApp.app</code> 已存在，并且 Xcode 的导出步骤已对其签名。下一阶段会对 Xcode 未签名的部分进行补充签名——嵌入的辅助程序、框架和捆绑的二进制文件。</p>
+        </div>
+      </div>
+
+      <h2>第三阶段 — 代码签名（以及完全磁盘访问陷阱）</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>如果你的应用捆绑了辅助二进制文件（CLI、Node 运行时、Sparkle 更新器、Python 解释器），必须在签名外层 Bundle 之前逐一签名这些文件。顺序很重要——由内而外地签名：</p>
+          <pre><code># Sign each embedded binary first
+codesign --force --options runtime --timestamp \
+  --sign "Developer ID Application: Your Name (ABCDE12345)" \
+  --entitlements MyApp.entitlements \
+  "build/export/MyApp.app/Contents/Resources/bin/node"
+
+codesign --force --options runtime --timestamp \
+  --sign "Developer ID Application: Your Name (ABCDE12345)" \
+  --entitlements MyApp.entitlements \
+  "build/export/MyApp.app/Contents/Resources/bin/mycli"
+
+# Then re-sign the outer app bundle
+codesign --force --options runtime --timestamp --deep \
+  --sign "Developer ID Application: Your Name (ABCDE12345)" \
+  --entitlements MyApp.entitlements \
+  "build/export/MyApp.app"
+
+# Verify
+codesign --verify --deep --strict --verbose=2 "build/export/MyApp.app"
+spctl --assess --type execute --verbose "build/export/MyApp.app"</code></pre>
+          <p><code>--options runtime</code> 用于启用 Hardened Runtime，缺少它公证会被拒绝。<code>--timestamp</code> 会附加来自 Apple 服务器的安全时间戳——同样为必须项。</p>
+          <div class="warn-box">
+            <strong><code>errSecInternalComponent</code> 陷阱。</strong>如果 <code>codesign</code> 失败并提示 <em>"errSecInternalComponent"</em>，说明你的终端（或运行 codesign 的进程）缺少完全磁盘访问权限。macOS 会阻止没有此权限的进程读取 Keychain 中的私钥材料。解决方法：系统设置 &gt; 隐私与安全性 &gt; 完全磁盘访问 &gt; 添加 Terminal.app（或你实际使用的宿主进程）。重新启动终端会话后再重试。这也是从其他沙盒化宿主中运行发布脚本时可能莫名失败的原因——请从真正的 Terminal.app 窗口运行。
+          </div>
+        </div>
+      </div>
+
+      <h2>第四阶段 — 公证并等待</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>公证在 Apple 服务端运行。你需要将已签名的应用压缩后上传，然后等待。<code>--wait</code> 标志会阻塞直到结果返回——通常需要 1–5 分钟，有时超过 30 分钟：</p>
+          <pre><code># Zip the signed app
+ditto -c -k --keepParent "build/export/MyApp.app" "build/MyApp.zip"
+
+# Submit and block until done
+xcrun notarytool submit "build/MyApp.zip" \
+  --keychain-profile "AC_PASSWORD" \
+  --wait</code></pre>
+          <p>成功时输出会包含 <code>status: Accepted</code> 和一个 UUID。如果显示 <code>Invalid</code>，请拉取日志：</p>
+          <pre><code>xcrun notarytool log &lt;submission-uuid&gt; \
+  --keychain-profile "AC_PASSWORD" \
+  notarization-log.json</code></pre>
+          <p>JSON 日志会精确指出哪个二进制文件失败以及原因。常见原因：嵌入的辅助程序未签名（重新执行第三阶段）、缺少 Hardened Runtime 标志、缺少安全时间戳，或第三方框架使用了私有 API。</p>
+          <div class="tip-box">
+            <strong>在状态变为 Accepted 之前不要进行装订。</strong>"软接受"并不存在——构建要么已公证，要么未公证。
+          </div>
+        </div>
+      </div>
+
+      <h2>第五阶段 — 装订</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>装订（Staple）会将公证票据附加到应用 Bundle 上，使 Gatekeeper 能够离线验证（用户 Mac 上的首次启动无需网络）：</p>
+          <pre><code>xcrun stapler staple "build/export/MyApp.app"
+xcrun stapler validate "build/export/MyApp.app"</code></pre>
+          <p>Bundle 现在已可以分发。你可以将 <code>.app</code> 直接交给用户，但为了更好的安装体验，通常还需要将其打包进 DMG。</p>
+        </div>
+      </div>
+
+      <h2>构建 DMG——以及 /Volumes 陷阱</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>传统 DMG 方案：用 <code>hdiutil create</code> 创建可读写镜像，挂载到 <code>/Volumes/MyApp/</code>，将应用复制进去，设置卷图标，卸载，再转换为压缩只读格式。这在 macOS 14 及更早版本上可以正常工作。</p>
+          <p>在 macOS 26.2+ 上，未沙盒化的脚本在没有完全磁盘访问权限的情况下挂载到 <code>/Volumes/</code> 会静默失败，或在流程中途返回看似签名错误的提示。解决方法是改为挂载到 <code>/private/tmp/</code>——TCC 不会拦截该路径：</p>
+          <pre><code># Stage layout in a writable scratch dir
+STAGING="$(mktemp -d)/MyApp-staging"
+mkdir -p "$STAGING"
+cp -R "build/export/MyApp.app" "$STAGING/"
+ln -s /Applications "$STAGING/Applications"
+
+# Build the DMG via /private/tmp, not /Volumes
+hdiutil create -volname "MyApp" \
+  -srcfolder "$STAGING" \
+  -ov -format UDZO \
+  "build/MyApp.dmg"
+
+# Sign the DMG itself
+codesign --force --timestamp \
+  --sign "Developer ID Application: Your Name (ABCDE12345)" \
+  "build/MyApp.dmg"
+
+# Notarize and staple the DMG (separately from the app)
+xcrun notarytool submit "build/MyApp.dmg" \
+  --keychain-profile "AC_PASSWORD" --wait
+xcrun stapler staple "build/MyApp.dmg"</code></pre>
+          <p>DMG 需要单独完成一次公证。Apple 将磁盘镜像视为独立的可分发产物，如果 DMG 本身未经公证，Gatekeeper 会阻止用户下载后挂载。</p>
+          <div class="warn-box">
+            <strong>如果 <code>hdiutil create</code> 在 macOS 26.2+ 上报 <em>"Resource busy"</em> 或 <em>"hdiutil: create failed"</em>：</strong>这是 TCC 对 <code>/Volumes</code> 的拦截。要么为你的终端授予完全磁盘访问权限，要么（更推荐）将暂存路径保持在 <code>/private/tmp/</code> 内，永远不直接操作 <code>/Volumes/</code>。
+          </div>
+        </div>
+      </div>
+
+      <h2>Sparkle sign_update 恢复</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>如果你的应用使用 Sparkle 实现自动更新，发布脚本需要用 EdDSA 密钥为每个 DMG 签名，并将签名追加到 appcast 中。该工具就是 <code>sign_update</code>，从 Sparkle 源码构建而来：</p>
+          <pre><code>sign_update build/MyApp.dmg
+# Outputs: sparkle:edSignature="…" length="…"</code></pre>
+          <p>陷阱在于：<code>sign_update</code> 存放在 DerivedData 中（Xcode 按需从 Sparkle Swift 包构建它）。任何 <code>rm -rf ~/Library/Developer/Xcode/DerivedData</code> 操作都会把它清除。发布脚本随后会因找不到二进制文件而失败，而显而易见的解法——"重建项目"——每次都要花 10 分钟以上，因为 Xcode 需要重新解析所有包依赖。</p>
+          <p>更快的解法：从匹配版本的 Sparkle GitHub Release 下载预构建的 <code>sign_update</code>。Sparkle 在 <code>https://github.com/sparkle-project/Sparkle/releases/</code> 提供了包含 <code>bin/sign_update</code> 的压缩包——只需将其提交到仓库，或在发布脚本中下载：</p>
+          <pre><code># In your release script, before signing
+if ! command -v sign_update &gt;/dev/null; then
+  SPARKLE_VERSION="2.6.4"   # whatever matches your project
+  curl -fsSL "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" \
+    | tar -xJ -C /tmp/sparkle
+  export PATH="/tmp/sparkle/bin:$PATH"
+fi
+sign_update build/MyApp.dmg</code></pre>
+          <p>这样可以将发布流程与 Xcode 的 DerivedData 状态解耦。在一台全新机器上从零 checkout，分钟级别即可完成发布，而不必等待 Xcode 重新构建。</p>
+        </div>
+      </div>
+
+      <h2>诊断清单</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>当流程中途出现问题时，请按以下顺序逐项排查——越靠前的检查越快：</p>
+          <ul>
+            <li><strong><code>security find-identity -v -p codesigning</code></strong>——Developer ID Application 证书是否存在且未过期？如果没有，整个流程无法启动。</li>
+            <li><strong><code>codesign --verify --deep --strict --verbose=2 MyApp.app</code></strong>——Bundle 内部是否一致？嵌入的辅助程序签名与外层 Bundle 的不匹配会在这里暴露。</li>
+            <li><strong><code>spctl --assess --type execute --verbose MyApp.app</code></strong>——Gatekeeper 此刻是否会接受这个 Bundle？公证前显示"rejected"；装订后应显示"accepted source=Notarized Developer ID"。</li>
+            <li><strong><code>xcrun notarytool log &lt;uuid&gt; …</code></strong>——这是 Apple 对任何公证拒绝的权威说明。不要猜测，直接拉日志。</li>
+            <li><strong><code>stapler validate MyApp.app</code></strong>——公证票据是否已附加？如果跳过装订，用户在没有网络的情况下首次启动会被静默拦截。</li>
+            <li><strong>系统设置 &gt; 隐私与安全性 &gt; 完全磁盘访问</strong>——宿主进程是否已列入？<code>errSecInternalComponent</code> 和 <code>/Volumes</code> 写入失败都源于缺少完全磁盘访问权限。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>将此技能放入 LingCode 的技能文件夹，然后告诉 LingCode "对这个 Mac 应用进行代码签名和公证"，它就会运行完整的流程：</p>
+          <pre><code>---
+name: mac-codesign-and-notarize
+description: Use when shipping a macOS app outside the App Store — codesign, notarize, staple, DMG creation, and Sparkle EdDSA signing. Triggers: 'codesign fails', 'notarization rejected', 'errSecInternalComponent', 'internal error in Code Signing subsystem', 'sign_update not found', 'DMG mount fails', /Volumes write blocked, Sparkle EdDSA issue, hardened runtime error. Actions: archive, export with developer-id method, codesign with --options runtime + --timestamp, notarytool submit --wait, stapler staple, hdiutil create DMG, sign Sparkle update. Errors: errSecInternalComponent (FDA missing), macOS 26.2+ TCC /Volumes trap, missing sign_update after DerivedData clean. Skip if: App Store submission (use ios-signing-and-app-store) or simulator builds.
+---
+
+Codesign, notarize, and staple a Mac app for direct distribution.
+
+Phase 1 — Archive: xcodebuild archive with manual signing,
+Developer ID Application identity pinned.
+
+Phase 2 — Export: xcodebuild -exportArchive with developer-id
+method in ExportOptions.plist.
+
+Phase 3 — Codesign: sign embedded helpers inside-out before the
+outer bundle. --options runtime + --timestamp required. If
+codesign reports errSecInternalComponent, the host process is
+missing Full Disk Access — fix in System Settings first.
+
+Phase 4 — Notarize: ditto into a zip, notarytool submit --wait
+with --keychain-profile. On Invalid, pull notarytool log for the
+exact rejected binary.
+
+Phase 5 — Staple: stapler staple, then stapler validate.
+
+DMG step: stage inside /private/tmp (NOT /Volumes — macOS 26.2+
+TCC blocks /Volumes writes without FDA). hdiutil create -format
+UDZO, codesign the DMG, notarize and staple separately.
+
+Sparkle sign_update: if missing after DerivedData clean, fetch
+the prebuilt binary from the matching Sparkle GitHub release
+rather than waiting for an Xcode rebuild.
+
+Diagnostic order: security find-identity → codesign --verify →
+spctl --assess → notarytool log → stapler validate → FDA check.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/mac-codesign-and-notarize/SKILL.md</code>——参阅<a href="/zh/tutorials/install-a-skill.html">安装技能</a>了解确切位置以及技能的发现机制。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/first-time-ios-app-store-submission.html" class="tutorial-next-card">
+            <h3>首次 App Store 提交</h3>
+            <p>iOS 分发使用不同的签名模型——在首次提交前完整了解整个流程</p>
+          </a>
+          <a href="/zh/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>用 LingCode 上传到 TestFlight</h3>
+            <p>同属 notarytool 体系，但产物不同——脚本化上传到 TestFlight</p>
+          </a>
+          <a href="/zh/tutorials/fix-ios-signing-errors.html" class="tutorial-next-card">
+            <h3>修复常见 iOS 签名错误</h3>
+            <p>"No account for team"、功能同步、自动 vs 手动——iOS 端的对应问题</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug systematically with LingCode</title>
+  <meta name="description" content="Most debugging is pattern-matching against guesses, then trying the guesses. Use LingCode to debug systematically — reproduce, isolate, hypothesize, test, narrow — and only then propose a fix.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/debug-systematically-with-lingcode.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/debug-systematically-with-lingcode.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/debug-systematically-with-lingcode.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/debug-systematically-with-lingcode.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Debug systematically with LingCode",
+  "description": "Most \"debugging\" is pattern-matching against guesses, then trying the guesses. Systematic debugging is slower per step and faster overall: reproduce, isolate, hypothesize, test, narrow — and only then propose a fix. LingCode follows the method when you give it the method.",
+  "url": "https://lingcode.dev/tutorials/debug-systematically-with-lingcode.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/debug-systematically-with-lingcode.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Debug systematically with LingCode"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Tips & tricks",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Debug systematically",
+      "item": "https://lingcode.dev/tutorials/debug-systematically-with-lingcode.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/debug-systematically-with-lingcode.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Tips &amp; tricks</a>
+      <span>/</span>
+      <span>Debug systematically</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Debug systematically with LingCode</h1>
+      <p class="intro">Most "debugging" is pattern-matching against guesses, then trying the guesses. Systematic debugging is slower per step and faster overall: reproduce, isolate, hypothesize, test, narrow — and only <em>then</em> propose a fix. LingCode follows the method when you give it the method.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why guess-and-patch is the slow path</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>The fast-feeling debugging loop is: read the stack trace, guess a cause from the shape, try a fix, see if the error goes away. It feels fast because each iteration is short. It's slow because:</p>
+          <ul>
+            <li><strong>The first guess is almost never the root cause</strong> — it's the most-recently-seen similar pattern, which is correlation, not causation.</li>
+            <li><strong>You can't tell if a fix worked</strong> if you didn't isolate the bug first. The error stops happening for any reason and you call it solved, until it returns at 2am.</li>
+            <li><strong>"Stops crashing" is not the same as "bug fixed."</strong> A try/catch around the symptom looks green and masks the underlying state corruption.</li>
+          </ul>
+          <p>Systematic debugging trades the dopamine of fast iteration for the certainty of "I know what went wrong and I know my fix addresses that specifically." The skill in this tutorial gives LingCode an explicit five-step protocol so it doesn't fall into pattern-match mode on your behalf.</p>
+        </div>
+      </div>
+
+      <h2>What you need</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong> — <a href="/LingCode-Installer.dmg" download>download the installer</a>.</li>
+            <li><strong>A bug</strong> — a test failure, a crash, a wrong output, or "this used to work."</li>
+            <li><strong>The ability to run the code that fails</strong> locally. Bugs you can't reproduce are a different — harder — problem.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 1 — Reproduce, before reading any code</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>The first thing LingCode should do is reproduce the bug locally and capture the exact command, input, and observed output. Not read the source. Not theorize. Just reproduce:</p>
+          <pre><code>Before reading any source, reproduce the bug. Report:
+- Exact command run.
+- Exact input (paste it; don't paraphrase).
+- Exact output / error / stack trace (paste verbatim).
+- Whether it's deterministic (run it 3 times — same result?).
+
+If you can't reproduce, stop. Ask for: the minimal failing
+input, environment differences, or a recording. Don't guess
+at causes for bugs you haven't seen.</code></pre>
+          <p>If LingCode can't reproduce the bug, every subsequent step is theater. The honest answer is "I need a repro" — not a fix attempt.</p>
+          <div class="tip-box">
+            <strong>Deterministic vs. flaky matters.</strong> If the bug fires 1 in 5 times, narrow the variable that controls flakiness (timing, ordering, randomness) before continuing. Intermittent bugs solved by "I changed something and didn't see it again" come back.
+          </div>
+        </div>
+      </div>
+
+      <h2>Step 2 — Isolate the smallest failing case</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Most bug reports come wrapped in a full app, a long test suite, or a complex input. LingCode's next job is to peel layers off until the bug fires from the smallest possible test:</p>
+          <pre><code>Reduce the failing case. Aim for:
+- A single failing test (or a 10-line script) that triggers
+  the bug.
+- The smallest input that still reproduces.
+- The narrowest call path — strip middleware, unrelated
+  state, optional config.
+
+Each reduction must still reproduce. If a reduction stops
+reproducing, you've found something — either the bug is in
+the part you removed, or your reduction was wrong. Note it.</code></pre>
+          <p>"Each reduction must still reproduce" is the rule. Removing code until the bug disappears <em>and not investigating why</em> is how you fix the wrong thing.</p>
+        </div>
+      </div>
+
+      <h2>Step 3 — Hypothesize, with a falsifiable prediction</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Now — and only now — LingCode reads code and forms a theory. The theory must come with a prediction that can be checked:</p>
+          <pre><code>Form a single hypothesis. It must:
+- Name the specific function / state / interaction you think
+  is wrong.
+- Predict what will happen if your hypothesis is correct
+  AND a tweak is applied that should change behavior.
+- Predict what will happen if your hypothesis is wrong.
+
+"I think it's a race condition" is not a hypothesis. "I think
+read_config() returns before write_config() completes on cold
+start, so adding a 100ms sleep before read should make the
+bug rarer but not gone" is a hypothesis.</code></pre>
+          <p>Two hypotheses simultaneously is fine. Three is a sign you're not actually reading the code — you're brainstorming. Narrow before testing.</p>
+        </div>
+      </div>
+
+      <h2>Step 4 — Test the hypothesis, not the fix</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>This is the step that separates systematic debugging from guess-and-patch. The test is designed to prove the hypothesis right or wrong — not to make the bug go away:</p>
+          <pre><code>Test the hypothesis. Pick the cheapest probe that distinguishes
+right-from-wrong:
+- A print / log at the suspected boundary, showing the value
+  you predicted.
+- A breakpoint or debugger inspection.
+- A unit test that exercises the suspected interaction.
+- A diff of the value before and after the suspected mutation.
+
+If the probe contradicts the hypothesis, the hypothesis is
+wrong. Go back to step 3. Do not "adjust" the hypothesis to
+fit — write a new one.</code></pre>
+          <div class="warn-box">
+            <strong>"The error went away" is not confirmation.</strong> Errors disappear for many reasons unrelated to your theory — caching, timing, side effects in your test setup. The hypothesis is confirmed only when the probe shows what you predicted.
+          </div>
+        </div>
+      </div>
+
+      <h2>Step 5 — Narrow to the minimal fix</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Once the hypothesis is confirmed, LingCode writes the smallest change that addresses the actual cause — not the symptom:</p>
+          <pre><code>Propose the fix. It should:
+- Address the cause identified in step 4, not the symptom in
+  step 1.
+- Be the smallest change that achieves that.
+- Come with a regression test that fails before the fix and
+  passes after. (No regression test = no proof the fix works.)
+
+Then re-run the original reproduction from step 2.
+If it still fires, the fix is incomplete — go back to step 3.
+If it doesn't, run the full test suite to check for collateral
+damage. Document one-line cause + one-line fix in the commit
+message.</code></pre>
+          <p>The regression test is the artifact that proves you understood the bug. If you can't write a test that catches it, you didn't understand it — you just made it stop happening.</p>
+        </div>
+      </div>
+
+      <h2>When to break the protocol</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Systematic debugging is the right default. It's overkill for two cases:</p>
+          <ul>
+            <li><strong>Trivial typos and obvious errors.</strong> "Cannot read property 'name' of undefined" on line 42 where line 41 doesn't await an async call — fix it. Don't ceremoniously hypothesize.</li>
+            <li><strong>Production fires.</strong> If users are down, the right move is the fastest known mitigation (rollback, feature flag off, restart). Run systematic debugging afterward, on the post-mortem, with the system stable.</li>
+          </ul>
+          <p>For everything in between — flaky tests, "works for me" reports, intermittent crashes, mysterious slowdowns — the protocol pays for itself. Have LingCode ask "is this a fire or an investigation?" up front:</p>
+          <pre><code>Before debugging, classify:
+- FIRE: users down, ship a mitigation now, investigate after.
+- INVESTIGATION: bug is contained, follow the 5 steps.
+- TYPO: obvious error visible in the diff, just fix it.
+
+Don't run a full systematic-debug ritual on a typo.
+Don't skip steps on an investigation because it "looks easy."</code></pre>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>The full debugging protocol is packaged as a skill — drop it into your LingCode skills folder and LingCode will reach for it on any test failure or crash:</p>
+          <pre><code>---
+name: systematic-debugging
+description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes. Triggers: 'this is broken', 'why does X fail', 'debug this', 'find the bug', stack trace pasted, failing test output, runtime exception, 'doesn't work', 'unexpected behavior'. Actions: five-step protocol — reproduce → isolate → hypothesize → test the hypothesis (not the fix) → narrow to minimal fix with a regression test. Triage gate: FIRE (drop everything) / INVESTIGATION (full protocol) / TYPO (one-line fix, skip protocol). Anti-pattern: pattern-match-and-guess, fix-before-reproducing.
+---
+
+Debug systematically, not by pattern-matching. Most "fixes"
+that make errors disappear without proving cause come back.
+
+Classify first: FIRE (mitigate now), INVESTIGATION (follow
+the protocol), or TYPO (just fix it).
+
+For INVESTIGATIONS:
+
+1. REPRODUCE. Before reading any source. Capture exact
+   command, input, output. Confirm determinism. If you
+   can't reproduce, stop and ask — don't guess.
+
+2. ISOLATE. Reduce to the smallest failing case. Each
+   reduction must still reproduce. If a reduction stops
+   reproducing, investigate why before continuing.
+
+3. HYPOTHESIZE. One specific theory naming function /
+   state / interaction. Include a falsifiable prediction:
+   what should happen if right, what if wrong.
+
+4. TEST the hypothesis, not the fix. Use the cheapest
+   probe that distinguishes right from wrong (log, debugger,
+   diff). "The error went away" is not confirmation —
+   the probe must show what you predicted.
+
+5. NARROW to a minimal fix that addresses the cause, not
+   the symptom. Write a regression test that fails before
+   and passes after. Re-run original repro. If it still
+   fires, the fix is incomplete.
+
+Document cause + fix in one line each in the commit.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/systematic-debugging/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/test-driven-development-with-lingcode.html" class="tutorial-next-card">
+            <h3>Test-driven development</h3>
+            <p>The regression test in step 5 is easier to write if you wrote a failing test first — TDD as a debugging multiplier</p>
+          </a>
+          <a href="/tutorials/give-and-receive-code-review-with-lingcode.html" class="tutorial-next-card">
+            <h3>Give and receive code review</h3>
+            <p>Once the bug is fixed, the PR's review feedback deserves the same rigor as the debugging did</p>
+          </a>
+          <a href="/tutorials/finish-a-development-branch.html" class="tutorial-next-card">
+            <h3>Finish a development branch</h3>
+            <p>After the fix lands, walk the closing checklist so the bugfix branch integrates cleanly</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

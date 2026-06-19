@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, max-age=0">
+  <title>Check your email — LingCode</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <style>
+    .pwd-page { min-height: 100vh; display: flex; flex-direction: column; }
+    .pwd-card-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 120px 24px 48px; }
+    .pwd-card {
+      width: 100%; max-width: 440px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 32px;
+    }
+    .pwd-card h1 { font-size: 1.375rem; margin: 0 0 12px; letter-spacing: -0.02em; }
+    .pwd-card p { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6; margin: 0 0 16px; }
+    .pwd-field { margin-bottom: 16px; }
+    .pwd-field label { display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+    .pwd-field input {
+      width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-strong);
+      background: var(--bg); color: var(--text); font-size: 1rem; font-family: var(--font);
+    }
+    .pwd-err { color: var(--red); font-size: 0.875rem; margin-top: 8px; min-height: 1.25em; }
+    .pwd-msg { color: var(--text); font-size: 0.9375rem; margin-top: 12px; }
+    .pwd-card .btn { width: 100%; justify-content: center; margin-top: 8px; }
+    .pwd-back { margin-top: 20px; text-align: center; }
+    .pwd-back a { color: var(--text-muted); font-size: 0.875rem; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body class="pwd-page">
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="pwd-card-wrap">
+    <div class="pwd-card">
+      <h1>Verify your email</h1>
+      <p>We sent a link to your address. Open it to confirm your account, then sign in here or in the Mac app.</p>
+      <form id="resend-form">
+        <div class="pwd-field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autocomplete="email" placeholder="you@example.com">
+        </div>
+        <button type="submit" class="btn btn-ghost" id="resend-btn">Resend verification email</button>
+        <p class="pwd-err" id="err"></p>
+        <p class="pwd-msg" id="msg" hidden></p>
+      </form>
+      <div class="pwd-back"><a href="/signin.html">Back to sign in</a></div>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var pre = params.get('email');
+  var input = document.getElementById('email');
+  if (pre) {
+    input.value = pre;
+  }
+  document.getElementById('resend-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var err = document.getElementById('err');
+    var msg = document.getElementById('msg');
+    var btn = document.getElementById('resend-btn');
+    err.textContent = '';
+    msg.hidden = true;
+    btn.disabled = true;
+    var email = input.value.trim();
+    fetch('/api/account/resend-verification', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    })
+      .then(function (r) {
+        return r.json().then(function (j) {
+          return { ok: r.ok, j: j };
+        });
+      })
+      .then(function (x) {
+        btn.disabled = false;
+        if (!x.ok) {
+          err.textContent = (x.j && x.j.error) || 'Request failed';
+          return;
+        }
+        msg.hidden = false;
+        msg.textContent = x.j.message || 'If this account needs verification, we sent an email.';
+      })
+      .catch(function () {
+        btn.disabled = false;
+        err.textContent = 'Network error.';
+      });
+  });
+})();
+  </script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

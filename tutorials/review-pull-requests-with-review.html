@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review pull requests with /review — LingCode Tutorials</title>
+  <meta name="description" content="Run /review on a PR. The agent reads the diff, the linked tickets, the existing tests, and writes a review that focuses on what humans would miss.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/review-pull-requests-with-review.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/review-pull-requests-with-review.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/review-pull-requests-with-review.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/review-pull-requests-with-review.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Review pull requests with /review",
+  "description": "Run /review on a pull request and the agent does the first pass for you. It reads the diff, the linked ticket, the existing tests, the surrounding code — and writes a review that points at things humans tend to miss when their attention is on style.",
+  "url": "https://lingcode.dev/tutorials/review-pull-requests-with-review.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/review-pull-requests-with-review.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Review pull requests with /review"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Review pull requests with /review",
+      "item": "https://lingcode.dev/tutorials/review-pull-requests-with-review.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/review-pull-requests-with-review.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Native Mac IDE</a>
+      <span>/</span>
+      <span>Review pull requests with /review</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Review pull requests with /review</h1>
+      <p class="intro">Run <code>/review</code> on a pull request and the agent does the first pass for you. It reads the diff, the linked ticket, the existing tests, the surrounding code — and writes a review that points at things humans tend to miss when their attention is on style.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Code review is one of those tasks where the cost of doing it badly is invisible and the cost of doing it well is real time. A perfunctory "LGTM" passes through code that has bugs in it. A thorough review takes thirty minutes per PR, often longer, and you have a queue of them. The equilibrium that most teams settle into is somewhere uncomfortable: reviews that catch the obvious things but miss the subtle ones, paid for with reviewer time that could have gone to other work.</p>
+      <p>The agent is well-suited to closing some of that gap. It can read the full diff plus the relevant context (existing tests, surrounding functions, the linked ticket) faster than a human can scroll. It doesn't get tired on PR five of the morning. It's particularly good at the things busy reviewers skip: checking whether tests were added for new logic, noticing inconsistencies between this change and adjacent files, flagging error handling that's structurally different from neighboring patterns.</p>
+      <p>What the agent isn't good at is judgment — whether this change is the right approach, whether it fits the team's strategic direction, whether the trade-offs are acceptable. Those are still your call. The agent's review is a first pass that surfaces what's worth your attention; your review is the one that decides.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Running <code>/review</code> on a local diff and on a remote PR</li>
+        <li>What the agent looks at (and what it can't)</li>
+        <li>How to read the review output and prioritize</li>
+        <li>Following up with targeted prompts on specific findings</li>
+        <li>When NOT to use it</li>
+      </ul>
+
+      <h2>Step 1: Review a local diff</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>The simplest case — your own changes before pushing</h3>
+          <p>In your local checkout, with the branch you want to review checked out, type in the chat panel:</p>
+          <pre><code>/review</code></pre>
+          <p>The agent runs <code>git diff</code> against the merge base, plus <code>git log</code> to see what was committed. It writes a review covering: what the change does, whether the change matches its stated intent (from commit messages), bugs / race conditions / security issues, missing tests, style inconsistencies with surrounding code.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Review a remote PR</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Pass the PR URL or number</h3>
+          <p>For a PR on GitHub:</p>
+          <pre><code>/review https://github.com/myorg/myrepo/pull/1234
+# or, when in the repo:
+/review #1234</code></pre>
+          <p>The agent uses <code>gh</code> (if installed) or fetches via the GitHub API. It reads the PR description, the linked issue if any, the diff, and recent comments. If you have a <a href="/tutorials/connect-linear-and-github-via-mcp.html">GitHub MCP server connected</a>, the agent uses that instead — same result, structured tool calls.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>For best results in unfamiliar codebases:</strong> have a <a href="/tutorials/generate-a-claude-md-with-init.html">CLAUDE.md</a> in the repo. The agent's review benefits enormously from project-specific conventions (e.g., "we use Result types, not exceptions"). Without context, it falls back to generic best practices.
+      </div>
+
+      <h2>Step 3: Read the output strategically</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Three tiers; only the top two need your attention</h3>
+          <p>A typical review groups findings into rough tiers:</p>
+          <ul>
+            <li><strong>Tier 1: Probable bugs.</strong> "On line 47, <code>user</code> can be null here but isn't checked." Read these carefully. Most are real; a few are paranoia.</li>
+            <li><strong>Tier 2: Missing pieces.</strong> "This function is non-trivial and has no tests." "Error path returns early without releasing the lock." These are the highest-value findings — things humans tend to miss when reading line-by-line.</li>
+            <li><strong>Tier 3: Style.</strong> "Naming convention differs from the rest of the file." Useful but low priority; address only if the inconsistency would actually confuse a reader.</li>
+          </ul>
+          <p>If you have time, address all three. If you don't, address Tiers 1 and 2 and ship.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Follow up on specific findings</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Conversation, not monologue</h3>
+          <p>The first review is the agent's overview. To dig into a specific finding, just ask:</p>
+          <ul>
+            <li>"Show me where the null check should go and propose the fix."</li>
+            <li>"Write a test that would catch the bug you flagged in <code>UserService</code>."</li>
+            <li>"Why do you think the error path doesn't release the lock — show me the code."</li>
+          </ul>
+          <p>The agent now has the review context loaded; follow-up turns are cheap. This is where you turn "the agent found 7 things" into "the agent helped me fix 5 things and we discussed the other 2."</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Post the review back to GitHub</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>For PRs that aren't yours</h3>
+          <p>If you're reviewing a teammate's PR and want to share the agent's findings, ask: "Post these as PR comments on GitHub." With the <a href="/tutorials/connect-linear-and-github-via-mcp.html">GitHub MCP</a> or <code>gh</code> installed, the agent creates inline comments on the relevant lines, summarizes the high-level findings in a review body, and leaves the review in "comment" state (not approved, not requesting changes) for you to inspect.</p>
+          <p>You should always look before clicking "Submit review" — your name will be on it.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: When NOT to use it</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>The agent's blind spots</h3>
+          <ul>
+            <li><strong>Architecture decisions.</strong> The agent can't tell you whether this PR moves the system in the right direction. It can describe what changes; it can't judge whether the change is wise. You decide.</li>
+            <li><strong>Performance at scale.</strong> "This query looks fine" isn't a load test. The agent reads code, not production traces. For perf-sensitive changes, run benchmarks.</li>
+            <li><strong>Security-critical code.</strong> Use <a href="/tutorials/run-security-review.html">/security-review</a> specifically for that — a different skill that focuses on threat surfaces. <code>/review</code> is the general-purpose review.</li>
+            <li><strong>Trivial changes.</strong> A one-line typo fix doesn't need an AI review. The overhead is bigger than the benefit.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't sign off without reading the code yourself.</strong> The agent's review is a tool for your attention, not a substitute for it. A clean review doesn't mean the PR is correct — it means the agent didn't find anything in the surface it looked at.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/run-security-review.html" class="tutorial-next-card">
+            <h3>Run /security-review on your branch</h3>
+            <p>The security-focused sibling skill — different lens, different findings</p>
+          </a>
+          <a href="/tutorials/write-a-subagent.html" class="tutorial-next-card">
+            <h3>Write a subagent</h3>
+            <p>For team-specific review styles, write your own reviewer subagent</p>
+          </a>
+          <a href="/tutorials/connect-linear-and-github-via-mcp.html" class="tutorial-next-card">
+            <h3>Connect Linear and GitHub via MCP</h3>
+            <p>Post the review back to GitHub via structured tool calls</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode Cloud errors & troubleshooting — every error code and its fix | Docs</title>
+  <meta name="description" content="The complete LingCode Cloud error reference: every JSON error code from the data, auth, storage, functions, secrets, hosting, and vector-search APIs, what each one means, and the one-line fix.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/troubleshooting.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/troubleshooting.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/troubleshooting.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/troubleshooting.html">
+  <meta property="og:title" content="LingCode Cloud errors & troubleshooting">
+  <meta property="og:description" content="Every JSON error code from LingCode Cloud — data, auth, storage, functions, secrets, hosting, vectors — with what it means and the one-line fix.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .err-table { width: 100%; border-collapse: collapse; margin: 18px 0 8px; font-size: 0.9rem; }
+    .err-table th, .err-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.5; }
+    .err-table th { font-family: "Geist Mono", monospace; font-size: 0.72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--signal); border-bottom: 1px solid var(--border); }
+    .err-table td:first-child { white-space: nowrap; font-family: "Geist Mono", monospace; font-size: 0.82rem; color: var(--text); }
+    .err-table td code { white-space: nowrap; }
+    @media (max-width: 720px) { .err-table td:first-child { white-space: normal; } }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Troubleshooting</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Errors</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Errors &amp; troubleshooting</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Every LingCode Cloud API error comes back as a short JSON <strong>code</strong>. In the SDK, a failed call resolves to <code>{ data: null, error }</code> where <code>error.code</code> is the string code and <code>error.status</code> is the HTTP status. Over REST, errors look like <code>{ ok: false, error: "&lt;code&gt;", message: "…" }</code>. Find the code below to see what it means and how to fix it.</p>
+      <p class="intro">This page is a lookup table, not a walkthrough. Errors are grouped by the product that raises them — data, auth, storage, functions, secrets, hosting, vector search, and a handful of general transient ones. Match on the <code>code</code> string; the message is human-readable but the code is what's stable.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>How errors are shaped</h2>
+      <p>You never have to parse prose. Both transports carry the same machine-readable code:</p>
+      <pre><code>// SDK
+const { data, error } = await lingcode.from('todos').update({ done: true });
+if (error) {
+  console.log(error.code);   // e.g. "where_required"
+  console.log(error.status); // e.g. 400
+}
+
+// REST
+// HTTP 400
+// { "ok": false, "error": "where_required", "message": "update requires a filter" }</code></pre>
+      <p>Look up <code>error.code</code> in the tables below.</p>
+
+      <h2>Data</h2>
+      <p>Raised by table reads, writes, and the SQL query editor. Full guide: <a href="/docs/cloud/database.html">Database</a>.</p>
+      <table class="err-table">
+        <thead><tr><th>Code</th><th>What it means</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>where_required</td><td><code>update()</code>/<code>delete()</code> ran without a filter.</td><td>Add a filter (<code>.eq</code>/<code>.match</code>) to scope the rows.</td></tr>
+          <tr><td>table_not_found <span style="color:var(--text-dim)">(404)</span></td><td>The table name is wrong or hasn't been created.</td><td>Check the name; run the migration that creates it.</td></tr>
+          <tr><td>invalid_request <span style="color:var(--text-dim)">(400)</span></td><td>A required field is missing or malformed (wrong table/filter/row shape).</td><td>Fix the table name, filter, or row shape.</td></tr>
+          <tr><td>not_provisioned <span style="color:var(--text-dim)">(409)</span></td><td>The backend isn't live yet (still provisioning).</td><td>Wait and retry, or poll the backend status.</td></tr>
+          <tr><td>read_only_violation</td><td>The console SQL query editor only runs read statements (<code>SELECT</code>/<code>WITH</code>/<code>TABLE</code>/<code>EXPLAIN</code>/<code>SHOW</code>).</td><td>Use a migration for writes and DDL.</td></tr>
+          <tr><td>quota_exceeded <span style="color:var(--text-dim)">(402)</span></td><td>A tier cap was hit (tables, rows, etc.).</td><td>Free up room or <a href="/pricing.html">upgrade</a>.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Auth</h2>
+      <p>Raised by sign-up, sign-in, OTP/magic-link, MFA, and OAuth. Full guide: <a href="/docs/cloud/auth.html">Authentication</a>.</p>
+      <table class="err-table">
+        <thead><tr><th>Code</th><th>What it means</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>unauthorized <span style="color:var(--text-dim)">(401)</span></td><td>Missing or invalid token.</td><td>Send the anon key (<code>Bearer</code> or <code>?apikey=</code>) or the signed-in user token.</td></tr>
+          <tr><td>forbidden <span style="color:var(--text-dim)">(403)</span></td><td>An RLS policy denied it — the row isn't owned by this user, or the table has no policy granting access.</td><td>Review your <a href="/docs/cloud/security.html">policies</a>.</td></tr>
+          <tr><td>invalid_code / invalid_or_expired / too_many_attempts</td><td>A one-time code or magic link was wrong, expired, or retried too often.</td><td>Request a fresh one.</td></tr>
+          <tr><td>mfa_required</td><td>The backend requires MFA and the session is not yet at AAL2.</td><td>Complete the MFA verify step.</td></tr>
+          <tr><td>state_secret_missing / invalid_redirect</td><td>OAuth isn't fully configured, or the redirect URL isn't on the allow-list.</td><td>Configure the provider in the console and use an allowed redirect.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Storage</h2>
+      <p>Raised by bucket uploads, downloads, and removes. Full guide: <a href="/docs/cloud/storage.html">Storage</a>.</p>
+      <table class="err-table">
+        <thead><tr><th>Code</th><th>What it means</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>object_not_found <span style="color:var(--text-dim)">(404)</span></td><td>No object at that bucket/path.</td><td>Check the bucket and path.</td></tr>
+          <tr><td>object_too_large / value_too_large</td><td>The file exceeds the inline per-object cap.</td><td>Use the direct presigned-upload path (the SDK does this automatically) or upgrade the tier.</td></tr>
+          <tr><td>direct_upload_unavailable</td><td>The presigned direct-to-storage path isn't available on this backend.</td><td>Fall back to the inline upload for small files.</td></tr>
+          <tr><td>quota_exceeded <span style="color:var(--text-dim)">(402)</span></td><td>The backend's total storage cap is reached.</td><td>Free up space or <a href="/pricing.html">upgrade</a>.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Functions</h2>
+      <p>Raised by builtin and custom serverless function invocations. Full guide: <a href="/docs/cloud/functions.html">Functions</a>.</p>
+      <table class="err-table">
+        <thead><tr><th>Code</th><th>What it means</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>unknown_function <span style="color:var(--text-dim)">(404)</span></td><td>The slug is wrong — a wrong <em>name</em>, not that functions are unavailable.</td><td>Check the function slug.</td></tr>
+          <tr><td>functions_runtime_unavailable <span style="color:var(--text-dim)">(503)</span></td><td>The Deno runtime isn't installed on this server, so custom functions can't run (builtins still work).</td><td>Use a builtin, or contact the operator to install the runtime.</td></tr>
+          <tr><td>function_error</td><td>Your function threw.</td><td>Check the returned <code>logs</code> field for the message.</td></tr>
+          <tr><td>source_too_large</td><td>Custom function source exceeds 256&nbsp;KB.</td><td>Trim it.</td></tr>
+          <tr><td>missing_secret</td><td>The function needs a vault secret that isn't set.</td><td>Add it in the console <a href="/docs/cloud/secrets.html">Secrets</a>.</td></tr>
+          <tr><td>timeout</td><td>The function exceeded the tier's wall-clock limit (3s free / 10s pro / 30s max_pro). Message: <code>Function timed out after Xms</code>.</td><td>Make it faster or move long work elsewhere.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Secrets</h2>
+      <p>Raised by the secrets vault. Full guide: <a href="/docs/cloud/secrets.html">Secrets vault</a>.</p>
+      <table class="err-table">
+        <thead><tr><th>Code</th><th>What it means</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>too_many_secrets</td><td>A backend allows at most 32 secrets.</td><td>Delete an unused secret first.</td></tr>
+          <tr><td>value_too_large</td><td>A secret value exceeds 16&nbsp;KB.</td><td>Store a shorter value or a reference to the data.</td></tr>
+          <tr><td>vault_not_configured</td><td>The server's vault key isn't set (operator/infra issue, not your app).</td><td>Contact the operator.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Hosting &amp; deploy</h2>
+      <p>Raised by app deploys and custom-domain attachment. Full guide: <a href="/docs/cloud/hosting.html">App hosting</a>.</p>
+      <table class="err-table">
+        <thead><tr><th>Code</th><th>What it means</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>no_build_config</td><td>The build didn't produce <code>dist/server/wrangler.json</code> (the Cloudflare Vite plugin didn't run).</td><td>Rebuild with the correct adapter.</td></tr>
+          <tr><td>bundle_too_large</td><td>The Worker bundle exceeds 60&nbsp;MB.</td><td>Trim dependencies and assets.</td></tr>
+          <tr><td>cap_reached</td><td>You've hit the limit of hosted Worker apps (10).</td><td>Delete an old one or upgrade.</td></tr>
+          <tr><td>rate_limited</td><td>Too many deploys (12/hour).</td><td>Wait and retry.</td></tr>
+          <tr><td>custom_domain_failed / domain_taken / reserved_domain / invalid_domain</td><td>A custom-domain attach problem — DNS not pointing at the edge, the domain is already attached elsewhere, reserved, or malformed.</td><td>Point DNS at the edge, free or rename the domain, and use a valid hostname.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Vector search</h2>
+      <p>Raised by semantic search. Full guide: <a href="/docs/cloud/vector-search.html">Vector search</a>.</p>
+      <table class="err-table">
+        <thead><tr><th>Code</th><th>What it means</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>embeddings_not_configured / embeddings_failed</td><td>Managed embeddings aren't available or failed.</td><td>Set them up, or pass your own precomputed vectors to <code>vector.search</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>General</h2>
+      <p>Transient and rate-limit errors that any endpoint can return.</p>
+      <table class="err-table">
+        <thead><tr><th>Code</th><th>What it means</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>server_error / cloud_error</td><td>A transient server problem.</td><td>Retry; if it persists, contact <a href="/support.html">support</a>.</td></tr>
+          <tr><td>too_many_inflight</td><td>Too many concurrent requests in flight.</td><td>Back off and retry.</td></tr>
+          <tr><td>rate_limited</td><td>You're sending requests too fast.</td><td>Slow down.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box">
+        <h3>Still stuck?</h3>
+        <p>Run the <a href="/tutorials/scan-your-backend-with-advisors.html">advisors</a> for schema and RLS issues, check the backend <strong>Logs</strong> in the console for the underlying error, and see <a href="/support.html">support</a>.</p>
+      </div>
+
+      <div class="tutorial-next">
+        <h2>What's next</h2>
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/security.html">
+            <span class="card-eyebrow">Security</span>
+            <h3>Row-level security</h3>
+            <p>Why most <code>forbidden</code> errors trace back to a missing policy — and how to write the right one.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">Reference</span>
+            <h3>API reference</h3>
+            <p>The full SDK surface and every REST endpoint, with request and response shapes.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/">
+            <span class="card-eyebrow">Start here</span>
+            <h3>LingCode Cloud</h3>
+            <p>Back to the docs home — the five-minute walkthrough and every product guide.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

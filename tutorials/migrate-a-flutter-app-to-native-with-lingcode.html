@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Migrate a Flutter app to native iOS, Android, and macOS with LingCode</title>
+  <meta name="description" content="Use LingCode's agent to convert a Flutter app into idiomatic SwiftUI, Jetpack Compose, and macOS SwiftUI — treating the Flutter repo as a design spec, not source to translate. Zero Dart in the output.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Migrate a Flutter app to native iOS, Android, and macOS",
+  "description": "LingCode reads your Flutter repo as a design spec — not source to translate — and writes idiomatic SwiftUI, Jetpack Compose, and macOS SwiftUI from scratch. No Dart in the output. No \"Flutter-flavored\" native code. Plan it in five phases so LingCode doesn't drift halfway through.",
+  "url": "https://lingcode.dev/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Migrate a Flutter app to native iOS, Android, and macOS"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Migrate a Flutter app to native",
+      "item": "https://lingcode.dev/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Native Mac IDE</a>
+      <span>/</span>
+      <span>Migrate a Flutter app to native</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Migrate a Flutter app to native iOS, Android, and macOS</h1>
+      <p class="intro">LingCode reads your Flutter repo as a <em>design spec</em> — not source to translate — and writes idiomatic SwiftUI, Jetpack Compose, and macOS SwiftUI from scratch. No Dart in the output. No "Flutter-flavored" native code. Plan it in five phases so LingCode doesn't drift halfway through.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why translate-don't-port works better than the opposite</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>The naïve approach is to map each Flutter widget to a native equivalent one-to-one and hope it composes. It doesn't. Three things break:</p>
+          <ul>
+            <li><strong>State idioms diverge.</strong> Provider, Riverpod, and Bloc don't have one-to-one analogues — they have one-to-many. <code>Provider</code> becomes <code>@Observable</code>+<code>@Environment</code> on iOS but <code>ViewModel</code>+<code>StateFlow</code> on Android. Translating literally produces awkward hybrids.</li>
+            <li><strong>Layout primitives differ.</strong> A <code>Container</code> with padding, alignment, decoration, and a child is one widget in Flutter — three modifiers in SwiftUI and a <code>Box</code> with modifiers in Compose. Translating widget-by-widget yields nested noise.</li>
+            <li><strong>Platform channels can't be guessed.</strong> Every <code>MethodChannel</code> is a hand-written native hook on each platform. Faking them produces silent runtime breakage.</li>
+          </ul>
+          <p>Reading the Flutter source for <em>intent</em> — what screens exist, how they navigate, what data flows where — and then writing the native version fresh produces code a native developer would actually want to maintain.</p>
+        </div>
+      </div>
+
+      <h2>What you need</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong> — <a href="/LingCode-Installer.dmg" download>download the installer</a>. Free tier is plenty for this.</li>
+            <li><strong>The Flutter repo</strong> — open in LingCode. Must contain <code>pubspec.yaml</code> at the root.</li>
+            <li><strong>An empty target directory</strong> — LingCode writes <code>ios/</code>, <code>android/</code>, and <code>macos/</code> next to (not inside) your Flutter source. Keeps the Flutter app intact while you migrate.</li>
+            <li><strong>Xcode and Android Studio installed</strong> — for building and running the native output. LingCode generates the projects; you run them.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Phase 1 — Inventory the Flutter app</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Open the chat panel and ask LingCode to scan the Flutter repo and write a conversion plan. A prompt that works:</p>
+          <pre><code>Read this Flutter repo and write CONVERSION_PLAN.md in
+../native-output/. Summarize:
+- pubspec.yaml: deps, Flutter SDK constraint, assets, fonts.
+- lib/ tree: every screen/route and its purpose.
+- State management: Provider / Riverpod / Bloc / GetX / setState.
+- Data layer: HTTP client, local DB (sqflite/Hive/Isar), shared prefs.
+- Platform channels and native plugins, listed one by one.
+- Theme, typography, color tokens, l10n strings.
+- Gotchas: BackdropFilter, CustomPainter, ShaderMask, FFI plugins,
+  native ads SDKs, Firebase Crashlytics — anything without a clean
+  native mapping.
+
+Don't start porting yet. Stop after the plan.</code></pre>
+          <p>LingCode reads the repo, builds a todo list as it scans, and writes <code>CONVERSION_PLAN.md</code>. <strong>Read it before approving any code generation.</strong> The "gotchas" section is the one that decides whether the project is a two-week job or a two-month job.</p>
+          <div class="tip-box">
+            <strong>Tip:</strong> If you only want the plan and nothing more, say "scan only — stop after the plan." LingCode will checkpoint and wait for you.
+          </div>
+        </div>
+      </div>
+
+      <h2>Phase 2 — Architecture per target</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>For each target platform, LingCode needs to commit to architectural choices before generating code. Ask it to append a per-target architecture section to the plan:</p>
+          <pre><code>Append to CONVERSION_PLAN.md a section for each of iOS, Android,
+macOS that picks:
+- Navigation pattern: NavigationStack on Apple, NavHost on Android.
+- DI / state container: @Observable+@Environment, or ViewModel+
+  StateFlow, etc. Match the original Flutter state idiom.
+- Networking layer: URLSession + async/await (Apple), OkHttp/Retrofit
+  (Android), or shared via Ktor if there's a reason to.
+- Persistence: SwiftData / Core Data / GRDB (Apple), Room (Android).
+- Asset pipeline: where pubspec assets land in each native project.
+
+Where the screen makes sense on macOS, share SwiftUI views between
+iOS and macOS — don't duplicate.</code></pre>
+          <p>This is the last cheap step. Approving the wrong navigation pattern here means rewriting every screen later. Read the architecture section like a code review.</p>
+        </div>
+      </div>
+
+      <h2>Phase 3 — Scaffold the native projects</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Now ask LingCode to create the empty projects:</p>
+          <pre><code>Scaffold the iOS, Android, and macOS projects in ../native-output/.
+Use Xcode's project format for iOS and macOS (don't hand-write
+.xcodeproj XML). Use Gradle for Android (don't hand-write
+build.gradle). Bundle IDs:
+- iOS:     com.yourcompany.yourapp
+- Android: com.yourcompany.yourapp
+- macOS:   com.yourcompany.yourapp.mac</code></pre>
+          <p>LingCode uses its native scaffolders for this — same shape Xcode and Android Studio produce on "New Project." You should be able to open <code>ios/YourApp.xcodeproj</code> in Xcode and <code>android/</code> in Android Studio and have both build the empty template.</p>
+          <div class="warn-box">
+            <strong>Verify the empty projects build before generating screens.</strong> If the scaffold is broken, you'll spend hours debugging code that's actually fine. Build each target empty first.
+          </div>
+        </div>
+      </div>
+
+      <h2>Phase 4 — Port screen by screen</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>This is the long phase. Ask LingCode to port one screen at a time, using a todo list to track progress:</p>
+          <pre><code>Port screens from lib/screens/ to the native projects, one screen
+per todo item. For each screen:
+
+1. Read the Flutter widget for intent — screen layout, state flow,
+   navigation in and out.
+2. Write the SwiftUI view (iOS + macOS where it makes sense).
+3. Write the Compose composable (Android).
+4. Wire navigation in both NavigationStack and NavHost.
+5. Wire state into the chosen container.
+
+For widgets with no clean native mapping, stub with
+// TODO(flutter-to-native): ... and log it in CONVERSION_PLAN.md
+under "deferred." Don't fake behavior.
+
+Start with the home screen. Stop after each screen for me to review.</code></pre>
+          <p>The "stop after each screen" instruction matters. Letting LingCode run all 20 screens without checkpoints means re-reviewing all 20 at the end, which is the worst time to catch architectural drift.</p>
+        </div>
+      </div>
+
+      <h2>The idiom map LingCode uses internally</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>If you want to spot-check LingCode's translations, here's the mapping it follows:</p>
+          <h3 style="margin-top:1.5rem;">Flutter widget → SwiftUI</h3>
+          <ul>
+            <li><code>Container</code>/<code>Padding</code>/<code>Center</code> → <code>VStack</code>/<code>HStack</code>/<code>ZStack</code> with <code>.padding</code> modifiers</li>
+            <li><code>Row</code> / <code>Column</code> → <code>HStack</code> / <code>VStack</code></li>
+            <li><code>ListView</code> → <code>List</code></li>
+            <li><code>GridView</code> → <code>LazyVGrid</code></li>
+            <li><code>Navigator.push</code> → <code>NavigationStack(path:)</code></li>
+            <li><code>FutureBuilder</code> → <code>.task</code> + <code>@State</code></li>
+            <li><code>StreamBuilder</code> → <code>AsyncSequence</code> + <code>.task</code></li>
+            <li><code>TextField</code> → <code>TextField</code> + <code>@FocusState</code></li>
+            <li><code>GestureDetector</code> → <code>.onTapGesture</code> / <code>.gesture</code></li>
+            <li><code>AnimatedContainer</code> → <code>.animation</code></li>
+            <li><code>Hero</code> → matched-geometry effect</li>
+            <li><code>SafeArea</code> → <code>.safeAreaInset</code> / <code>.ignoresSafeArea</code></li>
+          </ul>
+          <h3 style="margin-top:1.5rem;">Flutter widget → Compose</h3>
+          <ul>
+            <li><code>Container</code> → <code>Box</code></li>
+            <li><code>Row</code> / <code>Column</code> → <code>Row</code> / <code>Column</code></li>
+            <li><code>ListView</code> → <code>LazyColumn</code></li>
+            <li><code>GridView</code> → <code>LazyVerticalGrid</code></li>
+            <li><code>Navigator</code> → <code>NavHost</code> + <code>NavController</code></li>
+            <li><code>FutureBuilder</code> → <code>collectAsStateWithLifecycle</code></li>
+            <li><code>TextField</code> → <code>TextField</code> + <code>FocusRequester</code></li>
+            <li><code>AnimatedContainer</code> → <code>animate*AsState</code></li>
+            <li><code>Hero</code> → <code>Modifier.sharedElement</code></li>
+            <li><code>SafeArea</code> → <code>WindowInsets</code></li>
+          </ul>
+          <h3 style="margin-top:1.5rem;">State → native</h3>
+          <ul>
+            <li>Provider → <code>@Observable</code> + <code>@Environment</code> (Apple) / <code>ViewModel</code> + <code>StateFlow</code> (Android)</li>
+            <li>Riverpod → same shape, with explicit DI</li>
+            <li>Bloc / Cubit → reducer-style <code>ViewModel</code> with sealed event/state types</li>
+            <li>GetX → don't try to mirror; flatten into the native idiom</li>
+            <li><code>setState</code> → <code>@State</code> (Apple) / <code>remember</code> (Compose)</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>The "deferred" pile — what LingCode won't fake</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Some Flutter features don't have an honest native mapping. LingCode stubs them and logs them in <code>CONVERSION_PLAN.md</code> rather than guessing — you decide what to do with each:</p>
+          <ul>
+            <li><strong>BackdropFilter, custom CustomPainter, ShaderMask edge cases.</strong> Custom rendering goes through Metal / SkSL or platform-specific shaders. No one-shot translation.</li>
+            <li><strong>Every platform channel.</strong> Each <code>MethodChannel</code> is a hand-written native hook on iOS and Android — Swift methods and Kotlin functions you write yourself. LingCode stubs the call sites.</li>
+            <li><strong>FFI plugins.</strong> Same story — your C/C++ library needs Swift and Kotlin bindings, not Dart's FFI.</li>
+            <li><strong>Native ads SDKs.</strong> AdMob and Meta Audience SDKs ship native; the Flutter plugin is a thin wrapper. Re-integrate natively.</li>
+            <li><strong>Firebase Crashlytics initialization.</strong> Must live in <code>AppDelegate</code> (iOS) and <code>Application</code> (Android), not the shared layer.</li>
+            <li><strong>RawKeyboardListener edge cases.</strong> Apple has <code>onKeyPress</code>; Android has <code>onKeyEvent</code> — usable, but not a literal mapping.</li>
+          </ul>
+          <p>Don't let LingCode invent behavior for these. The honest stub is better than confidently wrong code.</p>
+        </div>
+      </div>
+
+      <h2>Phase 5 — Verify the builds</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>After the screen-by-screen phase, ask LingCode to verify each target:</p>
+          <pre><code>For each target, run the build and report pass/fail:
+- iOS:     xcodebuild -project ios/YourApp.xcodeproj
+             -scheme YourApp -destination 'generic/platform=iOS Simulator'
+             build
+- Android: cd android && ./gradlew assembleDebug
+- macOS:   xcodebuild -project macos/YourApp.xcodeproj
+             -scheme YourApp build
+
+If a target fails, diagnose and fix before moving on. Don't claim
+done until every requested platform builds clean.</code></pre>
+          <p>This is where you'd run LingCode's parallel agents — one per target — if you want to compress wall time. Each target is independent; failures in iOS won't block Android.</p>
+        </div>
+      </div>
+
+      <h2>Run side-by-side</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>The native projects build, but the real test is parity. Open both the original Flutter app and the new iOS build in simulators, then walk through every screen comparing behavior — navigation, animations, error states, edge cases like empty lists and offline behavior.</p>
+          <p>LingCode runs the iOS simulator and Android emulator from the Run Destination Picker (⌘R) — you don't need a separate Xcode or Android Studio window for casual testing. Use Android Studio when you need ADB tooling, profilers, or AVD management.</p>
+        </div>
+      </div>
+
+      <h2>Hard constraints — what good migrations look like</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>The output is Flutter-free.</strong> No <code>flutter</code> embed, no "add-to-app." If you wanted that, you didn't need this tutorial.</li>
+            <li><strong>Platform channels are listed in the plan, not faked.</strong> Each one is a deliberate hand-port; LingCode shouldn't guess what their native side does.</li>
+            <li><strong>No Flutter test files were ported.</strong> Native tests are written fresh against the native code — XCTest, JUnit, Espresso.</li>
+            <li><strong>The Flutter repo wasn't mutated.</strong> No <code>pub get</code>, no <code>flutter build</code>, no edits — LingCode treats it as a read-only spec.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Use the Flutter app as a regression oracle.</strong> Keep it runnable while you migrate. Every time the native version surprises you, re-run the same flow in Flutter and compare. Faster than re-reading Dart source to remember "what was that supposed to do."
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p>This entire workflow is packaged as a skill — drop it into your LingCode skills folder and ask LingCode for "flutter to native" to invoke it automatically:</p>
+          <pre><code>---
+name: flutter-to-native
+description: Convert a Flutter app to native iOS (SwiftUI), Android (Jetpack Compose), and/or macOS (SwiftUI). Reads the Flutter repo as a design spec and writes fresh idiomatic native code — zero Dart in the output. Triggers: 'migrate from Flutter', 'rewrite Flutter app in native', 'flutter to swiftui', 'flutter to compose', 'flutter to native', existing pubspec.yaml, lib/main.dart. Actions: inventory Flutter app, propose native architecture per target, scaffold ios/ android/ macos/, port screen-by-screen, verify each build clean. Anti-pattern: Flutter embed, add-to-app, faked platform channels. Five phases with checkpoints.
+---
+
+Convert a Flutter app to native. Treat the Flutter repo as a design
+spec, not source to translate. Read it to understand intent
+(screens, navigation, state, data), then write idiomatic native
+code from scratch.
+
+Phase 1 — Inventory: scan pubspec, lib/, state mgmt, data layer,
+platform channels, theme, gotchas. Write CONVERSION_PLAN.md.
+
+Phase 2 — Architecture per target: navigation, DI, networking,
+persistence, asset pipeline.
+
+Phase 3 — Scaffold ios/, android/, macos/.
+
+Phase 4 — Port screen by screen, one todo per screen.
+
+Phase 5 — Verify each target builds clean.
+
+Stop after each phase for user review. Stub deferred items with
+// TODO(flutter-to-native): ... rather than faking behavior.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/flutter-to-native/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/install-a-skill.html" class="tutorial-next-card">
+            <h3>Install a skill</h3>
+            <p>Drop the flutter-to-native skill into LingCode so it picks it up automatically</p>
+          </a>
+          <a href="/tutorials/write-a-custom-skill.html" class="tutorial-next-card">
+            <h3>Write a custom skill</h3>
+            <p>Build your own multi-phase workflows that LingCode can invoke on demand</p>
+          </a>
+          <a href="/tutorials/first-time-ios-app-store-submission.html" class="tutorial-next-card">
+            <h3>Ship your migrated iOS app</h3>
+            <p>Once the native version builds, take it to TestFlight and the App Store</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deploy FAQ: App Store, Google Play, Web Platforms | LingCode</title>
+  <meta name="description" content="Every question developers actually ask when setting up a deploy from LingCode — Apple Developer fees, TestFlight processing, lost keystores, AAB vs APK, rollbacks, env vars, CI integration, and more.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/deploy-faq.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Deploy FAQ — App Store, Google Play, Web Platforms">
+  <meta property="og:description" content="The questions developers actually ask when setting up a deploy.">
+  <meta property="og:url" content="https://lingcode.dev/deploy-faq.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Do I need a paid Apple Developer account to deploy from LingCode?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. A free Apple ID can build and run on your own Mac, but App Store Connect will refuse uploads until your account is enrolled in the Apple Developer Program ($99/year)." } },
+      { "@type": "Question", "name": "Can I use one .p8 file for both iOS and macOS?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. The .p8 is an App Store Connect API key, not platform-specific. LingCode picks --type macos or --type ios based on the Xcode scheme's SUPPORTED_PLATFORMS; the same key authenticates both." } },
+      { "@type": "Question", "name": "What happens if I lose my .p8 file?", "acceptedAnswer": { "@type": "Answer", "text": "Revoke the key on appstoreconnect.apple.com/access/api and generate a new one. Any machine that was using the lost key stops working until you replace it. No way to re-download — Apple only serves the .p8 once at creation time." } },
+      { "@type": "Question", "name": "What happens if I lose my Android keystore?", "acceptedAnswer": { "@type": "Answer", "text": "Without Play App Signing opted in, you cannot update the app on Google Play again. Google uses the keystore signature to verify new uploads are \"from you.\" Request an upload-key reset in Play Console → Setup → App signing, which Google reviews manually." } },
+      { "@type": "Question", "name": "Why does TestFlight processing take so long?", "acceptedAnswer": { "@type": "Answer", "text": "Apple runs server-side validation, extracts metadata, symbolicates crash data, and scans for private API usage before the build becomes distributable. Typical time is 5–30 minutes but can stretch to an hour during peak windows. Outside LingCode's control." } },
+      { "@type": "Question", "name": "Can a service account upload the first build to Google Play?", "acceptedAnswer": { "@type": "Answer", "text": "No. Google requires that a human has manually uploaded at least one AAB for a given package name before automated uploads are allowed. Build a signed AAB locally with ./gradlew bundleRelease and drag it into Play Console → Internal testing → Create new release once." } }
+    ]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 780px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.375rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.0625rem; margin: 24px 0 8px; color: var(--text); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content ul, .blog-content ol { margin: 0 0 16px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .toc-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 22px; margin: 24px 0 32px; }
+    .toc-columns a { color: var(--signal); text-decoration: none; font-size: 0.875rem; line-height: 1.75; }
+    .toc-columns strong { color: var(--text-muted); font-weight: 600; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin: 8px 0 4px; }
+    .q-block { margin: 28px 0 0; }
+    .q-block h3 { color: var(--text); font-weight: 600; font-size: 1.0625rem; margin: 0 0 8px; }
+    .q-block h3 .anchor { color: var(--text-muted); font-weight: 400; font-size: 0.75rem; margin-left: 8px; opacity: 0; transition: opacity 0.15s; }
+    .q-block h3:hover .anchor { opacity: 1; }
+    .q-block p { margin: 0 0 16px; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .sibling-nav { max-width: 800px; margin: 0 auto; padding: 20px 32px 0; }
+    .sibling-nav-inner { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .sibling-nav-label { font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px; }
+    .sibling-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 0.8125rem; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+    .sibling-pill:hover { color: var(--text); border-color: var(--signal); text-decoration: none; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <nav class="sibling-nav" aria-label="Deploy guide siblings">
+      <div class="sibling-nav-inner">
+        <span class="sibling-nav-label">Deploy guides:</span>
+        <a href="/magic-deploy-setup.html" class="sibling-pill">App Store</a>
+        <a href="/app-store-connect-fields.html" class="sibling-pill">ASC fields</a>
+        <a href="/google-play-deploy-setup.html" class="sibling-pill">Google Play</a>
+        <a href="/magic-deploy-web-platforms.html" class="sibling-pill">Web</a>
+        <a href="/host-your-own-server.html" class="sibling-pill">Provision</a>
+        <a href="/magic-deploy-scripts.html" class="sibling-pill">Scripts</a>
+      </div>
+    </nav>
+
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Reference</p>
+        <h1>Deploy FAQ</h1>
+        <p>The questions developers actually ask when setting up a deploy from LingCode.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+
+      <div class="toc-columns">
+        <div>
+          <strong>App Store (iOS + macOS)</strong>
+          <a href="#apple-need-paid">Paid Apple Developer account?</a><br>
+          <a href="#p8-both-platforms">One .p8 for iOS + macOS?</a><br>
+          <a href="#lost-p8">I lost my .p8 file</a><br>
+          <a href="#apple-dist-vs-iphone">Apple Distribution vs iPhone Distribution?</a><br>
+          <a href="#testflight-processing">TestFlight processing time?</a><br>
+          <a href="#app-store-review-time">App Store review time?</a><br>
+          <a href="#multiple-teams">Multiple teams on one Apple ID?</a>
+        </div>
+        <div>
+          <strong>Google Play</strong>
+          <a href="#play-need-paid">Is $25 really required?</a><br>
+          <a href="#first-manual-upload">Why the first manual upload?</a><br>
+          <a href="#lost-keystore">I lost my keystore</a><br>
+          <a href="#aab-vs-apk">AAB vs APK?</a><br>
+          <a href="#share-keystore">Share a keystore across apps?</a><br>
+          <a href="#play-review-time">Play review time?</a><br>
+          <a href="#skip-tracks">Skip tracks and jump to production?</a>
+        </div>
+        <div>
+          <strong>Web platforms</strong>
+          <a href="#which-web-platform">Which platform should I use?</a><br>
+          <a href="#preview-deploys">Preview deploys per branch?</a><br>
+          <a href="#env-vars-runtime">Env vars at runtime?</a><br>
+          <a href="#web-free-tier">Free tiers?</a><br>
+          <a href="#custom-domains">Custom domains?</a><br>
+          <a href="#web-rollback">How do I roll back?</a>
+        </div>
+        <div>
+          <strong>LingCode-specific</strong>
+          <a href="#credentials-stored">Where does LingCode store my credentials?</a><br>
+          <a href="#deploy-on-push">Deploy automatically on git push?</a><br>
+          <a href="#ci-integration">CI / GitHub Actions integration?</a><br>
+          <a href="#deploy-failed-midway">Deploy failed mid-way — what now?</a><br>
+          <a href="#multi-target">Multiple deploy targets in one project?</a><br>
+          <a href="#offline-deploy">Can I deploy offline?</a>
+        </div>
+      </div>
+
+      <h2>App Store (iOS + macOS)</h2>
+
+      <div class="q-block">
+        <h3 id="apple-need-paid">Do I need a paid Apple Developer account? <a href="#apple-need-paid" class="anchor">#</a></h3>
+        <p><strong>Yes.</strong> A free Apple ID lets you build and run on your own Mac, but <a href="/glossary.html#app-store-connect">App Store Connect</a> refuses uploads until your account is enrolled in the <a href="/glossary.html#developer-program">Apple Developer Program</a> ($99/year). LingCode's preflight catches this — but you'll feel it the moment you try to generate a Distribution certificate, which requires enrollment.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="p8-both-platforms">Can I use the same .p8 file for both iOS and macOS? <a href="#p8-both-platforms" class="anchor">#</a></h3>
+        <p><strong>Yes.</strong> The <a href="/glossary.html#p8">.p8</a> is an App Store Connect API key; it's not platform-specific. LingCode picks <code>--type macos</code> or <code>--type ios</code> automatically from the scheme's <a href="/glossary.html#supported-platforms"><code>SUPPORTED_PLATFORMS</code></a>, so the same key authenticates uploads for both.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="lost-p8">What happens if I lose my .p8 file? <a href="#lost-p8" class="anchor">#</a></h3>
+        <p>Revoke the key at <a href="https://appstoreconnect.apple.com/access/api" rel="noopener noreferrer">appstoreconnect.apple.com/access/api</a> and generate a new one. The <code>.p8</code> is downloadable only once at creation — Apple doesn't keep a copy on their side. Any machine using the lost key stops working; replace with the new one and you're back.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="apple-dist-vs-iphone">What's the difference between "Apple Distribution" and "iPhone Distribution"? <a href="#apple-dist-vs-iphone" class="anchor">#</a></h3>
+        <p><strong>Apple Distribution</strong> is the modern unified cert — works for iOS, macOS, tvOS, and watchOS. <strong>iPhone Distribution</strong> and <strong>Mac App Distribution</strong> are older platform-specific variants still valid for legacy projects. LingCode's preflight accepts any of them.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="testflight-processing">Why does TestFlight processing take so long? <a href="#testflight-processing" class="anchor">#</a></h3>
+        <p>Apple runs server-side validation, extracts metadata, symbolicates crash info, and scans for private API usage before the build becomes distributable. Typical time is 5–30 minutes, but it can stretch to an hour during peak windows. This happens entirely on Apple's side — nothing LingCode does (or doesn't do) changes it.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="app-store-review-time">How long does App Store review take? <a href="#app-store-review-time" class="anchor">#</a></h3>
+        <p>First submissions for a new app average 24–48 hours. Subsequent updates are usually faster (6–24 hours). Apple publishes current review times at <a href="https://developer.apple.com/app-store/review/" rel="noopener noreferrer">developer.apple.com/app-store/review</a>. Independent of TestFlight processing — review is a separate, human-run step.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="multiple-teams">I'm on multiple Apple teams. Which one should I use? <a href="#multiple-teams" class="anchor">#</a></h3>
+        <p>The team that owns the App Store Connect app record for this specific app. The <a href="/glossary.html#team-id">Team ID</a>, the signing cert, and the app record must all match — a cert for Team A signing a build for Team B's app record fails at export time. Double-check which team owns the app before copying the Team ID.</p>
+      </div>
+
+      <h2>Google Play</h2>
+
+      <div class="q-block">
+        <h3 id="play-need-paid">Is the $25 Google Play signup really required? <a href="#play-need-paid" class="anchor">#</a></h3>
+        <p><strong>Yes, one-time.</strong> Without an active <a href="/glossary.html#play-console">Play Console</a> account you cannot create apps, upload builds, or generate service accounts. No workarounds.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="first-manual-upload">Why can't my service account upload the first build? <a href="#first-manual-upload" class="anchor">#</a></h3>
+        <p>Google's anti-fraud model requires a human-originated upload to establish trust for a new package name. Until that first upload, the API silently accepts requests but never processes them. Build a signed AAB locally, drag it into Play Console → Internal testing → Create new release, once. After that, service-account uploads work normally.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="lost-keystore">What happens if I lose my Android keystore? <a href="#lost-keystore" class="anchor">#</a></h3>
+        <p>If you opted into <strong>Play App Signing</strong> (Google holds the release key for you), you can request an upload-key reset in Play Console → Setup → App signing. Google reviews these manually — usually within a few days. If you <em>didn't</em> opt into Play App Signing, you cannot update the app under the same package name; you'd have to ship a new one. This is why every <a href="/glossary.html#keystore">keystore</a> guide screams about backing up to two places.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="aab-vs-apk">What's the difference between AAB and APK? <a href="#aab-vs-apk" class="anchor">#</a></h3>
+        <p>An <strong>APK</strong> is a single file containing every resource for every device — ships as-is to users. An <strong>AAB</strong> is a modular bundle; Google Play slices it server-side and delivers a device-specific APK at install time, dramatically shrinking download size. Google required AAB for new apps from August 2021. LingCode produces AABs via <code>./gradlew bundleRelease</code>.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="share-keystore">Can I share one keystore across multiple apps? <a href="#share-keystore" class="anchor">#</a></h3>
+        <p>Technically yes — one <code>.keystore</code> file can hold multiple aliases, each for a different app. In practice, most teams use one keystore per app to keep blast radius narrow: a leaked keystore only compromises one app's ability to ship updates.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="play-review-time">How long does Google Play review take? <a href="#play-review-time" class="anchor">#</a></h3>
+        <p>Internal testing: no review, instant. Closed/open testing or production for a first release: usually &lt;24 hours, but Google has shifted to up to 7 days for new apps in recent years. Subsequent updates to production apps that pass automated checks often go live in 2–3 hours.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="skip-tracks">Can I skip tracks and jump straight to production? <a href="#skip-tracks" class="anchor">#</a></h3>
+        <p>Yes — you can upload directly to production, or promote a build from any <a href="/glossary.html#track">track</a> to any other. Good practice: start on <em>internal</em>, verify it runs, then promote. That's what Magic Deploy defaults to. Nothing stops you from picking production on day one.</p>
+      </div>
+
+      <h2>Web platforms</h2>
+
+      <div class="q-block">
+        <h3 id="which-web-platform">Which web platform should I use? <a href="#which-web-platform" class="anchor">#</a></h3>
+        <p>Depends what you're shipping. Next.js / React / Vue static sites: <strong>Vercel</strong> or <strong>Netlify</strong> (generous free tiers, excellent framework detection). Long-running Node/Python/Go servers with a database: <strong>Railway</strong> or <strong>Fly.io</strong>. Rails, multi-process Node apps, or Python workers with cron: <strong>Heroku</strong>. If in doubt, try Vercel — cheapest to set up, and you can migrate later.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="preview-deploys">Can I get preview deploys per branch? <a href="#preview-deploys" class="anchor">#</a></h3>
+        <p>Yes, depending on the platform. Vercel and Netlify generate preview URLs for every branch out of the box (when git-integrated). Railway and Fly.io support per-environment deploys but require explicit config. Heroku has review apps via GitHub integration. LingCode always deploys the currently-checked-out code; preview-per-branch is a platform feature, not a LingCode feature.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="env-vars-runtime">How do I set env vars my app reads at runtime? <a href="#env-vars-runtime" class="anchor">#</a></h3>
+        <p>Through the platform's dashboard, not LingCode. LingCode passes tokens to the <em>CLI</em> at deploy time — those aren't visible to your running app. Use: Vercel → Project → Settings → Environment Variables; Netlify → Site settings → Environment; Railway → Project → Variables; Fly.io → <code>fly secrets set</code>; Heroku → <code>heroku config:set</code>.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="web-free-tier">Do these platforms have free tiers? <a href="#web-free-tier" class="anchor">#</a></h3>
+        <p>Vercel and Netlify: generous free tiers with bandwidth limits. Railway: $5/mo in free credits — exhausts fast. Fly.io: "free allowance" of small shared-cpu machines (~3 VMs). Heroku: no free tier since Nov 2022 — eco dynos are $5/mo. Check current pricing on each dashboard.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="custom-domains">How do I add a custom domain? <a href="#custom-domains" class="anchor">#</a></h3>
+        <p>Through the platform's dashboard, not LingCode. Each platform's docs cover the DNS records you need (usually a CNAME or ALIAS). Once the domain is live on the platform, LingCode's next deploy goes there automatically.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="web-rollback">How do I roll back a deploy? <a href="#web-rollback" class="anchor">#</a></h3>
+        <p>Use the platform's dashboard, not LingCode. Vercel, Netlify, Railway, and Heroku all have a "Deployments" or "Releases" list with a one-click rollback button. For Fly.io: <code>fly deploy --image &lt;old-image-tag&gt;</code>. LingCode deploys forward; rollback is a dashboard operation.</p>
+      </div>
+
+      <h2>LingCode-specific</h2>
+
+      <div class="q-block">
+        <h3 id="credentials-stored">Where does LingCode store my credentials? <a href="#credentials-stored" class="anchor">#</a></h3>
+        <p>In macOS <code>UserDefaults</code> on your Mac, scoped to the LingCode app. <strong>Nothing is uploaded to any LingCode server</strong> — credentials go directly from your Mac to Apple's / Google's / the platform's servers at deploy time. A hardening pass to move secrets into the Keychain is on the roadmap.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="deploy-on-push">Can I deploy automatically on git push? <a href="#deploy-on-push" class="anchor">#</a></h3>
+        <p>Not from LingCode directly. LingCode is a desktop IDE, so deploys are human-triggered from the Magic Deploy button. For push-triggered deploys, use the platform's native git integration (Vercel, Netlify, Railway, and Heroku all support it) or a CI pipeline.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="ci-integration">Does LingCode work with CI / GitHub Actions? <a href="#ci-integration" class="anchor">#</a></h3>
+        <p>LingCode doesn't run in CI itself (it's a Mac desktop app). But every deploy target LingCode uses is just a CLI invocation — the exact commands are in Magic Deploy's progress log. Copy them into a GitHub Action or your CI of choice and you get the same flow, minus the live UI.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="deploy-failed-midway">My deploy failed mid-way. Is my app in a weird state? <a href="#deploy-failed-midway" class="anchor">#</a></h3>
+        <p>Usually no. For App Store: if the archive or export fails, nothing was uploaded — safe. If upload fails, nothing's visible in App Store Connect either. For Play: if gradle succeeds but upload or commit fails, you might have an uncommitted edit in Play Console — open the app's release dashboard and discard it manually, then retry. For web platforms: each platform has its own rollback/retry behavior; the previous deploy stays live until the new one fully succeeds.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="multi-target">Can one project deploy to multiple targets? <a href="#multi-target" class="anchor">#</a></h3>
+        <p>Yes. LingCode persists Magic Deploy config per project, and you can reconfigure and re-run the Deploy button as many times as you want — to Vercel for the web frontend, to App Store for the iOS app, to Google Play for the Android sibling. The in-app settings are independent for each target.</p>
+      </div>
+
+      <div class="q-block">
+        <h3 id="offline-deploy">Can I deploy offline? <a href="#offline-deploy" class="anchor">#</a></h3>
+        <p>No. Every deploy target involves uploading something to a remote service (Apple, Google, Vercel, etc.), which obviously needs internet. The <em>build</em> step (archive, bundleRelease, npm run build) runs locally and works offline; only the upload fails without a connection.</p>
+      </div>
+
+      <h2>Didn't find your question?</h2>
+      <p>Open an issue or ask in the <a href="/support.html">Support</a> page. If it's a concept you want explained in more depth, see the <a href="/learn-code-signing.html">deep-dive posts</a> or the <a href="/glossary.html">glossary</a>.</p>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">Ready to deploy?</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">Pick your target on the <a href="/deploy.html">deploy hub</a> and follow its guide.</p>
+        <a href="/">Download LingCode for Mac</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

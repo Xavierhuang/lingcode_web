@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage database migrations — LingCode Tutorials</title>
+  <meta name="description" content="Versioned schema changes that move every environment from one shape to another, predictably. Prisma, Drizzle, raw SQL with a runner — pick one, never edit a deployed migration.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/manage-database-migrations.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/manage-database-migrations.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/manage-database-migrations.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/manage-database-migrations.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Manage database migrations",
+  "description": "A migration is a versioned schema change you can replay on any environment to get it to a specific state. The reason this matters: ad-hoc ALTER TABLE on production from a console gets your local dev box out of sync with prod within a month. Migrations make schema evolution boring",
+  "url": "https://lingcode.dev/tutorials/manage-database-migrations.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/manage-database-migrations.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Manage database migrations"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Manage database migrations",
+      "item": "https://lingcode.dev/tutorials/manage-database-migrations.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/manage-database-migrations.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Manage database migrations</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Manage database migrations</h1>
+      <p class="intro">A migration is a versioned schema change you can replay on any environment to get it to a specific state. The reason this matters: ad-hoc <code>ALTER TABLE</code> on production from a console gets your local dev box out of sync with prod within a month. Migrations make schema evolution boring and reviewable.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The reason migrations exist as a separate concept — instead of "just <code>ALTER TABLE</code> when you need to" — is that schemas drift. The dev database evolves freely while you build features. The staging database evolved differently last quarter. The production database has whatever was applied in the order it was applied. Without a system, "what's the actual current schema" becomes a question only an ops engineer with admin access can answer, and changes that work on dev fail on prod for non-obvious reasons. With migrations, the schema is a sequence of versioned text files in the repo; any environment can be brought to any version by replaying the right files; the question "what's the schema" is answered by reading the migrations folder.</p>
+      <p>The mental model is small: a <strong>migration</strong> is a file (usually two — an <em>up</em> step that applies the change and a <em>down</em> step that reverses it) tied to a unique version (a timestamp or a sequence number). A <strong>migration runner</strong> is the tool that tracks which migrations have been applied on each database (typically in a <code>schema_migrations</code> table) and applies the unrun ones in order. Different tools generate different file formats — raw SQL, ORM-specific DSL, declarative schema diffs — but the shape is the same. Pick one tool, commit the migration files, run the tool on every deploy, never edit a migration after it ships.</p>
+      <p>This tutorial covers the three tools you'll actually consider in 2026 — <strong>Prisma Migrate</strong>, <strong>Drizzle Kit</strong>, and <strong>raw SQL with a small runner</strong> — explains which to pick when, walks the first-migration flow for each, and ends with the operational rules that prevent the migration disasters teams keep rediscovering.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>What "a migration" actually is and what the runner tracks</li>
+        <li>The three tool flavors: ORM-coupled (Prisma), schema-diff (Drizzle), tool-agnostic (raw SQL)</li>
+        <li>Generating, reviewing, and applying a first migration in each</li>
+        <li>The non-negotiable rule: never edit a deployed migration</li>
+        <li>Production gotchas: long migrations, table locks, online schema changes</li>
+        <li>When and how to roll back; when you can't</li>
+        <li>Seeding test data without polluting migrations</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> A Postgres database your app talks to (local Docker, <a href="/tutorials/install-postgres-and-redis-on-your-server.html">self-hosted</a>, or managed at Supabase/Neon/RDS), an app that connects to it, and a clear idea of one schema change you want to make (e.g., add a column, add a table, add an index). You'll need to choose one of three tool flavors below; you can't easily mix them.
+      </div>
+
+      <h2>Step 1: Pick the tool flavor</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>The decision determines everything that follows</h3>
+          <ul>
+            <li><strong>Prisma Migrate</strong> — you describe the schema in <code>schema.prisma</code>; Prisma diffs against the DB and generates the SQL migration. Best when you're already using Prisma as your ORM. Strong type generation; tight coupling between schema, types, and DB.</li>
+            <li><strong>Drizzle Kit</strong> — you define the schema as TypeScript code (table definitions in <code>.ts</code> files); Drizzle generates SQL migration files. Less coupling than Prisma — the migrations are plain SQL you can read, edit, and run elsewhere. Pairs with Drizzle ORM but works standalone too.</li>
+            <li><strong>Raw SQL + a runner</strong> (node-pg-migrate, knex, sqitch, Flyway) — you write the SQL by hand; the runner tracks what's applied. No coupling to any ORM. Most portable; the schema lives only in the SQL files and the DB itself, not in any other source of truth.</li>
+          </ul>
+          <p>Quick rule of thumb: <strong>using Prisma already?</strong> Prisma Migrate. <strong>Want type-safe DB code but plain-SQL migrations?</strong> Drizzle Kit. <strong>Want maximum portability or working in a non-TypeScript stack?</strong> Raw SQL.</p>
+          <p>You can switch later but it's painful. Pick deliberately.</p>
+        </div>
+      </div>
+
+      <h2>Step 2 (Prisma): Write a schema, generate a migration</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>For projects already on Prisma</h3>
+          <p>Edit <code>prisma/schema.prisma</code> to describe the desired schema. Adding a new table:</p>
+          <pre><code>model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}</code></pre>
+          <p>Generate and apply a migration:</p>
+          <pre><code>npx prisma migrate dev --name add_post_table</code></pre>
+          <p>This creates <code>prisma/migrations/&lt;timestamp&gt;_add_post_table/migration.sql</code> — readable SQL Prisma derived from the diff — runs it against your dev DB, and regenerates the TypeScript types. Open the file and <strong>read what it generated</strong>. Prisma's diffs are usually correct but it has done surprising things (dropped + recreated columns instead of renaming, generated indexes you didn't expect) — catch them in review, not in production.</p>
+          <p>Commit the migration folder. On deploy: <code>npx prisma migrate deploy</code> applies all unrun migrations against the target DB. Never run <code>migrate dev</code> against production — it can prompt for resets.</p>
+        </div>
+      </div>
+
+      <h2>Step 3 (Drizzle): Define schema, generate migration</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>SQL migrations from TypeScript schema definitions</h3>
+          <p>Define the schema as TypeScript in <code>db/schema.ts</code>:</p>
+          <pre><code>import { pgTable, serial, varchar, integer, timestamp } from "drizzle-orm/pg-core";
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const posts = pgTable("posts", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  body: varchar("body").notNull(),
+  authorId: integer("author_id").references(() =&gt; users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});</code></pre>
+          <p>Configure Drizzle in <code>drizzle.config.ts</code>:</p>
+          <pre><code>import { defineConfig } from "drizzle-kit";
+export default defineConfig({
+  schema: "./db/schema.ts",
+  out: "./drizzle",
+  dialect: "postgresql",
+  dbCredentials: { url: process.env.DATABASE_URL! },
+});</code></pre>
+          <p>Generate the migration SQL:</p>
+          <pre><code>npx drizzle-kit generate
+# Creates drizzle/0001_add_posts.sql with the actual SQL.
+# Open it. Read it. Commit it.
+
+# Apply it:
+npx drizzle-kit migrate</code></pre>
+          <p>Drizzle's appeal: the generated SQL is plain. If you don't like the diff, hand-edit the <code>.sql</code> before committing. The <code>migrate</code> command tracks applied migrations in a <code>__drizzle_migrations</code> table.</p>
+        </div>
+      </div>
+
+      <h2>Step 4 (Raw SQL): node-pg-migrate or equivalent</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>SQL you wrote, runner that tracks it</h3>
+          <p>For Node, <code>node-pg-migrate</code> is a small, well-maintained runner. Other ecosystems have equivalents: <code>knex</code> migrations, Flyway (JVM and standalone), <code>sqitch</code> (language-agnostic), Django/Rails/Laravel built-in migrations.</p>
+          <pre><code>npm i node-pg-migrate
+npx node-pg-migrate create add-posts-table
+# Creates migrations/&lt;timestamp&gt;_add-posts-table.js with up() and down() exports.</code></pre>
+          <p>Write the SQL:</p>
+          <pre><code>// migrations/1715000000000_add-posts-table.js
+exports.up = pgm =&gt; {
+  pgm.createTable("posts", {
+    id: "id",  // shorthand for serial primary key
+    title: { type: "varchar(255)", notNull: true },
+    body: { type: "text", notNull: true },
+    author_id: { type: "integer", notNull: true, references: "users" },
+    created_at: { type: "timestamp", default: pgm.func("now()") },
+  });
+};
+
+exports.down = pgm =&gt; {
+  pgm.dropTable("posts");
+};</code></pre>
+          <p>Apply / revert:</p>
+          <pre><code>npx node-pg-migrate up          # apply all unrun
+npx node-pg-migrate down        # revert most recent</code></pre>
+          <p>The migrations are tracked in a <code>pgmigrations</code> table. For more advanced needs (raw SQL only, no DSL), use <code>pgm.sql("CREATE TABLE ...")</code> inside <code>up()</code>. The runner doesn't care; it just executes whatever you put there.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>The "schema as TypeScript" tools (Prisma, Drizzle) couple your schema to a specific language stack.</strong> If you might switch languages later (Node → Python, say), the raw-SQL pattern is the only one that survives unchanged. The schema lives in plain <code>.sql</code> files; any tool in any language can apply them. Worth picking raw SQL if you have any reason to think the stack will move.
+      </div>
+
+      <h2>Step 5: The rules that prevent migration disasters</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Three non-negotiables</h3>
+          <ul>
+            <li><strong>Never edit a deployed migration.</strong> Once a migration has run on any shared environment (staging, production), it is frozen. The next change is a <em>new</em> migration. Editing a deployed one means the file no longer matches what's already applied — every environment now has a different schema and the runner can't reconcile.</li>
+            <li><strong>Migrations are always additive on the way up.</strong> Add columns as nullable. Add tables. Add indexes. Reversing a deploy by reverting the migration usually doesn't work in production (data has been written that depends on the new schema). Plan for forward-only.</li>
+            <li><strong>Test the migration end-to-end before deploying.</strong> Spin up a clean DB, replay all migrations, verify the schema matches expectations. This is what CI does for you — see <a href="/tutorials/automate-deploys-with-github-actions.html">CI/CD with GitHub Actions</a> Step 6 for the service-container pattern that runs migrations in CI.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 6: Production gotchas on big tables</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>What works on 1,000 rows breaks on 100 million</h3>
+          <p>Most migrations are instant on small tables and slow-or-locking on big ones. The patterns to know:</p>
+          <ul>
+            <li><strong>Adding a NOT NULL column with a default value</strong> — on Postgres 11+, fast (metadata-only). On older versions, full table rewrite. Always check your Postgres version.</li>
+            <li><strong>Adding a foreign key constraint</strong> — locks both tables while validating. On big tables: add the constraint as <code>NOT VALID</code> first (fast, no validation), then <code>VALIDATE CONSTRAINT</code> in a separate migration (slow but doesn't block writes).</li>
+            <li><strong>Creating an index</strong> — locks writes on the table by default. Use <code>CREATE INDEX CONCURRENTLY</code> on Postgres for an online build. <strong>Cannot run inside a transaction</strong> — disable the wrapping transaction for that migration (each tool has a flag).</li>
+            <li><strong>Backfilling data</strong> — never put a "<code>UPDATE big_table SET col = ...</code>" in a migration. It locks the table for hours. Backfill in batches from application code or a separate script; the migration only adds the column.</li>
+          </ul>
+          <p>For really big tables (50M+ rows on Postgres), look at <strong>pg_repack</strong> and online-schema-change tools. The migration runner can't help you avoid locks; the SQL itself has to be written carefully.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: Rolling back</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>When you can, when you can't, what to do instead</h3>
+          <p>The <code>down</code> migration is mostly useful in dev — applying a migration, realizing it's wrong, reverting, regenerating. In production, "roll back the migration" is usually the wrong answer:</p>
+          <ul>
+            <li>Data has been written that uses the new schema. Reverting drops that data.</li>
+            <li>Long-running migrations that you canceled mid-flight may have left the DB in a partial state. The down migration doesn't know which steps completed.</li>
+            <li>Rolling back a deployed migration on prod creates a divergence: prod is now on schema vN-1 while staging is on vN. Your next migration written against vN won't apply on prod.</li>
+          </ul>
+          <p>The production pattern instead: <strong>roll forward, not back.</strong> If a migration deployed and you regret it, write a new migration that fixes the regret. Drop the column you shouldn't have added; revert the constraint; whatever. This keeps the migration sequence linear and every environment converges to the same head.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: Seeding test data</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>Keep it out of migrations</h3>
+          <p>"Seed data" — fake users for dev, lookup tables, demo content — is tempting to put in migrations because it lives near the schema. Don't. Migrations should be schema-only; data belongs in a separate script.</p>
+          <pre><code>// scripts/seed.ts
+import { db } from "./db";
+
+await db.users.create({ email: "admin@local", role: "admin" });
+await db.users.createMany([
+  { email: "alice@local" },
+  { email: "bob@local" },
+]);</code></pre>
+          <p>Run <code>npm run seed</code> after a fresh DB setup. The seed script is idempotent (use <code>upsert</code> or check-before-insert); it can run multiple times safely. This separation is what lets your migrations be pure schema and your seed data live next to the test fixtures it represents.</p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/install-postgres-and-redis-on-your-server.html" class="tutorial-next-card">
+            <h3>Install Postgres and Redis on your server</h3>
+            <p>The self-hosted Postgres the migrations run against</p>
+          </a>
+          <a href="/tutorials/automate-deploys-with-github-actions.html" class="tutorial-next-card">
+            <h3>CI/CD with GitHub Actions</h3>
+            <p>Run migrations on every PR against a throwaway DB to catch failures early</p>
+          </a>
+          <a href="/tutorials/pick-a-baas-firebase-vs-supabase.html" class="tutorial-next-card">
+            <h3>Pick a BaaS: Firebase vs Supabase</h3>
+            <p>Supabase exposes Postgres migrations directly; Firebase's schema-less model skips this whole concept</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

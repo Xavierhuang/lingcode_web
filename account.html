@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account — LingCode</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <style>
+    .account-hero { padding: 110px 32px 12px; text-align: center; }
+    .account-hero h1 { font-size: clamp(1.75rem, 3vw, 2.25rem); margin: 0 0 4px; letter-spacing: -0.03em; }
+    .account-wrap { max-width: 880px; margin: 0 auto; padding: 12px 32px 100px; }
+    .account-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 22px 24px; margin-bottom: 16px; text-align: left;
+    }
+    .account-card-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 12px; margin: 0 0 14px; flex-wrap: wrap;
+    }
+    .account-card-head h2 { font-size: 0.95rem; font-weight: 600; margin: 0; color: var(--text); }
+    .account-card-head .meta { font-size: 0.78rem; color: var(--text-dim); }
+    .account-card h2 { font-size: 0.95rem; font-weight: 600; margin: 0 0 12px; color: var(--text); }
+    /* Mac-app card: subtle accent gradient → primary CTA, distinct from data cards. */
+    .account-card.account-mac {
+      background: linear-gradient(135deg, rgba(0,208,132,0.10), rgba(0,208,132,0.02) 60%);
+      border-color: rgba(0,208,132,0.3);
+    }
+    .account-row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 0.9375rem; color: var(--text-muted); padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .account-row:last-child { border-bottom: none; }
+    .account-row strong { color: var(--text); font-weight: 500; }
+    .account-billing { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6; }
+    .account-actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 12px; }
+    .account-actions.account-actions-tight { margin-top: 4px; }
+    .account-guest { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+    .account-guest a { color: var(--signal, #00d084); }
+    .account-banner { padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 0.9375rem; }
+    .account-banner.ok { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.35); color: var(--text); }
+    .account-banner.muted { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); }
+
+    /* ─── Danger zone ─── */
+    .danger-zone { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; }
+    .btn-danger {
+      background: transparent; color: #ef4444;
+      border: 1px solid rgba(239,68,68,0.4);
+    }
+    .btn-danger:hover { background: rgba(239,68,68,0.08); border-color: #ef4444; }
+    .btn-danger-solid {
+      background: #ef4444; color: #fff; border: 1px solid #ef4444;
+    }
+    .btn-danger-solid:hover { background: #dc2626; border-color: #dc2626; }
+
+    /* ─── Delete-account modal ─── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+    }
+    .modal {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 28px; max-width: 480px; width: 100%;
+      box-shadow: 0 30px 80px -20px rgba(0,0,0,0.5);
+    }
+    .modal h3 { margin: 0 0 12px; font-size: 1.25rem; color: var(--text); }
+    .modal p { margin: 0 0 12px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
+    .modal ul { margin: 0 0 16px; padding-left: 20px; color: var(--text-muted); font-size: 0.875rem; line-height: 1.7; }
+    .modal-input {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: 8px; background: var(--bg); color: var(--text);
+      font-size: 0.9375rem; margin: 6px 0 16px; box-sizing: border-box;
+    }
+    .modal-input:focus { outline: none; border-color: var(--accent, #a855f7); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+    .modal-error { color: #ef4444; font-size: 0.875rem; margin: 0 0 12px; min-height: 1em; }
+
+    /* ─── Your prototypes — visual grid with thumbnail cards ─── */
+    .saved-grid {
+      display: grid; gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      list-style: none; margin: 0; padding: 0;
+    }
+    .saved-card {
+      display: flex; flex-direction: column;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; transition: border-color 0.15s, transform 0.15s;
+    }
+    .saved-card:hover { border-color: rgba(0,208,132,0.4); transform: translateY(-1px); }
+    .saved-thumb-link {
+      display: block; aspect-ratio: 16 / 10; background: #0f0f12;
+      position: relative; overflow: hidden; cursor: pointer;
+    }
+    .saved-thumb-link img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .saved-thumb-link .saved-thumb-empty {
+      position: absolute; inset: 0; display: flex; align-items: center;
+      justify-content: center; color: var(--text-dim); font-size: 0.78rem;
+      font-family: 'Geist Mono', monospace; letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #161620, #0f0f15);
+    }
+    .saved-card-body {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 12px 14px 14px;
+    }
+    .saved-title {
+      font-size: 0.9375rem; font-weight: 600; margin: 0;
+      color: var(--text); line-height: 1.3; word-wrap: break-word;
+      overflow: hidden; text-overflow: ellipsis;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .saved-prompt {
+      font-size: 0.8125rem; color: var(--text-muted); margin: 0;
+      line-height: 1.4; overflow: hidden; text-overflow: ellipsis;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .saved-meta {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      font-size: 0.7rem; color: var(--text-dim);
+      font-family: 'Geist Mono', monospace; margin-top: 2px;
+    }
+    .saved-meta .saved-provider { text-transform: uppercase; letter-spacing: 0.05em; }
+    .saved-card-actions {
+      display: flex; gap: 6px; padding: 0 12px 12px; align-items: center;
+      flex-wrap: wrap; row-gap: 6px;
+    }
+    .saved-card-actions .spacer { flex: 1; }
+    .saved-card-actions button {
+      background: transparent; color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px 9px; font-size: 0.72rem; cursor: pointer;
+      transition: all 0.12s; font-family: 'Geist', sans-serif;
+    }
+    .saved-card-actions button:hover { color: var(--text); border-color: var(--border-strong); }
+    .saved-card-actions .saved-delete:hover { color: #f87171; border-color: rgba(248,113,113,0.5); }
+    .saved-empty {
+      color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;
+      margin: 4px 0 0; padding: 16px 0;
+    }
+    .saved-empty a { color: var(--signal, #00d084); }
+    @media (max-width: 600px) {
+      .saved-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    }
+    @media (max-width: 380px) {
+      .saved-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/project.html">Projects</a>
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="account-hero">
+      <div class="section-container">
+        <h1 id="account-title">Your account</h1>
+      </div>
+    </section>
+
+    <div class="account-wrap" id="account-root">
+      <p class="account-guest" id="account-loading">Loading…</p>
+    </div>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+  <script>
+(function () {
+  // Sign-in/up flows from other pages (e.g. /try.html) stash where the user
+  // came from in sessionStorage. After the OAuth round-trip drops us here,
+  // bounce to that destination if set. The server's redirect_uri whitelist
+  // is exact-match, so we can't carry `next` on the URL.
+  try {
+    var stashedNext = sessionStorage.getItem('lingcode.next');
+    if (stashedNext && stashedNext.startsWith('/') && !stashedNext.startsWith('//')) {
+      sessionStorage.removeItem('lingcode.next');
+      // Confirm we're actually signed in before bouncing — if the OAuth
+      // failed we'd want the user to see the sign-in CTA on this page.
+      fetch('/api/account/me', { credentials: 'include', cache: 'no-store' })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (x) {
+          if (x && x.ok && x.j && x.j.ok) window.location.replace(stashedNext);
+        })
+        .catch(function () {});
+    }
+  } catch (_) {}
+
+  var root = document.getElementById('account-root');
+  var loading = document.getElementById('account-loading');
+  var title = document.getElementById('account-title');
+
+  var params = new URLSearchParams(window.location.search);
+  var billingFlash = params.get('billing');
+
+  function showGuest(message) {
+    if (loading) loading.remove();
+    root.innerHTML =
+      '<div class="account-guest"><p>' +
+      message +
+      '</p><p><a href="/signin.html">Sign in</a> or <a href="/signup.html">Create an account</a></p></div>';
+  }
+
+  function tierLabel(t) {
+    var s = (t || '').toLowerCase();
+    if (s === 'max_pro' || s === 'max-pro' || s === 'maxpro' || s === 'max') return 'Max Pro';
+    if (s === 'pro') return 'Pro';
+    return 'Free';
+  }
+  function isPaidTier(t) {
+    var s = (t || '').toLowerCase();
+    return s === 'pro' || s === 'max_pro' || s === 'max-pro' || s === 'maxpro' || s === 'max';
+  }
+  function isMaxProTier(t) {
+    var s = (t || '').toLowerCase();
+    return s === 'max_pro' || s === 'max-pro' || s === 'maxpro' || s === 'max';
+  }
+
+  function formatPeriodEnd(iso) {
+    if (!iso) return '';
+    try {
+      var d = new Date(iso);
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch (e) {
+      return iso;
+    }
+  }
+
+  function postBilling(path, body) {
+    return fetch(path, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {})
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); });
+  }
+
+  Promise.all([
+    fetch('/api/billing/config', { credentials: 'same-origin' }).then(function (r) { return r.json(); }),
+    fetch('/api/account/me', { credentials: 'same-origin' }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+  ])
+    .then(function (results) {
+      if (loading) loading.remove();
+      var cfg = results[0];
+      var x = results[1];
+      if (!x.ok || !x.j.ok) {
+        showGuest('Sign in to see your plan.');
+        return;
+      }
+      var d = x.j;
+      var stripe = cfg.stripe && (cfg.pro_monthly || cfg.pro_annual);
+      title.textContent = 'Signed in';
+      // Top-nav swap: hide Sign in, reveal Sign out — same pattern /try.html
+      // uses via setNavAuthState(true). Without this the nav looked stuck on
+      // "Sign in" even after the body confirmed the user was signed in.
+      var navSignin  = document.getElementById('nav-signin');
+      var navSignout = document.getElementById('nav-signout');
+      if (navSignin)  navSignin.hidden  = true;
+      if (navSignout) {
+        navSignout.hidden = false;
+        navSignout.addEventListener('click', function (e) {
+          e.preventDefault();
+          fetch('/api/account/logout', { method: 'POST', credentials: 'same-origin' })
+            .then(function () { window.location.href = '/signin.html'; });
+        });
+      }
+
+      // Bottom-left avatar menu (Claude-style) — the entry point to the backend
+      // console, which nothing else linked to. Signed-in only.
+      mountAccountFab(d.email);
+
+      var banner = '';
+      if (billingFlash === 'success') {
+        banner = '<div class="account-banner ok">Payment setup complete. Your plan updates in a moment after Stripe notifies us.</div>';
+      } else if (billingFlash === 'cancel') {
+        banner = '<div class="account-banner muted">Checkout canceled. You can upgrade anytime.</div>';
+      }
+
+      // Treat both Pro and Max Pro as paid tiers — both unlock managed
+       // LingModel and hide the BYOK upgrade prompts. Max Pro adds unlimited
+       // app generation but uses the same billing/UI surface.
+      var isPro = isPaidTier(d.tier);
+      var isMaxPro = isMaxProTier(d.tier);
+      var sub = d.subscription_status ? '<div class="account-row"><span>Subscription</span><strong>' + escapeHtml(d.subscription_status) + '</strong></div>' : '';
+      var period = d.subscription_current_period_end
+        ? '<div class="account-row"><span>Current period ends</span><strong>' + escapeHtml(formatPeriodEnd(d.subscription_current_period_end)) + '</strong></div>'
+        : '';
+      var interval = d.billing_interval
+        ? '<div class="account-row"><span>Billing</span><strong>' + escapeHtml(d.billing_interval === 'year' ? 'Annual' : 'Monthly') + '</strong></div>'
+        : '';
+      var hosted = '';
+      if (typeof d.hosted_prompts_used === 'number' && typeof d.hosted_prompt_limit === 'number' && !isPro) {
+        hosted =
+          '<div class="account-row"><span>LingModel prompts (included)</span><strong>' +
+          escapeHtml(String(d.hosted_prompts_used)) +
+          ' / ' +
+          escapeHtml(String(d.hosted_prompt_limit)) +
+          '</strong></div>' +
+          '<p class="account-billing" style="margin-top:8px">Add your own key in the Mac app for BYOK. Pro removes the LingModel cap.</p>';
+      } else if (isPro) {
+        hosted =
+          '<div class="account-row"><span>LingModel</span><strong>Unlimited (Pro)</strong></div>';
+      }
+
+      var billingBody = '';
+      if (!cfg.stripe) {
+        // Admin signal — only visible on dev/local where Stripe isn't wired.
+        billingBody = '<p class="account-billing">Billing not configured on this server.</p>';
+      } else if (isMaxPro) {
+        // Top tier — no upsell, just confirmation + manage path.
+        billingBody = '<p class="account-billing">You’re on <strong>Max Pro</strong>.</p>';
+      } else if (isPro) {
+        // Pro user — surface Max Pro as the next step rather than ending the
+        // sentence at "Manage in Stripe". The Manage button still ships below.
+        billingBody = '<p class="account-billing">You’re on <strong>Pro</strong>. Upgrade to <strong>Max Pro</strong> for 5× LingModel throughput, priority inference queue, and higher Deep Agent budgets.</p>';
+      } else {
+        billingBody = '<p class="account-billing">Upgrade to <strong>Pro</strong> for unlimited LingModel and priority support.</p>';
+      }
+
+      var upgradeActions = '';
+      if (stripe && !isPro) {
+        if (cfg.pro_monthly) {
+          upgradeActions += '<button type="button" class="btn btn-primary btn-lg" id="btn-pro-month">Upgrade Pro (monthly)</button> ';
+        }
+        if (cfg.pro_annual) {
+          upgradeActions += '<button type="button" class="btn btn-ghost btn-lg" id="btn-pro-year">Pro (annual)</button> ';
+        }
+      } else if (stripe && isPro && !isMaxPro) {
+        // Pro → Max Pro upgrade buttons. Mirror the Free → Pro pattern:
+        // primary monthly, ghost annual.
+        if (cfg.max_pro_monthly) {
+          upgradeActions += '<button type="button" class="btn btn-primary btn-lg" id="btn-max-month">Upgrade to Max Pro (monthly)</button> ';
+        }
+        if (cfg.max_pro_annual) {
+          upgradeActions += '<button type="button" class="btn btn-ghost btn-lg" id="btn-max-year">Max Pro (annual)</button> ';
+        }
+      }
+      var manage = '';
+      if (stripe && isPro && d.has_stripe_customer) {
+        // De-emphasized to ghost when an upgrade CTA exists alongside it
+        // (Pro users); promoted back to primary for Max Pro where Manage is
+        // the only billing action available.
+        var manageClass = isMaxPro ? 'btn-primary' : 'btn-ghost';
+        manage = '<button type="button" class="btn ' + manageClass + ' btn-lg" id="btn-portal">Manage subscription</button> ';
+      }
+
+      // Card order: Mac app (primary action) -> Billing (upgrade CTA, kept
+      // above the fold so Pro -> Max Pro is unmissable) -> Profile -> Saved.
+      root.innerHTML =
+        banner +
+        '<div class="account-card account-mac">' +
+          '<div class="account-card-head"><h2>Mac app</h2></div>' +
+          '<p class="account-billing" style="margin:0 0 14px"><a href="/LingCode-Installer.dmg" style="color:var(--signal,#00d084)">Download</a> first if needed.</p>' +
+          '<div class="account-actions account-actions-tight">' +
+            '<button type="button" class="btn btn-primary btn-lg" id="btn-open-lingcode">Open LingCode</button>' +
+          '</div>' +
+          '<p id="open-app-msg" class="account-billing" style="display:none;margin-top:12px">Didn\u2019t open? Install from <a href="/LingCode-Installer.dmg" style="color:var(--signal,#00d084)">Download</a>.</p>' +
+        '</div>' +
+        '<div class="account-card">' +
+          '<div class="account-card-head"><h2>Billing</h2><span class="meta">' + escapeHtml(tierLabel(d.tier)) + '</span></div>' +
+          billingBody +
+          (upgradeActions || manage ? '<div class="account-actions">' + upgradeActions + manage + '</div>' : '') +
+        '</div>' +
+        '<div class="account-card">' +
+          '<div class="account-card-head"><h2>Profile</h2></div>' +
+          '<div class="account-row"><span>Email</span><strong>' + escapeHtml(d.email) + '</strong></div>' +
+          sub + period + interval + hosted +
+        '</div>' +
+        // Saved-prototypes card placeholder \u2014 filled async by renderSavedPrototypes()
+        // below so a slow / failing list endpoint doesn't block billing render.
+        '<div class="account-card" id="saved-card" style="display:none">' +
+          '<div class="account-card-head"><h2>Your prototypes</h2><span class="meta" id="saved-card-meta"></span></div>' +
+          '<div id="saved-card-body"></div>' +
+        '</div>' +
+        // Cloud apps (full-stack Worker deploys) — filled async by renderCloudApps().
+        '<div class="account-card" id="cloud-apps-card" style="display:none">' +
+          '<div class="account-card-head"><h2>Your Cloud apps</h2><span class="meta" id="cloud-apps-meta"></span></div>' +
+          '<div id="cloud-apps-body"></div>' +
+        '</div>' +
+        '<div class="danger-zone">' +
+          '<button type="button" class="btn btn-danger" id="btn-delete-account">Delete account</button>' +
+        '</div>';
+
+      // Fire-and-forget: load saved prototypes after the main paint settles.
+      // Failures are silent (the card just stays hidden).
+      renderSavedPrototypes();
+      renderCloudApps();
+
+      var openApp = document.getElementById('btn-open-lingcode');
+      var openAppMsg = document.getElementById('open-app-msg');
+      if (openApp) {
+        openApp.addEventListener('click', function () {
+          openApp.disabled = true;
+          openApp.textContent = 'Opening…';
+          if (openAppMsg) openAppMsg.style.display = 'none';
+          fetch('/api/account/app-handoff', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (r) {
+              if (r.ok && r.j.ok && r.j.url) {
+                // Use a temporary anchor so the current page is NOT navigated away.
+                // window.location.href = 'lingcode://...' causes a hard navigation failure
+                // in Chrome/Edge when the scheme has no registered handler.
+                var a = document.createElement('a');
+                a.href = r.j.url;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                // After a short delay, re-enable the button and show a fallback message
+                // in case the app isn't installed.
+                setTimeout(function () {
+                  openApp.disabled = false;
+                  openApp.textContent = 'Open LingCode';
+                  if (openAppMsg) openAppMsg.style.display = '';
+                }, 2500);
+              } else {
+                openApp.disabled = false;
+                openApp.textContent = 'Open LingCode';
+                alert(r.j.error || 'Could not open LingCode. Install the app from Download, then try again.');
+              }
+            })
+            .catch(function () {
+              openApp.disabled = false;
+              openApp.textContent = 'Open LingCode';
+              alert('Could not connect. Try again.');
+            });
+        });
+      }
+      var bm = document.getElementById('btn-pro-month');
+      if (bm) {
+        bm.addEventListener('click', function () {
+          postBilling('/api/billing/checkout', { interval: 'month' }).then(function (r) {
+            if (r.ok && r.j.url) window.location.href = r.j.url;
+            else alert(r.j.error || 'Could not start checkout');
+          });
+        });
+      }
+      var by = document.getElementById('btn-pro-year');
+      if (by) {
+        by.addEventListener('click', function () {
+          postBilling('/api/billing/checkout', { interval: 'year' }).then(function (r) {
+            if (r.ok && r.j.url) window.location.href = r.j.url;
+            else alert(r.j.error || 'Could not start checkout');
+          });
+        });
+      }
+      var mxm = document.getElementById('btn-max-month');
+      if (mxm) {
+        mxm.addEventListener('click', function () {
+          postBilling('/api/billing/checkout', { tier: 'max_pro', interval: 'month' }).then(function (r) {
+            if (r.ok && r.j.url) window.location.href = r.j.url;
+            else alert(r.j.error || 'Could not start checkout');
+          });
+        });
+      }
+      var mxy = document.getElementById('btn-max-year');
+      if (mxy) {
+        mxy.addEventListener('click', function () {
+          postBilling('/api/billing/checkout', { tier: 'max_pro', interval: 'year' }).then(function (r) {
+            if (r.ok && r.j.url) window.location.href = r.j.url;
+            else alert(r.j.error || 'Could not start checkout');
+          });
+        });
+      }
+      var bp = document.getElementById('btn-portal');
+      if (bp) {
+        bp.addEventListener('click', function () {
+          postBilling('/api/billing/portal', {}).then(function (r) {
+            if (r.ok && r.j.url) window.location.href = r.j.url;
+            else alert(r.j.error || 'Could not open billing portal');
+          });
+        });
+      }
+      var bda = document.getElementById('btn-delete-account');
+      if (bda) {
+        bda.addEventListener('click', function () {
+          openDeleteAccountModal(d.email, isPro);
+        });
+      }
+    })
+    .catch(function () {
+      if (loading) loading.remove();
+      showGuest('Could not load account. If you use an ad blocker, allow this site. Otherwise try signing in again.');
+    });
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Renders a typed-confirm modal for permanent account deletion. User must
+  // type their exact email to enable the confirm button. On success the
+  // server destroys their session, cancels any active Stripe subscription,
+  // and cascade-deletes their data; we then bounce them to the homepage.
+  function openDeleteAccountModal(email, isPaidUser) {
+    var existing = document.getElementById('delete-account-modal');
+    if (existing) existing.remove();
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'delete-account-modal';
+    var stripeNote = isPaidUser
+      ? '<li>Your active <strong>Stripe subscription will be canceled immediately</strong> (no proration / refund). Cancel manually first via Manage subscription if you want partial-period refund handling.</li>'
+      : '';
+    overlay.innerHTML =
+      '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="da-title">' +
+        '<h3 id="da-title">Delete account?</h3>' +
+        '<p>This permanently removes:</p>' +
+        '<ul>' +
+          '<li>Your LingCode account (' + escapeHtml(email) + ')</li>' +
+          '<li>All saved /try prototypes you own + their secrets, domains, Supabase links</li>' +
+          '<li>Your collaboration memberships and Supabase OAuth tokens</li>' +
+          stripeNote +
+        '</ul>' +
+        '<p>Type <strong>' + escapeHtml(email) + '</strong> below to confirm. This cannot be undone.</p>' +
+        '<input type="email" class="modal-input" id="da-confirm" placeholder="' + escapeHtml(email) + '" autocomplete="off" />' +
+        '<p class="modal-error" id="da-error"></p>' +
+        '<div class="modal-actions">' +
+          '<button type="button" class="btn btn-ghost" id="da-cancel">Cancel</button>' +
+          '<button type="button" class="btn btn-danger-solid" id="da-confirm-btn" disabled>Permanently delete</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    var input = document.getElementById('da-confirm');
+    var confirmBtn = document.getElementById('da-confirm-btn');
+    var errEl = document.getElementById('da-error');
+    input.focus();
+    input.addEventListener('input', function () {
+      confirmBtn.disabled = input.value.trim().toLowerCase() !== String(email).toLowerCase();
+    });
+    function close() { overlay.remove(); }
+    document.getElementById('da-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', function escHandler(e) {
+      if (e.key === 'Escape' && document.getElementById('delete-account-modal')) {
+        close();
+        document.removeEventListener('keydown', escHandler);
+      }
+    });
+    confirmBtn.addEventListener('click', function () {
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Deleting…';
+      errEl.textContent = '';
+      fetch('/api/account/delete', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmEmail: input.value.trim() })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (r) {
+          if (r.ok && r.j.ok) {
+            window.location.href = '/?account_deleted=1';
+          } else {
+            errEl.textContent = (r.j && r.j.error) || 'Delete failed. Try again.';
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Permanently delete';
+          }
+        })
+        .catch(function () {
+          errEl.textContent = 'Network error. Try again.';
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Permanently delete';
+        });
+    });
+  }
+
+  // Coarse "2h ago" / "3d ago" formatter — tight enough for a prototypes
+  // list. Falls back to a date for items older than 30 days.
+  function relTime(ms) {
+    if (!ms || typeof ms !== 'number') return '';
+    var now = Date.now();
+    var d = Math.max(0, now - ms);
+    var s = Math.floor(d / 1000);
+    if (s < 60) return s + 's ago';
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + 'm ago';
+    var h = Math.floor(m / 60);
+    if (h < 24) return h + 'h ago';
+    var dd = Math.floor(h / 24);
+    if (dd < 30) return dd + 'd ago';
+    try {
+      return new Date(ms).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch (e) { return ''; }
+  }
+
+  function renderSavedPrototypes() {
+    var card = document.getElementById('saved-card');
+    var body = document.getElementById('saved-card-body');
+    var meta = document.getElementById('saved-card-meta');
+    if (!card || !body) return;
+    fetch('/api/account/saved-prototypes', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.ok) return;
+        card.style.display = '';
+        if (!j.items || j.items.length === 0) {
+          if (meta) meta.textContent = '';
+          body.innerHTML = '<p class="saved-empty">Nothing saved yet. Build something on <a href="/try.html">/try</a>, click ☆ Save in the preview, and it shows up here.</p>';
+          return;
+        }
+        if (meta) meta.textContent = j.items.length + (j.cap ? ' / ' + j.cap : '') + ' saved';
+        // Visual grid: each card is a thumbnail (or gradient placeholder)
+        // + title + prompt snippet + meta + actions row.
+        var html = '<ul role="list" class="saved-grid">';
+        for (var i = 0; i < j.items.length; i++) {
+          var it = j.items[i];
+          var promptSnippet = it.source_prompt ? String(it.source_prompt).slice(0, 200) : '';
+          var thumb = it.thumbnail && /^data:image\//i.test(it.thumbnail)
+            ? '<img src="' + escapeHtml(it.thumbnail) + '" alt="" loading="lazy">'
+            : '<div class="saved-thumb-empty">' + escapeHtml(it.provider_id || 'prototype') + '</div>';
+          html +=
+            '<li class="saved-card" data-id="' + escapeHtml(it.id) + '">' +
+              '<a class="saved-thumb-link" data-act="open" href="#" aria-label="Open ' + escapeHtml(it.title) + '">' + thumb + '</a>' +
+              '<div class="saved-card-body">' +
+                '<h3 class="saved-title">' + escapeHtml(it.title) + '</h3>' +
+                (promptSnippet ? '<p class="saved-prompt" title="' + escapeHtml(it.source_prompt) + '">' + escapeHtml(promptSnippet) + '</p>' : '') +
+                '<div class="saved-meta">' +
+                  (it.provider_id ? '<span class="saved-provider">' + escapeHtml(it.provider_id) + '</span>' : '') +
+                  '<span class="saved-age">' + escapeHtml(relTime(it.created_at)) + '</span>' +
+                '</div>' +
+              '</div>' +
+              '<div class="saved-card-actions">' +
+                '<button type="button" data-act="rename">Rename</button>' +
+                '<button type="button" data-act="domain">Domain</button>' +
+                '<span class="spacer"></span>' +
+                '<button type="button" class="saved-delete" data-act="delete">Delete</button>' +
+              '</div>' +
+            '</li>';
+        }
+        html += '</ul>';
+        body.innerHTML = html;
+        // Single delegated handler for all action buttons / open links.
+        body.addEventListener('click', onSavedAction);
+      })
+      .catch(function () { /* silent — card stays hidden */ });
+  }
+
+  // Your deployed full-stack Worker apps (Deploy to LingCode Cloud). Reuses the
+  // saved-card visual classes so no new CSS is needed.
+  function renderCloudApps() {
+    var card = document.getElementById('cloud-apps-card');
+    var body = document.getElementById('cloud-apps-body');
+    var meta = document.getElementById('cloud-apps-meta');
+    if (!card || !body) return;
+    // Two kinds live under "Your Cloud apps": full-stack Worker/SSR deploys
+    // (cloud-workers) and static frontend deploys (cloud-apps). Fetch both and
+    // render them together, distinguished by a badge + their applicable actions.
+    Promise.all([
+      fetch('/api/account/cloud-workers', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+      fetch('/api/account/cloud-apps', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    ]).then(function (res) {
+      var wj = res[0], aj = res[1];
+      var workers = (wj && wj.ok && wj.items) ? wj.items : [];
+      var apps = (aj && aj.ok && aj.items) ? aj.items : [];
+      card.style.display = '';
+      var total = workers.length + apps.length;
+      if (total === 0) {
+        if (meta) meta.textContent = '';
+        body.innerHTML = '<p class="saved-empty">No apps deployed yet. Deploy a site with <strong>Deploy</strong>, or a full-stack app with <strong>Deploy to LingCode Cloud</strong>, from the Mac app.</p>';
+        return;
+      }
+      if (meta) meta.textContent = total + (total === 1 ? ' app' : ' apps');
+      var html = '<ul role="list" class="saved-grid">';
+      for (var i = 0; i < workers.length; i++) html += cloudWorkerCardHtml(workers[i]);
+      for (var k = 0; k < apps.length; k++) html += cloudStaticAppCardHtml(apps[k]);
+      html += '</ul>';
+      body.innerHTML = html;
+      body.addEventListener('click', onCloudAppAction);
+      // Inline attached-domain list for both kinds (kind-aware endpoint).
+      body.querySelectorAll('.cloud-app').forEach(function (li) {
+        renderAppDomains(li.getAttribute('data-id'), li, li.getAttribute('data-kind') || 'worker');
+      });
+    });
+  }
+
+  // Full-stack Worker / SSR deploy card (jobs, logs, secrets, suspend).
+  function cloudWorkerCardHtml(it) {
+    var url = it.url || ('https://' + it.hostname + '/');
+    var host = String(url).replace(/^https?:\/\//, '').replace(/\/$/, '');
+    var suspended = it.status === 'suspended';
+    // Only the owner can delete / suspend / transfer / add a domain (server gates
+    // these on minRole 'owner'). Editors/viewers of a shared project would
+    // otherwise see buttons that always 403 with "Could not delete." Default to
+    // owner when role is absent (a directly-owned app reports no project role).
+    var isOwner = (it.role || 'owner') === 'owner';
+    var statusPill = suspended
+      ? '<span class="saved-provider" style="background:#fee2e2;color:#991b1b">Suspended</span>'
+      : '';
+    return '<li class="saved-card cloud-app" data-kind="worker" data-id="' + escapeHtml(it.id) + '" data-url="' + escapeHtml(url) + '" data-status="' + escapeHtml(it.status || 'active') + '" data-project-id="' + escapeHtml(it.project_id || '') + '">' +
+        '<div class="saved-card-body">' +
+          '<h3 class="saved-title">' + escapeHtml(it.title || it.id) + '</h3>' +
+          '<p class="saved-prompt"><a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(host) + '</a></p>' +
+          '<div class="saved-meta">' +
+            '<span class="saved-provider">Worker · SSR</span>' +
+            '<span class="saved-provider">v' + escapeHtml(String(it.version || 1)) + '</span>' +
+            statusPill +
+            '<span class="saved-age">' + escapeHtml(relTime(it.updated_at || it.created_at)) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="saved-card-actions">' +
+          '<button type="button" data-act="open">Open</button>' +
+          '<button type="button" data-act="jobs">Jobs</button>' +
+          '<button type="button" data-act="logs">Logs</button>' +
+          '<button type="button" data-act="secrets">Secrets</button>' +
+          (isOwner ? '<button type="button" data-act="domain">Add domain</button>' : '') +
+          (isOwner ? '<button type="button" data-act="share">Share / Transfer</button>' : '') +
+          '<span class="spacer"></span>' +
+          (isOwner
+            ? (suspended
+                ? '<button type="button" data-act="resume">Resume</button>'
+                : '<button type="button" data-act="suspend">Suspend</button>')
+            : '') +
+          (isOwner ? '<button type="button" class="saved-delete" data-act="delete">Delete</button>' : '') +
+        '</div>' +
+      '</li>';
+  }
+
+  // Static frontend deploy card (no server runtime → no jobs/logs/secrets/suspend).
+  function cloudStaticAppCardHtml(it) {
+    var url = it.url || (it.hostname ? 'https://' + it.hostname + '/' : '#');
+    var host = String(url).replace(/^https?:\/\//, '').replace(/\/$/, '');
+    // Delete + Share/Transfer are owner-only (Add domain is editor-allowed for
+    // static apps). Default to owner when role is absent.
+    var isOwner = (it.role || 'owner') === 'owner';
+    return '<li class="saved-card cloud-app" data-kind="app" data-id="' + escapeHtml(it.id) + '" data-url="' + escapeHtml(url) + '">' +
+        '<div class="saved-card-body">' +
+          '<h3 class="saved-title">' + escapeHtml(it.title || it.id) + '</h3>' +
+          '<p class="saved-prompt"><a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(host) + '</a></p>' +
+          '<div class="saved-meta">' +
+            '<span class="saved-provider">Static</span>' +
+            '<span class="saved-age">' + escapeHtml(relTime(it.updated_at || it.created_at)) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="saved-card-actions">' +
+          '<button type="button" data-act="open">Open</button>' +
+          '<button type="button" data-act="domain">Add domain</button>' +
+          (isOwner ? '<button type="button" data-act="share">Share / Transfer</button>' : '') +
+          '<span class="spacer"></span>' +
+          (isOwner ? '<button type="button" class="saved-delete" data-act="delete">Delete</button>' : '') +
+        '</div>' +
+      '</li>';
+  }
+
+  function onCloudAppAction(e) {
+    var target = e.target.closest('[data-act]');
+    if (!target) return;
+    var act = target.getAttribute('data-act');
+    var li = target.closest('.cloud-app');
+    if (!li) return;
+    var id = li.getAttribute('data-id');
+    if (!id) return;
+    var kind = li.getAttribute('data-kind') || 'worker';
+    var apiBase = (kind === 'app' ? '/api/account/cloud-apps/' : '/api/account/cloud-workers/') + encodeURIComponent(id);
+    var titleEl = li.querySelector('.saved-title');
+    var appTitle = titleEl ? titleEl.textContent : id;
+    if (act === 'open') {
+      window.open(li.getAttribute('data-url'), '_blank', 'noopener');
+    } else if (act === 'jobs') {
+      manageCrons(id, appTitle);
+    } else if (act === 'logs') {
+      showWorkerLogs(id, appTitle);
+    } else if (act === 'suspend' || act === 'resume') {
+      var to = act === 'suspend';
+      if (to && !window.confirm('Suspend “' + appTitle + '”? It will return 503 until you resume it.')) return;
+      fetch('/api/account/cloud-workers/' + encodeURIComponent(id) + '/' + act, { method: 'POST', credentials: 'same-origin' })
+        .then(function (r) { if (!r.ok) throw new Error('failed'); renderCloudApps(); })
+        .catch(function () { alert('Could not ' + act + '.'); });
+    } else if (act === 'domain') {
+      if (kind === 'app') {
+        // Static apps use the custom-domains API (same shape backends.html drives).
+        manageDomains(id, appTitle, {
+          base: apiBase + '/custom-domains',
+          check: apiBase + '/custom-domains/',
+          onChange: function () { renderAppDomains(id, li, 'app'); },
+        });
+      } else {
+        manageDomains(id, appTitle, {
+          base: apiBase + '/domains',
+          check: apiBase + '/domains/',
+          onChange: function () { renderAppDomains(id, li, 'worker'); },
+        });
+      }
+    } else if (act === 'secrets') {
+      manageWorkerSecrets(id, appTitle);
+    } else if (act === 'share') {
+      var pid = li.getAttribute('data-project-id');
+      if (pid) { window.location.href = '/project.html?id=' + encodeURIComponent(pid); return; }
+      // No project yet (deployed before projects, or without the IDE linking one):
+      // mint one on the fly, then open its share/transfer panel.
+      target.disabled = true;
+      var prevLabel = target.textContent;
+      target.textContent = 'Preparing…';
+      fetch(apiBase + '/ensure-project', { method: 'POST', credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j || !j.ok || !j.project_id) throw new Error('ensure_failed');
+          window.location.href = '/project.html?id=' + encodeURIComponent(j.project_id);
+        })
+        .catch(function () { target.disabled = false; target.textContent = prevLabel; alert('Could not open sharing for this app.'); });
+    } else if (act === 'delete') {
+      if (!window.confirm('Delete this app? Its URL stops working immediately.')) return;
+      fetch(apiBase, { method: 'DELETE', credentials: 'same-origin' })
+        .then(function (r) { if (!r.ok) throw new Error('delete_failed'); li.remove();
+          var remaining = document.querySelectorAll('#cloud-apps-body .cloud-app').length;
+          var meta = document.getElementById('cloud-apps-meta');
+          if (remaining === 0) { if (meta) meta.textContent = ''; document.getElementById('cloud-apps-body').innerHTML = '<p class="saved-empty">No apps deployed yet.</p>'; }
+          else if (meta) { meta.textContent = remaining + ' apps'; }
+        })
+        .catch(function () { alert('Could not delete.'); });
+    }
+  }
+
+  // Worker env secrets — set directly on a deployed Worker (no managed backend).
+  // Stored encrypted and bound as c.env.<KEY> immediately + on every deploy.
+  function manageWorkerSecrets(id, title) {
+    fetch('/api/account/cloud-workers/' + encodeURIComponent(id) + '/secrets', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : { data: [] }; })
+      .then(function (j) {
+        var names = (j.data || []).map(function (s) { return s.key; });
+        var listMsg = names.length ? ('Secrets set for “' + title + '”:\n  • ' + names.join('\n  • ')) : 'No secrets set for “' + title + '” yet.';
+        var key = window.prompt(
+          listMsg + '\n\nEnter a secret NAME to add/update (e.g. STRIPE_SECRET_KEY).\n' +
+          'Prefix with “-” to delete (e.g. -STRIPE_SECRET_KEY). Blank to cancel.', '');
+        if (!key) return;
+        key = key.trim();
+        if (key.charAt(0) === '-') {
+          var del = key.slice(1);
+          fetch('/api/account/cloud-workers/' + encodeURIComponent(id) + '/secrets/' + encodeURIComponent(del), { method: 'DELETE', credentials: 'same-origin' })
+            .then(function (r) { if (!r.ok) throw new Error('x'); alert('Deleted ' + del + '.'); })
+            .catch(function () { alert('Delete failed.'); });
+          return;
+        }
+        var value = window.prompt('Value for ' + key + '\n(stored encrypted; binds as c.env.' + key + ' right away):', '');
+        if (value === null) return;
+        fetch('/api/account/cloud-workers/' + encodeURIComponent(id) + '/secrets', {
+          method: 'PUT', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: key, value: value }),
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res && res.ok) { if (window.confirm('Saved ' + key + ' — it’s bound to your Worker now. Add another?')) manageWorkerSecrets(id, title); }
+            else alert('Failed: ' + ((res && res.message) || 'error'));
+          })
+          .catch(function () { alert('Save failed.'); });
+      })
+      .catch(function () { alert('Could not load secrets.'); });
+  }
+
+  function onSavedAction(e) {
+    // Walk up to either the action element (button/link with data-act) or
+    // the card itself. Lets clicks anywhere on the thumbnail link / its
+    // child img also trigger Open.
+    var target = e.target.closest('[data-act]');
+    if (!target) return;
+    var act = target.getAttribute('data-act');
+    var li = target.closest('.saved-card');
+    if (!li) return;
+    var id = li.getAttribute('data-id');
+    if (!id) return;
+    if (act === 'open') {
+      // Direct navigation to /p/<id> — server inline-renders the prototype
+      // in a sandboxed iframe; URL stays short. No round-trip needed.
+      e.preventDefault();
+      window.location.href = '/p/' + encodeURIComponent(id);
+    } else if (act === 'rename') {
+      var current = li.querySelector('.saved-title').textContent;
+      var next = window.prompt('Rename prototype:', current);
+      if (next == null) return;
+      var trimmed = String(next).trim();
+      if (!trimmed || trimmed === current) return;
+      fetch('/api/account/saved-prototypes/' + encodeURIComponent(id), {
+        method: 'PATCH', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: trimmed }),
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error('rename_failed');
+          li.querySelector('.saved-title').textContent = trimmed;
+        })
+        .catch(function () { alert('Could not rename.'); });
+    } else if (act === 'delete') {
+      if (!window.confirm('Delete this saved prototype?')) return;
+      fetch('/api/account/saved-prototypes/' + encodeURIComponent(id), {
+        method: 'DELETE', credentials: 'same-origin',
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error('delete_failed');
+          li.remove();
+          var remaining = document.querySelectorAll('#saved-card-body .saved-card').length;
+          var meta = document.getElementById('saved-card-meta');
+          if (remaining === 0) {
+            if (meta) meta.textContent = '';
+            document.getElementById('saved-card-body').innerHTML =
+              '<p class="saved-empty">Nothing saved yet. Build something on <a href="/try.html">/try</a>, click ☆ Save in the preview, and it shows up here.</p>';
+          } else if (meta) {
+            // Best-effort count update without re-fetching cap.
+            var match = meta.textContent.match(/^(\d+)(.*)$/);
+            if (match) meta.textContent = (parseInt(match[1], 10) - 1) + match[2];
+          }
+        })
+        .catch(function () { alert('Could not delete.'); });
+    } else if (act === 'domain') {
+      manageDomains(id, li.querySelector('.saved-title').textContent);
+    }
+  }
+
+  // Custom-domain manager: list / add / remove a prototype's own domains and
+  // show the DNS the customer must set. Lightweight modal.
+  function manageDomains(id, title, opts) {
+    opts = opts || {};
+    var base = opts.base || ('/api/account/prototypes/' + encodeURIComponent(id) + '/custom-domains');
+    var checkBase = opts.check || null;       // '<.../domains/>' → append '<domain>/check'
+    var onChange = opts.onChange || null;
+    var pollTimer = null;
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML = '<div style="background:#ffffff;border:1px solid #e6e6ee;border-radius:14px;max-width:520px;width:100%;padding:22px 24px;font-family:Geist,system-ui,sans-serif;color:#1b1b26">'
+      + '<h3 style="margin:0 0 4px;font-size:1.05rem">Custom domains</h3>'
+      + '<p style="margin:0 0 14px;color:var(--text-muted,#8a8b94);font-size:.85rem">Serve “' + escapeHtml(title) + '” on your own domain.</p>'
+      + '<div id="cd-list" style="margin-bottom:14px"><p style="color:var(--text-muted)">Loading…</p></div>'
+      + '<div style="display:flex;gap:8px"><input id="cd-input" placeholder="app.yoursite.com" style="flex:1;background:#f4f4f8;color:#1b1b26;border:1px solid var(--border,#26272e);border-radius:8px;padding:8px 11px"/>'
+      + '<button id="cd-add" class="btn btn-primary">Add</button></div>'
+      + '<p id="cd-msg" style="color:var(--text-muted);font-size:.78rem;margin:8px 0 0;min-height:1em"></p>'
+      + '<div style="text-align:right;margin-top:14px"><button id="cd-close" class="btn btn-ghost">Close</button></div>'
+      + '</div>';
+    document.body.appendChild(overlay);
+    var close = function () { if (pollTimer) clearInterval(pollTimer); overlay.remove(); if (onChange) onChange(); };
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    overlay.querySelector('#cd-close').onclick = close;
+
+    // r may be a row object ({domain, provider, cname}) or a bare domain string
+    // (older callers). Domainee-managed domains need just ONE CNAME → edge.domainee.dev;
+    // own-edge domains show the CNAME (subdomain) + A (root) pair.
+    function dnsBlock(r) {
+      var d = (r && r.domain) || r;
+      var box = '<div style="background:#f4f4f8;border:1px solid #e6e6ee;border-radius:8px;padding:8px 10px;font-size:.74rem;font-family:Geist Mono,monospace;margin-top:6px;color:#1b1b26">';
+      if (r && r.provider === 'domainee') {
+        var tgt = r.cname || 'edge.domainee.dev';
+        return box
+          + '<div style="display:flex;align-items:center;gap:6px"><span><b>CNAME</b> ' + escapeHtml(d) + ' → <b>' + escapeHtml(tgt) + '</b></span>'
+          + '<button class="btn btn-ghost cd-copy" data-copy="' + escapeHtml(d + ' CNAME ' + tgt) + '" style="margin-left:auto;padding:1px 8px;font-size:.7rem">Copy</button></div>'
+          + '<span style="color:#8a8b94">One record — SSL is issued automatically. (Apex domains: use registrar forwarding to www, since a CNAME can\'t sit at the root.)</span></div>';
+      }
+      return box
+        + '<div style="display:flex;align-items:center;gap:6px"><span>Subdomain: <b>CNAME</b> ' + escapeHtml(d) + ' → <b>apps.lingcode.dev</b></span>'
+        + '<button class="btn btn-ghost cd-copy" data-copy="' + escapeHtml(d + ' CNAME apps.lingcode.dev') + '" style="margin-left:auto;padding:1px 8px;font-size:.7rem">Copy</button></div>'
+        + 'Root domain: <b>A</b> ' + escapeHtml(d) + ' → <b>138.197.107.228</b></div>';
+    }
+    function renderList(rows) {
+      var box = overlay.querySelector('#cd-list');
+      if (!rows.length) { box.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">No domains yet.</p>'; return; }
+      box.innerHTML = rows.map(function (r) {
+        return '<div data-dom="' + escapeHtml(r.domain) + '" style="border:1px solid var(--border,#26272e);border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+          + '<div style="display:flex;align-items:center;gap:8px"><b style="flex:1">' + escapeHtml(r.domain) + '</b>'
+          + (checkBase ? '<span class="cd-status" style="padding:2px 9px;border-radius:999px;font-size:.7rem;font-weight:600;background:#e0e7ff;color:#3730a3">Verifying…</span>' : '')
+          + '<a href="https://' + escapeHtml(r.domain) + '" target="_blank" style="color:var(--signal,#00d084);font-size:.78rem">open ↗</a>'
+          + '<button class="btn btn-ghost" data-rm="' + escapeHtml(r.domain) + '" style="padding:2px 8px;font-size:.72rem">Remove</button></div>'
+          + dnsBlock(r) + '<div class="cd-reg"></div></div>';
+      }).join('');
+      Array.prototype.forEach.call(box.querySelectorAll('[data-rm]'), function (b) {
+        b.onclick = function () {
+          if (!confirm('Remove ' + b.getAttribute('data-rm') + '?')) return;
+          fetch(base + '/' + encodeURIComponent(b.getAttribute('data-rm')), { method: 'DELETE', credentials: 'same-origin' }).then(load);
+        };
+      });
+      Array.prototype.forEach.call(box.querySelectorAll('.cd-copy'), function (b) {
+        b.onclick = function () { navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () { var o = b.textContent; b.textContent = 'Copied'; setTimeout(function () { b.textContent = o; }, 1200); }).catch(function () {}); };
+      });
+      // "Smart manual": detect where each domain's DNS lives and deep-link the
+      // user straight to that host's DNS editor, beside the copy-able records.
+      rows.forEach(function (r) {
+        var rsel = (window.CSS && CSS.escape) ? CSS.escape(r.domain) : r.domain;
+        var cell = box.querySelector('[data-dom="' + rsel + '"] .cd-reg');
+        if (!cell) return;
+        fetch('/api/cloud/domains/registrar?domain=' + encodeURIComponent(r.domain), { credentials: 'same-origin' })
+          .then(function (x) { return x.ok ? x.json() : null; })
+          .then(function (s) {
+            if (!s || !s.ok || !s.host) return;
+            var inner = s.dnsUrl
+              ? '<a href="' + escapeHtml(s.dnsUrl) + '" target="_blank" rel="noopener" style="color:#3730a3;font-weight:600;text-decoration:none">Open ' + escapeHtml(s.host) + ' DNS settings ↗</a> <span style="color:#8a8b94">· then add the records above</span>'
+              : '<span style="color:#8a8b94">DNS host: <b>' + escapeHtml(s.host) + '</b> — add the records above in its DNS editor</span>';
+            cell.innerHTML = '<div style="font-size:.74rem;margin-top:7px">' + inner + '</div>';
+          }).catch(function () {});
+      });
+      if (checkBase) rows.forEach(function (r) {
+        fetch(checkBase + encodeURIComponent(r.domain) + '/check', { credentials: 'same-origin' })
+          .then(function (x) { return x.ok ? x.json() : null; })
+          .then(function (s) {
+            var sel = (window.CSS && CSS.escape) ? CSS.escape(r.domain) : r.domain;
+            var el = box.querySelector('[data-dom="' + sel + '"] .cd-status');
+            if (el && s) { var ok = s.status === 'active'; el.style.background = ok ? '#dcfce7' : '#e0e7ff'; el.style.color = ok ? '#166534' : '#3730a3'; el.textContent = ok ? '✓ Active' : 'Verifying…'; }
+          }).catch(function () {});
+      });
+    }
+    function load() {
+      fetch(base, { credentials: 'same-origin' }).then(function (r) { return r.json(); })
+        .then(function (j) { renderList((j && j.data) || []); }).catch(function () {});
+    }
+    overlay.querySelector('#cd-add').onclick = function () {
+      var inp = overlay.querySelector('#cd-input'), msg = overlay.querySelector('#cd-msg');
+      var domain = inp.value.trim().toLowerCase(); if (!domain) return;
+      msg.textContent = 'Adding…';
+      fetch(base, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ domain: domain }) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          if (!res.ok || !res.j.ok) { msg.textContent = (res.j && (res.j.message || res.j.error)) || 'Failed'; return; }
+          var also = (res.j.data && res.j.data.also) || [];
+          msg.textContent = also.length
+            ? 'Added — also registered ' + also.map(function (a) { return a.domain; }).join(', ') + ' so both forms work. Set the DNS below for each.'
+            : 'Added. Set the DNS below, then it goes live in a few minutes.';
+          inp.value = ''; load();
+        }).catch(function () { msg.textContent = 'Failed'; });
+    };
+    load();
+    if (checkBase) pollTimer = setInterval(load, 8000);
+  }
+
+  // Lightweight per-card display of an app's attached custom domains. Workers
+  // expose them at /domains; static apps at /custom-domains (same `{data:[…]}` shape).
+  function renderAppDomains(id, li, kind) {
+    var existing = li.querySelector('.cloud-app-domains'); if (existing) existing.remove();
+    var url = (kind === 'app')
+      ? '/api/account/cloud-apps/' + encodeURIComponent(id) + '/custom-domains'
+      : '/api/account/cloud-workers/' + encodeURIComponent(id) + '/domains';
+    fetch(url, { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.ok || !j.data || !j.data.length) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'cloud-app-domains';
+        wrap.style.cssText = 'margin:4px 0 2px;display:flex;flex-wrap:wrap;gap:6px;font-size:.75rem';
+        wrap.innerHTML = j.data.map(function (d) {
+          return '<a href="https://' + escapeHtml(d.domain) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:3px">🌐 ' + escapeHtml(d.domain) + '</a>';
+        }).join('');
+        var actions = li.querySelector('.saved-card-actions');
+        if (actions) li.insertBefore(wrap, actions); else li.appendChild(wrap);
+      })
+      .catch(function () {});
+  }
+
+  // Shared lightweight modal shell (same visual language as manageDomains).
+  // Returns { overlay, body, close }. `bodyHtml` fills the scrollable content area.
+  function openModal(title, subtitle, bodyHtml) {
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML = '<div style="background:#fff;border:1px solid #e6e6ee;border-radius:14px;max-width:560px;width:100%;padding:22px 24px;font-family:Geist,system-ui,sans-serif;color:#1b1b26;max-height:80vh;display:flex;flex-direction:column">'
+      + '<h3 style="margin:0 0 4px;font-size:1.05rem">' + escapeHtml(title) + '</h3>'
+      + '<p style="margin:0 0 14px;color:#8a8b94;font-size:.85rem">' + subtitle + '</p>'
+      + '<div class="lc-modal-body" style="overflow:auto;flex:1">' + bodyHtml + '</div>'
+      + '<div style="text-align:right;margin-top:14px"><button class="btn btn-ghost lc-modal-close">Close</button></div>'
+      + '</div>';
+    document.body.appendChild(overlay);
+    var close = function () { overlay.remove(); };
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    overlay.querySelector('.lc-modal-close').onclick = close;
+    return { overlay: overlay, body: overlay.querySelector('.lc-modal-body'), close: close };
+  }
+
+  // Scheduled jobs (cron) manager for a deployed Worker. LingCode fires a signed
+  // HTTP request to <path> on the app's URL on each schedule (Cloudflare can't run
+  // per-tenant cron, so this is server-side fan-out).
+  function manageCrons(id, title) {
+    var base = '/api/account/cloud-workers/' + encodeURIComponent(id) + '/crons';
+    var m = openModal('Scheduled jobs', 'Run a route on “' + escapeHtml(title) + '” on a schedule. Cron syntax (UTC): <code>min hour dom mon dow</code>.',
+      '<div id="cr-list" style="margin-bottom:14px"><p style="color:#8a8b94">Loading…</p></div>'
+      + '<div style="display:grid;grid-template-columns:1.3fr 1fr auto;gap:8px;align-items:center">'
+      + '<input id="cr-sched" placeholder="0 9 * * 1-5" style="background:#f4f4f8;border:1px solid #e6e6ee;border-radius:8px;padding:8px 11px"/>'
+      + '<input id="cr-path" placeholder="/cron/daily" style="background:#f4f4f8;border:1px solid #e6e6ee;border-radius:8px;padding:8px 11px"/>'
+      + '<button id="cr-add" class="btn btn-primary">Add</button></div>'
+      + '<p id="cr-msg" style="color:#8a8b94;font-size:.78rem;margin:8px 0 0;min-height:1em"></p>');
+
+    function fmtTime(ms) { return ms ? relTime(Math.round(ms)) : '—'; }
+    function renderList(rows) {
+      var box = m.body.querySelector('#cr-list');
+      if (!rows.length) { box.innerHTML = '<p style="color:#8a8b94;font-size:.85rem">No jobs yet.</p>'; return; }
+      box.innerHTML = rows.map(function (r) {
+        return '<div data-cid="' + escapeHtml(r.id) + '" style="border:1px solid #e6e6ee;border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+          + '<div style="display:flex;align-items:center;gap:8px">'
+          + '<code style="flex:1;font-size:.8rem">' + escapeHtml(r.schedule) + '  →  ' + escapeHtml(r.method || 'POST') + ' ' + escapeHtml(r.path) + '</code>'
+          + '<label style="font-size:.72rem;color:#8a8b94;display:flex;align-items:center;gap:4px"><input type="checkbox" class="cr-enabled"' + (r.enabled ? ' checked' : '') + '/>on</label>'
+          + '<button class="btn btn-ghost cr-rm" style="padding:2px 8px;font-size:.72rem">Remove</button></div>'
+          + '<div style="font-size:.72rem;color:#8a8b94;margin-top:5px">next ' + escapeHtml(fmtTime(r.next_run_at)) + ' · last ' + escapeHtml(fmtTime(r.last_run_at)) + (r.last_status ? ' (HTTP ' + escapeHtml(String(r.last_status)) + ')' : '') + '</div>'
+          + '</div>';
+      }).join('');
+      Array.prototype.forEach.call(box.querySelectorAll('[data-cid]'), function (row) {
+        var cid = row.getAttribute('data-cid');
+        row.querySelector('.cr-rm').onclick = function () {
+          if (!confirm('Remove this job?')) return;
+          fetch(base + '/' + encodeURIComponent(cid), { method: 'DELETE', credentials: 'same-origin' }).then(load);
+        };
+        row.querySelector('.cr-enabled').onchange = function (e) {
+          fetch(base + '/' + encodeURIComponent(cid), { method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: e.target.checked }) }).then(load);
+        };
+      });
+    }
+    function load() {
+      fetch(base, { credentials: 'same-origin' }).then(function (r) { return r.json(); })
+        .then(function (j) { renderList((j && j.data) || []); }).catch(function () {});
+    }
+    m.body.querySelector('#cr-add').onclick = function () {
+      var sched = m.body.querySelector('#cr-sched').value.trim();
+      var path = m.body.querySelector('#cr-path').value.trim() || '/';
+      var msg = m.body.querySelector('#cr-msg');
+      if (!sched) { msg.textContent = 'Enter a cron schedule.'; return; }
+      msg.textContent = 'Adding…';
+      fetch(base, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schedule: sched, path: path }) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          if (!res.ok || !res.j.ok) { msg.textContent = (res.j && (res.j.message || res.j.error)) || 'Failed'; return; }
+          msg.textContent = ''; m.body.querySelector('#cr-sched').value = ''; m.body.querySelector('#cr-path').value = ''; load();
+        }).catch(function () { msg.textContent = 'Failed'; });
+    };
+    load();
+  }
+
+  // Read-only logs + a usage summary line for a deployed Worker.
+  function showWorkerLogs(id, title) {
+    var apibase = '/api/account/cloud-workers/' + encodeURIComponent(id);
+    var m = openModal('Logs', 'Recent output from “' + escapeHtml(title) + '”.',
+      '<div id="wl-usage" style="font-size:.78rem;color:#8a8b94;margin-bottom:10px">Loading usage…</div>'
+      + '<div style="text-align:right;margin-bottom:8px"><button id="wl-refresh" class="btn btn-ghost" style="padding:3px 10px;font-size:.78rem">Refresh</button></div>'
+      + '<pre id="wl-logs" style="background:#0f1117;color:#d7dae0;border-radius:8px;padding:12px;font-size:.74rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;margin:0;min-height:120px;max-height:46vh;overflow:auto">Loading…</pre>');
+
+    function loadUsage() {
+      fetch(apibase + '/usage?days=7', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          var el = m.body.querySelector('#wl-usage'); if (!el || !j || !j.ok) return;
+          var today = (j.data && j.data[0]) || { requests: 0, errors: 0 };
+          var lim = j.limit ? (' / ' + j.limit.toLocaleString()) : '';
+          var st = j.status === 'suspended' ? ' · <b style="color:#991b1b">suspended' + (j.status_reason ? ' (' + escapeHtml(j.status_reason) + ')' : '') + '</b>' : '';
+          el.innerHTML = 'Today: ' + (today.requests || 0).toLocaleString() + lim + ' requests, ' + (today.errors || 0) + ' errors' + st;
+        }).catch(function () {});
+    }
+    function loadLogs() {
+      var pre = m.body.querySelector('#wl-logs');
+      fetch(apibase + '/logs?limit=200', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j || !j.ok) { pre.textContent = 'Could not load logs.'; return; }
+          if (!j.data || !j.data.length) { pre.textContent = 'No logs yet. (Logs appear once the dispatch tail worker is forwarding events.)'; return; }
+          pre.textContent = j.data.slice().reverse().map(function (r) {
+            var t = new Date(r.ts).toISOString().replace('T', ' ').slice(0, 19);
+            return t + '  [' + (r.level || 'info') + ']  ' + (r.message || '');
+          }).join('\n');
+        }).catch(function () { pre.textContent = 'Could not load logs.'; });
+    }
+    m.body.querySelector('#wl-refresh').onclick = function () { loadUsage(); loadLogs(); };
+    loadUsage(); loadLogs();
+  }
+
+  // Bottom-left circular avatar with an upward popup menu (Claude account-menu
+  // pattern). Its purpose is to surface the backend console + sign-out, which
+  // otherwise had no link from this page.
+  function mountAccountFab(email) {
+    if (document.getElementById('lc-fab')) return;
+    // First ALPHABETIC character of the email (skip leading digits/symbols, so
+    // "2foo@x.com" → "F", not "2"). Person glyph when there's no letter at all.
+    var letter = (String(email || '').match(/[a-z]/i) || [''])[0].toUpperCase();
+    var st = document.createElement('style');
+    st.textContent =
+      '#lc-fab{position:fixed;left:20px;bottom:20px;width:46px;height:46px;border-radius:50%;background:var(--signal,#00d084);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font:600 18px/1 Geist,system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.28);z-index:9998}'
+      + '#lc-fab:hover{filter:brightness(1.05)}'
+      + '#lc-fab-menu{position:fixed;left:20px;bottom:78px;min-width:250px;background:#fff;color:#1b1b26;border:1px solid #e6e6ee;border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.2);padding:8px;z-index:9999;display:none;font-family:Geist,system-ui,sans-serif}'
+      + '#lc-fab-menu.open{display:block}'
+      + '#lc-fab-menu .lc-em{padding:8px 12px 6px;font-size:.8rem;color:#8a8b94;word-break:break-all}'
+      + '#lc-fab-menu .lc-hr{height:1px;background:#ececf2;margin:6px 4px}'
+      + '#lc-fab-menu a,#lc-fab-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;padding:10px 12px;border-radius:9px;font:500 .92rem/1.2 Geist,system-ui,sans-serif;color:#1b1b26;cursor:pointer;text-decoration:none;box-sizing:border-box}'
+      + '#lc-fab-menu a:hover,#lc-fab-menu button:hover{background:#f4f4f8}';
+    document.head.appendChild(st);
+
+    var btn = document.createElement('button');
+    btn.id = 'lc-fab'; btn.type = 'button';
+    btn.setAttribute('aria-label', 'Account menu');
+    if (letter) { btn.textContent = letter; }
+    else { btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.42 0-8 2.69-8 6v1h16v-1c0-3.31-3.58-6-8-6Z"/></svg>'; }
+
+    var menu = document.createElement('div');
+    menu.id = 'lc-fab-menu';
+    menu.innerHTML = '<div class="lc-em">' + escapeHtml(email || '') + '</div>'
+      + '<div class="lc-hr"></div>'
+      + '<a href="/backends.html">☁&nbsp;&nbsp;Cloud backends</a>'
+      + '<a href="/try.html">✦&nbsp;&nbsp;Open /try</a>'
+      + '<div class="lc-hr"></div>'
+      + '<button type="button" id="lc-fab-signout">⏻&nbsp;&nbsp;Sign out</button>';
+
+    document.body.appendChild(menu);
+    document.body.appendChild(btn);
+
+    function setOpen(o) { menu.classList.toggle('open', o); }
+    btn.onclick = function (e) { e.stopPropagation(); setOpen(!menu.classList.contains('open')); };
+    document.addEventListener('click', function (e) { if (e.target !== btn && !menu.contains(e.target)) setOpen(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+    menu.querySelector('#lc-fab-signout').onclick = function () {
+      fetch('/api/account/logout', { method: 'POST', credentials: 'same-origin' })
+        .then(function () { window.location.href = '/signin.html'; });
+    };
+  }
+})();
+  </script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

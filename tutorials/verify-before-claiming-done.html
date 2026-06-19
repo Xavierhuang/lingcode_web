@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify before claiming done — evidence over assertion — LingCode</title>
+  <meta name="description" content="LingCode can produce confident-sounding completions for code that doesn't compile or tests that don't run. Verification before completion is a discipline — run the build, read the output, then claim done.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/verify-before-claiming-done.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/verify-before-claiming-done.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/verify-before-claiming-done.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/verify-before-claiming-done.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Verify before claiming done — evidence over assertion",
+  "description": "\"Should work\" and \"verified to work\" are different states. LingCode can produce confident-sounding completions for code that doesn't compile, tests that don't run, and features that don't actually behave as claimed. The fix isn't a smarter model — it's a discipline you make expli",
+  "url": "https://lingcode.dev/tutorials/verify-before-claiming-done.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/verify-before-claiming-done.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Verify before claiming done — evidence over assertion"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Tips & tricks",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Verify before claiming done",
+      "item": "https://lingcode.dev/tutorials/verify-before-claiming-done.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/verify-before-claiming-done.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Tips &amp; tricks</a>
+      <span>/</span>
+      <span>Verify before claiming done</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Verify before claiming done — evidence over assertion</h1>
+      <p class="intro">"Should work" and "verified to work" are different states. LingCode can produce confident-sounding completions for code that doesn't compile, tests that don't run, and features that don't actually behave as claimed. The fix isn't a smarter model — it's a discipline you make explicit: evidence before assertion.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why "looks right" is the trap</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>Coding agents — every one of them, including LingCode at default settings — have a pattern: write code, scan it, decide it looks right, declare done. Three things go wrong with that pattern:</p>
+          <ul>
+            <li><strong>The code doesn't compile.</strong> A misspelled symbol, a missing import, a type that drifted between files. LingCode never ran the compiler — it just looked plausible.</li>
+            <li><strong>The tests pass nothing.</strong> A new test file got created but isn't wired into the test runner. LingCode claims "all tests pass" because the runner found zero tests and exited 0.</li>
+            <li><strong>The feature is silent.</strong> The button gets added, the click handler exists, but the handler returns early on a condition LingCode didn't think through. "I implemented X" — yes, and X does nothing in the path the user takes.</li>
+          </ul>
+          <p>None of these are model failures. They're <em>process</em> failures — claiming completion without running the verification step. The fix is to make verification a hard precondition for the words "done" and "fixed" and "passing."</p>
+        </div>
+      </div>
+
+      <h2>The rule, stated once</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Before LingCode (or you) says any of these:</p>
+          <ul>
+            <li>"This is done."</li>
+            <li>"I fixed it."</li>
+            <li>"The tests pass."</li>
+            <li>"It builds clean."</li>
+            <li>"It's ready to commit."</li>
+          </ul>
+          <p>There must be a tool call output in the same conversation showing the relevant command ran and produced the expected result. Not "I expect it to compile" — the build output. Not "the tests should pass" — the test runner's pass count.</p>
+          <p>This is the whole tutorial. The rest is how to actually enforce it.</p>
+        </div>
+      </div>
+
+      <h2>The four verification gates</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Map each completion claim to the command that proves it. If the command isn't in the transcript, the claim isn't supported.</p>
+          <table style="width:100%; margin-top:0.75rem;">
+            <thead>
+              <tr style="text-align:left;">
+                <th style="padding:0.5rem 0.75rem; border-bottom:1px solid #ddd;">Claim</th>
+                <th style="padding:0.5rem 0.75rem; border-bottom:1px solid #ddd;">Required evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;">"It builds."</td>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;"><code>swift build</code>, <code>xcodebuild build</code>, <code>cargo build</code>, <code>npm run build</code>, <code>tsc --noEmit</code> — output ends with success and no errors above it.</td>
+              </tr>
+              <tr>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;">"Tests pass."</td>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;">Test runner output showing <strong>non-zero number of tests run</strong> and zero failures. "0 tests, 0 failures" is not passing — it's empty.</td>
+              </tr>
+              <tr>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;">"Lints clean."</td>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;">Linter output with no warnings or errors. Suppressions count as evidence of unfinished work, not completion.</td>
+              </tr>
+              <tr>
+                <td style="padding:0.5rem 0.75rem;">"The feature works."</td>
+                <td style="padding:0.5rem 0.75rem;">A manual reproduction of the user path — actual click, actual request, actual output — with the result captured (screenshot, command output, or "I ran X, observed Y").</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2>Ask LingCode for the proof, not the assertion</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>When LingCode finishes a task and says "this should work" or "tests should pass," the right follow-up is one sentence:</p>
+          <pre><code>Run the build and tests and paste the output before declaring
+done.</code></pre>
+          <p>That single prompt changes the closing assistant turn from a narrative ("I added the function, updated the call site, this should compile") to a verifiable artifact (the actual build output). If the output shows errors, you're back in the loop with a real lead. If it shows success, you have evidence.</p>
+          <div class="tip-box">
+            <strong>Make this the default closing instruction</strong> when you start any non-trivial task: <em>"Before saying done, run the build and tests and paste the output."</em> Save it as a snippet or commit it to muscle memory.
+          </div>
+        </div>
+      </div>
+
+      <h2>The "zero tests" trap</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>The most embarrassing failure mode: LingCode writes a test, runs the runner, the runner exits 0 because no test was discovered, and LingCode declares "tests pass."</p>
+          <p>Defend against it by checking the count, not the exit code:</p>
+          <pre><code>Run the tests. Tell me how many tests executed and how many
+passed. If zero tests executed, the test file isn't wired in — fix
+that first.</code></pre>
+          <p>Common reasons a test runner finds zero tests:</p>
+          <ul>
+            <li>File outside the expected test directory.</li>
+            <li>Filename doesn't match the runner's pattern (<code>*Test.swift</code>, <code>*.test.ts</code>, <code>test_*.py</code>).</li>
+            <li>Class or function name doesn't start with the runner's prefix (<code>test</code>, <code>it</code>, <code>describe</code>).</li>
+            <li>Test target wasn't added to the Xcode/SwiftPM project — the file exists on disk but isn't compiled.</li>
+          </ul>
+          <p>Each of those produces a green "all tests pass" message that means nothing.</p>
+        </div>
+      </div>
+
+      <h2>The "compiles but does nothing" trap</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Build green and tests green still don't prove behavior. The honest check for "the feature works" is a manual repro of the user's path. Three lightweight ways to force this in LingCode:</p>
+          <ul>
+            <li><strong>For CLI features:</strong> ask LingCode to invoke the new command with realistic inputs and show the output. <em>"Run <code>lingcode ask --provider claude 'hello'</code> and paste the response."</em></li>
+            <li><strong>For UI features:</strong> ask for a screenshot or a runtime log. If LingCode can't take a screenshot, ask <em>"add a print statement at the entry of the new handler, run the app, click the button, and paste the log output."</em></li>
+            <li><strong>For API features:</strong> ask for the actual HTTP call. <em>"<code>curl</code> the new endpoint with a real payload and show me the status code and body."</em></li>
+          </ul>
+          <div class="warn-box">
+            <strong>"I checked the code and it should work" is not evidence.</strong> Push past it. The cost of one extra command is seconds; the cost of believing a phantom completion is hours of debugging the wrong layer.
+          </div>
+        </div>
+      </div>
+
+      <h2>When verification surfaces a problem, don't paper over it</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>The verification step's job is to <em>find</em> failures. When it does, the right response is:</p>
+          <ol>
+            <li>Read the actual error message in full.</li>
+            <li>Diagnose the root cause — what's wrong, not what's plausible.</li>
+            <li>Fix the root cause.</li>
+            <li>Re-run the verification. Loop.</li>
+          </ol>
+          <p>The wrong responses, in increasing order of damage:</p>
+          <ul>
+            <li>Skip the verification next time. ("It usually passes.")</li>
+            <li>Suppress the warning. (Adding <code>// swiftlint:disable</code>, <code>// @ts-ignore</code>, <code># noqa</code> to make the linter shut up about the symptom.)</li>
+            <li>Skip or weaken the failing test. (Adding <code>.skip</code>, deleting an assertion, lowering a threshold.)</li>
+            <li>Declare done anyway and move on.</li>
+          </ul>
+          <p>Each one converts a real signal into permanent technical debt. If LingCode proposes any of them, push back: <em>"Don't suppress — explain why this is failing and fix it."</em></p>
+        </div>
+      </div>
+
+      <h2>Make it cheap, so you'll actually do it</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Verification only sticks if it's frictionless. Three things make it cheap:</p>
+          <ul>
+            <li><strong>Allowlist the build and test commands</strong> — see <a href="/tutorials/reduce-permission-prompts.html">Reduce permission prompts</a>. If <code>npm test</code> or <code>swift build</code> needs approval every time, LingCode (and you) will skip it.</li>
+            <li><strong>Use a hook to run the build automatically</strong> — see <a href="/tutorials/add-custom-hooks.html">Add custom hooks</a>. A post-edit hook that runs <code>tsc --noEmit</code> or <code>swift build</code> after every write means verification happens whether anyone remembers to ask.</li>
+            <li><strong>Write the standard verification prompt once.</strong> Add it to a project-level CLAUDE.md or a saved snippet so every session starts with the discipline baked in.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>The closing checklist</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Before LingCode commits, opens a PR, or types the word "done," confirm — out loud, in the chat:</p>
+          <ul>
+            <li><strong>Build:</strong> ran the build, output ends clean.</li>
+            <li><strong>Tests:</strong> ran the tests, N tests executed, all passed (N &gt; 0).</li>
+            <li><strong>Behavior:</strong> manually exercised the user-facing path, observed the expected outcome.</li>
+            <li><strong>No suppressions:</strong> didn't add ignores, disables, or skips to make the verification pass.</li>
+          </ul>
+          <p>If any item is missing, the work isn't done — it's "pending verification." Naming the state honestly is the cheapest fix in software development.</p>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>The discipline is packaged as a skill — drop it into your skills folder and ask LingCode for "verify before completion" or just rely on LingCode triggering it on "done" / "fixed" / "passing" claims:</p>
+          <pre><code>---
+name: verification-before-completion
+description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs. Triggers: 'this is done', 'I fixed it', 'tests pass', 'it builds clean', 'ready to commit', 'all green', 'ship it'. Actions: require evidence per claim — build output for 'builds', test count + zero failures for 'tests pass', linter output for 'lints clean', manual reproduction for 'feature works'. Anti-patterns: 'should work' without running, 'tests pass' with zero tests run, suppressing/skipping/lowering test thresholds. Discipline: evidence before assertion, always.
+---
+
+Verify before claiming done. Required output in the conversation
+before saying "done", "fixed", "passing", "ready", or
+"works":
+
+1. Build evidence
+   Run the project's build command (swift build / xcodebuild build /
+   cargo build / npm run build / tsc --noEmit). Output must end
+   clean with no errors. Paste the relevant tail.
+
+2. Test evidence
+   Run the test runner. Confirm the output shows a NON-ZERO number
+   of tests executed and zero failures. "0 tests, 0 failures" is
+   empty — diagnose why the runner found nothing.
+
+3. Behavior evidence
+   For user-facing features, exercise the actual path (CLI command +
+   output, HTTP call + response, button click + log line). Capture
+   the observation.
+
+4. No suppression
+   If a check failed, do not silence it (no // @ts-ignore, no
+   .skip, no disable comments, no lowered thresholds). Fix the root
+   cause and re-run.
+
+When the user asks "is it done?" or you'd say "it should work":
+stop and run the verifications first. Report what you ran, what
+you saw, and only then claim status. If any check is missing, name
+the work as "pending verification" — not done.
+
+Cheap when commands are allowlisted in settings.json (see
+fewer-permission-prompts skill) and / or wrapped in a post-edit
+hook that auto-runs the typecheck.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/verification-before-completion/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/debug-systematically-with-lingcode.html" class="tutorial-next-card">
+            <h3>Debug systematically</h3>
+            <p>Once verification catches a failure, the systematic-debugging discipline is how you fix it without papering over</p>
+          </a>
+          <a href="/tutorials/test-driven-development-with-lingcode.html" class="tutorial-next-card">
+            <h3>Test-driven development</h3>
+            <p>Write the test first, watch it fail, then make it pass — verification baked into the rhythm of every change</p>
+          </a>
+          <a href="/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html" class="tutorial-next-card">
+            <h3>Migrate a Flutter app to native</h3>
+            <p>A long-form workflow where Phase 5 is "verify the builds" — verification as the explicit final step</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

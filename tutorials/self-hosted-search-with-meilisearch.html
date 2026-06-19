@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-hosted search with Meilisearch — LingCode Tutorials</title>
+  <meta name="description" content="Open-source search engine in a single binary. Run on a $5 VPS, index in seconds, query in milliseconds. Same shape as Algolia at a fraction of the cost.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/self-hosted-search-with-meilisearch.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Self-hosted search with Meilisearch",
+  "description": "Meilisearch is what happens when someone writes Algolia's user-facing model as a single Rust binary. Run it on a $5 VPS, index records via HTTP, query in milliseconds. Open source; same UI library as Algolia.",
+  "url": "https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Run Meilisearch locally",
+      "url": "https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Run on a production VPS",
+      "url": "https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Create API keys",
+      "url": "https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Install the SDK",
+      "url": "https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Configure the index",
+      "url": "https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html#step-5"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "name": "Drop in the UI library",
+      "url": "https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html#step-6"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 7,
+      "name": "Use Meilisearch Cloud if self-hosting feels heavy",
+      "url": "https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html#step-7"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Self-hosted search with Meilisearch",
+      "item": "https://lingcode.dev/tutorials/self-hosted-search-with-meilisearch.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/self-hosted-search-with-meilisearch.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Self-hosted search with Meilisearch</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Self-hosted search with Meilisearch</h1>
+      <p class="intro">Meilisearch is what happens when someone writes Algolia's user-facing model as a single Rust binary. Run it on a $5 VPS, index records via HTTP, query in milliseconds. Open source; same UI library as Algolia.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>When to pick Meilisearch</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick Meilisearch when</strong> — you want Algolia-shaped DX at a fraction of the cost, your data shouldn't leave your infrastructure, or you've outgrown Algolia's free tier and don't want to start paying.</li>
+            <li><strong>Pick <a href="/tutorials/set-up-algolia-search.html">Algolia</a></strong> for zero ops + global edge by default.</li>
+            <li><strong>Pick <a href="https://typesense.org/" target="_blank" rel="noopener">Typesense ↗</a></strong> for the same shape as Meilisearch with slightly different opinions.</li>
+            <li><strong>Pick Postgres FTS</strong> if you have under ~100K records and search doesn't need to be flagship.</li>
+          </ul>
+          <p>Two ways to run Meilisearch: self-host (free, you run the box) or <a href="https://www.meilisearch.com/cloud" target="_blank" rel="noopener">Meilisearch Cloud ↗</a> (paid, they run it). This tutorial covers self-hosting.</p>
+        </div>
+      </div>
+
+      <h2>Run Meilisearch locally</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Single binary:</p>
+          <pre><code>curl -L https://install.meilisearch.com | sh
+./meilisearch --master-key="your-strong-master-key"</code></pre>
+          <p>Listens on <code>http://localhost:7700</code>. The master key is required in production; without one, Meilisearch starts in dev mode (no auth). Generate a long random string for real use.</p>
+          <p>Docker alternative:</p>
+          <pre><code>docker run -it --rm \
+  -p 7700:7700 \
+  -v $(pwd)/meili_data:/meili_data \
+  getmeili/meilisearch:latest \
+  meilisearch --master-key="your-strong-master-key"</code></pre>
+          <p>Test it:</p>
+          <pre><code>curl http://localhost:7700/health
+# {"status":"available"}</code></pre>
+          <p><a href="https://www.meilisearch.com/docs/learn/self_hosted/getting_started_with_self_hosted_meilisearch" target="_blank" rel="noopener">Self-hosting docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Run on a production VPS</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Spin up a $5/month box on <a href="/tutorials/buy-a-server-from-digitalocean.html">DigitalOcean</a>, <a href="/tutorials/buy-a-server-from-hetzner.html">Hetzner</a>, etc. SSH in and run:</p>
+          <pre><code># Install Meilisearch
+curl -L https://install.meilisearch.com | sh
+sudo mv ./meilisearch /usr/local/bin/
+
+# Run as a systemd service
+sudo nano /etc/systemd/system/meilisearch.service</code></pre>
+          <p>Paste:</p>
+          <pre><code>[Unit]
+Description=Meilisearch
+After=systemd-user-sessions.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/meilisearch --config-file-path /etc/meilisearch.toml
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+          <p>Create <code>/etc/meilisearch.toml</code> with your master key, data path, environment, etc. (see <a href="https://www.meilisearch.com/docs/learn/configuration/instance_options" target="_blank" rel="noopener">configuration docs ↗</a>).</p>
+          <pre><code>sudo systemctl enable meilisearch
+sudo systemctl start meilisearch</code></pre>
+          <p>Put <a href="/tutorials/set-up-https-with-lets-encrypt.html">Nginx + HTTPS</a> in front. Now you have a real search endpoint at <code>https://search.yourdomain.com</code>.</p>
+        </div>
+      </div>
+
+      <h2>Create API keys</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>The master key is for admin operations only — don't ship it. Use scoped API keys for your app.</p>
+          <p>Auto-generated on first run: query the keys endpoint with the master key:</p>
+          <pre><code>curl -X GET 'http://localhost:7700/keys' \
+  -H 'Authorization: Bearer your-master-key'</code></pre>
+          <p>Two default keys are pre-generated:</p>
+          <ul>
+            <li><strong>Default Admin API Key</strong> — full read/write. Backend only.</li>
+            <li><strong>Default Search API Key</strong> — search-only. Safe in browser.</li>
+          </ul>
+          <pre><code>MEILI_HOST=https://search.yourdomain.com
+MEILI_MASTER_KEY=your-master-key                # backend admin ops only
+MEILI_ADMIN_KEY=xxxxxxxxxx                      # backend; from Default Admin API Key
+MEILI_SEARCH_KEY=xxxxxxxxxx                     # safe for client; from Default Search API Key</code></pre>
+        </div>
+      </div>
+
+      <h2>Install the SDK</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <pre><code>npm install meilisearch</code></pre>
+          <p>Official SDKs: <a href="https://www.meilisearch.com/docs/learn/resources/sdks" target="_blank" rel="noopener">JS, Python, Ruby, PHP, Go, Java, .NET, Rust, Swift, Dart ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Index your first records</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <pre><code>import { MeiliSearch } from "meilisearch";
+
+const client = new MeiliSearch({
+  host: process.env.MEILI_HOST,
+  apiKey: process.env.MEILI_ADMIN_KEY,
+});
+
+// Add documents (creates the index automatically)
+await client.index("posts").addDocuments([
+  {
+    id: 1,                                    // required; primary key
+    title: "How to deploy to Vercel",
+    body: "First, install the CLI...",
+    tags: ["deploy", "vercel"],
+    published_at: 1714521600,
+  },
+  { id: 2, title: "...", body: "..." },
+]);</code></pre>
+          <p>Meilisearch processes async — returns a task ID. For batch imports of millions of records, poll <code>/tasks/{id}</code> for completion. For small adds, results are searchable in milliseconds.</p>
+        </div>
+      </div>
+
+      <h2>Configure the index</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Two settings that matter most (mirroring Algolia):</p>
+          <pre><code>// Which fields are searchable, in priority order
+await client.index("posts").updateSearchableAttributes([
+  "title",
+  "body",
+  "tags",
+]);
+
+// Which fields you can filter on
+await client.index("posts").updateFilterableAttributes(["tags", "author"]);
+
+// Custom ranking
+await client.index("posts").updateRankingRules([
+  "words", "typo", "proximity", "attribute",
+  "sort", "exactness",
+  "published_at:desc",       // newer first
+]);</code></pre>
+          <p><a href="https://www.meilisearch.com/docs/learn/configuration/settings" target="_blank" rel="noopener">Settings docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Search from the browser</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <pre><code>import { MeiliSearch } from "meilisearch";
+
+const client = new MeiliSearch({
+  host: process.env.NEXT_PUBLIC_MEILI_HOST,
+  apiKey: process.env.NEXT_PUBLIC_MEILI_SEARCH_KEY,    // search-only; safe
+});
+
+const results = await client.index("posts").search("vercel", {
+  limit: 10,
+  filter: ['tags = "deploy"'],
+});</code></pre>
+          <p>Use the search-only key. It can only read, not modify; safe to ship in browser.</p>
+        </div>
+      </div>
+
+      <h2>Drop in the UI library</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Meilisearch ships an InstantSearch-compatible adapter, so all the Algolia UI widgets work:</p>
+          <pre><code>npm install instantsearch.js @meilisearch/instant-meilisearch
+# or for React:
+npm install react-instantsearch @meilisearch/instant-meilisearch</code></pre>
+          <pre><code>import { InstantSearch, SearchBox, Hits } from "react-instantsearch";
+import { instantMeiliSearch } from "@meilisearch/instant-meilisearch";
+
+const { searchClient } = instantMeiliSearch(
+  process.env.NEXT_PUBLIC_MEILI_HOST,
+  process.env.NEXT_PUBLIC_MEILI_SEARCH_KEY,
+);
+
+export function Search() {
+  return (
+    &lt;InstantSearch searchClient={searchClient} indexName="posts"&gt;
+      &lt;SearchBox /&gt;
+      &lt;Hits hitComponent={({ hit }) =&gt; &lt;div&gt;{hit.title}&lt;/div&gt;} /&gt;
+    &lt;/InstantSearch&gt;
+  );
+}</code></pre>
+          <p><a href="https://github.com/meilisearch/instant-meilisearch" target="_blank" rel="noopener">instant-meilisearch ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Sync your DB → Meilisearch</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Same patterns as Algolia:</p>
+          <ul>
+            <li><strong>On every write</strong> — DB write also calls <code>addDocuments</code>. Simple, doubles latency slightly.</li>
+            <li><strong>Async via <a href="/tutorials/background-jobs-with-inngest.html">Inngest</a></strong> — fire an event after DB write; let a function sync to Meilisearch. Decoupled.</li>
+            <li><strong>Periodic batch</strong> — every N minutes, sync all changed records. Simplest; small staleness window.</li>
+          </ul>
+          <p>For Postgres → Meilisearch, <a href="https://github.com/airbnb/airbyte" target="_blank" rel="noopener">Airbyte ↗</a> has a free connector. Or use <a href="https://supabase.com/docs/guides/database/extensions/wrappers/meilisearch" target="_blank" rel="noopener">Supabase's Meilisearch wrapper ↗</a> if you're on Supabase.</p>
+        </div>
+      </div>
+
+      <h2>Common operations</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <pre><code>// Update (merges with existing fields by primary key)
+await client.index("posts").updateDocuments([
+  { id: 1, body: "Updated body" },
+]);
+
+// Delete
+await client.index("posts").deleteDocument(1);
+await client.index("posts").deleteDocuments({ filter: 'tags = "draft"' });
+
+// Stats
+const stats = await client.index("posts").getStats();
+console.log(stats.numberOfDocuments);
+
+// Drop the whole index
+await client.deleteIndex("posts");</code></pre>
+        </div>
+      </div>
+
+      <h2>Backups</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p>Meilisearch produces a single <strong>dump</strong> file you can restore from:</p>
+          <pre><code>curl -X POST 'http://localhost:7700/dumps' \
+  -H 'Authorization: Bearer your-master-key'</code></pre>
+          <p>Dumps land in your configured data path. Schedule via cron; rsync to S3 / R2 for offsite copies. Restore by starting Meilisearch with <code>--import-dump path/to/dump.dump</code>.</p>
+          <p>Meilisearch can rebuild from your source-of-truth DB in minutes — for many teams, "the DB is the backup; just re-sync to Meilisearch on disaster" works fine.</p>
+        </div>
+      </div>
+
+      <h2>Use Meilisearch Cloud if self-hosting feels heavy</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <p><a href="https://www.meilisearch.com/cloud" target="_blank" rel="noopener">Meilisearch Cloud ↗</a> hosts the same engine you'd self-host. $30/mo for the starter tier. Worth it if you don't want to maintain a Linux box; still much cheaper than Algolia at meaningful scale.</p>
+          <p>Migration is symmetric — dump from self-hosted, restore to Cloud, switch your client's host URL.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't expose Meilisearch without auth.</strong> Without a master key, anyone who can reach your port can read AND wipe your index. Always run with a strong master key in production. Bind to localhost + put Nginx in front, or whitelist client IPs at your firewall.
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://www.meilisearch.com/docs" target="_blank" rel="noopener">Meilisearch docs ↗</a></li>
+        <li><a href="https://www.meilisearch.com/docs/reference/api/overview" target="_blank" rel="noopener">REST API reference ↗</a></li>
+        <li><a href="https://www.meilisearch.com/docs/learn/configuration/instance_options" target="_blank" rel="noopener">Configuration ↗</a></li>
+        <li><a href="https://www.meilisearch.com/docs/learn/security/master_api_keys" target="_blank" rel="noopener">API keys + security ↗</a></li>
+        <li><a href="https://github.com/meilisearch/meilisearch" target="_blank" rel="noopener">Source on GitHub ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-algolia-search.html" class="tutorial-next-card">
+            <h3>Set up Algolia search</h3>
+            <p>Managed alternative; zero ops + global edge by default</p>
+          </a>
+          <a href="/tutorials/buy-a-server-from-hetzner.html" class="tutorial-next-card">
+            <h3>Buy a server from Hetzner</h3>
+            <p>Cheap VPS to run Meilisearch on; €4/mo covers it for most projects</p>
+          </a>
+          <a href="/tutorials/set-up-https-with-lets-encrypt.html" class="tutorial-next-card">
+            <h3>Set up HTTPS with Let's Encrypt</h3>
+            <p>Front your Meilisearch with TLS via Nginx + certbot</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

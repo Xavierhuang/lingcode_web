@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>将静态网站部署到 S3 + CloudFront — LingCode 教程</title>
+  <meta name="description" content="经典的 AWS 静态托管方案：用 S3 存储文件，CloudFront 提供 CDN 与 HTTPS，ACM 免费签发证书，Route 53 管理 DNS。一次搭建，永久部署。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "将静态网站部署到 S3 + CloudFront",
+  "description": "S3 存储文件，CloudFront 通过 HTTPS 在全球范围内分发，ACM 免费签发证书，Route 53 让 mybrand.com 指向整个系统。这是在 AWS 上部署静态网站的标准方案——一旦搭建完成，每次部署只需一条 aws s3 sync 命令。",
+  "url": "https://lingcode.dev/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "将静态网站部署到 S3 + CloudFront"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "将静态网站部署到 S3 + CloudFront",
+      "item": "https://lingcode.dev/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>将静态网站部署到 S3 + CloudFront</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>将静态网站部署到 S3 + CloudFront</h1>
+      <p class="intro">S3 存储文件，CloudFront 通过 HTTPS 在全球范围内分发，ACM 免费签发证书，Route 53 让 <code>mybrand.com</code> 指向整个系统。这是在 AWS 上部署静态网站的标准方案——一旦搭建完成，每次部署只需一条 <code>aws s3 sync</code> 命令。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>现代的主流替代方案——Vercel、Netlify、Cloudflare Pages——已将整条部署流水线打包成一个按钮。推送 git 仓库，它们就会自动处理存储、CDN、证书和 DNS。人们仍然手动搭建 S3 + CloudFront 的原因在于，它<em>属于 AWS 生态</em>：同一套 IAM 策略可以让 Lambda 把生成的报告写入同一个 bucket；同一个 CloudFront 分发可以前置于其身后的 ALB；同一个 Route 53 托管区可以管理其他 AWS 资源的记录。如果你的基础设施在 AWS 上，静态网站也理应在 AWS 上——而且静态内容的 AWS 价格极为低廉。</p>
+      <p>核心概念：<strong>S3 是源站</strong>（私有 bucket，存放构建产物）；<strong>CloudFront 是缓存与入口</strong>（在全球边缘节点缓存文件、终止 TLS、提供 <code>https://</code> 访问）；<strong>ACM 提供证书</strong>（免费 TLS，但 CloudFront 要求证书必须位于 <code>us-east-1</code>）；<strong>Route 53 管理 DNS</strong>（Alias 记录将域名指向 CloudFront 分发）。四项服务各司其职，互不越界。</p>
+      <p>本教程将从头到尾完整介绍首次配置流程，以及流水线搭建完成后每次部署的操作方式。对于控制台操作繁琐的步骤（bucket 策略、sync），我们使用 AWS CLI；对于 CLI 操作繁琐的步骤（CloudFront、ACM），我们使用控制台。最终，部署只需三条命令：<code>npm run build &amp;&amp; aws s3 sync ./dist s3://mybrand-site &amp;&amp; aws cloudfront create-invalidation ...</code>，从此一劳永逸。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>S3、CloudFront、ACM 和 Route 53 各自承担什么职责</li>
+        <li>为什么 CloudFront 使用的 ACM 证书<em>必须</em>位于 <code>us-east-1</code></li>
+        <li>源站访问控制（OAC）——公开 bucket 方案的现代替代</li>
+        <li>缓存失效：何时需要、如何脚本化</li>
+        <li>在小规模和中等规模下，这套方案的实际费用</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前置条件：</strong>拥有具备管理员或足够 IAM 权限的 AWS 账号、已安装并配置好 AWS CLI（<code>aws configure</code>）、域名的 DNS 托管于 <a href="/zh/tutorials/use-route-53-for-your-domain.html">Route 53</a>（或愿意在其他地方添加记录），以及一个已构建好的静态网站（一个包含 HTML/CSS/JS 的目录）。
+      </div>
+
+      <h2>第 1 步：创建 S3 Bucket</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>私有 bucket，保留默认设置，一条 CLI 命令搞定</h3>
+          <p>选择一个 bucket 名称。它必须在整个 AWS 范围内全局唯一，建议使用类似 <code>mybrand-site-prod-2026</code> 的命名。名称本身并不重要——用户永远不会看到它，因为 CloudFront 在前面挡着。</p>
+          <pre><code>aws s3api create-bucket \
+  --bucket mybrand-site-prod-2026 \
+  --region us-east-1
+# (对于 us-east-1 以外的区域，需添加 --create-bucket-configuration LocationConstraint=&lt;region&gt;)</code></pre>
+          <p>保留默认的"屏蔽所有公开访问"设置。有了 CloudFront + OAC 在前面（第 4 步），bucket 保持私有状态；CloudFront 使用自己的凭证来读取文件。公开 bucket 的方式仍然可行，但已是过时的模式——AWS 新文档全面推荐 OAC。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：上传网站文件</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3><code>aws s3 sync</code> 就是部署命令</h3>
+          <p>如果你的网站构建输出目录是 <code>./dist</code>（或 <code>./build</code>、<code>./public</code>，取决于项目）：</p>
+          <pre><code>aws s3 sync ./dist s3://mybrand-site-prod-2026 --delete
+# --delete 会删除 S3 中本地已不存在的文件——
+# 不加此参数，已删除的页面会作为孤儿继续在线。</code></pre>
+          <p>首次 sync 会上传所有文件，后续只上传变更的文件。这就是你之后要脚本化的部署命令。此时 S3 已有文件，但无法访问——bucket 是私有的，CloudFront 也还没建。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：在 us-east-1 申请 ACM 证书</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>区域至关重要；CloudFront 只读取 us-east-1 的证书</h3>
+          <p>这是最常见的首次配置错误。AWS Certificate Manager 证书是按区域划分的。CloudFront 是全球服务，但证书查找固定走 <code>us-east-1</code>。申请证书前，<strong>请将控制台区域切换到"美国东部（弗吉尼亚北部）— us-east-1"</strong>，或通过 CLI 操作：</p>
+          <pre><code>aws acm request-certificate \
+  --domain-name mybrand.com \
+  --subject-alternative-names www.mybrand.com \
+  --validation-method DNS \
+  --region us-east-1</code></pre>
+          <p>ACM 会返回一个 <code>CertificateArn</code> 以及一组 CNAME 验证记录——证书中每个域名各一条。如果你的 DNS 在同一账号的 Route 53 上，控制台会提供一键"在 Route 53 中创建记录"的按钮。否则，需要手动将每条 CNAME 复制到你的 DNS 服务商。记录生效后，验证通常在几分钟内完成。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>证书续期是自动的。</strong>一旦通过 DNS 验证并签发，ACM 每 13 个月自动续期，并在零停机的情况下将新证书切换到 CloudFront。只要 DNS 验证记录保持不变，你就无需再管证书的事。
+      </div>
+
+      <h2>第 4 步：创建带 OAC 的 CloudFront 分发</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>最复杂的一步；建议在控制台完成</h3>
+          <p>打开 CloudFront → <strong>创建分发</strong>，填写以下内容：</p>
+          <ul>
+            <li><strong>源域：</strong>从下拉列表中选择你的 S3 bucket（不要选网站端点——选 bucket 本身）。</li>
+            <li><strong>源访问：</strong>选择<em>源访问控制设置（推荐）</em>，点击<strong>创建新 OAC</strong>，保留默认值并保存。分发创建完成后，CloudFront 会给你一段 bucket 策略片段——你将在第 5 步把它粘贴到 S3。</li>
+            <li><strong>查看器协议策略：</strong>选择<em>将 HTTP 重定向到 HTTPS</em>。</li>
+            <li><strong>允许的 HTTP 方法：</strong><em>GET、HEAD</em>（静态网站不需要 POST）。</li>
+            <li><strong>备用域名（CNAME）：</strong><code>mybrand.com</code> 和 <code>www.mybrand.com</code>。</li>
+            <li><strong>自定义 SSL 证书：</strong>选择第 3 步申请的 ACM 证书。</li>
+            <li><strong>默认根对象：</strong><code>index.html</code>。</li>
+          </ul>
+          <p>点击创建。CloudFront 开始部署分发，首次大约需要 5 到 15 分钟。你会得到一个类似 <code>d1234abcde.cloudfront.net</code> 的分发域名——在 DNS 接入之前，可以直接用该 URL 测试。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：附加 OAC Bucket 策略</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>只允许 CloudFront 读取 bucket，其他一律拒绝</h3>
+          <p>OAC 创建流程会在成功页面显示 bucket 策略片段，复制它。在 S3 → bucket → <strong>权限</strong> → <strong>Bucket 策略</strong>中粘贴。内容如下：</p>
+          <pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowCloudFrontServicePrincipalReadOnly",
+    "Effect": "Allow",
+    "Principal": { "Service": "cloudfront.amazonaws.com" },
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::mybrand-site-prod-2026/*",
+    "Condition": {
+      "StringEquals": {
+        "AWS:SourceArn": "arn:aws:cloudfront::123456789:distribution/E1ABCDEFGHIJK"
+      }
+    }
+  }]
+}</code></pre>
+          <p><code>SourceArn</code> 条件是 OAC 安全性的关键：只有你指定的分发才能读取这个 bucket。若没有此条件，任何账号下的任何 CloudFront 分发都可以读取。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：将域名指向 CloudFront</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>在 Route 53 中为每个域名创建一条 Alias 记录</h3>
+          <p>在 Route 53 → 你的托管区 → <strong>创建记录</strong>：</p>
+          <ul>
+            <li><strong>记录名称：</strong>留空（对应根域名）或填 <code>www</code>（对应 www 子域名）。</li>
+            <li><strong>记录类型：</strong>A。</li>
+            <li><strong>别名：</strong>开启。</li>
+            <li><strong>流量路由到：</strong>CloudFront 分发的别名 → 选择你的分发。</li>
+          </ul>
+          <p>创建完成后，重复以上步骤配置另一个域名（根域名 / www）。DNS 解析通常在几分钟内生效——如果是同一 AWS 账号下的 Alias 记录，有时几秒就能完成。</p>
+          <p>如果你的 DNS 不在 Route 53，可在你的 DNS 服务商添加常规 CNAME 记录，将 <code>www</code> 指向 <code>d1234abcde.cloudfront.net</code>，并使用你的 DNS 服务商提供的 CNAME 扁平化 / ALIAS 功能处理根域名（详见 <a href="/zh/tutorials/connect-domain-to-server-with-dns.html">DNS 教程</a>）。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：验证并保存部署命令</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>三项检查；之后只需三条命令</h3>
+          <pre><code># 1. 确认证书已附加到分发。
+curl -sI https://mybrand.com | grep -E '^(HTTP|Server)'
+# 预期结果：HTTP/2 200 ... Server: CloudFront
+
+# 2. 确认文件可以访问。
+curl -s https://mybrand.com | head
+# 预期结果：你的 index.html 内容。
+
+# 3. 确认 DNS 指向 CloudFront。
+dig mybrand.com +short
+# 预期结果：CloudFront 边缘节点 IP（各区域不同；确认不为空即可）。</code></pre>
+          <p>从现在起，部署的方式如下——将这三行保存为项目中的 <code>deploy.sh</code>：</p>
+          <pre><code>#!/usr/bin/env bash
+set -e
+npm run build
+aws s3 sync ./dist s3://mybrand-site-prod-2026 --delete
+aws cloudfront create-invalidation \
+  --distribution-id E1ABCDEFGHIJK \
+  --paths "/*"</code></pre>
+          <p>缓存失效（invalidation）是让新文件立即生效的关键。不执行失效操作，CloudFront 会继续提供缓存中的旧文件，直到 TTL 过期（缓存响应默认 24 小时）。每月有 1,000 个失效路径免费——以每次部署一个路径的失效来算，相当于每天 33 次，足以覆盖大多数项目。</p>
+        </div>
+      </div>
+
+      <h2>实际费用是多少</h2>
+      <p>以每月 10,000 访客、约 1 GB 流量的个人网站为例：</p>
+      <ul>
+        <li><strong>S3 存储</strong>：$0.023/GB/月 × 小型网站 = 不足 $0.01</li>
+        <li><strong>CloudFront 数据传出</strong>：$0.085/GB × 1 GB = 约 $0.085</li>
+        <li><strong>CloudFront 请求</strong>：$0.0075 / 10,000 次 HTTPS 请求 × 约 50,000 次 = $0.04</li>
+        <li><strong>Route 53 托管区</strong>：$0.50/月（如使用 Route 53 管理 DNS）</li>
+        <li><strong>ACM 证书</strong>：免费</li>
+      </ul>
+      <p>总计：一个真实但流量平静的个人网站，每月不到 $1。AWS 免费套餐的前 12 个月提供 50 GB 免费 CloudFront 出站流量，通常能覆盖所有费用；免费期结束后，费用线性增长。若静态网站月流量达到 1 TB，传输费用约为 $85——这时候 Cloudflare Pages（带宽无限、免费）就显得非常有吸引力了。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/deploy-with-aws-amplify-hosting.html" class="tutorial-next-card">
+            <h3>使用 AWS Amplify Hosting 部署</h3>
+            <p>如果你不想自己运行 CLI，这是本文方案的 git push 自动部署版本</p>
+          </a>
+          <a href="/zh/tutorials/use-route-53-for-your-domain.html" class="tutorial-next-card">
+            <h3>使用 Route 53 管理域名</h3>
+            <p>若要使用第 6 步中的 Alias 记录路径，此为必备前提</p>
+          </a>
+          <a href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>在 Lightsail 上运行 Node API</h3>
+            <p>当静态网站需要后端支持时</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速交付的创始人和追求真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/zh/features.html">Mac IDE</a></li>
+        <li><a href="/zh/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/zh/docs.html">文档</a></li>
+        <li><a href="/zh/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简介</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何为 LingCode 编写自定义技能？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="技能是一个 Markdown 文件，用于教给智能体一个小型可复用的习惯。为你的团队风格、代码库约定或某个特殊技巧编写一个技能文件吧。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/write-a-custom-skill.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/write-a-custom-skill.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/write-a-custom-skill.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/write-a-custom-skill.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "编写自定义技能",
+  "description": "技能是教给智能体某件事最轻量、最低仪式感的方式。只需在 .claude/skills/ 中放入一个 Markdown 文件，给它命名，用普通语言写下指令。智能体下一轮就能读取它，并永远记住你的做事方式。",
+  "url": "https://lingcode.dev/zh/tutorials/write-a-custom-skill.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/write-a-custom-skill.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "编写自定义技能"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "编写自定义技能",
+      "item": "https://lingcode.dev/zh/tutorials/write-a-custom-skill.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/write-a-custom-skill.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>编写自定义技能</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何为 LingCode 编写自定义技能？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>在 <code>.claude/skills/&lt;your-skill&gt;/SKILL.md</code> 中创建一个带有 YAML frontmatter（<code>name</code>、<code>description</code>）的 Markdown 文件，并在下方写上指令。智能体会自动发现它，并在遇到匹配任务时调用它。</p>
+      <p class="intro">技能是教给智能体某件事最轻量、最低仪式感的方式。只需在 <code>.claude/skills/</code> 中放入一个 Markdown 文件，给它命名，用普通语言写下指令。智能体下一轮就能读取它，并永远记住你的做事方式。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>每个代码库都有不成文的规矩：命名要这样，错误处理要那样，某类文件总是需要这个额外步骤。新成员在最初几周里会不断碰壁；智能体在每次全新的对话中也面临同样的困境。每天重复解释五次"表名用 snake_case，不用 camelCase"的成本并不低，最尴尬的情况是智能体连续犯了四次同样的错，仅仅因为没有人把它记录下来。</p>
+      <p>把这些规则写进 <code>CLAUDE.md</code> 的直觉，对于全项目范围内的不变约定是正确的。但很多习惯并不是全局性的，它们是情境性的："写测试的时候，这样做。""准备推代码之前，先跑这个。""用户说'ship it'的时候，别只是部署——先打个 release tag。"一个塞满了"在这种特定情况下做这件特定的事"的 200 行 <code>CLAUDE.md</code>，对任何读者（模型或人类）来说都很难使用，而且智能体每次都会把所有内容全部加载进来。</p>
+      <p>技能是更细粒度的替代方案：每种情境对应一个 Markdown 文件，仅在相关时才加载。格式极其简单——带有名称和描述的 frontmatter，加上包含指令的正文，旁边可附上可选的辅助文件。智能体通过读取描述来判断技能是否适用；如果适用，就加载正文。多个技能可以共存而互不干扰；你可以在两分钟内写好一个技能，然后把它忘掉，直到对应情境再次出现。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>技能文件格式：带有 frontmatter 的 <code>SKILL.md</code></li>
+        <li>智能体如何决定何时加载一个技能</li>
+        <li>项目级技能与用户级技能应分别放在哪里</li>
+        <li>如何用斜杠命令手动调用技能</li>
+        <li>何时通过 <code>disable-model-invocation</code> 禁止模型自动调用</li>
+      </ul>
+
+      <h2>第一步：文件结构</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>一个文件夹，一个文件，一个可选的辅助文件</h3>
+          <p>在 <code>.claude/skills/</code> 下创建一个以技能命名的文件夹，在其中放入 <code>SKILL.md</code>：</p>
+          <pre><code>.claude/
+└── skills/
+    └── tdd/
+        ├── SKILL.md         ← 必需
+        └── examples.md      ← 可选；补充材料</code></pre>
+          <p>这就是完整的结构。文件夹名即技能名，<code>SKILL.md</code> 是必需的入口文件。文件夹中的其他任何文件都可以在技能正文中引用。</p>
+        </div>
+      </div>
+
+      <h2>第二步：编写 frontmatter</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>名称与描述最为关键</h3>
+          <p>打开 <code>SKILL.md</code>，以 YAML frontmatter 开头：</p>
+          <pre><code>---
+name: tdd
+description: Use this when the user asks for a test, when adding a new function, or when fixing a bug — write the test FIRST, then implement.
+---
+
+# Body goes here
+
+When working in TDD mode:
+1. Read the existing tests in the same module.
+2. Write a failing test for the new behavior.
+...
+</code></pre>
+          <p><strong>description（描述）</strong>是最重要的字段。智能体会读取所有可用技能的描述，并根据用户的输入决定加载哪些技能。模糊的描述（"帮助处理测试"）会被忽略；具体的描述（"当用户要求测试或修复 bug 时，先写测试"）才会被匹配。</p>
+          <p>描述的写法建议用"<em>Use this when [触发条件]</em>"或"<em>For [情境], do [操作]</em>"的形式。措辞的影响比你想象的更大。</p>
+        </div>
+      </div>
+
+      <h2>第三步：编写正文</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>祈使句、具体、简短</h3>
+          <p><code>SKILL.md</code> 的正文是实际的指令集。目标是控制在 200 行以内。使用祈使句（"先写测试，再写实现"）、具体示例，以及明确的"这样做，不要那样做"对比——尤其是在错误做法很有诱惑力的地方。</p>
+          <p>你可以通过相对路径引用技能文件夹中的其他文件，智能体在加载技能时会读取它们。辅助文件适合放：长代码示例、检查清单、参考表格。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>气味测试：</strong>如果未来的你冷启动打开这个技能文件，你能知道它适用于何时、该做什么吗？如果能，说明这个技能写得好。如果描述让你摸不着头脑，那就重写它。
+      </div>
+
+      <h2>第四步：项目级 vs. 用户级</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>选择与规则范围相匹配的作用域</h3>
+          <p>技能文件夹可以放在两个位置：</p>
+          <ul>
+            <li><strong>项目级：</strong><code>.claude/skills/&lt;name&gt;/</code>，放在项目根目录或任意上级目录中。适合代码库特有的约定（"在这个 repo 中，表名用 snake_case"）。</li>
+            <li><strong>用户级：</strong><code>~/.claude/skills/&lt;name&gt;/</code>。适合跨所有项目的个人习惯（"提交前总是先跑我的 lint 检查"）。</li>
+          </ul>
+          <p>项目级技能保留其原始名称。打包在<a href="/zh/tutorials/install-and-configure-plugins.html">插件</a>中的用户级技能会以 <code>&lt;plugin&gt;:&lt;skill&gt;</code> 的形式命名空间化——两个插件各自可以有一个 <code>tdd</code> 技能而不会冲突。项目级的 <code>tdd</code> 会覆盖任何插件中的 <code>tdd</code>。</p>
+        </div>
+      </div>
+
+      <h2>第五步：手动调用</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>斜杠命令与直接提及</h3>
+          <p>技能不仅可以由模型自动调用。手动触发有两种方式：</p>
+          <ul>
+            <li><strong>斜杠命令：</strong>在聊天面板中输入 <code>/&lt;skill-name&gt;</code>（或对带命名空间的技能使用 <code>/&lt;plugin&gt;:&lt;skill&gt;</code>），技能立即加载。在智能体的自动匹配没有触发时非常有用。</li>
+            <li><strong>直接提及：</strong>在提示词中说"use the tdd skill"，会强烈引导智能体加载该技能。不够精确，但更符合对话习惯。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第六步：只对人类开放、不对模型开放的技能</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3><code>disable-model-invocation</code> 逃生舱</h3>
+          <p>有些技能威力强大，你不希望模型自行决定使用的时机——比如破坏性操作、高成本操作、调用第三方 API 的操作。在 frontmatter 中加上这一行：</p>
+          <pre><code>---
+name: deploy-to-prod
+description: Build, sign, and deploy to production.
+disable-model-invocation: true
+---</code></pre>
+          <p>此后模型的系统提示词中不会出现这个技能，它无法自动调用。但斜杠菜单中仍会显示它，人类可以主动运行。这是"我想随时用到它，但我想亲自决定何时使用"这类场景的正确设置。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>技能不是工具。</strong>技能是教智能体<em>如何</em>用现有工具做某件事，它不会新增能力——要新增能力，请参阅<a href="/zh/tutorials/connect-an-mcp-server.html">连接 MCP 服务器</a>。如果你发现自己在写"然后调用这个 REST API"，那应该是 MCP 服务器，而不是技能。
+      </div>
+
+      <h2>接下来做什么</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>安装和配置插件</h3>
+            <p>如何将一组技能打包，分发给团队成员</p>
+          </a>
+          <a href="/zh/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>连接 MCP 服务器</h3>
+            <p>当技能需要的是新能力，而不仅仅是新指令时</p>
+          </a>
+          <a href="/zh/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>权限模式</h3>
+            <p>技能在同一套授权体系下运行；选择适合的模式</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

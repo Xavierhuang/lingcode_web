@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何使用 Auth0 为应用添加身份验证？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="企业级身份验证提供商。支持 SAML/SSO、SCIM、B2B 身份认证及自定义规则。注册账号、创建应用、接入 SDK、配置跳转。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/auth-with-auth0.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/auth-with-auth0.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/auth-with-auth0.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-22T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/auth-with-auth0.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Auth0 添加身份验证",
+  "description": "Auth0 是企业级身份验证提供商，由 Okta 收购，广泛应用于需要 SAML / SSO / SCIM 的场景。UI 比 Clerk 更复杂，但规则自定义能力更强；当你的身份验证需求包括"Fortune 500 的 IT 部门可以接入自己的身份提供商"时，Auth0 是正确的选择。",
+  "url": "https://lingcode.dev/zh/tutorials/auth-with-auth0.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-22",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/auth-with-auth0.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "注册并创建租户",
+      "url": "https://lingcode.dev/zh/tutorials/auth-with-auth0.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "创建应用",
+      "url": "https://lingcode.dev/zh/tutorials/auth-with-auth0.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "配置回调 URL",
+      "url": "https://lingcode.dev/zh/tutorials/auth-with-auth0.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "启用身份提供商",
+      "url": "https://lingcode.dev/zh/tutorials/auth-with-auth0.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "安装 SDK（Next.js 示例）",
+      "url": "https://lingcode.dev/zh/tutorials/auth-with-auth0.html#step-5"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "name": "添加登录 / 登出链接",
+      "url": "https://lingcode.dev/zh/tutorials/auth-with-auth0.html#step-6"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 7,
+      "name": "使用 Actions 添加自定义逻辑",
+      "url": "https://lingcode.dev/zh/tutorials/auth-with-auth0.html#step-7"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 Auth0 添加身份验证",
+      "item": "https://lingcode.dev/zh/tutorials/auth-with-auth0.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/auth-with-auth0.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>使用 Auth0 添加身份验证</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-22</span>
+      </div>
+      <h1>如何使用 Auth0 为应用添加身份验证？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>Auth0 是企业级身份验证提供商，支持 SAML、SSO、SCIM 及自定义规则。在 auth0.com 创建租户和应用，配置回调 URL，接入 SDK，完成跳转。当你需要让 IT 部门接入企业身份提供商时，选 Auth0 而非 Clerk。</p>
+      <p class="intro">Auth0 是企业级身份验证提供商，由 Okta 收购，专为需要 SAML / SSO / SCIM 的场景而生。相比 Clerk，它的管理界面更复杂，但规则自定义能力更强。当你的身份验证需求包括"Fortune 500 的 IT 部门可以接入自己的身份提供商"时，Auth0 是正确的选择。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>何时选择 Auth0</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>选择 Auth0 的场景</strong>——你的客户是需要 SAML / Microsoft Entra ID / Okta SSO 的企业，你需要 SCIM 用户预配，你的身份验证逻辑有复杂的多租户规则，或者你需要一个其他应用可以使用的 OIDC 提供商。</li>
+            <li><strong>选择 <a href="/zh/tutorials/auth-with-clerk.html">Clerk</a></strong>——解决相同问题，但开发体验更友好，中等规模下成本更低。</li>
+            <li><strong>选择 <a href="/zh/tutorials/set-up-supabase-database-and-auth.html">Supabase Auth</a></strong>——如果你已经在使用 Supabase。</li>
+            <li><strong>选择<a href="/zh/tutorials/sign-in-with-google-oauth.html">手动 OAuth</a></strong>——如果你只需要接入 1–2 个提供商，且希望不依赖第三方服务自行掌控全局。</li>
+          </ul>
+          <p>对于独立 SaaS 来说，Auth0 过于重量级。它真正适合的是面向 IT 部门销售的 B2B 产品。</p>
+        </div>
+      </div>
+
+      <h2>注册并创建租户</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>前往 <a href="https://auth0.com/signup" target="_blank" rel="noopener">auth0.com/signup ↗</a> 注册账号。免费套餐：B2C 每月 7,500 个活跃用户，或开启 SSO 的 B2B 场景 50 个 MAU。</p>
+          <p>注册时需要填写<strong>租户</strong>名称和所在地区。租户是顶层容器，其他所有内容（应用、连接、规则）都归属于它。大多数团队会按环境划分租户（开发、预发布、生产）。</p>
+        </div>
+      </div>
+
+      <h2>创建应用</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>进入 Auth0 控制台 → <strong>Applications → Create Application</strong>。填写以下信息：</p>
+          <ul>
+            <li><strong>Name</strong>——你的应用名称。</li>
+            <li><strong>Application type</strong>（应用类型）：
+              <ul>
+                <li><strong>Single Page Application (SPA)</strong>——React、Vue、Angular 客户端渲染应用。</li>
+                <li><strong>Regular Web Application</strong>——Next.js、Express、服务端渲染应用。</li>
+                <li><strong>Machine to Machine</strong>——后端服务间鉴权，无用户参与。</li>
+                <li><strong>Native</strong>——iOS、Android、Electron。</li>
+              </ul>
+            </li>
+          </ul>
+          <p>点击 Create 后，你将获得 <strong>Domain</strong>、<strong>Client ID</strong> 以及（机密应用）<strong>Client Secret</strong>。</p>
+          <pre><code>AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+AUTH0_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   # NEVER in browser
+AUTH0_AUDIENCE=https://yourapp.com/api                  # for API auth (Step 8)</code></pre>
+        </div>
+      </div>
+
+      <h2>配置回调 URL</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>在应用设置页滚动到 <strong>Application URIs</strong>，添加以下内容：</p>
+          <ul>
+            <li><strong>Allowed Callback URLs</strong>——多个地址用逗号分隔：<code>http://localhost:3000/api/auth/callback, https://yourapp.com/api/auth/callback</code></li>
+            <li><strong>Allowed Logout URLs</strong>——登出后的跳转地址：<code>http://localhost:3000, https://yourapp.com</code></li>
+            <li><strong>Allowed Web Origins</strong>——SPA 刷新 token 所需：<code>http://localhost:3000, https://yourapp.com</code></li>
+          </ul>
+          <p>地址必须精确匹配。末尾斜杠、http 与 https 的区别、端口号——都会影响匹配结果。保存配置。</p>
+        </div>
+      </div>
+
+      <h2>启用身份提供商</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Auth0 控制台 → <strong>Authentication → Database</strong> 用于邮箱/密码登录。或者：</p>
+          <p><strong>Authentication → Social</strong> 用于 Google、GitHub、Apple、Microsoft、Facebook 等社交登录——一键开启；Auth0 提供默认的开发者凭证，也可以粘贴你在各提供商后台创建的自有凭证（生产环境推荐）。</p>
+          <p><strong>Authentication → Enterprise</strong> 用于 SAML、ADFS、Azure AD / Microsoft Entra ID、Google Workspace、Okta、OneLogin——这些正是你的企业客户 IT 部门希望接入的选项。</p>
+          <p><a href="https://auth0.com/docs/authenticate/identity-providers" target="_blank" rel="noopener">身份提供商文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>安装 SDK（Next.js 示例）</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <pre><code>npm install @auth0/nextjs-auth0</code></pre>
+          <p>配置环境变量（参见步骤 2）。创建 API 路由：</p>
+          <pre><code>// app/api/auth/[auth0]/route.ts
+import { handleAuth } from '@auth0/nextjs-auth0';
+
+export const GET = handleAuth();</code></pre>
+          <p>包裹你的应用：</p>
+          <pre><code>// app/layout.tsx
+import { UserProvider } from '@auth0/nextjs-auth0/client';
+
+export default function RootLayout({ children }) {
+  return (
+    &lt;html&gt;
+      &lt;body&gt;
+        &lt;UserProvider&gt;{children}&lt;/UserProvider&gt;
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+          <p>其他框架的快速入门：<a href="https://auth0.com/docs/quickstarts" target="_blank" rel="noopener">React、Vue、Angular、Express、Python、Java、.NET、iOS、Android ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>添加登录 / 登出链接</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <pre><code>&lt;a href="/api/auth/login"&gt;Sign in&lt;/a&gt;
+&lt;a href="/api/auth/logout"&gt;Sign out&lt;/a&gt;</code></pre>
+          <p>点击登录后，用户会被重定向到 Auth0 的 <strong>Universal Login</strong> 页面——这是 Auth0 托管的登录界面。用户在此完成身份验证，Auth0 随后携带 session cookie 跳回你的应用。</p>
+          <p>Universal Login 支持自定义：控制台 → <strong>Branding → Universal Login</strong>，可调整颜色、Logo 和文案。如需更深度定制（使用自己的 UI），请使用内嵌登录流程（更复杂；<a href="https://auth0.com/docs/authenticate/login/embedded-login" target="_blank" rel="noopener">内嵌文档 ↗</a>）。</p>
+        </div>
+      </div>
+
+      <h2>读取当前用户信息</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <pre><code>// Server side (Next.js)
+import { getSession } from '@auth0/nextjs-auth0';
+
+export default async function Dashboard() {
+  const session = await getSession();
+  if (!session) redirect('/api/auth/login');
+  return &lt;div&gt;Hello {session.user.name}&lt;/div&gt;;
+}
+
+// Client side
+import { useUser } from '@auth0/nextjs-auth0/client';
+
+export function Profile() {
+  const { user, isLoading } = useUser();
+  if (isLoading) return null;
+  if (!user) return &lt;a href="/api/auth/login"&gt;Sign in&lt;/a&gt;;
+  return &lt;img src={user.picture} alt={user.name} /&gt;;
+}</code></pre>
+        </div>
+      </div>
+
+      <h2>使用 JWT 保护 API</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>对于独立的后端 API（而非仅依赖 session），Auth0 会签发 JWT，由你的服务器负责验证。</p>
+          <p>Auth0 控制台 → <strong>Applications → APIs → Create API</strong>。设置 Identifier（例如 <code>https://yourapp.com/api</code>）——这将作为 JWT 的 audience 使用。</p>
+          <p>在你的 API 中：</p>
+          <pre><code>npm install jose</code></pre>
+          <pre><code>import { jwtVerify, createRemoteJWKSet } from 'jose';
+
+const JWKS = createRemoteJWKSet(new URL(
+  `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`
+));
+
+export async function verifyAuth(req) {
+  const auth = req.headers.get('authorization');
+  if (!auth?.startsWith('Bearer ')) return null;
+  const token = auth.slice(7);
+  try {
+    const { payload } = await jwtVerify(token, JWKS, {
+      issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+      audience: process.env.AUTH0_AUDIENCE,
+    });
+    return payload;   // contains sub (user ID), permissions, etc.
+  } catch {
+    return null;
+  }
+}</code></pre>
+          <p>JWKS 轮换、签名验证——一切由 jose 处理。<a href="https://auth0.com/docs/secure/tokens/json-web-tokens" target="_blank" rel="noopener">JWT 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>使用 Actions 添加自定义逻辑</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Auth0 的 <strong>Actions</strong> 可在身份验证流程的关键节点（登录后、注册前、发送密码重置邮件等）运行服务端 JavaScript。适用场景：</p>
+          <ul>
+            <li>向 JWT 添加自定义声明（如角色、套餐信息）。</li>
+            <li>在注册时将用户同步到你的数据库。</li>
+            <li>拦截黑名单邮箱地址的注册请求。</li>
+            <li>对特定用户群体强制启用 MFA。</li>
+          </ul>
+          <p>Auth0 控制台 → <strong>Actions → Flows → Login</strong> → Add Action → Build Custom。示例：</p>
+          <pre><code>exports.onExecutePostLogin = async (event, api) =&gt; {
+  // Add a custom claim to the token
+  api.idToken.setCustomClaim('https://yourapp.com/role', event.user.app_metadata?.role || 'member');
+};</code></pre>
+          <p><a href="https://auth0.com/docs/customize/actions" target="_blank" rel="noopener">Actions 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>Organizations（适用于 B2B / 多租户）</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>如果你的客户是企业（每家企业有多个用户），请使用 <strong>Organizations</strong>。每个组织可以独立配置连接、成员、品牌和管理员角色。</p>
+          <p>Auth0 控制台 → <strong>Organizations → Create Organization</strong>。成员通过 URL 参数 <code>?organization=org_xxx</code> 登录对应组织。</p>
+          <p>这是 Auth0 在 B2B 场景中最具竞争力的功能之一——Clerk 和 Supabase Auth 现在也有类似概念，但 Auth0 的实现最为完善。<a href="https://auth0.com/docs/manage-users/organizations" target="_blank" rel="noopener">Organizations 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>为企业客户配置 SAML / SSO</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p>大多数团队选择 Auth0 的核心原因：企业 SSO 开箱即用。</p>
+          <p>Auth0 控制台 → <strong>Authentication → Enterprise → SAML → Create Connection</strong>。使用客户的 IdP 元数据进行配置，并绑定到对应组织。该组织的用户随后便可通过公司 IdP（Okta、Microsoft Entra ID、OneLogin 等）完成登录。</p>
+          <p>Enterprise 套餐还支持 SCIM 预配（通过 IdP 自动创建/停用用户）。<a href="https://auth0.com/docs/authenticate/protocols/saml" target="_blank" rel="noopener">SAML 文档 ↗</a> · <a href="https://auth0.com/docs/authenticate/protocols/scim" target="_blank" rel="noopener">SCIM 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>价格涨幅快于 Clerk。</strong>免费套餐看起来很慷慨（B2C 7,500 MAU），但 Organizations、自定义域名、MFA 强制、SAML 等生产功能均需付费升级到 Essentials 套餐（$35+/月）。达到一定规模后，Auth0 的费用通常是 Clerk 的 3–10 倍。在做决定前先算清楚账。<a href="https://auth0.com/pricing" target="_blank" rel="noopener">Auth0 定价 ↗</a>。
+      </div>
+
+      <h2>自定义域名</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <p>默认情况下，用户在登录 URL 中会看到 <code>your-tenant.auth0.com</code>。生产环境建议配置自定义域名（如 <code>login.yourapp.com</code>）：</p>
+          <p>Auth0 控制台 → <strong>Settings → Custom Domains → Add Domain</strong>。在你的 <a href="/zh/tutorials/connect-domain-to-server-with-dns.html">DNS 提供商</a>处添加所需的 CNAME 记录，等待验证完成。</p>
+          <p>需要 Essentials 套餐或更高级别。</p>
+        </div>
+      </div>
+
+      <h2>常见问题</h2>
+      <div class="step">
+        <div class="step-num">13</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>回调 URL 不匹配</strong>——初次集成最常见的错误。请将所有变体（localhost、生产地址、带斜杠和不带斜杠）都添加到 Allowed Callback URLs。</li>
+            <li><strong>SPA 将 token 写入 JS 包</strong>——SPA 应用没有 Client Secret，浏览器端只有 Client ID。如果你的"SPA"需要 secret，实际上应该选择 Regular Web Application 类型。</li>
+            <li><strong>token 在会话中途过期</strong>——Auth0 默认 token 有效期较短（1 小时）。如需更长的会话，请使用 refresh token 或在应用设置中延长有效期。</li>
+            <li><strong>忘记添加 API audience</strong>——从前端调用自己的 API 时，登录时需要传入 <code>audience: AUTH0_AUDIENCE</code>。若缺少此参数，你会得到一个不透明 token 而非 JWT，导致后端无法验证。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <ul>
+        <li><a href="https://auth0.com/docs" target="_blank" rel="noopener">Auth0 文档 ↗</a></li>
+        <li><a href="https://auth0.com/docs/quickstarts" target="_blank" rel="noopener">各框架快速入门 ↗</a></li>
+        <li><a href="https://auth0.com/docs/customize/actions" target="_blank" rel="noopener">Actions 参考 ↗</a></li>
+        <li><a href="https://auth0.com/docs/manage-users/organizations" target="_blank" rel="noopener">Organizations ↗</a></li>
+        <li><a href="https://auth0.com/docs/authenticate/protocols/saml" target="_blank" rel="noopener">SAML ↗</a></li>
+      </ul>
+
+      <h2>接下来学什么</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/auth-with-clerk.html" class="tutorial-next-card">
+            <h3>使用 Clerk 添加身份验证</h3>
+            <p>现代化替代方案，开发体验更友好，中等规模下成本更低</p>
+          </a>
+          <a href="/zh/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>配置 Supabase（数据库 + 身份验证）</h3>
+            <p>如果你已经在使用 Supabase</p>
+          </a>
+          <a href="/zh/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>使用 Google OAuth 登录</h3>
+            <p>不依赖托管提供商的手动 OAuth 方案</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速上线的创始人和追求真实工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

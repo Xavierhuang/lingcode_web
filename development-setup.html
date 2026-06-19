@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Development Setup with LingCode — Backend, Database, Frontend | LingCode</title>
+  <meta name="description" content="Set up a full-stack dev environment with LingCode: Postgres, Redis, Node, Python, Go, Rails. Local database setup, migrations, env vars, and how LingCode's AI accelerates each step.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/development-setup.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Development Setup with LingCode">
+  <meta property="og:description" content="Backend, database, frontend — everything about building an app with LingCode before you ship it.">
+  <meta property="og:url" content="https://lingcode.dev/development-setup.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 800px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--text); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 12px 0 20px; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; color: var(--text); }
+    .callout p { margin: 0; }
+    .callout strong { color: var(--signal); }
+    .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 24px 0 32px; }
+    .toc ul { margin: 0; padding-left: 20px; }
+    .toc li { margin-bottom: 4px; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .stack-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin: 20px 0; }
+    .stack-card h3:first-child { margin-top: 0; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Guide · Development</p>
+        <h1>Development setup with LingCode</h1>
+        <p>Backend, database, frontend, env vars, secrets. How to go from empty project folder to working local app — and how LingCode's AI speeds up every step.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <div class="callout">
+        <p><strong>Scope.</strong> This guide covers the <em>develop</em> phase — getting your stack running locally. For the <em>ship</em> phase (App Store, Google Play, Vercel, your own server), see the <a href="/deploy.html">deploy hub</a>. New to LingCode itself? Start with <a href="/getting-started.html">Getting Started</a>.</p>
+      </div>
+
+      <div class="toc">
+        <ul>
+          <li><a href="#foundations">Foundations: Homebrew, languages, Docker</a></li>
+          <li><a href="#databases">Local databases: Postgres, MySQL, Redis, SQLite</a></li>
+          <li><a href="#migrations">Migrations &amp; seed data</a></li>
+          <li><a href="#env-secrets">Env vars, <code>.env</code> files, and secrets</a></li>
+          <li><a href="#stacks">Common stacks end-to-end</a></li>
+          <li><a href="#lingcode-workflow">How LingCode's AI accelerates this</a></li>
+          <li><a href="#before-ship">Before you ship</a></li>
+        </ul>
+      </div>
+
+      <h2 id="foundations">Foundations: one-time install</h2>
+
+      <h3>Homebrew (the package manager you'll use for everything else)</h3>
+      <pre><code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</code></pre>
+      <p>After install, make sure <code>/opt/homebrew/bin</code> (Apple Silicon) or <code>/usr/local/bin</code> (Intel) is on your PATH. Test with <code>brew --version</code>.</p>
+
+      <h3>Language toolchains</h3>
+      <p>Install only what your stack actually uses. Mix-and-match fine.</p>
+      <pre><code>brew install node      # Node.js + npm
+brew install python    # Python 3.12+ (system Python is too old)
+brew install go        # Go
+brew install ruby      # Ruby (or use rbenv/asdf for multiple versions)
+brew install rust      # Rust (or rustup.rs for the proper installer)</code></pre>
+      <p>For multiple versions of one language, install a version manager: <a href="https://github.com/nvm-sh/nvm" rel="noopener noreferrer">nvm</a> (Node), <a href="https://github.com/pyenv/pyenv" rel="noopener noreferrer">pyenv</a> (Python), <a href="https://rbenv.org/" rel="noopener noreferrer">rbenv</a> (Ruby), or <a href="https://asdf-vm.com/" rel="noopener noreferrer">asdf</a> (unified).</p>
+
+      <h3>Docker (for databases and ephemeral services)</h3>
+      <p>Most local DB setups are easier with Docker than with a native install — one command to start, one to stop, no PATH conflicts. Install <a href="https://www.docker.com/products/docker-desktop/" rel="noopener noreferrer">Docker Desktop</a> or the lighter-weight <a href="https://orbstack.dev/" rel="noopener noreferrer">OrbStack</a> (recommended on Apple Silicon — uses less memory, faster).</p>
+
+      <h2 id="databases">Local databases</h2>
+
+      <h3>Postgres (the default choice for most apps)</h3>
+      <p>Two ways to run it. Pick one; don't mix.</p>
+
+      <p><strong>Option A — Homebrew (native):</strong></p>
+      <pre><code>brew install postgresql@16
+brew services start postgresql@16
+createdb myapp_dev
+psql myapp_dev   # verify it works</code></pre>
+      <p>Connects on <code>postgres://$USER@localhost:5432/myapp_dev</code>. Survives reboots via <code>brew services</code>. No password by default.</p>
+
+      <p><strong>Option B — Docker (isolated):</strong></p>
+      <pre><code>docker run --name pg16 -d \
+  -e POSTGRES_PASSWORD=dev \
+  -e POSTGRES_DB=myapp_dev \
+  -p 5432:5432 \
+  -v pg16data:/var/lib/postgresql/data \
+  postgres:16</code></pre>
+      <p>Connects on <code>postgres://postgres:dev@localhost:5432/myapp_dev</code>. Start/stop with <code>docker start pg16</code> / <code>docker stop pg16</code>. Data persists in a named volume, so restarting the container keeps your data.</p>
+
+      <h3>MySQL</h3>
+      <pre><code>brew install mysql
+brew services start mysql
+mysql -u root -e "CREATE DATABASE myapp_dev;"</code></pre>
+      <p>Or Docker:</p>
+      <pre><code>docker run --name mysql8 -d -e MYSQL_ROOT_PASSWORD=dev -e MYSQL_DATABASE=myapp_dev -p 3306:3306 mysql:8</code></pre>
+
+      <h3>Redis (caching, queues, sessions)</h3>
+      <pre><code>brew install redis && brew services start redis
+# or
+docker run --name redis -d -p 6379:6379 redis:7</code></pre>
+      <p>Test with <code>redis-cli ping</code> → <code>PONG</code>.</p>
+
+      <h3>SQLite (no server — just a file)</h3>
+      <p>Already installed on macOS. Nothing to set up. Most ORMs (Prisma, Drizzle, Django ORM, ActiveRecord) support it out of the box. Perfect for prototyping; graduate to Postgres when you hit concurrency or production.</p>
+
+      <div class="callout">
+        <p><strong>docker-compose for a full stack.</strong> If you have multiple services (Postgres + Redis + a background worker), stop running <code>docker run</code> by hand — write a <code>docker-compose.yml</code> once and use <code>docker compose up -d</code> thereafter. Ask LingCode's chat: <em>"generate a docker-compose.yml for Postgres 16 + Redis 7 with named volumes"</em>.</p>
+      </div>
+
+      <h2 id="migrations">Migrations &amp; seed data</h2>
+      <p>Raw SQL is rarely how you shape a schema during development. Use a migration tool — it tracks which schema changes have been applied, lets you roll forward/back, and turns "set up a fresh database" into one command.</p>
+      <ul>
+        <li><strong>Node / TypeScript:</strong> <a href="https://www.prisma.io/" rel="noopener noreferrer">Prisma</a> (<code>npx prisma migrate dev</code>) or <a href="https://orm.drizzle.team/" rel="noopener noreferrer">Drizzle</a>.</li>
+        <li><strong>Python:</strong> <a href="https://alembic.sqlalchemy.org/" rel="noopener noreferrer">Alembic</a> (<code>alembic upgrade head</code>) for SQLAlchemy; Django has built-in <code>manage.py migrate</code>.</li>
+        <li><strong>Rails:</strong> built-in (<code>bundle exec rails db:migrate</code>).</li>
+        <li><strong>Go:</strong> <a href="https://github.com/golang-migrate/migrate" rel="noopener noreferrer">golang-migrate</a> is the most common choice.</li>
+      </ul>
+      <p>Seed data — the "give me a dev database with 10 users and 50 posts" step — usually lives in a <code>prisma/seed.ts</code>, <code>db/seeds.rb</code>, or a Python script. Commit it to git so teammates and CI get identical starter data.</p>
+
+      <h2 id="env-secrets">Env vars, <code>.env</code> files, and secrets</h2>
+
+      <h3>The .env pattern</h3>
+      <p>Store development config in a file your app reads on startup, not hard-coded. Keep it out of git.</p>
+      <pre><code># .env (local only; never commit)
+DATABASE_URL=postgres://user:dev@localhost:5432/myapp_dev
+REDIS_URL=redis://localhost:6379
+CLAUDE_API_KEY=sk-ant-...
+STRIPE_SECRET_KEY=sk_test_...</code></pre>
+      <p>And a <code>.env.example</code> that <em>is</em> committed, with placeholder values, so new contributors know what to fill in:</p>
+      <pre><code># .env.example (commit this)
+DATABASE_URL=postgres://user:pass@localhost:5432/db
+REDIS_URL=redis://localhost:6379
+CLAUDE_API_KEY=
+STRIPE_SECRET_KEY=</code></pre>
+      <p>Add <code>.env</code> to your <code>.gitignore</code>. Seriously — check it's there. Leaked API keys from git are the #1 way dev teams lose money.</p>
+
+      <h3>Loading .env into your runtime</h3>
+      <ul>
+        <li><strong>Node:</strong> <code>dotenv</code> package, or Node 20+ has <code>--env-file=.env</code> built in.</li>
+        <li><strong>Python:</strong> <code>python-dotenv</code> or Pydantic's <code>BaseSettings</code>.</li>
+        <li><strong>Rails:</strong> <code>dotenv-rails</code> in the Gemfile.</li>
+        <li><strong>Go:</strong> <code>github.com/joho/godotenv</code> in the <code>init()</code>.</li>
+        <li><strong>Next.js / Vite:</strong> native support — files named <code>.env.local</code> are picked up automatically.</li>
+      </ul>
+
+      <h3>Secrets for production</h3>
+      <p>Never deploy your dev <code>.env</code> to prod. Production secrets live in the platform's own secret store (Vercel env vars, Fly.io <code>fly secrets set</code>, Railway variables, <code>heroku config:set</code>, or your cloud's secret manager). The <a href="/magic-deploy-web-platforms.html">web platforms setup guide</a> walks through each.</p>
+
+      <h2 id="stacks">Common stacks end-to-end</h2>
+
+      <div class="stack-card">
+        <h3>Next.js + Postgres + Prisma</h3>
+        <pre><code>npx create-next-app@latest myapp --typescript --tailwind --app
+cd myapp
+npm i -D prisma && npx prisma init --datasource-provider postgresql
+# edit prisma/schema.prisma, then:
+npx prisma migrate dev --name init
+npm run dev   # http://localhost:3000</code></pre>
+        <p>Set <code>DATABASE_URL</code> in <code>.env.local</code>. The <code>prisma migrate dev</code> command creates the database, applies the schema, and generates the typed client. Rebuild the client with <code>npx prisma generate</code> after schema edits.</p>
+      </div>
+
+      <div class="stack-card">
+        <h3>Node/Express + Postgres + Drizzle</h3>
+        <pre><code>mkdir api && cd api && npm init -y
+npm i express pg drizzle-orm && npm i -D tsx drizzle-kit typescript
+# create src/db.ts, src/schema.ts
+npx drizzle-kit generate && npx drizzle-kit migrate
+npx tsx src/server.ts</code></pre>
+      </div>
+
+      <div class="stack-card">
+        <h3>FastAPI + Postgres + SQLAlchemy</h3>
+        <pre><code>python -m venv .venv && . .venv/bin/activate
+pip install fastapi uvicorn sqlalchemy alembic psycopg[binary] python-dotenv
+alembic init alembic    # configure alembic.ini → sqlalchemy.url from env
+alembic revision --autogenerate -m "init"
+alembic upgrade head
+uvicorn app.main:app --reload</code></pre>
+      </div>
+
+      <div class="stack-card">
+        <h3>Ruby on Rails + Postgres</h3>
+        <pre><code>gem install rails
+rails new myapp --database=postgresql
+cd myapp
+bundle install
+rails db:create db:migrate
+rails server   # http://localhost:3000</code></pre>
+      </div>
+
+      <div class="stack-card">
+        <h3>Go + Postgres + sqlc</h3>
+        <pre><code>go mod init github.com/you/myapp
+go get github.com/jackc/pgx/v5 github.com/sqlc-dev/sqlc
+# write db/queries/*.sql, run: sqlc generate
+go run .</code></pre>
+      </div>
+
+      <h2 id="lingcode-workflow">How LingCode accelerates the above</h2>
+      <p>You can do all of this in any editor. LingCode earns its keep during the small, repetitive, tedious parts that break concentration:</p>
+      <ul>
+        <li><strong>Boilerplate.</strong> "Generate a Prisma schema for a blog with Users, Posts, and Comments" in chat — you get a usable starting point in 10 seconds.</li>
+        <li><strong>Migrations.</strong> Select a schema change, run <code>/review</code> — Claude flags missing indexes, bad null defaults, and forgotten <code>updated_at</code> triggers before they become a rollback.</li>
+        <li><strong>Error hunting.</strong> Paste a Postgres error message into chat — LingCode has your schema as context, and will usually point at the exact migration that caused it.</li>
+        <li><strong>Docker recipes.</strong> "docker-compose.yml for Postgres 16 + Redis + pgAdmin" — saves trips to Google and Stack Overflow.</li>
+        <li><strong>Seed data.</strong> "Generate 50 realistic seed users for Prisma" — better than <code>name: 'User 1'; name: 'User 2';</code>.</li>
+        <li><strong>Slash commands.</strong> <code>/explain</code>, <code>/optimize</code>, <code>/refactor</code>, <code>/fix</code>, <code>/review</code> all work on selected code — the full list is at <a href="/blog.html">the Skills guide</a>.</li>
+        <li><strong>Multiple sessions.</strong> Start a long-running migration in one <a href="/claude-sessions.html">Claude Session</a>, keep iterating on your schema in another. They don't step on each other.</li>
+        <li><strong>Terminal integration.</strong> Cmd+J opens a terminal in your project dir. Output from builds, tests, and <code>docker compose logs</code> is visible alongside your code without alt-tabbing to Terminal.app.</li>
+      </ul>
+
+      <h2 id="before-ship">Before you ship</h2>
+      <p>Four checks worth running once the local stack is green:</p>
+      <ol>
+        <li><strong>Secrets not in git.</strong> <code>git ls-files | grep -i '\.env$'</code> should return nothing.</li>
+        <li><strong>Migrations idempotent.</strong> Drop and recreate the dev DB, run migrations from scratch — it should succeed.</li>
+        <li><strong>Tests pass.</strong> Run them once in Release / production mode, not just dev — catches <code>#if DEBUG</code> divergences before they bite you in deploy.</li>
+        <li><strong>Env var list complete.</strong> Diff your <code>.env</code> against <code>.env.example</code>; update the example so teammates and CI aren't missing keys.</li>
+      </ol>
+      <p>Then read the <a href="/deploy.html">deploy hub</a> and pick your target.</p>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">Ready to ship the app you just built?</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;"><a href="/magic-deploy-web-platforms.html">Deploy a web app</a> · <a href="/magic-deploy-setup.html">Deploy a Mac or iOS app</a> · <a href="/google-play-deploy-setup.html">Deploy an Android app</a></p>
+        <a href="/deploy.html">Open the deploy hub →</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

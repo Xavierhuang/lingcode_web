@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何为独立任务调度并行 Agent？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="当你有 2 个以上无共享状态且无顺序依赖的任务时，LingCode 可并行执行以压缩总耗时。了解何时该用并行调度——以及何时共享状态意味着你应保持串行。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/dispatch-parallel-agents.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/dispatch-parallel-agents.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/dispatch-parallel-agents.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/dispatch-parallel-agents.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "为独立任务调度并行 Agent",
+  "description": "大多数"循环中的 agent"工作天然是串行的——读取文件、做出决策、写入文件、循环往复。但当你有两个或更多无共享状态且无顺序依赖的任务时，并行执行可以线性压缩总耗时。关键在于判断何时该用——因为共享状态意味着竞态条件，而代码中的竞态条件意味着工作成果的丢失。",
+  "url": "https://lingcode.dev/zh/tutorials/dispatch-parallel-agents.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/dispatch-parallel-agents.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "为独立任务调度并行 Agent"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "调度并行 Agent",
+      "item": "https://lingcode.dev/zh/tutorials/dispatch-parallel-agents.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/dispatch-parallel-agents.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">后端集成</a>
+      <span>/</span>
+      <span>调度并行 Agent</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>如何为独立任务调度并行 Agent？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>当你有 2 个以上无共享状态的任务时，在一条消息中发起多个 <code>Agent</code> 工具调用。这些 Agent 并发执行，各自返回独立结果，主循环随后继续。适用于并行搜索、并行测试运行或并行构建检查。</p>
+      <p class="intro">大多数"循环中的 agent"工作天然是串行的——读取文件、做出决策、写入文件、循环往复。但当你有两个或更多无共享状态且无顺序依赖的任务时，并行执行可以线性压缩总耗时。关键在于判断何时该这么做——因为共享状态意味着竞态条件，而代码中的竞态条件意味着工作成果的丢失。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>串行默认大多数时候是正确的</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>LingCode 默认一次运行一个 agent 循环，这几乎始终是你想要的。一个典型任务——"重构这个模块"——的流程如下：</p>
+          <ol>
+            <li>读取 <code>module.swift</code>。</li>
+            <li>根据读取内容决定要做什么修改。</li>
+            <li>写入 <code>module.swift</code>。</li>
+            <li>运行涉及 <code>module.swift</code> 的测试。</li>
+            <li>根据测试输出决定要修复什么。</li>
+          </ol>
+          <p>每一步都依赖前一步。并行化此流程是不可能的——步骤 2 无法在步骤 1 返回之前运行。LingCode 的自然形态是串行的，因为推理本身就是串行的。</p>
+          <p><strong>并行调度是例外情况</strong>，仅适用于以下场景。在不适合的任务上强行使用，会浪费上下文并产生冲突写入；而在正确的任务上使用，则能将 20 分钟的工作压缩至 5 分钟。</p>
+        </div>
+      </div>
+
+      <h2>两问测试</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>在让 LingCode 调度并行 Agent 之前，先回答关于任务的两个问题。两者都必须是"是"：</p>
+          <ul>
+            <li><strong>无共享可变状态。</strong>各 Agent 不能写入同一个文件、同一条数据库记录、同一个 git 分支或同一个内存变量。读取共享状态没问题；写入才是陷阱。</li>
+            <li><strong>无顺序依赖。</strong>Agent B 的输入不能依赖 Agent A 的输出。如果你会写"先做 X，再做 Y"——那就是串行。</li>
+          </ul>
+          <p>如果两个问题都能回答"是"，并行调度既安全又更快。如果其中一个答案是"否"，请保持串行。</p>
+          <div class="warn-box">
+            <strong>"可能独立"和"真正独立"不是一回事。</strong>两个 Agent 重构同一个 Swift 文件的"不同"部分，其实仍然都在写同一个文件——它们会互相覆盖。请在文件粒度上验证独立性，而非概念粒度。
+          </div>
+        </div>
+      </div>
+
+      <h2>何时并行是正确选择——三个真实案例</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>在实践中真正有价值的模式：</p>
+          <ul>
+            <li><strong>多目标构建。</strong>同一个 App 的 iOS、Android 和 macOS 目标各有独立的工具链和项目，无共享写入。并行可将 9 分钟的总构建时间压缩至 3 分钟。</li>
+            <li><strong>逐文件独立审查。</strong>对 12 个独立模块做代码审查，每份审查写入各自的 <code>REVIEW_&lt;module&gt;.md</code>。每个 Agent 读一个文件、写一个文件——不会发生冲突。</li>
+            <li><strong>独立研究问题。</strong>"找出 API A 的所有用法"、"找出 API B 的所有用法"、"找出 API C 的所有用法"。三个 Agent 各自读取代码库，写入各自的草稿笔记，最后由聚合步骤合并结果。</li>
+          </ul>
+          <p>共同点：调度轮结束后有一个干净的合并步骤。并行 Agent 生成各自隔离的产物；由你（或后续的串行轮次）来整合它们。</p>
+        </div>
+      </div>
+
+      <h2>何时并行是错误选择——四个陷阱</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>实现单个功能。</strong>"添加登录"会涉及 UI、数据模型、网络层、Keychain——全部耦合在一起。并行运行会产生四个 Agent，各自写出相互不一致的接口约定。</li>
+            <li><strong>跨耦合文件重构。</strong>重命名一个被 8 个文件实现的 Swift 协议：每个文件的修改都依赖协议签名，而协议签名本身正在重构过程中被设计。使用带迭代判断的串行循环，端到端反而更快。</li>
+            <li><strong>任何写入同一 git 分支的操作。</strong>两个 Agent 并行提交到 <code>main</code> = 在你自己的会话中产生合并冲突。如果你确实需要这样做，请使用隔离的 worktree——参见 <a href="/zh/tutorials/use-isolated-worktrees.html">worktrees 教程</a>。</li>
+            <li><strong>迭代调试。</strong>"尝试一个修复、运行测试、再尝试另一个修复"本质上是串行的——每次尝试都需要基于上一次的结果。在这里并行化只会用过时信息烧掉多个并行尝试。</li>
+          </ul>
+          <div class="tip-box">
+            <strong>启发式规则：</strong>如果你对 LingCode 的提示词中自然包含"然后"——"做 X 然后做 Y"——那就是串行。如果自然包含"和"而没有任何"然后"——"找出所有 X 和找出所有 Y 和找出所有 Z"——那就是并行。
+          </div>
+        </div>
+      </div>
+
+      <h2>通过对话调度</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>通过以列表形式列出任务并说明它们是独立的，来让 LingCode 并行调度。一个有效的提示词示例：</p>
+          <pre><code>I want three independent things done in parallel — no shared
+state, no ordering between them:
+
+1. Audit Sources/Auth/ for force-unwraps and write findings to
+   AUDIT_AUTH.md.
+2. Audit Sources/Networking/ for force-unwraps and write findings
+   to AUDIT_NET.md.
+3. Audit Sources/Storage/ for force-unwraps and write findings to
+   AUDIT_STORAGE.md.
+
+Dispatch one sub-agent per task. After all three return,
+synthesize a top-level AUDIT_SUMMARY.md that aggregates the
+counts and ranks modules by severity.</code></pre>
+          <p>LingCode 会调度三个子 Agent，每个拥有独立的上下文窗口，并发运行，并在完成时汇合。合成步骤是最终的串行轮次——这就是合并发生的地方。</p>
+        </div>
+      </div>
+
+      <h2>每个子 Agent 看到什么</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>子 Agent 不共享你的对话历史。它们只获得你分配给它们的任务和项目文件——仅此而已。这是一个特性，而非缺陷：</p>
+          <ul>
+            <li><strong>每个 Agent 的上下文更小</strong> = 更快、更省、更专注。每个子 Agent 不会把你 50 轮的对话历史带入一个 5 分钟的审计任务中。</li>
+            <li><strong>Agent 之间无上下文泄漏</strong> = 并行决策不会因为读取了同样的最近断言而意外达成一致。每个 Agent 得到独立的判断。</li>
+          </ul>
+          <p>你需要付出的代价是：每个子 Agent 必须获得足够的指令，才能独立完成其任务。"审计 Auth"还不够——请说明目录、要查找什么、在哪里写入结果。上面的提示词对三个任务都做到了这一点。</p>
+          <div class="warn-box">
+            <strong>不要期望子 Agent 读心术。</strong>如果子 Agent 的任务描述包含"像我们之前讨论的那样"，子 Agent 并没有"之前的讨论"。请编写自包含的任务描述。
+          </div>
+        </div>
+      </div>
+
+      <h2>合并步骤比调度更重要</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>并行调度生成 N 个隔离的产物。价值来自于对它们的综合——而综合是串行的。在合并提示词上花更多心思，而不是调度提示词：</p>
+          <pre><code>Now that AUDIT_AUTH.md, AUDIT_NET.md, and AUDIT_STORAGE.md exist,
+synthesize AUDIT_SUMMARY.md:
+
+- Total force-unwrap count across all three modules.
+- Ranked list of files by count, highest first.
+- Patterns that appeared in 2+ modules (likely systemic, fix once).
+- Patterns unique to one module (likely local, fix in place).
+- Three concrete next-step PR titles.
+
+Read the three audit files; do not re-scan the source code.</code></pre>
+          <p>"不要重新扫描"的指令至关重要。没有它，LingCode 往往会重新执行子 Agent 已完成的工作——从而抵消并行化的收益。请信任这些产物。</p>
+        </div>
+      </div>
+
+      <h2>验证成效</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>并行运行结束后，检查两件事：</p>
+          <ul>
+            <li><strong>没有文件被两个 Agent 写入。</strong>运行 <code>git status</code> 或检查时间戳。如果两个产物最终位于同一路径，说明一个覆盖了另一个——你的"独立"任务并不是真正独立的。</li>
+            <li><strong>实际耗时确实更短。</strong>如果你并行化了三个各 30 秒的任务，调度的开销可能已经吃掉了收益。当每个子任务至少需要一两分钟的真实工作时，并行化才真正划算。</li>
+          </ul>
+          <p>如果并行运行没有超过串行运行，这是下次的参考信息。并非所有"看起来能并行"的任务实际上都适合并行。</p>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用此功能</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>将调度启发式规则封装为一个 skill，让 LingCode 在并行化之前先执行两问测试——并在串行更合适时保持串行：</p>
+          <pre><code>---
+name: dispatching-parallel-agents
+description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies. Triggers: 'do these in parallel', 'split this work', 'run multiple agents', 'parallelize', 'fan out', batch of independent file edits, multiple test fixtures, multiple isolated components. Actions: dispatch, parallelize, batch, fan-out, fan-in. Anti-pattern: tasks that share state, sequential dependencies, conflicting writes. Compresses wall time when the two-question test passes (no shared state + no sequential dep).
+---
+
+Before dispatching parallel agents, answer two questions about
+the task set:
+
+1. Is there shared mutable state? (Same file, same DB row, same
+   git branch, same in-memory variable.) If yes — stay serial.
+2. Does any task's input depend on another task's output? If yes
+   — stay serial.
+
+Both must be "no" to parallelize.
+
+When parallelizing:
+- Give each sub-agent a self-contained task description. They do
+  not share conversation history.
+- Have each sub-agent write to its own artifact path. No two
+  agents writing the same file.
+- Plan the merge step explicitly. The synthesis turn is serial
+  and reads the artifacts; it should not re-scan source.
+
+Good fits: multi-target builds, per-file independent reviews,
+independent research questions.
+
+Bad fits: implementing one feature, refactor across coupled
+files, two writes to the same git branch, iterative debugging.
+
+After parallel runs, sanity-check: no file written by two agents,
+wall time actually beat serial.</code></pre>
+          <p>保存至 <code>~/.lingcode/skills/dispatching-parallel-agents/SKILL.md</code>——参见 <a href="/zh/tutorials/install-a-skill.html">安装 skill</a> 了解确切位置以及 skill 如何被发现。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/execute-a-plan-with-checkpoints.html" class="tutorial-next-card">
+            <h3>带检查点执行计划</h3>
+            <p>对于较长的工作流，先规划结构以明确哪些步骤可并行——哪些步骤应保持串行</p>
+          </a>
+          <a href="/zh/tutorials/build-with-the-claude-api.html" class="tutorial-next-card">
+            <h3>使用 Claude API 构建</h3>
+            <p>相同的并行与串行逻辑同样适用于你自己的 API 调用：对独立的部分批量处理，对顺序的部分流式处理</p>
+          </a>
+          <a href="/zh/tutorials/run-a-prompt-on-a-schedule.html" class="tutorial-next-card">
+            <h3>按计划运行提示词</h3>
+            <p>独立的计划任务可以并行运行；顺序执行的任务则通过磁盘上的产物进行链式传递</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速上线的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五研讨会</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

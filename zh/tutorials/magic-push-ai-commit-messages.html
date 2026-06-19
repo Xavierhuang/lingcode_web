@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magic Push：AI 自动生成提交消息 — LingCode 教程</title>
+  <meta name="description" content="暂存、生成提交消息、推送——全部在 git 面板内完成。比敲"wip"更专业，比自己手写更快。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/magic-push-ai-commit-messages.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/magic-push-ai-commit-messages.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/magic-push-ai-commit-messages.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/magic-push-ai-commit-messages.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Magic Push：AI 自动生成提交消息",
+  "description": "暂存。点击。推送。Magic Push 读取实际的 diff，生成一条描述修改内容与原因的提交消息，然后推送——不再有"wip"占位符，不再有"fix stuff"记录。",
+  "url": "https://lingcode.dev/zh/tutorials/magic-push-ai-commit-messages.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/magic-push-ai-commit-messages.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "Magic Push：AI 自动生成提交消息"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Magic Push：AI 自动生成提交消息",
+      "item": "https://lingcode.dev/zh/tutorials/magic-push-ai-commit-messages.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/magic-push-ai-commit-messages.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">原生 Mac IDE</a>
+      <span>/</span>
+      <span>Magic Push：AI 自动生成提交消息</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>Magic Push：AI 自动生成提交消息</h1>
+      <p class="intro">暂存。点击。推送。Magic Push 读取实际的 diff，生成一条描述修改内容与原因的提交消息，然后推送——不再有"wip"占位符，不再有"fix stuff"记录。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>大多数工程师都知道一条好的提交消息应该是什么样的，但大多数工程师的提交日志里却充斥着糟糕的记录。问题不在于好消息难写——其实并不难。问题在于，当你准备好提交时，活已经干完了，人也累了，diff 还很复杂，再用精炼的祈使句把这一切总结出来，是你最不想做的一件事。于是你敲下"fix"、"updates"，最糟糕的是"wip"，然后继续。三周后，某个地方出了问题，你试着用 <code>git blame</code> 定位回归点，却发现那条提交消息什么都没说。</p>
+      <p>这个问题是不对称的：写提交消息只需三十秒，而读一条烂消息，每次都要多花好几分钟。然而成本由未来的你承担，时间却是现在的你节省的，所以这种惰性会不断累积，最终让日志越来越差。唯一可持续的解法是消除写时的摩擦。如果写一条好消息的时间成本为零，你自然就会写好。</p>
+      <p>Magic Push 弥合了这道鸿沟。它让 AI 读取已暂存的 diff——改了哪些文件、哪些行、改动的形状——然后起草一条描述这些变化的提交消息。你审阅草稿，有偏差就修改，然后推送。全程耗时大约等于读三行文字的时间。"好好写条消息"的心理门槛，从"需要思考三十秒"降低到"读五秒钟"。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>Magic Push 如何读取你的已暂存 diff</li>
+        <li>git 面板的工作流：暂存、生成消息、推送</li>
+        <li>AI 擅长和不擅长总结哪些内容</li>
+        <li>如何编辑生成的建议（有时你应该改）</li>
+        <li>如何为团队设置提交消息规范作为项目偏好</li>
+      </ul>
+
+      <h2>第 1 步：暂存你的改动</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>像操作普通 UI 一样使用 git 面板</h3>
+          <p>在侧边栏打开 git 面板。你会看到两个区域——"未暂存"列出当前的编辑内容，"已暂存"列出准备提交的内容。点击即可在两个区域之间移动文件，也可以展开文件后按 hunk 单独暂存。</p>
+          <p>粒度很重要：Magic Push 描述的是<em>已暂存</em>的内容，而不是所有修改。如果你改了五件事但只想提交其中一件，只暂存那一件即可。生成的消息将围绕那一件，而不是整个 diff。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：点击"生成提交消息"</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>diff 进去，消息出来</h3>
+          <p>在 git 面板的提交消息输入框上方，有一个按钮（通常是闪烁星形图标，有时标注"建议"）。点击它，AI 会读取已暂存的 diff，然后在输入框中生成一条草稿消息，通常是一行祈使句式的摘要，对于非琐碎的改动还会附带一段正文。</p>
+          <p>举例来说：给某个 HTTP handler 添加限速日志的 diff，可能会生成："Add rate-limit logging to /api/upload"。将三个文件重构为使用共享 helper 的 diff，可能会生成："Extract shared signing logic into AuthHelper"。如果 diff 混合了两处不相关的改动，可能会生成："Add rate-limit logging and rename UserRepo to UserStore"。最后这条是一个信号：当 AI 难以用一句话概括时，这个提交很可能是"两个提交穿着一件外套"。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>"两个提交穿着一件外套"的气味：</strong>如果生成的消息用"and"连接了两个不相关的改动，通常正确的做法是拆分暂存——先提交第一处改动并附上对应消息，再单独提交第二处。Magic Push 的困惑本身就是有价值的信息。
+      </div>
+
+      <h2>第 3 步：编辑草稿</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>AI 知道改了<em>什么</em>，但不一定知道<em>为什么</em></h3>
+          <p>AI 生成的草稿善于描述改了什么，因为它能看到 diff。但对于改动的原因，它就力不从心了——原因不在 diff 里，而在你脑子里、工单里，或者上周的讨论中。当原因很重要时（大多数非琐碎的提交都如此），请在草稿基础上补充原因。</p>
+          <p>示例："Rename UserRepo to UserStore"是 diff 呈现的内容，但原因可能是"Match the StoreRepo / FooStore naming convention adopted in #1422"。AI 不知道 #1422，除非你告诉它。请把它加进去。</p>
+          <p>对于琐碎的提交（lint 修复、格式调整、拼写改正），草稿通常无需修改。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：推送</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>一步完成提交与推送</h3>
+          <p>消息就绪后，点击推送按钮。git 面板会使用你的消息完成提交，然后推送到跟踪的远程分支。整个流程——暂存、生成、编辑、推送——对于典型的改动通常不超过一分钟。</p>
+          <p>如果你只想提交而不推送（还没准备好分享），有一个独立的"仅提交"选项。等你准备好了再推送。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：为团队调整消息风格</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>配置一次，处处生效</h3>
+          <p>不同团队有不同的提交消息规范：Conventional Commits（<code>feat: ...</code>、<code>fix: ...</code>、<code>chore: ...</code>）、不带前缀的祈使句、只写简短摘要不带正文、在末尾引用工单 ID 等。</p>
+          <p>只需在项目根目录的 <code>CLAUDE.md</code> 中告诉 AI 你团队的规范一次：</p>
+          <pre><code>## Commit messages
+
+Use imperative voice, no conventional-commit prefix. End with the
+ticket ID if applicable, e.g. "Add rate-limit logging (#1422)".</code></pre>
+          <p>之后生成的草稿都会遵循该规范。整个仓库都能受益——任何在这个项目中使用 LingCode 的人都将获得相同的风格。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：何时不该使用它</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>AI 不知道的秘密</h3>
+          <ul>
+            <li><strong>安全修复。</strong>当一次提交修复了 CVE 级别的问题时，你可能希望用一条极简的消息提交，并在发布后才披露细节。AI 生成的完整描述会暴露漏洞的形状。这类提交请手写。</li>
+            <li><strong>高度依赖上下文的提交。</strong>如果某次提交只有在了解工单、客户或历史事故的前提下才有意义，AI 生成的内容虽然准确，却流于表面。不如自己动手写。</li>
+            <li><strong>包含数百个文件的 squash 提交。</strong>AI 最擅长处理聚焦的 diff。庞大的 squash 只会得到一条笼统的总结。要么提高提交粒度（更好的做法），要么手动编写 squash 消息。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>如果你的团队有"禁止直接推送到 <code>main</code>"的规定，不要让 AI 帮你推。</strong>Magic Push 只会推送到你当前所在的分支。如果团队使用基于 PR 的工作流，请推送到功能分支后再开 PR。（你也可以通过 <a href="/zh/tutorials/add-custom-hooks.html">PreToolUse hook</a> 来强制执行——"拒绝任何目标为 main 的 <code>git push</code>"。）
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/magic-deploy-a-website.html" class="tutorial-next-card">
+            <h3>Magic Deploy 部署网站</h3>
+            <p>提交并推送之后，顺理成章的下一步——从对话中直接部署</p>
+          </a>
+          <a href="/zh/tutorials/magic-install-missing-packages.html" class="tutorial-next-card">
+            <h3>Magic Install 安装缺失包</h3>
+            <p>第三项 Magic 功能——无需思考，自动安装缺失依赖</p>
+          </a>
+          <a href="/zh/tutorials/add-custom-hooks.html" class="tutorial-next-card">
+            <h3>添加自定义 hook</h3>
+            <p>用 hook 强制执行"禁止推送到 main"，让 AI 无法绕过</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速上线的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何为 LingCode Cloud 后端添加多因素认证 (MFA)？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="为 LingCode Cloud 后端用户添加 TOTP 多因素认证，并使用轮转刷新令牌。在控制台开启"要求 MFA"，通过 SDK 注册验证因素，数据 API 即可强制执行。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/require-mfa-on-your-backend.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/require-mfa-on-your-backend.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/require-mfa-on-your-backend.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-02T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-02T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/require-mfa-on-your-backend.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "为后端启用 MFA 要求",
+  "description": "为 LingCode Cloud 后端用户添加 TOTP 多因素认证和轮转刷新令牌——在控制台开启该选项，通过 SDK 注册验证因素，数据 API 将强制执行对应的安全等级。",
+  "url": "https://lingcode.dev/zh/tutorials/require-mfa-on-your-backend.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-02",
+  "dateModified": "2026-06-02",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/zh/tutorials/require-mfa-on-your-backend.html" },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "为后端启用 MFA 要求"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "教程", "item": "https://lingcode.dev/zh/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "搜索", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "后端集成", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "为后端启用 MFA 要求", "item": "https://lingcode.dev/zh/tutorials/require-mfa-on-your-backend.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/require-mfa-on-your-backend.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html">后端集成</a>
+      <span>/</span>
+      <span>为后端启用 MFA 要求</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-06-02</span>
+      </div>
+      <h1>如何为后端添加多因素认证 (MFA)？</h1>
+      <p class="tldr"><strong>简而言之：</strong>在控制台（<a href="/backends.html">lingcode.dev/backends</a> → <strong>Authentication</strong>）开启 <strong>Require MFA for all signed-in users</strong>。在应用中，用户登录后调用 <code>client.auth.enrollMfa()</code>（将返回的 <code>otpauthUrl</code> 渲染为二维码供用户用认证 App 扫描），再调用 <code>client.auth.verifyMfa({ code })</code>。启用后，数据 API 会拒绝未完成 TOTP 验证的会话请求。访问令牌有效期较短，SDK 会自动刷新。</p>
+      <p class="intro">仅凭密码，一次凭证泄露就可能酿成安全事故。MFA 增加了第二重验证——来自认证 App 的 6 位动态码（TOTP）——让泄露的密码不再足以入侵账户。在大多数技术栈上，这意味着要额外接入第三方认证服务；而在 LingCode Cloud 后端，用户系统已原生支持 MFA，开启只需一个开关加两行 SDK 调用。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>本教程建立在已<a href="/zh/tutorials/connect-a-managed-backend.html">连接托管后端</a>的基础上，假设用户已通过邮箱/密码、魔法链接、OTP 或社交登录完成注册。MFA 在此之上叠加了 TOTP 第二因素，后端会为每个会话跟踪一个<em>安全等级</em>：普通登录后为 <code>aal1</code>，通过 TOTP 验证后升至 <code>aal2</code>。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>如何为后端启用 MFA 要求，以及它具体会限制哪些操作</li>
+        <li>SDK 中注册 → 验证的完整流程（包括二维码步骤）</li>
+        <li>短期令牌与自动刷新机制的工作原理，让会话在不意外登出的前提下保持安全</li>
+      </ul>
+
+      <h2>第一步 — 在控制台开启 MFA 要求</h2>
+      <p>进入 <a href="/backends.html">lingcode.dev/backends</a> → <strong>Authentication</strong>，打开 <strong>Require MFA for all signed-in users</strong> 开关。开启后，数据 API 会拒绝所有未达到 <code>aal2</code> 等级的用户会话请求，并返回 <code>mfa_required</code> 错误——你的应用捕获该错误后，引导用户完成注册/验证流程即可。（关闭时 MFA 为可选：用户仍可自行注册，但不强制执行。）匿名公共访问密钥不受影响——此设置仅限制<em>用户</em>会话，不影响由 RLS 规则管理的匿名读取权限。</p>
+
+      <h2>第二步 — 在应用中注册验证因素</h2>
+      <p>用户登录后，提供"开启双重验证"入口。注册操作会返回一个共享密钥和一个 <code>otpauth://</code> URL——将该 URL 渲染为二维码（任意小型二维码库均可），供用户用 Google Authenticator、1Password 等 App 扫码添加：</p>
+      <pre><code class="mono">const { data } = await client.auth.enrollMfa();
+// data.otpauthUrl → render as a QR; data.secret → manual-entry fallback
+</code></pre>
+
+      <h2>第三步 — 验证（达到 aal2）</h2>
+      <p>让用户输入 App 上显示的 6 位动态码并完成验证。首次验证成功即完成注册，并返回一个 <code>aal2</code> 会话，SDK 会自动保存：</p>
+      <pre><code class="mono">const { error } = await client.auth.verifyMfa({ code: userTypedCode });
+// no error → session is now aal2; data calls succeed
+</code></pre>
+      <p>在后续访问中（或令牌刷新后降回 <code>aal1</code>），受保护的请求会返回 <code>mfa_required</code>；此时调用 <code>client.auth.challengeMfa()</code> 查看用户已注册的验证因素，提示输入动态码，再次调用 <code>verifyMfa</code> 即可。</p>
+
+      <div class="info-box">
+        <h3>令牌自动刷新</h3>
+        <p>会话使用短期访问令牌配合轮转刷新令牌。SDK 会在访问令牌过期时透明地自动刷新——如果刷新令牌被重复使用（这是盗用的信号），整个令牌家族将立即失效。你无需手动管理任何这些细节；正因如此，用户才能在无长期令牌暴露于浏览器的情况下保持登录状态。</p>
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>连接托管后端</h3>
+            <p>MFA 所依赖的用户与认证系统</p>
+          </a>
+          <a href="/zh/tutorials/scan-your-backend-with-advisors.html" class="tutorial-next-card">
+            <h3>使用 Advisors 扫描</h3>
+            <p>找出未设置行级安全策略的数据表</p>
+          </a>
+          <a href="/zh/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>社交账号登录</h3>
+            <p>在 MFA 基础上添加 Google/GitHub 登录</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+      <p>原生 AI 应用开发平台。专为想要快速交付的创业者和追求真正利器的工程师而生。</p>
+    </div>
+    <div class="footer-col"><h4>产品</h4><ul><li><a href="/try.html">Web (/try)</a></li><li><a href="/cli.html">CLI</a></li><li><a href="/features.html">Mac IDE</a></li><li><a href="/pricing.html">定价</a></li><li><a href="/changelog.html">更新日志</a></li></ul></div>
+    <div class="footer-col"><h4>开发者</h4><ul><li><a href="/docs.html">文档</a></li><li><a href="/tutorials.html">教程</a></li><li><a href="/getting-started.html">入门指南</a></li><li><a href="/cli.html">CLI 参考</a></li><li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li></ul></div>
+    <div class="footer-col"><h4>社区</h4><ul><li><a href="/community.html">周五工作坊</a></li><li><a href="/community.html">高校合作</a></li><li><a href="/examples.html">作品展示</a></li><li><a href="/blog.html">博客</a></li><li><a href="/support.html">支持</a></li></ul></div>
+    <div class="footer-col"><h4>公司</h4><ul><li><a href="/manifesto.html">宣言</a></li><li><a href="/pitch.html">产品介绍</a></li><li><a href="/privacy.html">隐私政策</a></li><li><a href="/signin.html">登录</a></li><li><a href="/signup.html">注册</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用智能体上传至 TestFlight — LingCode 教程</title>
+  <meta name="description" content="配置 App Store Connect API 密钥后，在聊天面板中让 LingCode 智能体自动完成归档并将 iOS 构建上传至 TestFlight。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/upload-to-testflight-with-the-agent.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/upload-to-testflight-with-the-agent.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/upload-to-testflight-with-the-agent.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/upload-to-testflight-with-the-agent.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "用智能体上传至 TestFlight",
+  "description": "不再手动点击 Xcode 的 Organizer。一次性配置 App Store Connect API 密钥，然后在聊天中说"把这个发布到 TestFlight"——智能体会自动完成归档、导出、签名和上传。",
+  "url": "https://lingcode.dev/zh/tutorials/upload-to-testflight-with-the-agent.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/upload-to-testflight-with-the-agent.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "用智能体上传至 TestFlight"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "用智能体上传至 TestFlight",
+      "item": "https://lingcode.dev/zh/tutorials/upload-to-testflight-with-the-agent.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/upload-to-testflight-with-the-agent.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">原生 Mac IDE</a>
+      <span>/</span>
+      <span>用智能体上传至 TestFlight</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-advanced">● 高级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>用智能体上传至 TestFlight</h1>
+      <p class="intro">不再手动点击 Xcode 的 Organizer。一次性配置 App Store Connect API 密钥，然后在聊天中说"把这个发布到 TestFlight"——智能体会自动完成归档、导出、签名和上传。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>将 iOS 构建发布到 TestFlight，本质上是一连串重复的小步骤：为正式发布归档应用，使用 App Store 分发设置导出 IPA，针对描述文件进行验证，上传到 App Store Connect，等待处理，再确认构建是否出现在列表中。每个步骤都有自己的对话框或命令，而且每次都一模一样——这种事不应该由人来手动完成。</p>
+      <p>Xcode 的 Organizer 通过向导将这些步骤串联起来，稍微减轻了痛苦，但仍然需要你来驱动：点击"分发"，选择目标，等待，点击"下一步"，等待，点击"上传"。如果中途有任何失败——缺少某项能力、构建版本号重复、描述文件过期——你就得从头再来。</p>
+      <p>LingCode 智能体已经具备驱动每个步骤所需的工具（<code>xcodebuild archive</code>、<code>xcodebuild -exportArchive</code>、<code>xcrun altool --upload-app</code>）以及所需的上下文（你的项目、Bundle ID、Keychain 中的签名身份）。要实现端到端的"一键发布"，缺少的只有一个凭据：用于签署上传请求的 App Store Connect API 密钥。注册好该密钥后，只需在聊天中说"把这个构建上传到 TestFlight"，即可触发完整流程——实时输出各阶段日志，并在构建就绪后通知你。本教程涵盖凭据配置和实际发布两部分。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>生成 App Store Connect API 密钥</li>
+        <li>安全地将密钥告知 LingCode（只需一次）</li>
+        <li>从聊天面板触发上传</li>
+        <li>实时查看各阶段日志</li>
+        <li>公证失败时的处理方法</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前提条件：</strong>一个可构建的 iOS target、一个付费 Apple 开发者账号、已在 App Store Connect 中创建对应 Bundle ID 的应用记录，以及 Keychain 中有效的签名身份。智能体负责上传——它不会替你创建应用记录或修复过期证书。
+      </div>
+
+      <h2>第一步：在 App Store Connect 生成 API 密钥</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>在 appstoreconnect.apple.com 上进行一次性配置</h3>
+          <p>以账号持有人或管理员角色登录 App Store Connect，前往 <strong>用户和访问 → 集成 → App Store Connect API → 团队密钥</strong>，点击 <strong>生成 API 密钥</strong>（如果你已有用于 TestFlight 上传的密钥，也可直接使用现有密钥）。</p>
+          <p>为密钥赋予 <strong>App 管理员</strong>角色——这对 TestFlight 上传已足够，且避免了权限过度授予。在提示时下载 <code>.p8</code> 文件。<strong>该文件只有一次下载机会</strong>，请像对待其他凭据一样妥善保管。</p>
+          <p>记下接下来需要用到的三个值：<strong>发行人 ID</strong>（页面顶部显示）、<strong>密钥 ID</strong>（紧邻你刚创建的密钥旁边），以及 <code>.p8</code> 文件的路径。</p>
+        </div>
+      </div>
+
+      <h2>第二步：将密钥注册到 LingCode</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>向智能体发送一条提示</h3>
+          <p>打开 AI 聊天面板，输入：</p>
+          <p><code>Set my App Store Connect API key. Issuer ID is &lt;your-issuer-id&gt;, Key ID is &lt;your-key-id&gt;, p8 is at /Users/me/Downloads/AuthKey_&lt;key-id&gt;.p8</code></p>
+          <p>智能体将调用内部的 <code>set_asc_api_key</code> 工具，将凭据存入 LingCode Keychain（服务名为 <code>LingCode</code>）。存储的是 <code>.p8</code> 文件的内容，而非文件路径，因此原始文件删除后不影响使用。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>确认配置是否生效：</strong>向智能体询问"Is my ASC key configured?"——它会检查 Keychain 并告知结果。每台机器只需执行一次此步骤。
+      </div>
+
+      <h2>第三步：确保项目可以正常构建</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>始终先在本地进行归档</h3>
+          <p>在涉及网络和 Apple 之前，先验证归档在本地是否成功。在聊天中输入：<code>Archive the app for release.</code> 智能体会以 Release 配置运行 <code>xcodebuild archive</code>，将构建日志实时输出到运行控制台，并报告归档路径。</p>
+          <p>如果此步骤失败，请先修复根本原因（签名问题、缺少能力、Info.plist 错误等），再继续后续步骤。许多上传在第一次就止步于此，而公证服务的错误比本地归档失败更难调试。</p>
+        </div>
+      </div>
+
+      <h2>第四步：触发上传</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>实际的发布命令</h3>
+          <p>归档成功后，输入：</p>
+          <p><code>Upload this build to TestFlight.</code></p>
+          <p>智能体将调用 <code>archive_and_upload_testflight</code>（如果你已有归档，则调用其仅上传的变体）。内部流程为：从归档导出使用 App Store 分发设置的 IPA → 通过 <code>xcrun altool --upload-app</code> 上传至 App Store Connect → 轮询处理状态 → 报告可在 TestFlight 中找到的构建版本号。</p>
+        </div>
+      </div>
+
+      <h2>第五步：查看阶段日志</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>实时状态，而非日志刷屏</h3>
+          <p>智能体会将各阶段日志实时输出到运行控制台：<em>归档中 → 导出 IPA → 验证中 → 上传中 → 处理中</em>。每个阶段都有计时。<code>上传中</code>阶段绝对耗时最长（IPA 文件可达数 GB）；<code>处理中</code>阶段在 Apple 服务器端异步执行，可能需要 5 到 30 分钟。</p>
+          <p>你可以离开聊天标签页，智能体会在构建可用于 TestFlight 或处理失败时推送通知。</p>
+        </div>
+      </div>
+
+      <h2>第六步：上传失败时的处理</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>四种最常见的原因</h3>
+          <ul>
+            <li><strong>签名身份不在 Keychain 中</strong>——你需要安装 Developer ID / Apple Distribution 证书，智能体会直接告知。</li>
+            <li><strong>构建版本号已被使用</strong>——Apple 会拒绝相同 <code>CFBundleVersion</code> 的重复上传。在构建设置中递增 <code>CURRENT_PROJECT_VERSION</code>，重新归档即可。（向智能体说："Bump build number and re-archive."）</li>
+            <li><strong>权限不匹配</strong>——描述文件未包含 <code>.entitlements</code> 文件中声明的某项权限。如果你怀疑是智能体的编辑导致了此问题，请参阅<a href="/zh/tutorials/undo-bad-ai-edits.html">撤销智能体的错误编辑</a>。</li>
+            <li><strong>公证或处理被拒</strong>——Apple 会返回具体错误码，智能体会将其显示出来。常见情况：<code>UIDeviceFamily</code> 中缺少必需的设备系列。在 Info.plist 中修复后重新归档即可。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>这是智能体驱动的流程，不是一键操作。</strong>工具栏中目前没有"上传"按钮——整个流程都在聊天面板中进行。未来版本可能会添加一键入口；现在，你发出提示，智能体负责发布。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/undo-bad-ai-edits.html" class="tutorial-next-card">
+            <h3>撤销智能体的错误编辑</h3>
+            <p>在上传前恢复被智能体破坏的权限文件</p>
+          </a>
+          <a href="/zh/tutorials/experiment-safely-with-worktrees.html" class="tutorial-next-card">
+            <h3>用 worktree 安全地进行实验</h3>
+            <p>在发布前将候选版本变更暂存到 worktree 中</p>
+          </a>
+          <a href="/zh/tutorials/setting-up-api-keys.html" class="tutorial-next-card">
+            <h3>配置 API 密钥</h3>
+            <p>配置各提供商的密钥，让智能体能够执行更复杂的命令</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创业者和追求真实工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">展示案例</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资材料</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

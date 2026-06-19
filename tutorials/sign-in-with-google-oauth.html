@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in with Google (OAuth) — LingCode Tutorials</title>
+  <meta name="description" content="Google OAuth lets users sign in with their existing Google account — no password to set up, no password to forget. Three values from Google Cloud Console; the rest is your code.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/sign-in-with-google-oauth.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/sign-in-with-google-oauth.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/sign-in-with-google-oauth.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/sign-in-with-google-oauth.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Sign in with Google (OAuth)",
+  "description": "Google OAuth is the path of least resistance to \"your users can sign in to your app.\" They click a button, Google handles the credentials, your app gets a verified email and a stable user ID. The setup is a one-time dance in Google Cloud Console; the runtime is a few lines of cod",
+  "url": "https://lingcode.dev/tutorials/sign-in-with-google-oauth.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/sign-in-with-google-oauth.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Sign in with Google (OAuth)"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Sign in with Google (OAuth)",
+      "item": "https://lingcode.dev/tutorials/sign-in-with-google-oauth.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/sign-in-with-google-oauth.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Sign in with Google (OAuth)</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Sign in with Google (OAuth)</h1>
+      <p class="intro">Google OAuth is the path of least resistance to "your users can sign in to your app." They click a button, Google handles the credentials, your app gets a verified email and a stable user ID. The setup is a one-time dance in Google Cloud Console; the runtime is a few lines of code.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Every app that has users has to answer "how do they prove they're them." The traditional answer — email plus password — is also the most expensive. You're now responsible for password storage (hashing, salting, hopefully not rolling your own), password reset flows (email-based, with token expiry, with rate-limiting), forgot-password UIs, and the eternal support burden of "I can't log in." Half the support tickets at most consumer apps trace back to passwords. None of it adds value to your product.</p>
+      <p>OAuth sidesteps all of this by delegating identity to an existing identity provider — Google, in this case. Your user is already signed in to Google. They click "Sign in with Google," Google asks them once "let this app see your email," they say yes, your app gets back a JWT containing their email and a stable user ID. You never see their password. You never store their password. Forgot password isn't your problem anymore.</p>
+      <p>The implementation has two distinct parts. The boring part: register your app with Google, get a client ID and a client secret, configure authorized redirect URLs. The interesting part: handle the redirect flow in your code, exchange the temporary auth code for a real token, look up the user, create or update a session. This tutorial covers both, with notes on the specific places first-time OAuth integrations break.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The OAuth 2.0 + OpenID Connect flow in plain English</li>
+        <li>Creating a Google Cloud project and OAuth credentials</li>
+        <li>Setting authorized JavaScript origins and redirect URIs</li>
+        <li>The code flow: redirect, callback, token exchange, user lookup</li>
+        <li>The "consent screen" verification path for production</li>
+      </ul>
+
+      <h2>Step 1: The flow in plain English</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Four parties: user, browser, your server, Google</h3>
+          <p>What happens when someone clicks "Sign in with Google":</p>
+          <ol>
+            <li>Your server redirects the browser to a Google URL with your client ID and a callback URL.</li>
+            <li>Google asks the user "do you want to let this app see your email?" The user clicks Allow.</li>
+            <li>Google redirects the browser back to your callback URL with a temporary <strong>authorization code</strong>.</li>
+            <li>Your server takes that code, POSTs it back to Google with your client secret, and gets back an <strong>ID token</strong> — a JWT containing the user's email, name, Google user ID, etc.</li>
+            <li>Your server verifies the JWT signature (proving it actually came from Google), creates a session, sets a cookie, redirects to your app.</li>
+          </ol>
+          <p>The client secret never leaves your server. The authorization code is one-time-use. The session cookie is what your app uses going forward. Each piece has a specific security property.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Create a Google Cloud project</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>console.cloud.google.com</h3>
+          <p>Sign in to the Google Cloud Console. Create a new project (top-left "Select a project" → "New project"). Name it after your app. The project is the container for everything related to it on Google Cloud.</p>
+          <p>You don't need to enable billing for OAuth — only paid Google APIs need billing. Sign-in is free.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Configure the OAuth consent screen</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>What users see when granting permission</h3>
+          <p>In the project, <strong>APIs &amp; Services → OAuth consent screen</strong>. Pick <strong>External</strong> user type (Internal is only for Google Workspace domains). Configure:</p>
+          <ul>
+            <li><strong>App name:</strong> what users see ("Sign in to AppName").</li>
+            <li><strong>User support email:</strong> a real address you check.</li>
+            <li><strong>Authorized domains:</strong> your production domain (e.g., <code>yourapp.com</code>).</li>
+            <li><strong>Developer contact email:</strong> usually you.</li>
+            <li><strong>Scopes:</strong> for basic sign-in, request <code>email</code>, <code>profile</code>, and <code>openid</code>. Don't request more than you need.</li>
+          </ul>
+          <p>Initially the app is in <strong>Testing</strong> status — only listed test users can sign in. You can add up to 100 test users in the OAuth consent screen settings. For production, you'll move to "In Production" (Step 8).</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Create OAuth client credentials</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The client ID and client secret</h3>
+          <p><strong>APIs &amp; Services → Credentials → Create Credentials → OAuth client ID</strong>.</p>
+          <ul>
+            <li><strong>Application type:</strong> Web application.</li>
+            <li><strong>Name:</strong> internal; users don't see this.</li>
+            <li><strong>Authorized JavaScript origins:</strong> your app's URLs. For dev: <code>http://localhost:3000</code>. For production: <code>https://yourapp.com</code>. Add all environments.</li>
+            <li><strong>Authorized redirect URIs:</strong> where Google sends the code back. Typically <code>http://localhost:3000/api/auth/callback/google</code> for dev, <code>https://yourapp.com/api/auth/callback/google</code> for production. Must match exactly — trailing slashes, http vs https, port numbers all matter.</li>
+          </ul>
+          <p>Click Create. Google shows your <strong>Client ID</strong> (long string ending in <code>.apps.googleusercontent.com</code>) and <strong>Client Secret</strong> (shorter, starts with <code>GOCSPX-</code>). Copy both into your backend's env file:</p>
+          <pre><code>GOOGLE_CLIENT_ID=...apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-...</code></pre>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>The redirect URI mismatch is the most common bug.</strong> If your code sends a redirect URI that doesn't exactly match one in the authorized list, Google returns "redirect_uri_mismatch" — no fuzzy matching, no helpful guidance. Add every variant you'll use (dev, staging, production, both with and without <code>www</code> if applicable) up front.
+      </div>
+
+      <h2>Step 5: Implement the flow (or use a library)</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>NextAuth / Auth.js / Passport / clerk — pick one</h3>
+          <p>You can implement OAuth manually with HTTP calls, but you almost certainly shouldn't. The standard libraries handle the state parameter (anti-CSRF), JWT verification, session management, and dozens of edge cases. For most stacks:</p>
+          <ul>
+            <li><strong>Next.js:</strong> <code>next-auth</code> (now Auth.js). Configure providers in one file.</li>
+            <li><strong>Express / Node:</strong> Passport.js with the <code>passport-google-oauth20</code> strategy.</li>
+            <li><strong>Django:</strong> django-allauth.</li>
+            <li><strong>Rails:</strong> omniauth + omniauth-google-oauth2.</li>
+            <li><strong>Anything modern:</strong> Clerk, Auth0, Supabase Auth — auth-as-a-service that handles Google plus a dozen other providers.</li>
+          </ul>
+          <p>For Auth.js in Next.js, the configuration is roughly:</p>
+          <pre><code>import GoogleProvider from "next-auth/providers/google";
+
+export const authOptions = {
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
+};</code></pre>
+          <p>That plus the standard Auth.js route handler is enough. Twenty lines of code; a working sign-in button.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Handle the user record</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>First sign-in creates; subsequent sign-ins look up</h3>
+          <p>When the OAuth callback succeeds, you have a verified email and a Google user ID. The logic in your handler:</p>
+          <ol>
+            <li>Look up a user in your DB by Google ID. If they exist, that's the session user.</li>
+            <li>If not, check by email. If they exist, link the Google account to that user (this handles "they signed up with email/password first, then later switched to Google").</li>
+            <li>If neither matches, create a new user record with the email, name, and Google ID.</li>
+          </ol>
+          <p>Store the Google user ID separately from the email. Email addresses can theoretically change at Google; the Google ID never does.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: Test on localhost</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Use the test-user list while developing</h3>
+          <p>With the consent screen in Testing status, only emails added to the Test Users list can sign in. Add your own Google account; you can now click "Sign in with Google" on your local dev server and complete the flow.</p>
+          <p>Google's first-time consent screen shows your app name, the scopes requested, and a "This app isn't verified" warning (in Testing mode). Click "Advanced → Go to AppName (unsafe)" to proceed. Real users won't see this once you publish; until then, every test user sees it.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: Verification for production</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>The "unsafe" warning is for testing only</h3>
+          <p>To remove the unverified-app warning for real users, submit your app for verification. From the OAuth consent screen, click <strong>Publish App → Submit for verification</strong>. Google reviews your homepage, privacy policy, and the scopes you've requested.</p>
+          <p>For basic scopes (<code>email</code>, <code>profile</code>, <code>openid</code>) the verification is automatic — usually instant. For sensitive scopes (Gmail access, Drive access, etc.) verification can take weeks and requires a security assessment. Stick to basic scopes unless you have a real product reason for more.</p>
+          <p>Once verified, "unsafe" goes away, the user-cap of 100 testers lifts, and any Google user worldwide can sign in.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>One project for all environments.</strong> Use a single Google Cloud project with all your redirect URIs (dev, staging, prod) added at once, rather than separate projects per environment. Easier to manage; same client ID across environments; less verification overhead.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/sign-in-with-github-oauth.html" class="tutorial-next-card">
+            <h3>Sign in with GitHub (OAuth)</h3>
+            <p>Same shape, dev-audience oriented — pair the two for max sign-in coverage</p>
+          </a>
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>Set up Sentry error tracking</h3>
+            <p>Once users are signing in, you need to know when their flow breaks</p>
+          </a>
+          <a href="/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h3>Send transactional email with Resend</h3>
+            <p>Welcome email after the first Google sign-in</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

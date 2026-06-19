@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set up Typesense search — LingCode Tutorials</title>
+  <meta name="description" content="Open-source search with native semantic + vector + geo support. Run a single binary or use Typesense Cloud. Same DX as Algolia, cheaper at scale.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-typesense-search.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-typesense-search.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-typesense-search.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/set-up-typesense-search.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Set up Typesense search",
+  "description": "Open-source search engine, C++ core, native semantic + vector + geo search. Run as a single binary or hosted on Typesense Cloud. Algolia-like DX with no per-record fee.",
+  "url": "https://lingcode.dev/tutorials/set-up-typesense-search.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/set-up-typesense-search.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Pick Typesense when",
+      "url": "https://lingcode.dev/tutorials/set-up-typesense-search.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Run locally with Docker",
+      "url": "https://lingcode.dev/tutorials/set-up-typesense-search.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Create the API keys",
+      "url": "https://lingcode.dev/tutorials/set-up-typesense-search.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Install the SDK",
+      "url": "https://lingcode.dev/tutorials/set-up-typesense-search.html#step-4"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Set up Typesense search",
+      "item": "https://lingcode.dev/tutorials/set-up-typesense-search.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/set-up-typesense-search.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Set up Typesense search</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Set up Typesense search</h1>
+      <p class="intro">Open-source search engine, C++ core, native semantic + vector + geo search. Run as a single binary or hosted on Typesense Cloud. Algolia-like DX with no per-record fee.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Pick Typesense when</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick Typesense when</strong> — you want open-source search with built-in vector embeddings, you outgrew Algolia's free tier, or your search includes geo (nearby places) / semantic (meaning-based) queries.</li>
+            <li><strong>Pick <a href="/tutorials/set-up-algolia-search.html">Algolia</a></strong> for zero ops, polished UI, global edge by default.</li>
+            <li><strong>Pick <a href="/tutorials/self-hosted-search-with-meilisearch.html">Meilisearch</a></strong> for similar shape, slightly different priorities (Rust vs C++; some DX trade-offs).</li>
+            <li><strong>Pick Postgres FTS</strong> for ≤ 100K records with simple needs.</li>
+          </ul>
+          <p>Typesense's distinguishing features: native vector search (no separate vector DB), built-in geo search, opinionated about defaults (less config than Algolia, more than Meilisearch).</p>
+        </div>
+      </div>
+
+      <h2>Run locally with Docker</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <pre><code>docker run -p 8108:8108 \
+  -v $(pwd)/typesense-data:/data \
+  -e TYPESENSE_API_KEY=your-strong-api-key \
+  -e TYPESENSE_DATA_DIR=/data \
+  typesense/typesense:latest \
+  --enable-cors</code></pre>
+          <p>Listens on <code>http://localhost:8108</code>. Health check:</p>
+          <pre><code>curl http://localhost:8108/health
+# {"ok":true}</code></pre>
+          <p>Single binary version (no Docker): <a href="https://typesense.org/docs/guide/install-typesense.html" target="_blank" rel="noopener">install docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Production: pick deployment shape</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Self-host on a VPS</strong> — same pattern as <a href="/tutorials/self-hosted-search-with-meilisearch.html">Meilisearch</a>. systemd unit, Nginx + TLS in front. Cheapest; you maintain.</li>
+            <li><strong><a href="https://cloud.typesense.org/" target="_blank" rel="noopener">Typesense Cloud ↗</a></strong> — managed; clusters with auto-scale, global edge, on-call support. ~$20/mo starter.</li>
+          </ul>
+          <p>This tutorial assumes Typesense Cloud or single-node self-hosted; Typesense supports HA clusters but that's a separate setup.</p>
+        </div>
+      </div>
+
+      <h2>Create the API keys</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>The bootstrap admin key (you set it at startup) is for backend admin operations. For app code, create scoped keys:</p>
+          <pre><code>curl http://localhost:8108/keys \
+  -H 'X-TYPESENSE-API-KEY: your-strong-api-key' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "description": "Search-only key",
+    "actions": ["documents:search"],
+    "collections": ["*"]
+  }'</code></pre>
+          <p>Copy the returned <code>value</code> — that's your client-side search key. Safe in browser. <a href="https://typesense.org/docs/latest/api/api-keys.html" target="_blank" rel="noopener">API keys docs ↗</a>.</p>
+          <pre><code>TYPESENSE_HOST=https://search.yourdomain.com
+TYPESENSE_ADMIN_KEY=your-strong-api-key        # backend only
+TYPESENSE_SEARCH_KEY=xxxxxxxxxxxxxxxxxxxxx     # safe in client</code></pre>
+        </div>
+      </div>
+
+      <h2>Install the SDK</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <pre><code>npm install typesense</code></pre>
+          <p>Other languages: <a href="https://typesense.org/docs/latest/api/" target="_blank" rel="noopener">Python, Ruby, PHP, Go, Java, .NET, Swift, Dart ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Define a collection schema</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Unlike Algolia / Meilisearch (which infer schema from documents), Typesense expects an explicit schema:</p>
+          <pre><code>import Typesense from "typesense";
+
+const client = new Typesense.Client({
+  nodes: [{ host: "localhost", port: 8108, protocol: "http" }],
+  apiKey: process.env.TYPESENSE_ADMIN_KEY,
+});
+
+await client.collections().create({
+  name: "posts",
+  fields: [
+    { name: "title", type: "string" },
+    { name: "body", type: "string" },
+    { name: "tags", type: "string[]", facet: true },
+    { name: "published_at", type: "int64" },
+  ],
+  default_sorting_field: "published_at",
+});</code></pre>
+          <p>Defining types upfront is more work than the auto-infer model — but you get better query performance and clear errors when data doesn't match. <a href="https://typesense.org/docs/latest/api/collections.html" target="_blank" rel="noopener">Collections docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Index documents</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <pre><code>// Single document
+await client.collections("posts").documents().create({
+  id: "post-123",
+  title: "How to deploy to Vercel",
+  body: "First, install the CLI...",
+  tags: ["deploy", "vercel"],
+  published_at: 1714521600,
+});
+
+// Bulk import (much faster for batches)
+const jsonl = posts.map(p =&gt; JSON.stringify(p)).join("\n");
+await client.collections("posts").documents().import(jsonl, { action: "upsert" });</code></pre>
+          <p>JSONL bulk import handles 10K+ documents in a single request. <a href="https://typesense.org/docs/latest/api/documents.html" target="_blank" rel="noopener">Documents docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Search</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <pre><code>// Backend or frontend (with search-only key)
+const result = await client.collections("posts").documents().search({
+  q: "vercel deploy",
+  query_by: "title,body",
+  filter_by: 'tags:=["deploy"]',
+  sort_by: "published_at:desc",
+  per_page: 10,
+});
+
+console.log(result.hits);</code></pre>
+          <p>The <code>query_by</code> parameter specifies which fields to search; <code>filter_by</code> adds Boolean filters; <code>sort_by</code> overrides default ranking.</p>
+        </div>
+      </div>
+
+      <h2>Vector / semantic search (built in)</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Typesense ships native vector search — embeddings, similarity, hybrid search — without adding a separate vector DB.</p>
+          <pre><code>await client.collections().create({
+  name: "articles",
+  fields: [
+    { name: "title", type: "string" },
+    { name: "embedding", type: "float[]", num_dim: 384 },
+  ],
+});
+
+// Hybrid search: keyword + vector
+await client.collections("articles").documents().search({
+  q: "deployment strategies",
+  query_by: "title,embedding",
+  vector_query: "embedding:([0.1, 0.2, ...], k:10)",
+});</code></pre>
+          <p>Combine keyword matching with semantic similarity in one query. <a href="https://typesense.org/docs/latest/api/vector-search.html" target="_blank" rel="noopener">Vector search docs ↗</a>.</p>
+          <p>Typesense can also auto-generate embeddings via built-in models — pass <code>embed</code> config in the schema; Typesense fetches embeddings from OpenAI / Google PaLM / open-source models for you.</p>
+        </div>
+      </div>
+
+      <h2>Geo search</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Built-in lat/lng support — find records within X km of a point:</p>
+          <pre><code>// Schema
+{ name: "location", type: "geopoint" }
+
+// Document
+{ location: [37.7749, -122.4194] }
+
+// Search "within 5km of San Francisco"
+await client.collections("places").documents().search({
+  q: "*",
+  filter_by: "location:(37.7749, -122.4194, 5 km)",
+});</code></pre>
+          <p>No separate geo DB; works alongside text search in the same query.</p>
+        </div>
+      </div>
+
+      <h2>InstantSearch UI library</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>Typesense ships an Algolia-compatible InstantSearch adapter — same React/Vue widgets:</p>
+          <pre><code>npm install typesense-instantsearch-adapter react-instantsearch</code></pre>
+          <pre><code>import TypesenseInstantsearchAdapter from "typesense-instantsearch-adapter";
+
+const adapter = new TypesenseInstantsearchAdapter({
+  server: {
+    nodes: [{ host: "search.yourdomain.com", port: 443, protocol: "https" }],
+    apiKey: process.env.NEXT_PUBLIC_TYPESENSE_SEARCH_KEY,
+  },
+  additionalSearchParameters: { query_by: "title,body" },
+});
+
+import { InstantSearch, SearchBox, Hits } from "react-instantsearch";
+
+export function Search() {
+  return (
+    &lt;InstantSearch searchClient={adapter.searchClient} indexName="posts"&gt;
+      &lt;SearchBox /&gt;
+      &lt;Hits hitComponent={({ hit }) =&gt; &lt;div&gt;{hit.title}&lt;/div&gt;} /&gt;
+    &lt;/InstantSearch&gt;
+  );
+}</code></pre>
+          <p>Drop-in replacement for an Algolia <code>searchClient</code>. <a href="https://github.com/typesense/typesense-instantsearch-adapter" target="_blank" rel="noopener">Adapter repo ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p><strong>Self-hosted</strong>: free; you pay for the VPS ($5–10/mo for most projects).</p>
+          <p><strong>Typesense Cloud</strong>: starts ~$20/mo for a small cluster. Scales linearly with cluster size, not per-record. <a href="https://cloud.typesense.org/" target="_blank" rel="noopener">Pricing ↗</a>.</p>
+          <p>At Algolia's $25K/year tier, Typesense Cloud would be roughly $2-3K — order of magnitude cheaper.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Schemas are stricter than Algolia/Meilisearch.</strong> If you add a field to a document but not to the schema, Typesense rejects the document. This is good for production safety but feels stricter if you're used to "throw any JSON at it." Plan schemas; treat them like a DB migration.
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://typesense.org/docs/" target="_blank" rel="noopener">Typesense docs ↗</a></li>
+        <li><a href="https://typesense.org/docs/latest/api/" target="_blank" rel="noopener">API reference ↗</a></li>
+        <li><a href="https://typesense.org/docs/latest/api/vector-search.html" target="_blank" rel="noopener">Vector search ↗</a></li>
+        <li><a href="https://typesense.org/docs/latest/api/geosearch.html" target="_blank" rel="noopener">Geo search ↗</a></li>
+        <li><a href="https://github.com/typesense/typesense" target="_blank" rel="noopener">Source on GitHub ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-algolia-search.html" class="tutorial-next-card">
+            <h3>Set up Algolia search</h3>
+            <p>Managed alternative; zero ops + global edge</p>
+          </a>
+          <a href="/tutorials/self-hosted-search-with-meilisearch.html" class="tutorial-next-card">
+            <h3>Self-hosted search with Meilisearch</h3>
+            <p>Alternative self-hostable engine; schemaless, slightly different defaults</p>
+          </a>
+          <a href="/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>Set up Supabase</h3>
+            <p>Source of truth; sync to Typesense on write</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

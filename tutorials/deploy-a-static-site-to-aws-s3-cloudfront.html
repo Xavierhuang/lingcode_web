@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deploy a static site to S3 + CloudFront — LingCode Tutorials</title>
+  <meta name="description" content="The classic AWS static-hosting pattern: S3 bucket for storage, CloudFront for CDN + HTTPS, ACM for the cert, Route 53 for DNS. Built once, deployed forever.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Deploy a static site to S3 + CloudFront",
+  "description": "S3 stores the files. CloudFront serves them globally with HTTPS. ACM issues the cert for free. Route 53 makes mybrand.com reach the whole thing. It's the canonical AWS way to ship a static site — once you've set it up, deploys are a single aws s3 sync .",
+  "url": "https://lingcode.dev/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Deploy a static site to S3 + CloudFront"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Deploy a static site to S3 + CloudFront",
+      "item": "https://lingcode.dev/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Deploy a static site to S3 + CloudFront</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Deploy a static site to S3 + CloudFront</h1>
+      <p class="intro">S3 stores the files. CloudFront serves them globally with HTTPS. ACM issues the cert for free. Route 53 makes <code>mybrand.com</code> reach the whole thing. It's the canonical AWS way to ship a static site — once you've set it up, deploys are a single <code>aws s3 sync</code>.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Most modern alternatives — Vercel, Netlify, Cloudflare Pages — bundle this whole pipeline into one button. You push a git repo, they handle storage, CDN, cert, and DNS. The reason people still set up S3 + CloudFront by hand is that it's <em>part of AWS</em>: the same IAM policy that lets a Lambda write a generated report to the same bucket; the same CloudFront distribution that fronts an ALB behind it; the same Route 53 zone holding records for other AWS resources. If your infrastructure is on AWS, the static site lives on AWS too — and at AWS prices, which for static content are extremely cheap.</p>
+      <p>The mental model: <strong>S3 is the origin</strong> (a private bucket holding the built files), <strong>CloudFront is the cache + entrypoint</strong> (caches files at edge locations worldwide, terminates TLS, serves the <code>https://</code> URL), <strong>ACM is the cert</strong> (free TLS, but must be in <code>us-east-1</code> for CloudFront), <strong>Route 53 is the DNS</strong> (Alias record points your domain at the CloudFront distribution). Four services, one for each job, none of them doing the other's work.</p>
+      <p>This tutorial walks the first-time setup end-to-end, plus what a deploy looks like after the pipeline is wired. We'll use the AWS CLI for the parts that are tedious in the console (bucket policy, sync) and the console for the parts that are tedious in CLI (CloudFront, ACM). At the end, deploys are <code>npm run build &amp;&amp; aws s3 sync ./dist s3://mybrand-site &amp;&amp; aws cloudfront create-invalidation ...</code> — three commands forever.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>How S3, CloudFront, ACM, and Route 53 split responsibilities</li>
+        <li>Why ACM certs for CloudFront <em>must</em> be in <code>us-east-1</code></li>
+        <li>Origin Access Control (OAC) — the modern replacement for public buckets</li>
+        <li>Cache invalidation: when you need it, how to script it</li>
+        <li>What this actually costs at small and medium scale</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> An AWS account with admin or sufficient IAM permissions, the AWS CLI installed and configured (<code>aws configure</code>), a domain with DNS at <a href="/tutorials/use-route-53-for-your-domain.html">Route 53</a> (or willingness to add records elsewhere), and a built static site (a directory of HTML/CSS/JS).
+      </div>
+
+      <h2>Step 1: Create the S3 bucket</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Private bucket, default settings, one CLI command</h3>
+          <p>Pick a bucket name. It has to be globally unique across all of AWS, so something like <code>mybrand-site-prod-2026</code>. The name doesn't matter much — users never see it; CloudFront sits in front.</p>
+          <pre><code>aws s3api create-bucket \
+  --bucket mybrand-site-prod-2026 \
+  --region us-east-1
+# (For regions other than us-east-1, add --create-bucket-configuration LocationConstraint=&lt;region&gt;)</code></pre>
+          <p>Leave the default "Block all public access" settings on. With CloudFront + OAC in front (Step 4), the bucket stays private; CloudFront has its own credential to read from it. Public-bucket setups still work but are the deprecated pattern — newer AWS docs all use OAC.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Upload your site</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3><code>aws s3 sync</code> is the deploy command</h3>
+          <p>If your site is built into <code>./dist</code> (or <code>./build</code>, <code>./public</code>, whatever):</p>
+          <pre><code>aws s3 sync ./dist s3://mybrand-site-prod-2026 --delete
+# --delete removes files in S3 that no longer exist locally —
+# without it, removed pages stay live as orphans.</code></pre>
+          <p>The first sync uploads everything. Subsequent syncs only upload changed files. This is the deploy command you'll script later. At this point S3 has the files but they're inaccessible — the bucket is private and there's no CloudFront yet.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Request an ACM certificate in us-east-1</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Region matters; CloudFront only reads certs from us-east-1</h3>
+          <p>This is the most common first-time error. AWS Certificate Manager certificates are region-specific. CloudFront is a global service but is fronted by <code>us-east-1</code> for cert lookup. <strong>Switch the console region to "US East (N. Virginia) — us-east-1"</strong> before requesting the cert, or do it via CLI:</p>
+          <pre><code>aws acm request-certificate \
+  --domain-name mybrand.com \
+  --subject-alternative-names www.mybrand.com \
+  --validation-method DNS \
+  --region us-east-1</code></pre>
+          <p>ACM returns a <code>CertificateArn</code> and a set of CNAME validation records — one per domain in the cert. If your DNS is at Route 53 in the same account, the console offers a one-click "Create records in Route 53" button. Otherwise, you copy each CNAME to your DNS provider manually. Validation takes minutes once the records are live.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Cert renewal is automatic.</strong> Once issued and validated via DNS, ACM renews the cert every 13 months and rotates it into CloudFront with zero downtime. You'll never touch the cert again as long as the DNS validation records remain in place.
+      </div>
+
+      <h2>Step 4: Create the CloudFront distribution with OAC</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The complicated step; do it in the console</h3>
+          <p>Open CloudFront → <strong>Create distribution</strong>. Fill out:</p>
+          <ul>
+            <li><strong>Origin domain:</strong> select your S3 bucket from the dropdown (not the website endpoint — pick the bucket itself).</li>
+            <li><strong>Origin access:</strong> <em>Origin access control settings (recommended)</em>. Click <strong>Create new OAC</strong>, accept defaults, save. CloudFront will give you a bucket policy snippet at the end of distribution creation — you'll paste it into S3 in Step 5.</li>
+            <li><strong>Viewer protocol policy:</strong> <em>Redirect HTTP to HTTPS</em>.</li>
+            <li><strong>Allowed HTTP methods:</strong> <em>GET, HEAD</em> (static sites don't need POST).</li>
+            <li><strong>Alternate domain names (CNAMEs):</strong> <code>mybrand.com</code> and <code>www.mybrand.com</code>.</li>
+            <li><strong>Custom SSL certificate:</strong> select the ACM cert from Step 3.</li>
+            <li><strong>Default root object:</strong> <code>index.html</code>.</li>
+          </ul>
+          <p>Create. CloudFront provisions the distribution; this takes 5–15 minutes the first time. You'll get a distribution domain name like <code>d1234abcde.cloudfront.net</code> — you can hit that URL directly to test before DNS is wired up.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Attach the OAC bucket policy</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Let CloudFront read from the bucket; nothing else</h3>
+          <p>The OAC creation flow shows a bucket policy snippet on the success screen. Copy it. In S3 → bucket → <strong>Permissions</strong> → <strong>Bucket policy</strong>, paste it in. It looks like:</p>
+          <pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowCloudFrontServicePrincipalReadOnly",
+    "Effect": "Allow",
+    "Principal": { "Service": "cloudfront.amazonaws.com" },
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::mybrand-site-prod-2026/*",
+    "Condition": {
+      "StringEquals": {
+        "AWS:SourceArn": "arn:aws:cloudfront::123456789:distribution/E1ABCDEFGHIJK"
+      }
+    }
+  }]
+}</code></pre>
+          <p>The <code>SourceArn</code> condition is what makes OAC secure: only your specific distribution can read the bucket. Without it, any CloudFront distribution in any account could.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Point your domain at CloudFront</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>One Alias record per domain, in Route 53</h3>
+          <p>In Route 53 → your hosted zone → <strong>Create record</strong>:</p>
+          <ul>
+            <li><strong>Record name:</strong> empty (for apex) or <code>www</code> (for the www subdomain).</li>
+            <li><strong>Record type:</strong> A.</li>
+            <li><strong>Alias:</strong> on.</li>
+            <li><strong>Route traffic to:</strong> Alias to CloudFront distribution → select yours.</li>
+          </ul>
+          <p>Create. Repeat for the other name (apex / www). DNS propagates in minutes — for an Alias record on the same AWS account, often seconds.</p>
+          <p>If your DNS isn't at Route 53, add a regular CNAME record at your DNS provider with value <code>d1234abcde.cloudfront.net</code> for <code>www</code>, and use your DNS provider's CNAME-flattening / ALIAS feature for the apex (<a href="/tutorials/connect-domain-to-server-with-dns.html">DNS tutorial</a> covers this).</p>
+        </div>
+      </div>
+
+      <h2>Step 7: Verify and bookmark the deploy command</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Three checks; then it's three commands forever</h3>
+          <pre><code># 1. Cert is on the distribution.
+curl -sI https://mybrand.com | grep -E '^(HTTP|Server)'
+# Expected: HTTP/2 200 ... Server: CloudFront
+
+# 2. Files are reachable.
+curl -s https://mybrand.com | head
+# Expected: your index.html.
+
+# 3. DNS points at CloudFront.
+dig mybrand.com +short
+# Expected: a CloudFront edge IP (changes per region; just confirm it's not blank).</code></pre>
+          <p>From now on, deploys look like this — save these three lines as <code>deploy.sh</code> in your project:</p>
+          <pre><code>#!/usr/bin/env bash
+set -e
+npm run build
+aws s3 sync ./dist s3://mybrand-site-prod-2026 --delete
+aws cloudfront create-invalidation \
+  --distribution-id E1ABCDEFGHIJK \
+  --paths "/*"</code></pre>
+          <p>The invalidation is the part that makes new files visible immediately. Without it, CloudFront keeps serving cached old files until the TTL expires (default 24 hours for cached responses). You get 1,000 invalidation paths free per month — for one-path invalidations on every deploy, that's 33/day, which covers most projects.</p>
+        </div>
+      </div>
+
+      <h2>What this actually costs</h2>
+      <p>For a personal site with 10,000 monthly visitors and ~1 GB transferred:</p>
+      <ul>
+        <li><strong>S3 storage</strong>: $0.023/GB/month × small site = under $0.01</li>
+        <li><strong>CloudFront data transfer out</strong>: $0.085/GB × 1 GB = ~$0.085</li>
+        <li><strong>CloudFront requests</strong>: $0.0075 per 10,000 HTTPS requests × ~50,000 = $0.04</li>
+        <li><strong>Route 53 hosted zone</strong>: $0.50/month (if using Route 53 for DNS)</li>
+        <li><strong>ACM cert</strong>: free</li>
+      </ul>
+      <p>Total: under $1/month for a real-but-quiet personal site. The first 50 GB of CloudFront data transfer is free under the AWS Free Tier for 12 months, which usually covers everything; after the free tier, costs scale linearly. A static site doing 1 TB/month would be ~$85 in transfer, which is when Cloudflare Pages (unlimited bandwidth, free) starts looking very attractive.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/deploy-with-aws-amplify-hosting.html" class="tutorial-next-card">
+            <h3>Deploy with AWS Amplify Hosting</h3>
+            <p>The git-push-to-deploy version of this, if you'd rather not run the CLI yourself</p>
+          </a>
+          <a href="/tutorials/use-route-53-for-your-domain.html" class="tutorial-next-card">
+            <h3>Use Route 53 for your domain</h3>
+            <p>Required if you want the Alias-record path from Step 6 to work</p>
+          </a>
+          <a href="/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>Run a Node API on Lightsail</h3>
+            <p>When the static site needs a backend</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

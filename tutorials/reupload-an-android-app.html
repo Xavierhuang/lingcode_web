@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Re-upload an Android app to Play Console — LingCode Tutorials</title>
+  <meta name="description" content="A beginner-friendly walk through shipping a new Android build: install Android Studio, bump versionCode, build a signed AAB, upload to Play Console. Every download link in one place.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/reupload-an-android-app.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/reupload-an-android-app.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/reupload-an-android-app.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/reupload-an-android-app.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Re-upload an Android app to Play Console",
+  "description": "Ship a new version of your Android app to Google Play. Bump the version number, build a signed app bundle, upload, pick a release track. Walks through every tool you need to install — links for Mac, Windows, and Linux.",
+  "url": "https://lingcode.dev/tutorials/reupload-an-android-app.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/reupload-an-android-app.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Build a signed AAB",
+      "url": "https://lingcode.dev/tutorials/reupload-an-android-app.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Open Play Console",
+      "url": "https://lingcode.dev/tutorials/reupload-an-android-app.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Pick a release track",
+      "url": "https://lingcode.dev/tutorials/reupload-an-android-app.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Create the release",
+      "url": "https://lingcode.dev/tutorials/reupload-an-android-app.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Add testers (first time only)",
+      "url": "https://lingcode.dev/tutorials/reupload-an-android-app.html#step-5"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "name": "Use staged rollout for Production",
+      "url": "https://lingcode.dev/tutorials/reupload-an-android-app.html#step-6"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Re-upload an Android app to Play Console",
+      "item": "https://lingcode.dev/tutorials/reupload-an-android-app.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/reupload-an-android-app.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Re-upload an Android app to Play Console</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Re-upload an Android app to Play Console</h1>
+      <p class="intro">Ship a new version of your Android app to Google Play. Bump the version number, build a signed app bundle, upload, pick a release track. Walks through every tool you need to install — links for Mac, Windows, and Linux.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>What you need (one-time)</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>If this is your first time, install these once. Skip whichever you already have.</p>
+          <ul>
+            <li><strong>Android Studio</strong> — the official IDE; includes the Android SDK and build tools. Download:
+              <ul>
+                <li><a href="https://developer.android.com/studio" target="_blank" rel="noopener">Android Studio download page ↗</a> (auto-detects your OS)</li>
+                <li><a href="https://redirector.gvt1.com/edgedl/android/studio/install/2024.2.1.12/android-studio-2024.2.1.12-mac.dmg" target="_blank" rel="noopener">Mac (Intel) direct ↗</a> ·
+                  <a href="https://redirector.gvt1.com/edgedl/android/studio/install/2024.2.1.12/android-studio-2024.2.1.12-mac_arm.dmg" target="_blank" rel="noopener">Mac (Apple Silicon) direct ↗</a> ·
+                  <a href="https://redirector.gvt1.com/edgedl/android/studio/install/2024.2.1.12/android-studio-2024.2.1.12-windows.exe" target="_blank" rel="noopener">Windows direct ↗</a> ·
+                  <a href="https://redirector.gvt1.com/edgedl/android/studio/install/2024.2.1.12/android-studio-2024.2.1.12-linux.tar.gz" target="_blank" rel="noopener">Linux direct ↗</a>
+                </li>
+              </ul>
+            </li>
+            <li><strong>JDK (Java)</strong> — usually bundled inside Android Studio, no separate install needed. If you ever need it standalone: <a href="https://adoptium.net/temurin/releases/?version=17" target="_blank" rel="noopener">Eclipse Temurin JDK 17 ↗</a>.</li>
+            <li><strong>Google Play Developer account</strong> — $25 one-time fee, lets you publish apps. <a href="https://play.google.com/console/signup" target="_blank" rel="noopener">Sign up for Play Console ↗</a>.</li>
+            <li><strong>Your app project</strong> — an existing Android project. If you're using LingCode, you can also run Android builds from the IDE; see <a href="/tutorials/create-and-run-your-first-avd.html">Create and run your first Android emulator</a>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Bump the version number</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Google Play rejects re-uploads with the same <code>versionCode</code>. Open your app's <code>build.gradle</code> (or <code>build.gradle.kts</code>) — usually at <code>app/build.gradle</code> in your project — and bump it:</p>
+          <pre><code>android {
+    defaultConfig {
+        versionCode 42       // bump this — must be unique &amp; always increasing
+        versionName "1.2.1"  // user-visible; bump on real changes (e.g. 1.2.0 → 1.2.1)
+    }
+}</code></pre>
+          <p>What each one is:</p>
+          <ul>
+            <li><strong><code>versionCode</code></strong> — an integer Google uses internally. Must increase every upload. Goes 1, 2, 3, … 42, 43.</li>
+            <li><strong><code>versionName</code></strong> — the string users see in the Play Store ("1.2.1"). Bump on real changes; can stay the same for tiny patch uploads.</li>
+          </ul>
+          <p><a href="https://developer.android.com/studio/publish/versioning" target="_blank" rel="noopener">Android versioning docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Build a signed AAB</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Google Play requires an <strong>AAB</strong> (Android App Bundle), not the old APK format. <a href="https://developer.android.com/guide/app-bundle" target="_blank" rel="noopener">What an AAB is ↗</a>.</p>
+          <p><strong>Option A — Android Studio UI:</strong> <em>Build → Generate Signed Bundle / APK → Android App Bundle → Next → choose keystore → Release → Finish</em>. Output path is shown when it finishes.</p>
+          <p><strong>Option B — terminal:</strong></p>
+          <pre><code>./gradlew bundleRelease</code></pre>
+          <p>Output lands at <code>app/build/outputs/bundle/release/app-release.aab</code>.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>First time only — set up a keystore.</strong> The keystore is the cryptographic identity of your app. Use Android Studio's <em>Build → Generate Signed Bundle / APK → Create new…</em> to make one, or run <code>keytool -genkey -v -keystore release.keystore -alias my-app -keyalg RSA -keysize 2048 -validity 10000</code> in a terminal (<a href="https://docs.oracle.com/en/java/javase/17/docs/specs/man/keytool.html" target="_blank" rel="noopener">keytool docs ↗</a>). Store the file and password somewhere safe. <strong>Lose the keystore and you can never ship updates to this app again.</strong>
+      </div>
+
+      <div class="tip-box">
+        <strong>Use Play App Signing (recommended).</strong> Let Google manage your release signing key — enrolled once during your first upload. If you lose your upload key, Google can reset it. <a href="https://developer.android.com/studio/publish/app-signing#enroll" target="_blank" rel="noopener">Enroll docs ↗</a>.
+      </div>
+
+      <h2>Open Play Console</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Sign in to <a href="https://play.google.com/console" target="_blank" rel="noopener">Google Play Console ↗</a> with the Google account on your developer registration. Pick your app from the list.</p>
+        </div>
+      </div>
+
+      <h2>Pick a release track</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>In the left sidebar under <strong>Testing</strong> and <strong>Production</strong>, you have four tracks:</p>
+          <ul>
+            <li><strong>Internal testing</strong> — up to 100 named testers; available in minutes; no human review for established apps. <strong>Start here.</strong></li>
+            <li><strong>Closed testing</strong> — named groups; Google review (~1–7 days).</li>
+            <li><strong>Open testing</strong> — anyone with a link; review required.</li>
+            <li><strong>Production</strong> — public release; full review (1–7 days).</li>
+          </ul>
+          <p>For iterating, click <strong>Internal testing</strong>.</p>
+        </div>
+      </div>
+
+      <h2>Create the release</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Click <strong>Create new release</strong>. Drag your <code>app-release.aab</code> file into the upload area. Wait for Play Console to process it (~30 seconds).</p>
+          <p>Fill in <strong>Release notes</strong> (what changed for testers). Then <strong>Next → Save → Send for review</strong>. For internal testing, this is effectively instant.</p>
+        </div>
+      </div>
+
+      <h2>Add testers (first time only)</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>On the internal testing page, click <strong>Testers</strong>. Either:</p>
+          <ul>
+            <li><strong>Create email list</strong> — paste tester emails (one per line).</li>
+            <li><strong>Copy the opt-in URL</strong> at the bottom — share with testers; they click and join.</li>
+          </ul>
+          <p>Testers download via the Play Store as if it were a normal app, after they accept the invitation.</p>
+        </div>
+      </div>
+
+      <h2>Wait for review</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Time depends on the track:</p>
+          <ul>
+            <li><strong>Internal testing:</strong> ~minutes. Usually no human review.</li>
+            <li><strong>Closed / Open testing:</strong> 1–7 days for first build per track; subsequent often faster.</li>
+            <li><strong>Production:</strong> 1–7 days. New apps and big changes take longer.</li>
+          </ul>
+          <p>Google emails when status changes. Watch in Play Console under <strong>Publishing overview</strong>.</p>
+        </div>
+      </div>
+
+      <h2>Promote between tracks (when ready)</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>When internal testing has been stable, promote to a wider track without re-uploading:</p>
+          <p>Play Console → release track → <strong>Promote release</strong> → pick target (Closed / Open / Production) → review changes → submit. Each promotion goes through the target track's review.</p>
+        </div>
+      </div>
+
+      <h2>Use staged rollout for Production</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>For Production releases, don't hand 100% to users on day one. Use <strong>staged rollout</strong>:</p>
+          <ul>
+            <li>Start at 10% or 25% of users.</li>
+            <li>Watch crash rates in <a href="https://play.google.com/console" target="_blank" rel="noopener">Android Vitals ↗</a>.</li>
+            <li>Ramp to 50%, then 100%, over a few days.</li>
+            <li>Halt the rollout if Vitals shows regressions.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Optional: CI uploads with fastlane</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>For automating uploads from a CI pipeline (GitHub Actions, etc.), use <a href="https://docs.fastlane.tools/" target="_blank" rel="noopener">fastlane ↗</a>. Install:</p>
+          <pre><code>brew install fastlane            # macOS
+# or: sudo gem install fastlane (Linux/Windows)</code></pre>
+          <p>Generate a service account JSON in Play Console (<strong>Setup → API access → Create new service account</strong>), grant it <strong>Release manager</strong> on your app, then:</p>
+          <pre><code>fastlane supply --aab app-release.aab \
+  --track internal \
+  --json_key path/to/service-account.json</code></pre>
+          <p>References: <a href="https://docs.fastlane.tools/actions/upload_to_play_store/" target="_blank" rel="noopener">fastlane supply ↗</a> · <a href="https://developers.google.com/android-publisher" target="_blank" rel="noopener">Play Developer API ↗</a>.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Common rejection reasons:</strong> missing required permission justifications · target SDK version too low (Google bumps the floor annually — <a href="https://developer.android.com/google/play/requirements/target-sdk" target="_blank" rel="noopener">current requirements ↗</a>) · incomplete Data safety form · broken sign-in flow during Google's automated testing. Most are fixable without a new upload — just update the metadata.
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://developer.android.com/studio/publish" target="_blank" rel="noopener">Publish your app — Android developer docs ↗</a></li>
+        <li><a href="https://support.google.com/googleplay/android-developer" target="_blank" rel="noopener">Play Console Help ↗</a></li>
+        <li><a href="https://developer.android.com/studio/publish/upload-bundle" target="_blank" rel="noopener">Build &amp; upload AAB ↗</a></li>
+        <li><a href="https://developer.android.com/studio/publish/app-signing" target="_blank" rel="noopener">App signing keys ↗</a></li>
+        <li><a href="https://support.google.com/googleplay/android-developer/answer/9844679" target="_blank" rel="noopener">Internal testing track ↗</a></li>
+        <li><a href="https://developer.android.com/games/playgames/quickstart" target="_blank" rel="noopener">Play Games quickstart ↗</a> (if you're shipping a game)</li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/reupload-an-ios-build-to-testflight.html" class="tutorial-next-card">
+            <h3>Re-upload an iOS build to TestFlight</h3>
+            <p>Same shape, Apple side</p>
+          </a>
+          <a href="/tutorials/create-and-run-your-first-avd.html" class="tutorial-next-card">
+            <h3>Create and run your first Android emulator</h3>
+            <p>Test your build locally before uploading</p>
+          </a>
+          <a href="/tutorials/redeploy-a-website.html" class="tutorial-next-card">
+            <h3>Redeploy a website</h3>
+            <p>Web equivalent — much faster turnaround than mobile review</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

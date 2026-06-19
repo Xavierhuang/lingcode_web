@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug iOS, macOS &amp; Android in LingCode — Breakpoints, LLDB, Kotlin | LingCode</title>
+  <meta name="description" content="LingCode's built-in debuggers: lldb-dap for iOS/macOS, Kotlin debugger for Android. Breakpoints, step, threads, stack, variables, expression evaluation — without leaving the editor.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/debugging.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Debugging in LingCode">
+  <meta property="og:description" content="Breakpoints, step, variables, expression evaluation — for iOS, macOS, and Android, all in one editor.">
+  <meta property="og:url" content="https://lingcode.dev/debugging.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 760px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--text); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; color: var(--text); }
+    .callout p { margin: 0; }
+    .callout strong { color: var(--signal); }
+    .steps { counter-reset: step; margin: 24px 0; }
+    .step { position: relative; padding: 0 0 16px 48px; margin: 0 0 20px; }
+    .step::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: -4px; width: 32px; height: 32px; border-radius: 50%; background: var(--signal); color: #fff; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; }
+    .step h3 { margin-top: 0; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Guide · Debugging</p>
+        <h1>Debugging in LingCode</h1>
+        <p>Breakpoints, step, threads, stack, variables, expression evaluation. iOS, macOS, and Android — all from inside the editor, no Xcode or Android Studio required.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+
+      <div class="callout">
+        <p><strong>Two debuggers, one UI.</strong> LingCode wraps <code>lldb-dap</code> for Apple targets and the JDWP-based Kotlin debugger for Android, then exposes both through the same panel. The buttons (Continue / Step Over / Step Into / Step Out / Pause) work the same way regardless of target.</p>
+      </div>
+
+      <h2>Prerequisites</h2>
+
+      <ul>
+        <li><strong>For iOS / macOS:</strong> Xcode command-line tools installed. <code>lldb-dap</code> ships with them. Run <code>xcode-select --install</code> if missing.</li>
+        <li><strong>For Android:</strong> Android SDK + JDK installed and discoverable. LingCode picks them up via <code>ANDROID_HOME</code>, the standard SDK paths, or the toolchain banner in the editor that prompts you on first open of an Android project.</li>
+      </ul>
+
+      <h2>Set a breakpoint</h2>
+
+      <div class="steps">
+        <div class="step">
+          <h3>Click the gutter</h3>
+          <p>Open any source file (<code>.swift</code>, <code>.m</code>, <code>.kt</code>, <code>.java</code>). Click the line number in the left gutter — a red dot appears. Click again to remove. Same gesture as Xcode and IntelliJ.</p>
+        </div>
+        <div class="step">
+          <h3>Add a condition (optional)</h3>
+          <p>Open the <strong>Breakpoint Navigator</strong> from the sidebar (the breakpoint icon). Each breakpoint has an editable <em>condition</em> field — type a Swift / Kotlin expression and the debugger only stops when it evaluates to true. Useful for "stop the 100th time" or "stop only when <code>user.id == 42</code>".</p>
+        </div>
+      </div>
+
+      <h2>Launch under the debugger (Apple)</h2>
+
+      <div class="steps">
+        <div class="step">
+          <h3>Pick a destination</h3>
+          <p>Top-right of the editor: the destination dropdown lists every booted simulator and physical device. Pick one. If nothing shows up, open Xcode → Window → Devices and Simulators once to register them.</p>
+        </div>
+        <div class="step">
+          <h3>Hit <strong>Debug</strong> (⌘⇧Y)</h3>
+          <p>LingCode does what Xcode would do: <code>xcodebuild</code> in Debug config → installs the <code>.app</code> on the destination → launches under <code>lldb-dap</code> → attaches the UI. Build output streams to the <em>Output</em> panel; runtime <code>print()</code> and crashes stream to the <em>Run Console</em> panel; debugger transcript appears in the <strong>DAP Debug</strong> panel.</p>
+        </div>
+        <div class="step">
+          <h3>Hit a breakpoint</h3>
+          <p>When execution stops, the FloatingDebugToolbar appears over the editor with Continue / Step Over / Step Into / Step Out / Pause buttons. The line is highlighted in the editor; the call stack appears in the DAP panel.</p>
+        </div>
+      </div>
+
+      <h2>Launch under the debugger (Android)</h2>
+
+      <div class="steps">
+        <div class="step">
+          <h3>Boot an emulator or plug in a device</h3>
+          <p>Use the destination dropdown. The Android toolchain banner verifies <code>adb</code>, the SDK, and JDK before letting you launch.</p>
+        </div>
+        <div class="step">
+          <h3>Hit <strong>Debug</strong></h3>
+          <p>LingCode builds via Gradle (<code>./gradlew installDebug</code> equivalent), launches the app on the device, and attaches the JDWP debugger. The Kotlin Debug panel shows threads, stack, and variables.</p>
+        </div>
+      </div>
+
+      <h2>Inspect state while paused</h2>
+
+      <ul>
+        <li><strong>Variables tree</strong> — every scope (locals, parameters, captured, globals) with nested objects expandable to any depth.</li>
+        <li><strong>Threads &amp; Stack</strong> — list all threads; expand any to see its frames; click a frame to navigate the editor to that source line.</li>
+        <li><strong>Evaluate</strong> — at the bottom of the Debug panel, type any expression in the current scope and press Enter. Result appears inline. Works for both Swift (<code>self.user.name</code>, <code>items.count</code>) and Kotlin.</li>
+      </ul>
+
+      <h2>Step / continue / pause</h2>
+
+      <p>Use the FloatingDebugToolbar that appears over the editor, or the Debug panel buttons. Standard semantics:</p>
+      <ul>
+        <li><strong>Continue</strong> (⌘⌃Y) — run until next breakpoint or program exit.</li>
+        <li><strong>Step Over</strong> (F6) — execute current line; do not enter function calls.</li>
+        <li><strong>Step Into</strong> (F7) — enter the next function call.</li>
+        <li><strong>Step Out</strong> (F8) — finish the current function and stop at the caller.</li>
+        <li><strong>Pause</strong> — interrupt a running program (e.g. an infinite loop).</li>
+      </ul>
+
+      <h2>Debug Console (the bottom-panel tab)</h2>
+      <p>Separate from the LLDB debugger, the <strong>Debug Console</strong> tab in the bottom panel is a live NDJSON log viewer. Anything written to <code>~/Library/Logs/LingCode/diagnostics-*.json</code> or <code>ai-events-*.json</code> streams here in real time, with filter and clear. Use this when:</p>
+      <ul>
+        <li>Diagnosing crashes after the fact (MetricKit dumps land here).</li>
+        <li>Watching agent-loop tool calls fire (LingCode's own AI events).</li>
+        <li>Tailing structured logs from your own app — point its logger at the same directory.</li>
+      </ul>
+
+      <h2>Skip the debugger: just ask the AI to fix it</h2>
+      <p>This is what makes LingCode different from Xcode and Android Studio. The agent already has read access to your build state — you don't have to copy-paste anything. Open the chat panel and try one of these:</p>
+      <ul>
+        <li><strong>Build broken?</strong> Type <em>"check my output and fix the bug"</em>. The agent calls <code>get_build_errors</code>, reads the failing files, applies a <code>search_replace</code>, and (if you ask) re-runs <code>run_build</code> to verify.</li>
+        <li><strong>App crashes at runtime?</strong> Type <em>"the app just crashed, check the run console and tell me why"</em>. The agent calls <code>get_run_console_tail</code> on the app's stdout/stderr, reads the relevant source, and proposes a fix.</li>
+        <li><strong>Stopped at a breakpoint and confused?</strong> Right-click the line in the editor → <strong>Add to Chat</strong>, then ask <em>"why is <code>items</code> empty here?"</em>. The agent reads the function and the call sites that reach it.</li>
+        <li><strong>Got a Swift compiler error you don't recognize?</strong> Right-click the error in the <em>Output</em> panel → <strong>Explain with AI</strong>. A streaming explanation appears right there — no chat round-trip needed.</li>
+        <li><strong>Test failure?</strong> Type <em>"my tests are failing — fix them"</em>. The agent calls <code>run_tests</code>, parses results, reads the failing test + production code, and patches whichever is wrong.</li>
+      </ul>
+      <p>The agent has the same tools you do — <code>read_file</code>, <code>search_replace</code>, <code>run_build</code>, <code>run_tests</code>, <code>goto_line</code>, plus the build/run-console readers. Tell it the symptom; it finds the cause and proposes the fix. You stay in the editor the whole time.</p>
+
+      <div class="callout">
+        <p><strong>Best results when you give it scope.</strong> "Fix the bug" is vague — the agent might fix the wrong one. <em>"Look at the type-mismatch error in <code>UserView.swift</code> from the last build and fix it"</em> is targeted; the agent goes straight to the issue.</p>
+      </div>
+
+      <h2>Debug Mode (no debugger required)</h2>
+      <p>The <strong>Debug</strong> sidebar tab opens a debugging-assistance workspace independent of LLDB. It pairs:</p>
+      <ul>
+        <li>A live <strong>log viewer</strong> with regex filter for any file you choose.</li>
+        <li>A <strong>repro-steps</strong> note pad — durable across sessions, bound to the project.</li>
+        <li>An <strong>issue tracker</strong> column where you stash error snapshots and clean them up as you fix them.</li>
+      </ul>
+      <p>Useful when you're debugging a flaky integration, a third-party SDK with bad logging, or anything where you want to think about a bug before stepping through code.</p>
+
+      <h2>Troubleshooting</h2>
+      <ul>
+        <li><strong>"Could not find lldb-dap":</strong> run <code>xcode-select --install</code>, restart LingCode.</li>
+        <li><strong>App launches but no breakpoints hit:</strong> make sure you built in Debug config, not Release. Release strips debug symbols. Check the destination dropdown is on Debug, not Release.</li>
+        <li><strong>Step Into goes into a system framework:</strong> normal — Apple's <code>libdispatch</code>, <code>SwiftUI</code>, etc., have public symbols. Use Step Out to come back to your code, or set "Just My Code" if available.</li>
+        <li><strong>Android debugger times out attaching:</strong> emulator's ADB connection may have stalled. <code>adb kill-server &amp;&amp; adb start-server</code>, then retry. Check the Android toolchain banner for green status.</li>
+        <li><strong>Breakpoints disappear after rebuild:</strong> they shouldn't — they're stored per-project. If they do, file an issue with the project structure (file an issue from <a href="/support.html">support</a>).</li>
+      </ul>
+
+      <h2>What to read next</h2>
+      <ul>
+        <li><a href="/getting-started.html">Getting Started</a> — install LingCode and connect Claude.</li>
+        <li><a href="/collaboration.html">Collaboration</a> — share a debug session with a teammate live.</li>
+        <li><a href="/claude-sessions.html">Claude Sessions</a> — ask the AI to explain a stack trace while paused.</li>
+        <li><a href="/blog.html">Skills reference</a> — slash commands for /explain, /fix, /review.</li>
+      </ul>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">Not downloaded yet?</p>
+        <a href="/LingCode-Installer.dmg" download>Download for Mac</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

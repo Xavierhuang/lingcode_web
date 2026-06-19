@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deploy a container to ECS Fargate — LingCode Tutorials</title>
+  <meta name="description" content="Production-grade container deployment on AWS. ECR for images, ECS for orchestration, Fargate for serverless compute, ALB for traffic, Route 53 for DNS. The full pipeline, demystified.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-a-container-to-aws-ecs-fargate.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-a-container-to-aws-ecs-fargate.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/deploy-a-container-to-aws-ecs-fargate.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Deploy a container to ECS Fargate",
+  "description": "Five AWS services collaborating to run one container: ECR holds the image, ECS schedules tasks, Fargate runs them without you managing servers, an ALB routes traffic, Route 53 + ACM front it with a custom domain and HTTPS. Production-grade, autoscaling, AWS-native. Worth the setu",
+  "url": "https://lingcode.dev/tutorials/deploy-a-container-to-aws-ecs-fargate.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/deploy-a-container-to-aws-ecs-fargate.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Deploy a container to ECS Fargate"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Deploy a container to ECS Fargate",
+      "item": "https://lingcode.dev/tutorials/deploy-a-container-to-aws-ecs-fargate.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Deploy a container to ECS Fargate</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-advanced">● Advanced</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Deploy a container to ECS Fargate</h1>
+      <p class="intro">Five AWS services collaborating to run one container: ECR holds the image, ECS schedules tasks, Fargate runs them without you managing servers, an ALB routes traffic, Route 53 + ACM front it with a custom domain and HTTPS. Production-grade, autoscaling, AWS-native. Worth the setup if you're staying — overkill if you're not.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>"Why Fargate over a Lightsail box?" is the first question worth asking, because if you don't have a real answer, the answer is <em>don't</em>. Fargate's reasons-to-exist are autoscaling without managing EC2, container-native deploys that fit a CI pipeline, and integration with the rest of AWS (IAM task roles, VPC networking, ALB health checks, CloudWatch). For a small Node API behind a single domain, a $5 <a href="/tutorials/run-a-node-api-on-aws-lightsail.html">Lightsail instance</a> is genuinely the right answer and Fargate is overkill. For a service that needs to scale from 1 to 100 instances based on traffic, run multiple versions in parallel, talk to private VPC resources, and survive its own infrastructure rolling — Fargate exists for exactly that.</p>
+      <p>The mental model that makes the AWS docs comprehensible: <strong>ECR</strong> (Elastic Container Registry) is where container images live, like Docker Hub but private and inside your AWS account. <strong>ECS</strong> (Elastic Container Service) is the orchestrator — the thing that says "I want 3 instances of this container running, replace any that die, route traffic to healthy ones." <strong>Fargate</strong> is the compute mode — instead of running ECS on EC2 instances you manage, Fargate is "AWS runs the containers wherever; you don't see the servers." A <strong>task definition</strong> is the spec ("run image X with these env vars on these ports"). A <strong>service</strong> says "keep N tasks running based on this task definition behind this load balancer." An <strong>ALB</strong> (Application Load Balancer) is the public entrypoint that distributes traffic across the running tasks. <strong>ACM + Route 53</strong> are TLS and DNS, same as the other tutorials.</p>
+      <p>This tutorial walks the end-to-end first deploy: dockerize the app, push to ECR, write a task definition, create a Fargate service behind an ALB, wire DNS and a cert, deploy. Every step is mechanical once you've done it once; the first time has a lot of moving parts. Budget two hours for the first deploy; subsequent deploys (Step 9) are one command.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The roles of ECR, ECS, Fargate, ALB, and the IAM roles around them</li>
+        <li>Pushing a container image to your own ECR registry</li>
+        <li>Writing a Fargate task definition (the minimum viable one)</li>
+        <li>Creating a service with an ALB target group</li>
+        <li>HTTPS termination at the ALB with an ACM cert</li>
+        <li>What a "rolling deploy" looks like in ECS and how to roll back</li>
+        <li>What this actually costs vs. EC2 / Lightsail</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> Docker installed locally, AWS CLI configured, a containerizable web app (Node, Python, Go, anything that listens on a port), a domain with DNS at <a href="/tutorials/use-route-53-for-your-domain.html">Route 53</a> (strongly recommended — non-Route-53 works but is more manual), and a working <code>Dockerfile</code> in your project.
+      </div>
+
+      <h2>Step 1: Dockerize the app</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Build a small, working image first</h3>
+          <p>If you don't have a <code>Dockerfile</code> yet, here's a reasonable Node starter:</p>
+          <pre><code># Dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+ENV PORT=8080
+EXPOSE 8080
+CMD ["node", "server.js"]</code></pre>
+          <p>Build and test locally:</p>
+          <pre><code>docker build -t mybrand-api:latest .
+docker run -p 8080:8080 mybrand-api:latest
+curl http://localhost:8080/health</code></pre>
+          <p>If it doesn't work locally, it won't work on Fargate. Get the local image healthy before going anywhere near AWS.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Create an ECR repository and push</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>One repo per image; private by default</h3>
+          <pre><code># Create the repo
+aws ecr create-repository --repository-name mybrand-api --region us-east-1
+
+# Authenticate Docker to ECR
+aws ecr get-login-password --region us-east-1 \
+  | docker login --username AWS --password-stdin \
+    &lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com
+
+# Tag the local image with the ECR URL
+docker tag mybrand-api:latest \
+  &lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com/mybrand-api:latest
+
+# Push
+docker push &lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com/mybrand-api:latest</code></pre>
+          <p>The full image URI — <code>&lt;ACCOUNT_ID&gt;.dkr.ecr.&lt;REGION&gt;.amazonaws.com/&lt;REPO&gt;:&lt;TAG&gt;</code> — is what the task definition will reference. Note the account ID and region; you'll paste them often.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Create the IAM roles ECS needs</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Two roles: execution and task</h3>
+          <p>ECS needs two distinct IAM roles, and confusing them is the #1 first-deploy failure:</p>
+          <ul>
+            <li><strong>Task execution role</strong> (<code>ecsTaskExecutionRole</code>) — used by ECS/Fargate itself to pull the image from ECR and write logs to CloudWatch. AWS provides a managed policy (<code>AmazonECSTaskExecutionRolePolicy</code>) that's exactly what you need.</li>
+            <li><strong>Task role</strong> — used by your <em>application code</em> when it calls AWS APIs (e.g., reading from S3). Empty by default; add policies as your app needs them.</li>
+          </ul>
+          <p>Create the execution role once per account:</p>
+          <pre><code>aws iam create-role --role-name ecsTaskExecutionRole \
+  --assume-role-policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [{"Effect":"Allow","Principal":{"Service":"ecs-tasks.amazonaws.com"},"Action":"sts:AssumeRole"}]
+  }'
+aws iam attach-role-policy --role-name ecsTaskExecutionRole \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy</code></pre>
+          <p>The task role is project-specific; for a service that doesn't call AWS APIs, you can omit it.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Write the task definition</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>JSON that describes one running instance</h3>
+          <p>Save as <code>task-definition.json</code>:</p>
+          <pre><code>{
+  "family": "mybrand-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::&lt;ACCOUNT_ID&gt;:role/ecsTaskExecutionRole",
+  "containerDefinitions": [{
+    "name": "api",
+    "image": "&lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com/mybrand-api:latest",
+    "portMappings": [{"containerPort": 8080, "protocol": "tcp"}],
+    "essential": true,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/mybrand-api",
+        "awslogs-region": "us-east-1",
+        "awslogs-stream-prefix": "ecs",
+        "awslogs-create-group": "true"
+      }
+    }
+  }]
+}</code></pre>
+          <p>Smallest Fargate task is 256 CPU units (¼ vCPU) + 512 MB RAM. Most APIs run fine at that size. Register the task definition:</p>
+          <pre><code>aws ecs register-task-definition --cli-input-json file://task-definition.json</code></pre>
+        </div>
+      </div>
+
+      <h2>Step 5: Create the cluster, target group, and ALB</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>The networking layer that puts traffic in front of your tasks</h3>
+          <p>This part is genuinely faster in the console. AWS Console → ECS → <strong>Create cluster</strong> → name it <code>mybrand-prod</code> → <em>AWS Fargate (serverless)</em> infrastructure → Create.</p>
+          <p>Then, separately, create the Application Load Balancer: EC2 → Load Balancers → <strong>Create load balancer</strong> → <em>Application Load Balancer</em>:</p>
+          <ul>
+            <li>Scheme: internet-facing. IP address type: IPv4.</li>
+            <li>VPC: your default VPC. Mappings: at least two subnets in different AZs (Fargate requires this).</li>
+            <li>Security groups: create a new one allowing inbound 80 + 443 from anywhere.</li>
+            <li>Listeners: HTTP:80 forwarding to a new target group called <code>mybrand-api-tg</code> with target type <strong>IP</strong>, protocol <strong>HTTP</strong>, port <strong>8080</strong>, health-check path <code>/health</code> (or wherever your app responds with 200).</li>
+          </ul>
+          <p>After creation, the ALB has a DNS name like <code>mybrand-prod-12345.us-east-1.elb.amazonaws.com</code>. Note it; Step 8 points your domain at it.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Health-check path matters.</strong> If your app doesn't have a <code>/health</code> endpoint returning 200, the ALB will mark every task unhealthy and Fargate will kill them in a loop. Add a one-line health endpoint to your app <em>before</em> deploying. <code>app.get('/health', (req, res) =&gt; res.send('ok'))</code> is sufficient.
+      </div>
+
+      <h2>Step 6: Create the ECS service</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>"Run N tasks, behind this ALB, forever"</h3>
+          <p>ECS console → your cluster → <strong>Create service</strong>:</p>
+          <ul>
+            <li><strong>Launch type:</strong> FARGATE.</li>
+            <li><strong>Task definition:</strong> <code>mybrand-api</code> (latest revision).</li>
+            <li><strong>Service name:</strong> <code>mybrand-api</code>.</li>
+            <li><strong>Desired tasks:</strong> 2 for redundancy, 1 if you're testing.</li>
+            <li><strong>Networking:</strong> your default VPC, the same two subnets the ALB uses, the security group you created in Step 5.</li>
+            <li><strong>Load balancing:</strong> attach to the ALB. Target group: <code>mybrand-api-tg</code>. Container to load balance: <code>api:8080</code>.</li>
+          </ul>
+          <p>Create. Fargate pulls the image, starts the tasks, registers them with the target group. After 2–3 minutes the service shows "ACTIVE" and the target group shows healthy targets. Test:</p>
+          <pre><code>curl http://&lt;ALB_DNS_NAME&gt;/health
+# Expected: ok</code></pre>
+        </div>
+      </div>
+
+      <h2>Step 7: Request an ACM cert</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Different from CloudFront: ALBs use the cert from their own region</h3>
+          <p>Unlike <a href="/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">CloudFront</a> (which only reads certs from <code>us-east-1</code>), the ALB uses the cert from the same region the ALB lives in. If your ALB is in <code>us-east-1</code>, the cert needs to be in <code>us-east-1</code>; if it's in <code>eu-west-2</code>, the cert needs to be there.</p>
+          <pre><code>aws acm request-certificate \
+  --domain-name api.mybrand.com \
+  --validation-method DNS \
+  --region &lt;SAME_REGION_AS_ALB&gt;</code></pre>
+          <p>If DNS is at Route 53 in the same account, the console offers "Create records in Route 53" for the validation CNAME. Otherwise add the CNAME at your DNS provider. Wait for ACM to show "Issued" — usually 5–15 minutes.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: Add HTTPS listener + route DNS</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>One ALB listener for HTTPS; one Route 53 Alias</h3>
+          <p>EC2 → Load Balancers → your ALB → <strong>Listeners</strong> tab → <strong>Add listener</strong>:</p>
+          <ul>
+            <li>Protocol: HTTPS. Port: 443.</li>
+            <li>Default action: forward to the same target group (<code>mybrand-api-tg</code>).</li>
+            <li>SSL/TLS certificate: the ACM cert from Step 7.</li>
+          </ul>
+          <p>Optionally edit the HTTP:80 listener to redirect to HTTPS:443. Save.</p>
+          <p>Now point DNS at the ALB. In Route 53 → your hosted zone → <strong>Create record</strong>:</p>
+          <ul>
+            <li>Name: <code>api</code>.</li>
+            <li>Type: A. Alias: on. Route traffic to: <em>Alias to Application and Classic Load Balancer</em> → region → your ALB.</li>
+          </ul>
+          <p>Save. Test: <code>curl -I https://api.mybrand.com/health</code>. You should see <code>HTTP/2 200</code>.</p>
+        </div>
+      </div>
+
+      <h2>Step 9: The deploy loop</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <h3>Build, push, force new deployment</h3>
+          <p>After all the setup, every subsequent deploy is three commands:</p>
+          <pre><code># Build the new image
+docker build -t mybrand-api:latest .
+
+# Push to ECR (auth refresh might be needed first)
+docker tag mybrand-api:latest \
+  &lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com/mybrand-api:latest
+docker push &lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com/mybrand-api:latest
+
+# Tell ECS to roll out new tasks with the same task definition (which references :latest)
+aws ecs update-service \
+  --cluster mybrand-prod \
+  --service mybrand-api \
+  --force-new-deployment</code></pre>
+          <p>ECS performs a rolling deploy: starts new tasks, waits for them to pass the ALB health check, drains connections from the old tasks, kills them. Zero-downtime by default. Watch the deploy in the ECS console under your service's <strong>Deployments</strong> tab.</p>
+          <p><strong>To roll back:</strong> ECS keeps prior task-definition revisions forever. Update the service to use the previous revision: <code>aws ecs update-service --cluster mybrand-prod --service mybrand-api --task-definition mybrand-api:&lt;PREVIOUS_REVISION&gt;</code>. Same rolling-deploy mechanics in reverse.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Avoid <code>:latest</code> in production task definitions for serious workloads.</strong> A rolling deploy started before a push completes could pull an old or partial image. Use immutable tags (<code>mybrand-api:&lt;git-sha&gt;</code>) and update the task definition with each push. Slightly more work; significantly less foot-gun.
+      </div>
+
+      <h2>What this actually costs</h2>
+      <p>For 2 always-on Fargate tasks at the smallest size (0.25 vCPU + 0.5 GB RAM each), 24/7:</p>
+      <ul>
+        <li><strong>Fargate compute</strong>: $0.04048/vCPU-hour + $0.004445/GB-hour. For 2 × 0.25 vCPU = 0.5 vCPU-hour, plus 2 × 0.5 GB = 1 GB-hour, total ~$0.024/hour = <strong>~$17/month</strong>.</li>
+        <li><strong>ALB</strong>: $0.0225/hour (~$16/month) + ~$0.008 per LCU-hour (negligible at small traffic).</li>
+        <li><strong>ECR storage</strong>: $0.10/GB/month — typically under $0.05 for a small image.</li>
+        <li><strong>NAT Gateway</strong>: only if your tasks are in private subnets needing internet access. If you used a default public-subnet setup as above, $0. If you went private, <strong>$32/month + $0.045/GB</strong> — this is the bill-doubling surprise to watch for.</li>
+        <li><strong>Data transfer out</strong>: $0.09/GB after the free tier.</li>
+      </ul>
+      <p>Realistic monthly bill for a small API with 2 always-on tasks: <strong>~$35–40/month</strong>. A comparable <a href="/tutorials/run-a-node-api-on-aws-lightsail.html">Lightsail box</a> is $5–10/month. The 4–8× cost difference is what you're paying for autoscaling, rolling deploys, ALB health checks, and the rest of the production-grade machinery. Worth it when you need them, expensive when you don't.</p>
+
+      <h2>When Fargate is the wrong call</h2>
+      <p><strong>Single instance, no scaling.</strong> Lightsail wins on cost and complexity. Move up only when traffic forces it.</p>
+      <p><strong>Bursty workloads with idle periods.</strong> Fargate bills per second but always-on tasks bill always. If your service is mostly idle, look at Lambda (pay only for invocations) or App Runner (Fargate with simpler ergonomics and idle scale-to-zero).</p>
+      <p><strong>You don't want to operate AWS networking.</strong> ECS Fargate hides Fargate-the-compute but exposes you to VPCs, subnets, security groups, target groups, listeners. If that's too much, AWS App Runner is a thinner abstraction over the same machinery — fewer knobs, similar capabilities, slightly less control.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>Run a Node API on Lightsail</h3>
+            <p>Step back if Fargate is too much; Lightsail still scales further than people think</p>
+          </a>
+          <a href="/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html" class="tutorial-next-card">
+            <h3>Deploy a static site to S3 + CloudFront</h3>
+            <p>The frontend half of a typical Fargate-backed full-stack deploy</p>
+          </a>
+          <a href="/tutorials/buy-a-server-from-aws-ec2.html" class="tutorial-next-card">
+            <h3>Buy a server from EC2</h3>
+            <p>The other ECS launch type — cheaper at sustained load, more knobs to manage</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

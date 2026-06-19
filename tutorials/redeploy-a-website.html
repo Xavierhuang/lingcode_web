@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redeploy a website — LingCode Tutorials</title>
+  <meta name="description" content="Push code changes to your live site. Vercel, Netlify, Render, Cloudflare Pages, Railway, Fly.io — the redeploy command and time-to-live for each.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/redeploy-a-website.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/redeploy-a-website.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/redeploy-a-website.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/redeploy-a-website.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Redeploy a website",
+  "description": "Push code changes to your live site. On modern PaaS, the redeploy is usually git push — the host watches your branch and rebuilds automatically. Here's the redeploy command and time-to-live for each major host.",
+  "url": "https://lingcode.dev/tutorials/redeploy-a-website.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/redeploy-a-website.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Redeploy a website"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Redeploy a website",
+      "item": "https://lingcode.dev/tutorials/redeploy-a-website.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/redeploy-a-website.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Redeploy a website</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Redeploy a website</h1>
+      <p class="intro">Push code changes to your live site. On modern PaaS, the redeploy is usually <code>git push</code> — the host watches your branch and rebuilds automatically. Here's the redeploy command and time-to-live for each major host.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Vercel — <a href="https://vercel.com/docs/deployments" target="_blank" rel="noopener">docs ↗</a></h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>If repo is connected: just push.</p>
+          <pre><code>git push origin main</code></pre>
+          <p>Vercel detects the push, builds, and deploys.</p>
+          <p>Or via CLI (<a href="https://vercel.com/docs/cli" target="_blank" rel="noopener">vercel CLI ↗</a>):</p>
+          <pre><code>vercel --prod</code></pre>
+          <p><strong>Time:</strong> 30s–3 min for a typical Next.js / static site.</p>
+        </div>
+      </div>
+
+      <h2>Netlify — <a href="https://docs.netlify.com/site-deploys/overview/" target="_blank" rel="noopener">docs ↗</a></h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Push to the connected branch:</p>
+          <pre><code>git push origin main</code></pre>
+          <p>Or CLI:</p>
+          <pre><code>netlify deploy --prod</code></pre>
+          <p><strong>Time:</strong> 1–3 min.</p>
+        </div>
+      </div>
+
+      <h2>Cloudflare Pages — <a href="https://developers.cloudflare.com/pages/" target="_blank" rel="noopener">docs ↗</a></h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Push to the connected branch:</p>
+          <pre><code>git push origin main</code></pre>
+          <p>Or via Wrangler (<a href="https://developers.cloudflare.com/workers/wrangler/" target="_blank" rel="noopener">Wrangler docs ↗</a>):</p>
+          <pre><code>npx wrangler pages deploy ./dist --project-name=my-site</code></pre>
+          <p><strong>Time:</strong> 1–2 min.</p>
+        </div>
+      </div>
+
+      <h2>Render — <a href="/tutorials/deploy-on-render.html">our tutorial</a> · <a href="https://render.com/docs/deploys" target="_blank" rel="noopener">docs ↗</a></h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Push to the connected branch:</p>
+          <pre><code>git push origin main</code></pre>
+          <p>Or trigger from dashboard: <strong>Manual Deploy → Deploy latest commit</strong>.</p>
+          <p><strong>Time:</strong> 2–5 min (Render rebuilds the container).</p>
+        </div>
+      </div>
+
+      <h2>Railway — <a href="/tutorials/deploy-on-railway.html">our tutorial</a> · <a href="https://docs.railway.com/" target="_blank" rel="noopener">docs ↗</a></h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Push to the connected branch:</p>
+          <pre><code>git push origin main</code></pre>
+          <p>Or trigger from dashboard: service → <strong>Deployments → Redeploy</strong>.</p>
+          <p><strong>Time:</strong> 30s–2 min.</p>
+        </div>
+      </div>
+
+      <h2>Fly.io — <a href="/tutorials/deploy-on-fly-io.html">our tutorial</a> · <a href="https://fly.io/docs/launch/deploy/" target="_blank" rel="noopener">docs ↗</a></h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Fly is CLI-driven (no auto-deploy from git by default):</p>
+          <pre><code>fly deploy</code></pre>
+          <p>This rebuilds the image and rolls out new Machines. <strong>Time:</strong> 1–3 min per region.</p>
+        </div>
+      </div>
+
+      <h2>GitHub Pages — <a href="https://docs.github.com/pages" target="_blank" rel="noopener">docs ↗</a></h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Push to the branch GitHub Pages serves (usually <code>gh-pages</code> or <code>main</code>):</p>
+          <pre><code>git push origin main</code></pre>
+          <p><strong>Time:</strong> 30s–10 min. GitHub Pages can be slow on busy days.</p>
+        </div>
+      </div>
+
+      <h2>Self-hosted (Linux VPS)</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>If you're on your own server, see <a href="/tutorials/redeploy-a-vps.html">Redeploy a self-hosted server</a> — different workflow (git pull + restart).</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Watch the deploy in real time.</strong> Each PaaS shows live build logs in the dashboard. For Vercel/Netlify/Cloudflare you also get a per-deploy preview URL while the build runs — useful for testing before the main URL flips over.
+      </div>
+
+      <div class="warn-box">
+        <strong>If a build fails, your previous deploy stays live.</strong> Modern hosts only swap traffic when the new build succeeds. A broken commit won't take your site down — but the dashboard will show "Failed" until you push a fix. Check the build logs first; the error is usually a missing env var or a TypeScript error you ignored locally.
+      </div>
+
+      <h2>Cache busting</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>The deploy is live, but users with old CSS/JS cached locally won't see changes until their cache expires. Two fixes:</p>
+          <ul>
+            <li><strong>Hashed asset filenames</strong> (most frameworks do this by default) — <code>main.a1b2c3.js</code> changes per build; browsers fetch the new one.</li>
+            <li><strong>CDN purge</strong> — if your host is behind Cloudflare, the static asset cache may need an explicit purge. Cloudflare dashboard → Caching → Purge.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/redeploy-a-vps.html" class="tutorial-next-card">
+            <h3>Redeploy a self-hosted VPS</h3>
+            <p>Different workflow — git pull, restart, verify</p>
+          </a>
+          <a href="/tutorials/reupload-an-ios-build-to-testflight.html" class="tutorial-next-card">
+            <h3>Re-upload an iOS build to TestFlight</h3>
+            <p>The mobile equivalent — bump build number, archive, upload</p>
+          </a>
+          <a href="/tutorials/put-cloudflare-in-front-of-any-host.html" class="tutorial-next-card">
+            <h3>Put Cloudflare in front of any host</h3>
+            <p>Add CDN caching + free TLS to any deploy</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

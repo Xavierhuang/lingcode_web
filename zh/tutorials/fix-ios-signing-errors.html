@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>修复常见 iOS 签名错误（No account for team、能力同步、权限文件）</title>
+  <meta name="description" content="诊断并修复 iOS 签名错误——"No account for team"、能力与权限在 Xcode 和 developer.apple.com 之间的同步、自动与手动签名的选择，以及模拟器无需签名的基准验证。聚焦常见陷阱，而非完整的 App Store 提交指南。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/fix-ios-signing-errors.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/fix-ios-signing-errors.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/fix-ios-signing-errors.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/fix-ios-signing-errors.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "修复常见 iOS 签名错误",
+  "description": "针对 iOS 签名错误的诊断指南，专注于首次提交和 TestFlight 上传时遇到的拦路错误——解释每条晦涩提示的真实含义及解决方法。非完整的 App Store 提交流程说明——如需了解完整流程，请参阅《首次 App Store 提交》。",
+  "url": "https://lingcode.dev/zh/tutorials/fix-ios-signing-errors.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/fix-ios-signing-errors.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "修复常见 iOS 签名错误"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "修复 iOS 签名错误",
+      "item": "https://lingcode.dev/zh/tutorials/fix-ios-signing-errors.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/fix-ios-signing-errors.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">发布与基础设施</a>
+      <span>/</span>
+      <span>修复 iOS 签名错误</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>修复常见 iOS 签名错误</h1>
+      <p class="intro">这是一份针对 iOS 签名错误的诊断指南，专注于首次提交和 TestFlight 上传时遭遇的拦路错误——解释每条晦涩提示的真实含义及解决方法。本文不是完整的 App Store 提交流程说明——如需了解完整流程，请参阅<a href="/zh/tutorials/first-time-ios-app-store-submission.html">首次 App Store 提交</a>。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么 iOS 签名的问题与 Mac 签名不同</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>iOS 签名存在三个 Mac 签名没有的协调难题：</p>
+          <ul>
+            <li><strong>Provisioning Profile 是服务器端状态。</strong>每一项权限（entitlement）、能力（capability）和设备列表都保存在 <code>developer.apple.com</code> 上，Xcode 在本地缓存一份副本。两者不一致时，构建会失败，而报错信息两个地方都不提。</li>
+            <li><strong>自动签名试图帮你，但并不总能成功。</strong>它会替你创建 Profile、添加能力、注册设备——但前提是 Xcode 知道你指的是哪个团队。多团队账号在首次打开克隆下来的项目时，往往会触发"No account for team"错误。</li>
+            <li><strong>能力需要在两处同时开启。</strong>一项能力必须同时在 <code>developer.apple.com</code> 的 App ID 上启用，<em>并且</em>在项目的权限文件（entitlements file）中声明。只开其中一处，就会产生两处都不提的报错。</li>
+          </ul>
+          <p>模拟器完全免于上述所有限制——模拟器构建不需要签名或配置 Profile。如果你的项目在模拟器上构建成功，但在真机或上传时失败，那问题一定出在签名层，而不是代码本身。</p>
+        </div>
+      </div>
+
+      <h2>模拟器无需签名的基准验证</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>追查任何签名错误之前，先证明构建本身是正常的。先在模拟器上跑一遍：</p>
+          <pre><code>xcodebuild build \
+  -project MyApp.xcodeproj \
+  -scheme MyApp \
+  -destination 'generic/platform=iOS Simulator'</code></pre>
+          <p>如果这一步失败，问题在代码，不在签名——先把代码修好。如果成功，那么之后在真机上或 Archive 时出现的每一次失败，都是签名问题，下面的诊断表格适用。</p>
+          <div class="tip-box">
+            <strong>这个拆分是 iOS 调试中最有价值的一步。</strong>代码错误和签名错误在 Xcode 红色横幅里看起来一模一样。一条模拟器构建命令就能把两者分开。
+          </div>
+        </div>
+      </div>
+
+      <h2>"No account for team"——这条错误的真实含义</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>这是首次克隆项目后最经典的报错：</p>
+          <pre><code>error: No account for team "ABCDE12345". Add a new account in
+Accounts settings or verify your selected team is correct.</code></pre>
+          <p>这条报错<em>并不是</em>说该团队不存在，而是说你的 Xcode（以及 LingCode 调用 <code>xcodebuild</code> 时）没有登录任何隶属于该团队的 Apple ID。通常有三种情况会导致这个问题：</p>
+          <ul>
+            <li><strong>新机器，Xcode 里还没有添加 Apple ID。</strong>打开 Xcode &gt; Settings &gt; Accounts，添加你的 Apple ID，团队会自动出现。</li>
+            <li><strong>有多个 Apple ID，但选错了。</strong>项目的 <code>DEVELOPMENT_TEAM</code> 固定到了某个团队 ID，而你当前的 Apple ID 属于另一个团队。要么修改项目的 <code>DEVELOPMENT_TEAM</code>，要么添加正确的 Apple ID。</li>
+            <li><strong>Apple ID 过期或双重认证会话失效。</strong>打开 Xcode &gt; Settings &gt; Accounts &gt; 点击你的 Apple ID——团队列表为空或出现会话警告。重新验证身份即可。</li>
+          </ul>
+          <p>不打开 Xcode 也能查到项目的 Team ID：</p>
+          <pre><code>grep -A1 DEVELOPMENT_TEAM MyApp.xcodeproj/project.pbxproj | head -10</code></pre>
+          <p>然后去 <code>developer.apple.com/account</code> 确认该团队确实在你的账号下。</p>
+        </div>
+      </div>
+
+      <h2>自动签名与手动签名——有意识地做选择</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>两种签名模式，各有各的失败特征：</p>
+          <ul>
+            <li><strong>自动签名</strong>（Xcode &gt; 项目 &gt; Signing &amp; Capabilities &gt; "Automatically manage signing"）：Xcode 会在你添加能力或新增测试设备时自动创建和刷新 Provisioning Profile。本地开发很方便；但在 CI 环境中容易出问题，因为替你修改 <code>developer.apple.com</code> 所需的凭据很难以脚本方式提供。</li>
+            <li><strong>手动签名</strong>：你按名称手动指定 Provisioning Profile 和签名证书。可重现、可脚本化，但每次能力变更都需要在开发者门户上重新生成 Profile 并下载。</li>
+          </ul>
+          <p>务实的分工方式：本地开发用自动签名，Archive/发布用手动签名。可以在 Xcode &gt; Signing &amp; Capabilities 中按 Debug/Release 配置分别设置"Automatically manage signing"。命令行方式如下：</p>
+          <pre><code># 自动签名（开发）
+xcodebuild build \
+  -scheme MyApp \
+  -destination 'generic/platform=iOS' \
+  -allowProvisioningUpdates \
+  CODE_SIGN_STYLE=Automatic \
+  DEVELOPMENT_TEAM=ABCDE12345
+
+# 手动签名（发布 / CI）
+xcodebuild archive \
+  -scheme MyApp \
+  -archivePath build/MyApp.xcarchive \
+  -destination 'generic/platform=iOS' \
+  CODE_SIGN_STYLE=Manual \
+  DEVELOPMENT_TEAM=ABCDE12345 \
+  PROVISIONING_PROFILE_SPECIFIER="MyApp Distribution" \
+  CODE_SIGN_IDENTITY="Apple Distribution: Your Name (ABCDE12345)"</code></pre>
+          <p><code>-allowProvisioningUpdates</code> 这个标志让 <code>xcodebuild</code> 能与 Apple 服务器通信以刷新 Profile。不加这个标志，CI 环境中的自动签名构建会报"no provisioning profile matches"。</p>
+        </div>
+      </div>
+
+      <h2>能力与权限文件的同步</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>一项能力需要在两处同时开启，两处必须保持一致：</p>
+          <ul>
+            <li><strong>App ID</strong>，位于 <code>developer.apple.com/account/resources/identifiers</code>——能力复选框（推送通知、iCloud、Sign in with Apple、应用内购买、App Groups、Associated Domains 等）。</li>
+            <li><strong>项目中的权限文件</strong>（通常是 <code>MyApp.entitlements</code>）——XML 键值对，与这些能力一一对应。</li>
+          </ul>
+          <p>不一致时会出现的报错：</p>
+          <pre><code>Provisioning profile "iOS Team Provisioning Profile: com.you.MyApp"
+doesn't include the aps-environment entitlement.</code></pre>
+          <p>这意味着你的权限文件声明了推送通知（<code>aps-environment</code>），但 <code>developer.apple.com</code> 上的 App ID 并未开启推送通知。解决方法：在门户上开启后重新生成 Profile，或者从项目里移除该权限声明。</p>
+          <pre><code>The executable was signed with invalid entitlements. The
+entitlements specified in your application's Code Signing
+Entitlements file do not match those specified in your
+provisioning profile.</code></pre>
+          <p>根本原因相同，只是报错信息不同——权限文件与 Profile 不一致。修复顺序永远是：先在门户上改，再重新生成 Profile，再让 Xcode 拉取最新版本。</p>
+          <p>可以让 LingCode 帮你把已构建应用的当前权限导出来做一次核对：</p>
+          <pre><code>codesign -d --entitlements - build/MyApp.app</code></pre>
+          <p>以及查看 Provisioning Profile 实际授予了哪些权限：</p>
+          <pre><code>security cms -D -i build/MyApp.app/embedded.mobileprovision</code></pre>
+          <p>如果这两份输出的权限列表不一致，那就是问题所在。</p>
+          <div class="warn-box">
+            <strong>自动签名会部分掩盖这个陷阱。</strong>当你在 Signing &amp; Capabilities 中勾选某项能力时，Xcode <em>会</em>自动在 App ID 上启用它——但前提是你的 Apple ID 在团队中拥有管理员权限。如果你只是公司团队里的开发者角色成员，Xcode 会悄悄失败，无法在门户上开启该能力，下次 Archive 时就会出现不一致报错。
+          </div>
+        </div>
+      </div>
+
+      <h2>"No matching provisioning profile"——诊断表格</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>这条报错有六种常见原因，按顺序逐一排查：</p>
+          <ul>
+            <li><strong>Bundle ID 不匹配。</strong>项目中的 Bundle ID（<code>PRODUCT_BUNDLE_IDENTIFIER</code>）与门户上的 App ID 不一致，重命名后最常见。用 <code>grep PRODUCT_BUNDLE_IDENTIFIER MyApp.xcodeproj/project.pbxproj</code> 核对。</li>
+            <li><strong>Profile 类型与构建配置不符。</strong>Debug 构建需要 Development Profile，Archive 需要 Distribution Profile，不能混用。</li>
+            <li><strong>Profile 已过期。</strong>Profile 有效期一年，到期后在门户上重新生成并下载。</li>
+            <li><strong>在 Xcode 中添加了能力但门户上没有同步</strong>（见步骤 4）。手动签名时会表现为 Profile 不匹配。</li>
+            <li><strong>测试设备未注册。</strong>Development Profile 包含固定的设备列表，新设备需要将其 UDID 添加到门户后重新生成 Profile。</li>
+            <li><strong>签名证书已过期或被吊销。</strong>Profile 绑定到特定证书，证书失效则 Profile 作废。重新签发证书后，再重新生成 Profile。</li>
+          </ul>
+          <p>同一条报错信息可能对应以上六种情况中的任意一种，逐项排查，不要猜。</p>
+        </div>
+      </div>
+
+      <h2>"重新生成 Profile"的条件反射</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>每次变更能力、轮换证书或添加设备后，Xcode 里缓存的 Profile 就已经过时了。修复方式每次都一样：</p>
+          <ol>
+            <li>前往 <code>developer.apple.com/account/resources/profiles</code>。</li>
+            <li>找到对应的 Profile，点击 Edit，再点击 Save（这一步会根据当前 App ID 的状态重新生成 Profile）。</li>
+            <li>下载新的 <code>.mobileprovision</code> 文件，双击安装到 Xcode 中。</li>
+            <li>或者通过命令行：<code>xcodebuild -allowProvisioningUpdates …</code>，让 Xcode 自行拉取刷新后的 Profile。</li>
+          </ol>
+          <p>漏掉门户上"Edit &gt; Save"这一步，是重新下载后仍然报同样错误的最常见原因——门户在保存时触发重新生成，而不是在下载时。</p>
+        </div>
+      </div>
+
+      <h2>iOS Archive 时出现"errSecInternalComponent"</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>如果 iOS Archive 出现 <code>errSecInternalComponent</code>，原因与 macOS 上相同：运行 <code>xcodebuild</code>（或 LingCode，或 CI worker）的进程没有获得完全磁盘访问权限，无法从 Keychain 读取签名密钥。这条报错与 Keychain 损坏的报错完全相同，所以很多人会追错方向。</p>
+          <p>解决方法：</p>
+          <ul>
+            <li>系统设置 &gt; 隐私与安全性 &gt; 完全磁盘访问权限 &gt; 添加 Terminal.app（或你的 CI Agent，或运行 LingCode 的宿主机）。</li>
+            <li>重启终端会话——TCC 授权不会对已运行的进程生效。</li>
+            <li>重试 Archive。</li>
+          </ul>
+          <p>如果已经授权了完全磁盘访问但错误依旧，那才是 Keychain 本身的问题——打开 Keychain Access，找到签名证书，双击私钥，检查访问控制是否允许 <code>codesign</code>。</p>
+        </div>
+      </div>
+
+      <h2>什么时候放弃，切换到手动签名</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>自动签名很好用，直到它不管用为止。以下情况建议切换到手动签名：</p>
+          <ul>
+            <li>你需要可重现的 CI 构建。自动创建 Profile 需要 Apple ID 凭据，这类凭据不应该放进 CI 环境。</li>
+            <li>你使用的是开发者角色账号，Xcode 无法自动在门户上启用能力。手动签名让错误在操作门户时就暴露出来，而不是等到 Archive 才发现。</li>
+            <li>你有多个 Bundle ID（主应用 + 扩展 + WatchKit），Xcode 生成了互相重叠的 Profile。</li>
+            <li>"No matching provisioning profile"已经折腾超过 30 分钟，反复重新生成和重试都没有解决。</li>
+          </ul>
+          <p>手动签名用可见性换便利性——每一个错误都对应一个明确的门户操作，而不是 Xcode 黑盒式的自动协调。</p>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>将这个 skill 放入 LingCode 的 skills 文件夹，让 LingCode 帮你诊断任何 iOS 签名错误——它会替你走完整个诊断流程：</p>
+          <pre><code>---
+name: ios-signing-and-app-store
+description: Use when shipping an iOS app to TestFlight or the App Store — Apple Developer enrollment, automatic signing, capabilities provisioning, archive, export, and notarytool/Transporter upload. Triggers: 'No account for team', 'No matching provisioning profile', 'TestFlight upload fails', 'App Store submission', 'iOS signing error', capability/entitlement sync failure, simulator-doesn't-need-signing baseline question, errSecInternalComponent during xcodebuild. Actions: prove simulator builds, pick automatic vs manual signing, fix entitlement drift, run notarytool, upload via Transporter. Errors: 'No account for team X', 'Capabilities X requires entitlement', expired profile, bundle ID mismatch. Skip if: just running on simulator.
+---
+
+Diagnose and fix iOS signing errors.
+
+Step 0 — Prove the simulator builds clean. Simulator doesn't
+sign; if simulator fails, the problem is code, not signing.
+
+Step 1 — Resolve "No account for team": confirm the project's
+DEVELOPMENT_TEAM matches an Apple ID added in Xcode > Settings >
+Accounts. Re-auth on 2FA lapse.
+
+Step 2 — Pick signing mode deliberately. Automatic for local dev
+with -allowProvisioningUpdates. Manual for release/CI with
+PROVISIONING_PROFILE_SPECIFIER and CODE_SIGN_IDENTITY pinned.
+
+Step 3 — Capability/entitlement sync: a capability must be
+enabled BOTH on the App ID at developer.apple.com AND in the
+entitlements file. Verify with codesign -d --entitlements - and
+security cms -D -i embedded.mobileprovision.
+
+Step 4 — "No matching provisioning profile" walks six causes:
+bundle ID mismatch, wrong profile type, expired profile,
+unsynced capability, missing device, dead certificate.
+
+Step 5 — After ANY portal change: Edit > Save the profile on
+developer.apple.com (regenerates), then re-download or use
+-allowProvisioningUpdates.
+
+Step 6 — errSecInternalComponent = host process missing Full
+Disk Access (same as macOS). Fix in System Settings, restart
+terminal session.
+
+Step 7 — Escalate to manual signing if automatic has failed
+twice in a row.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/ios-signing-and-app-store/SKILL.md</code>——具体位置及 skill 的发现机制请参阅<a href="/zh/tutorials/install-a-skill.html">安装 Skill</a>。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/first-time-ios-app-store-submission.html" class="tutorial-next-card">
+            <h3>首次 App Store 提交</h3>
+            <p>签名问题解决后，走完完整的 Archive → 导出 → 上传流程</p>
+          </a>
+          <a href="/zh/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>用 LingCode 上传到 TestFlight</h3>
+            <p>通过命令行使用 notarytool / Transporter 完成脚本化的 TestFlight 上传</p>
+          </a>
+          <a href="/zh/tutorials/codesign-and-notarize-a-mac-app.html" class="tutorial-next-card">
+            <h3>为 Mac 应用签名与公证</h3>
+            <p>macOS 对应教程——在 App Store 之外通过直接分发方式发布并完成公证</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/zh/features.html">Mac IDE</a></li>
+        <li><a href="/zh/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/zh/docs.html">文档</a></li>
+        <li><a href="/zh/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · 为发布而生</span>
+    <span>原生 · 快速 · 诚实</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

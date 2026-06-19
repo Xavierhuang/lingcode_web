@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database — LingCode Cloud | Docs</title>
+  <meta name="description" content="The LingCode Cloud database guide: a private Postgres schema reached through a table-at-a-time CRUD gateway. The chainable query builder, filter operators, migrations, RLS, and why there are no JOINs, upserts, or pages bigger than 200 rows.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/database.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/database.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/database.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/database.html">
+  <meta property="og:title" content="Database — LingCode Cloud">
+  <meta property="og:description" content="A private Postgres schema reached through a table-CRUD gateway: the query builder, filter operators, migrations, RLS, and the no-JOIN/no-upsert rule.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .tutorial-next-card { display: block; padding: 18px 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); text-decoration: none; transition: border-color .15s ease, transform .15s ease; }
+    .tutorial-next-card:hover { border-color: var(--signal); transform: translateY(-2px); }
+    .tutorial-next-card .card-eyebrow { font-family: "Geist Mono", monospace; font-size: 0.7rem; letter-spacing: .04em; text-transform: uppercase; color: var(--signal); display: block; margin-bottom: 8px; }
+    .tutorial-next-card h3 { margin: 0 0 6px; font-size: 1rem; color: var(--text); }
+    .tutorial-next-card p { margin: 0; font-size: 0.875rem; color: var(--text-dim); line-height: 1.5; }
+    table.docs-table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.9rem; }
+    table.docs-table th, table.docs-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    table.docs-table th { font-family: "Geist Mono", monospace; font-size: 0.74rem; letter-spacing: .03em; text-transform: uppercase; color: var(--text-dim); }
+    table.docs-table code { white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Database</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Data</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Database</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Every backend is a private Postgres database in its own schema with row-level security. Your client never opens a SQL connection — it talks to a thin <strong>table-at-a-time CRUD gateway</strong> through the SDK (shaped like Supabase/Firebase). The anon key ships safely in the browser because RLS on the server, not key secrecy, enforces access. Schema — tables, indexes, views, constraints, policies — comes from <strong>migrations</strong>, never runtime calls. The runtime API is CRUD, not raw SQL: <strong>no JOINs, no upserts, 200 rows per page.</strong></p>
+      <p class="intro">This page is about the data plane: how you read and write rows, and — just as important — the shape of what the gateway will and won't do. If you've come from PostgREST or from writing raw SQL, the one thing worth internalizing before you write a line of code is that the runtime is deliberately <em>not</em> SQL. Understanding that boundary up front is the difference between code that works on the first try and code that 400s. We'll cover the why, then the how.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>The mental model</h2>
+      <p>A LingCode Cloud backend is a real Postgres database — but you don't connect to it. Instead, the SDK speaks to a small CRUD gateway that sits in front of the database and accepts one operation against one table at a time. That gateway is what makes the architecture safe to put in a browser bundle.</p>
+      <p>Here's the chain of reasoning:</p>
+      <ul>
+        <li>The <strong>anon key</strong> is public by design — it lives in your client code.</li>
+        <li>Because the client can't run arbitrary SQL, it can't escalate. Every request is "select/insert/update/delete on table X with these filters."</li>
+        <li>Each of those requests runs on the server under a low-privilege role with <strong>row-level security (RLS)</strong> applied, scoped to the signed-in user. The user only ever sees and touches rows the policies allow.</li>
+        <li>Anything genuinely relational — JOINs, views, indexes, constraints, generated columns — lives one level down, in your <strong>migrations</strong>, which run real DDL.</li>
+      </ul>
+
+      <div class="info-box">
+        <h3>Two layers, two languages</h3>
+        <p>Hold this split and most surprises disappear. <strong>Runtime</strong> (what your app does on every request) is table-at-a-time CRUD through the SDK — no SQL. <strong>Schema</strong> (what you set up once, or evolve over time) is full SQL DDL through migrations. When something feels impossible at runtime — a JOIN, an aggregate, a uniqueness guarantee — the answer is almost always "push it down into a migration."</p>
+      </div>
+
+      <h2>The query builder</h2>
+      <p>Start every query with <code>client.from('table')</code>. That returns a chainable builder: you stack filters and modifiers, then end with a terminal verb that actually runs the request and returns a promise. Inside <code>/try</code> and the Mac preview the client is already on the page as <code>window.lingcode</code>; in your own app you create it once (see <a href="/tutorials/use-lingcode-cloud-in-your-own-app.html">Use LingCode Cloud in your own app</a>).</p>
+
+      <pre><code>const { data, error } = await lingcode
+  .from('todos')
+  .eq('done', false)
+  .order('created_at', { ascending: false })
+  .limit(50)
+  .select();
+
+if (error) {
+  console.error(error.code, error.status);
+} else {
+  render(data); // T[]
+}</code></pre>
+
+      <p>Every terminal op resolves to a <code>Result</code>: <code>{ data, error }</code>. On success <code>error</code> is <code>null</code> and <code>data</code> is an array of rows. On failure <code>data</code> is <code>null</code> and <code>error</code> is <code>{ code, status }</code> — a stable string code plus the HTTP status. Always check <code>error</code>; the SDK does not throw on a request that the server rejects.</p>
+
+      <h3>Filters</h3>
+      <p>Chain as many filters as you like — they <strong>AND</strong> together. Each returns the builder, so order doesn't matter.</p>
+
+      <table class="docs-table">
+        <thead><tr><th>Filter</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>.eq(col, val)</code></td><td>column equals value</td></tr>
+          <tr><td><code>.neq(col, val)</code></td><td>column does not equal value</td></tr>
+          <tr><td><code>.gt(col, val)</code></td><td>greater than</td></tr>
+          <tr><td><code>.gte(col, val)</code></td><td>greater than or equal</td></tr>
+          <tr><td><code>.lt(col, val)</code></td><td>less than</td></tr>
+          <tr><td><code>.lte(col, val)</code></td><td>less than or equal</td></tr>
+          <tr><td><code>.like(col, str)</code></td><td>case-sensitive pattern match</td></tr>
+          <tr><td><code>.ilike(col, str)</code></td><td>case-insensitive pattern match</td></tr>
+          <tr><td><code>.in(col, [vals])</code></td><td>column is one of the listed values</td></tr>
+          <tr><td><code>.is(col, null | 'not_null')</code></td><td>IS NULL / IS NOT NULL</td></tr>
+          <tr><td><code>.match({ a: 1, b: 2 })</code></td><td>shorthand for several <code>.eq</code> filters at once</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Modifiers</h3>
+      <table class="docs-table">
+        <thead><tr><th>Modifier</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>.order(col, { ascending?: boolean })</code></td><td>sort by a column; defaults to ascending</td></tr>
+          <tr><td><code>.limit(n)</code></td><td>cap the number of rows returned</td></tr>
+          <tr><td><code>.range(from, to)</code></td><td>return an inclusive slice of rows (for paging)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Terminal operations</h3>
+      <p>The verb runs the request. Each returns <code>Promise&lt;Result&lt;T[]&gt;&gt;</code>.</p>
+      <table class="docs-table">
+        <thead><tr><th>Op</th><th>Does</th></tr></thead>
+        <tbody>
+          <tr><td><code>.select()</code></td><td>read rows matching the chained filters</td></tr>
+          <tr><td><code>.insert(row | row[])</code></td><td>insert one row or an array of rows</td></tr>
+          <tr><td><code>.update(patch)</code></td><td>apply a partial patch to matching rows</td></tr>
+          <tr><td><code>.delete()</code></td><td>delete matching rows</td></tr>
+          <tr><td><code>.subscribe(onChange, onError?)</code></td><td>open a realtime subscription to row changes</td></tr>
+        </tbody>
+      </table>
+
+      <div class="warn-box">
+        <strong><code>.update()</code> and <code>.delete()</code> refuse to run without a filter.</strong> A patch or delete with no <code>.eq</code>/<code>.in</code>/<code>.match</code> (etc.) would hit every row in the table, so the gateway rejects it with <code>where_required</code> rather than letting you wipe a table by accident. Always scope a mutation to the rows you mean.
+      </div>
+
+      <pre><code>// Update — filter first, then patch:
+await lingcode.from('todos').eq('id', 7).update({ done: true });
+
+// Delete — same rule:
+await lingcode.from('todos').eq('id', 7).delete();
+
+// This THROWS / is refused (no filter):
+await lingcode.from('todos').delete(); // → error.code === 'where_required'</code></pre>
+
+      <p><code>.subscribe()</code> is the entry point to realtime — subscribe to INSERT/UPDATE/DELETE on a table, RLS-filtered so users only see their own rows. It's documented in full on the <a href="/docs/cloud/realtime.html">Realtime guide</a>; we won't repeat it here.</p>
+
+      <h2>The key constraint: CRUD, not SQL</h2>
+      <p>This is the section to read twice. The runtime data API is table-CRUD. Three things that are reflexes in SQL do not exist at runtime, and each has a clean idiom in their place. Coming from PostgREST or raw SQL, this is where the first-try-vs-400 line gets drawn.</p>
+
+      <h3>No JOINs</h3>
+      <p>You can't join two tables in one query. You have three options, in rough order of preference:</p>
+      <ul>
+        <li><strong>Fetch each table and stitch in code</strong> — pull the parents, collect their ids, fetch the children with <code>.in()</code>, and assemble the shape you want in JavaScript.</li>
+        <li><strong>Denormalize</strong> — if you always read a field together with another table's row, copy it onto the row at write time.</li>
+        <li><strong>Create a VIEW in a migration</strong> — define the JOIN once as a database view, then <code>select()</code> from it exactly like a table.</li>
+      </ul>
+
+      <p>Before (the instinct — does not work at runtime):</p>
+      <pre><code>// ✗ There is no join. This is not a thing the gateway can do.
+const { data } = await lingcode
+  .from('todos')
+  .select('*, users(name)'); // → no relational expansion</code></pre>
+
+      <p>After — stitch in code:</p>
+      <pre><code>const { data: todos } = await lingcode.from('todos').select();
+
+const userIds = [...new Set(todos.map(t =&gt; t.user_id))];
+const { data: users } = await lingcode
+  .from('users')
+  .in('id', userIds)
+  .select();
+
+const byId = Object.fromEntries(users.map(u =&gt; [u.id, u]));
+const rows = todos.map(t =&gt; ({ ...t, user: byId[t.user_id] }));</code></pre>
+
+      <p>After — or define a view once in a migration, then read it like a table:</p>
+      <pre><code>-- migration (runs once, full DDL):
+create view todos_with_user as
+  select t.*, u.name as user_name
+  from todos t
+  join users u on u.id = t.user_id;</code></pre>
+      <pre><code>// runtime — the view is just a table to the SDK:
+const { data } = await lingcode.from('todos_with_user').select();</code></pre>
+
+      <h3>No upserts / ON CONFLICT</h3>
+      <p>There's no upsert and no <code>ON CONFLICT</code>. The idiom is: <strong>insert; on a duplicate-key error, fetch and update.</strong></p>
+      <pre><code>async function upsertProfile(profile) {
+  const ins = await lingcode.from('profiles').insert(profile);
+  if (!ins.error) return ins;
+
+  // Duplicate key → fall back to update on the conflicting row.
+  return lingcode
+    .from('profiles')
+    .eq('user_id', profile.user_id)
+    .update(profile);
+}</code></pre>
+
+      <h3>Pages of 200</h3>
+      <p><code>select()</code> returns <strong>at most 200 rows</strong>. For anything larger, page explicitly with <code>.limit()</code> and <code>.range()</code>. And because there are no JOINs or aggregates at runtime, counts and sums are computed either in your code (over the page) or in a view created in a migration.</p>
+      <pre><code>// Page through results 200 at a time:
+async function* allTodos() {
+  const PAGE = 200;
+  for (let from = 0; ; from += PAGE) {
+    const { data } = await lingcode
+      .from('todos')
+      .order('id', { ascending: true })
+      .range(from, from + PAGE - 1)
+      .select();
+    if (!data || data.length === 0) return;
+    yield* data;
+    if (data.length &lt; PAGE) return;
+  }
+}</code></pre>
+
+      <div class="info-box">
+        <h3>The rule of thumb</h3>
+        <p>If a query needs a JOIN, an upsert, an aggregate, or more than a page of rows in one shot — that's a signal to push work into a <strong>migration</strong> (a view, a generated column, a unique constraint) or to loop in your application code. The runtime gateway will keep it simple on purpose.</p>
+      </div>
+
+      <h2>Migrations &amp; schema</h2>
+      <p>All schema — tables, indexes, views, constraints, generated columns, seed data, and RLS policies — comes from migrations. There are two ways to run one:</p>
+      <ul>
+        <li>From the console's <strong>SQL</strong> tab: open <a href="https://lingcode.dev/backends.html">lingcode.dev/backends.html</a> and pick your backend.</li>
+        <li>Let the agent call <code>apply_migration</code> for you.</li>
+      </ul>
+      <p>Migrations run <strong>full DDL</strong>. Use <code>IF NOT EXISTS</code> so a migration is idempotent and safe to re-run:</p>
+      <pre><code>create table if not exists todos (
+  id         bigint generated always as identity primary key,
+  user_id    uuid,
+  title      text not null,
+  done       boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists todos_user_idx on todos (user_id);</code></pre>
+
+      <div class="warn-box">
+        <strong>The console's query editor is SELECT-only.</strong> It accepts read statements — <code>SELECT</code>, <code>WITH</code>, <code>TABLE</code>, <code>EXPLAIN</code>, <code>SHOW</code> — and rejects anything that writes or changes schema with <code>read_only_violation</code>. To run DDL or DML, use the <strong>migrations</strong> path (the SQL tab's migration runner or <code>apply_migration</code>), not the ad-hoc query editor.
+      </div>
+
+      <p>For the full workflow — writing, ordering, and re-running migrations — see <a href="/tutorials/manage-database-migrations.html">Manage database migrations</a>. Once you have schema, run the linter: <a href="/tutorials/scan-your-backend-with-advisors.html">Scan your backend with advisors</a> flags missing RLS policies, missing indexes, and missing primary keys before they bite you in production.</p>
+
+      <h2>Row-level security &amp; tenant isolation</h2>
+      <p>Each backend lives in its own Postgres schema with a dedicated, low-privilege role. Runtime queries — the ones the SDK makes with the anon key — run as that role, with the <strong>signed-in user's id exposed to the policies</strong>. That's what makes a policy like "a user can only see rows where <code>user_id</code> is their own id" work: the gateway runs your query, but Postgres silently filters it to the rows the policy permits.</p>
+      <pre><code>-- in a migration: turn on RLS and scope rows to their owner
+alter table todos enable row level security;
+
+create policy todos_owner on todos
+  using (user_id = current_user_id());</code></pre>
+      <p>The <strong>console / owner path</strong> is different: it <strong>bypasses RLS</strong> so you can administer every row across all users from <a href="https://lingcode.dev/backends.html">backends.html</a>. That's the privileged side — distinct from the anon-key runtime path your app uses.</p>
+      <p>This is the other half of why the anon key is safe to ship: it can only ever exercise the low-privilege, RLS-gated runtime role. Write your policies and the public key carries no risk.</p>
+
+      <h2>Per-tier limits</h2>
+      <p>Each backend has a table cap by plan:</p>
+      <table class="docs-table">
+        <thead><tr><th>Limit</th><th>Free</th><th>Pro</th><th>Max Pro</th></tr></thead>
+        <tbody>
+          <tr><td><code>maxTables</code></td><td>10</td><td>50</td><td>200</td></tr>
+        </tbody>
+      </table>
+      <p>There are also per-tier limits on <code>maxObjects</code> (stored objects) and <code>maxUsers</code> — the full numbers live on the <a href="/pricing.html">pricing page</a>. Exceeding any cap returns HTTP <strong>402</strong> with code <code>quota_exceeded</code>.</p>
+
+      <h2>Error codes</h2>
+      <p>When <code>error</code> is non-null, the <code>code</code> tells you what happened and <code>status</code> carries the HTTP status:</p>
+      <table class="docs-table">
+        <thead><tr><th>Code</th><th>Status</th><th>Means</th></tr></thead>
+        <tbody>
+          <tr><td><code>where_required</code></td><td>—</td><td>an <code>update</code> or <code>delete</code> was issued with no filter</td></tr>
+          <tr><td><code>table_not_found</code></td><td>404</td><td>the table doesn't exist (typo, or no migration yet)</td></tr>
+          <tr><td><code>invalid_request</code></td><td>400</td><td>the request was malformed</td></tr>
+          <tr><td><code>not_provisioned</code></td><td>409</td><td>the backend isn't live yet — provisioning hasn't finished</td></tr>
+          <tr><td><code>quota_exceeded</code></td><td>402</td><td>a per-tier cap (tables, objects, users) was hit</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Under the hood (REST)</h2>
+      <p>The SDK is a thin wrapper over four REST endpoints. The base is <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code>, and every call carries the anon key — either as a <code>Bearer</code> token or as a <code>?apikey=</code> query parameter. Each endpoint takes a JSON body describing the table plus filters and the row or patch.</p>
+      <table class="docs-table">
+        <thead><tr><th>Endpoint</th><th>SDK verb</th></tr></thead>
+        <tbody>
+          <tr><td><code>POST /select</code></td><td><code>.select()</code></td></tr>
+          <tr><td><code>POST /insert</code></td><td><code>.insert()</code></td></tr>
+          <tr><td><code>POST /update</code></td><td><code>.update()</code></td></tr>
+          <tr><td><code>POST /delete</code></td><td><code>.delete()</code></td></tr>
+        </tbody>
+      </table>
+      <pre><code>curl -X POST 'https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/select' \
+  -H 'Authorization: Bearer &lt;your-anon-key&gt;' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "table": "todos",
+    "filters": [{ "op": "eq", "col": "done", "val": false }],
+    "order":   [{ "col": "created_at", "ascending": false }],
+    "limit":   50
+  }'</code></pre>
+      <p>You'll almost always reach for the SDK, which gives you the chainable builder over exactly these endpoints. The full request/response shapes are in the <a href="/docs/cloud/api-reference.html#rest">API reference</a>.</p>
+
+      <div class="tutorial-next">
+        <h2>What's next</h2>
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/realtime.html">
+            <span class="card-eyebrow">Live</span>
+            <h3>Realtime</h3>
+            <p>Subscribe to row changes with <code>.subscribe()</code> over SSE, RLS-filtered to the signed-in user.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">Reference</span>
+            <h3>API reference</h3>
+            <p>The complete SDK surface and every <code>/api/cloud/be/&lt;id&gt;/…</code> REST endpoint, with request and response shapes.</p>
+          </a>
+          <a class="tutorial-next-card" href="/tutorials/use-lingcode-cloud-in-your-own-app.html">
+            <span class="card-eyebrow">Tutorial</span>
+            <h3>Use it in your own app</h3>
+            <p>Wire the SDK into your own project with a backend URL and anon key, end to end.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

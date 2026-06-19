@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在 settings.json 中自定义权限与环境变量 — LingCode</title>
+  <meta name="description" content="LingCode 通过 settings.json 读取权限允许/拒绝规则与环境变量。直接编辑此文件，告别每次会话中反复点击批准同一条 Bash 命令的烦恼。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/customize-permissions-and-env-vars-in-settings.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/customize-permissions-and-env-vars-in-settings.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/customize-permissions-and-env-vars-in-settings.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/customize-permissions-and-env-vars-in-settings.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "在 settings.json 中自定义权限与环境变量",
+  "description": "LingCode 的权限提示与环境变量并非 UI 开关，而是存放在 ~/.claude/settings.json 这个真实文件中。一旦你知道它在哪里、格式是什么，就再也不用今天第五十次为 ls 命令点击"批准"了。",
+  "url": "https://lingcode.dev/zh/tutorials/customize-permissions-and-env-vars-in-settings.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/customize-permissions-and-env-vars-in-settings.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "找到或创建文件",
+      "url": "https://lingcode.dev/zh/tutorials/customize-permissions-and-env-vars-in-settings.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "验证文件已加载",
+      "url": "https://lingcode.dev/zh/tutorials/customize-permissions-and-env-vars-in-settings.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "在 LingCode 中使用",
+      "url": "https://lingcode.dev/zh/tutorials/customize-permissions-and-env-vars-in-settings.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "在 settings.json 中自定义权限与环境变量",
+      "item": "https://lingcode.dev/zh/tutorials/customize-permissions-and-env-vars-in-settings.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/customize-permissions-and-env-vars-in-settings.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">原生 Mac IDE</a>
+      <span>/</span>
+      <span>在 settings.json 中自定义权限与环境变量</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>在 settings.json 中自定义权限与环境变量</h1>
+      <p class="intro">LingCode 中的权限提示与环境变量并非 UI 开关，而是存放在真实文件 <code>~/.claude/settings.json</code> 中。一旦你知道它在哪里、格式长什么样，就再也不用今天第五十次为 <code>ls</code> 点击"批准"了。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么这个文件会存在</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>默认情况下，LingCode 在每次执行 Bash 命令、向项目根目录之外写入文件以及调用任何有副作用的工具之前都会弹出确认提示。这是合理的安全默认值——你肯定不希望一个新的 agent 悄悄在你的主目录里跑 <code>rm -rf</code>。</p>
+          <p>但用了 LingCode 一周之后，你会发现同样的提示反复出现：<code>ls</code>、<code>git status</code>、<code>cat package.json</code>、<code>npm test</code>。这些命令根本不需要每次审批。每次浪费 2–3 秒，一天乘以五十次，注意力就这样被零散打断。</p>
+          <p>解决方案不是某个隐藏菜单——而是一个你自己拥有和编辑的 JSON 文件。它有两个位置：</p>
+          <ul>
+            <li><code>~/.claude/settings.json</code> — 你的<strong>用户级</strong>配置，适用于这台 Mac 上的所有项目。</li>
+            <li><code>&lt;repo&gt;/.claude/settings.local.json</code> — <strong>项目级</strong>配置，仅在该仓库内生效，并覆盖用户级配置。</li>
+          </ul>
+          <p>本教程涉及三个顶层键：<code>permissions.allow</code>、<code>permissions.deny</code> 和 <code>env</code>。（还有第四个键 <code>hooks</code>，它有专属教程，参见 <a href="/zh/tutorials/add-custom-hooks.html">添加自定义钩子</a>。）</p>
+        </div>
+      </div>
+
+      <h2>找到或创建文件</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>在终端中执行：</p>
+          <pre><code>mkdir -p ~/.claude
+touch ~/.claude/settings.json
+open -e ~/.claude/settings.json</code></pre>
+          <p>如果文件是全新空文件，粘贴以下骨架并保存：</p>
+          <pre><code>{
+  "permissions": {
+    "allow": [],
+    "deny": []
+  },
+  "env": {}
+}</code></pre>
+          <p>LingCode 会在下次弹出权限提示时自动读取该文件，无需重启。</p>
+        </div>
+      </div>
+
+      <h2>权限规则的格式</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p><code>allow</code> 和 <code>deny</code> 中的每一项都是匹配工具调用的字符串。两种常见格式：</p>
+          <ul>
+            <li><code>"Bash(&lt;command pattern&gt;)"</code> — 匹配 Shell 命令。模式支持精确命令或前缀通配符。</li>
+            <li><code>"&lt;ToolName&gt;"</code> — 匹配该工具的任意调用，无论参数是什么。适合无条件信任的只读工具。</li>
+          </ul>
+          <p>示例：</p>
+          <pre><code>{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(npm test:*)",
+      "Read",
+      "Glob",
+      "Grep"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)"
+    ]
+  }
+}</code></pre>
+          <p><code>Bash(ls:*)</code> 允许所有以 <code>ls</code> 开头的调用——<code>ls</code>、<code>ls -la</code>、<code>ls src/</code> 均可。<code>Bash(git status)</code> 则是精确匹配。</p>
+          <div class="tip-box">
+            <strong>拒绝规则优先。</strong>如果同一条命令同时命中允许和拒绝规则，拒绝规则生效。只要你的拒绝列表覆盖了危险边界，就可以放心使用宽泛的允许模式。
+          </div>
+        </div>
+      </div>
+
+      <h2>用户配置 vs 项目配置——该编辑哪个</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>两个文件会合并，项目配置覆盖用户配置。建议这样划分：</p>
+          <ul>
+            <li><strong>用户级（<code>~/.claude/settings.json</code>）：</strong>在<em>任何</em>仓库都安全的命令——<code>ls</code>、<code>cat</code>、<code>git status</code>、<code>git diff</code>、<code>git log</code>、<code>pwd</code>、<code>which</code>。这些与具体项目无关。</li>
+            <li><strong>项目级（<code>&lt;repo&gt;/.claude/settings.local.json</code>）：</strong>该代码库专属的命令——<code>npm test</code>、<code>cargo build</code>、<code>./scripts/build.sh</code>、<code>xcodebuild build</code>。不同仓库需要不同的白名单。</li>
+          </ul>
+          <p>如果项目配置文件中包含个人工作流相关的内容，应将其加入 gitignore。如果你想与团队共享一份基础白名单，可以在仓库根目录提交 <code>.claude/settings.json</code>（不带 <code>.local</code>）——LingCode 也会读取它，项目配置和本地配置会在此基础上叠加。</p>
+        </div>
+      </div>
+
+      <h2>环境变量</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p><code>env</code> 块用于设置 LingCode（及其运行的命令）可见的环境变量。常见用途：</p>
+          <ul>
+            <li><strong>按项目设置 provider 密钥</strong>——该仓库使用与默认不同的 API 密钥。</li>
+            <li><strong>工具开关</strong>——<code>DEBUG=1</code>、<code>NODE_ENV=development</code>、<code>NO_COLOR=1</code>。</li>
+            <li><strong>构建路径</strong>——<code>JAVA_HOME</code>、<code>ANDROID_HOME</code>（如果你的 shell rc 尚未导出它们）。</li>
+          </ul>
+          <pre><code>{
+  "env": {
+    "NODE_ENV": "development",
+    "NO_COLOR": "1",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  }
+}</code></pre>
+          <div class="warn-box">
+            <strong>如果文件会被共享，请不要直接在其中存放长期密钥。</strong>项目级 <code>.claude/settings.json</code> 常常会被提交；应优先使用 Keychain 或 shell rc。项目<em>本地</em>配置（<code>settings.local.json</code>）默认被 gitignore，适合存放每台机器专属的密钥。
+          </div>
+        </div>
+      </div>
+
+      <h2>实用白名单起步模板</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3 style="margin-top:0;">只读检查（随处安全）</h3>
+          <pre><code>"Bash(ls:*)",
+"Bash(cat:*)",
+"Bash(head:*)",
+"Bash(tail:*)",
+"Bash(pwd)",
+"Bash(which:*)",
+"Bash(file:*)",
+"Bash(stat:*)"</code></pre>
+          <h3 style="margin-top:1.5rem;">Git 只读</h3>
+          <pre><code>"Bash(git status)",
+"Bash(git status:*)",
+"Bash(git diff:*)",
+"Bash(git log:*)",
+"Bash(git branch:*)",
+"Bash(git show:*)",
+"Bash(git remote -v)"</code></pre>
+          <h3 style="margin-top:1.5rem;">Node / npm 项目</h3>
+          <pre><code>"Bash(npm test:*)",
+"Bash(npm run lint:*)",
+"Bash(npm run typecheck:*)",
+"Bash(npx tsc --noEmit:*)",
+"Bash(node --version)"</code></pre>
+          <h3 style="margin-top:1.5rem;">Swift / Xcode 项目</h3>
+          <pre><code>"Bash(swift build:*)",
+"Bash(swift test:*)",
+"Bash(xcodebuild build:*)",
+"Bash(xcodebuild test:*)",
+"Bash(xcrun simctl list)"</code></pre>
+          <p>根据你的项目类型，将对应的条目加入 <code>permissions.allow</code>，然后在接下来几天里持续补充——每当你发现自己反复批准某条命令时就把它加进去。</p>
+        </div>
+      </div>
+
+      <h2>拒绝列表——写一次，从此安心</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>宽泛的允许规则是包容性的，而拒绝规则是绝对性的。一份简短、高置信度的拒绝列表：</p>
+          <pre><code>"permissions": {
+  "deny": [
+    "Bash(rm -rf:*)",
+    "Bash(rm -fr:*)",
+    "Bash(sudo:*)",
+    "Bash(curl * | sh)",
+    "Bash(curl * | bash)",
+    "Bash(:(){ :|:& };:)",
+    "Bash(dd if=:*)",
+    "Bash(mkfs:*)",
+    "Bash(:>/dev/sda:*)"
+  ]
+}</code></pre>
+          <p>即便设置了 <code>permissions.allow: ["Bash(*)"]</code>，拒绝列表依然会生效。这是最低安全基线——设置一次，永久生效。</p>
+        </div>
+      </div>
+
+      <h2>验证文件已加载</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>编辑完成后，在 LingCode 对话中询问：</p>
+          <pre><code>Run `git status` and tell me whether you were prompted.</code></pre>
+          <p>如果白名单生效，LingCode 会直接执行命令并输出结果，不再弹出审批对话框。若仍然弹出提示，可能有两个原因：</p>
+          <ul>
+            <li><strong>JSON 格式错误。</strong>多余的逗号或缺少花括号会导致整个文件被静默丢弃。运行 <code>python3 -m json.tool ~/.claude/settings.json</code>——有格式错误时它会打印解析异常。</li>
+            <li><strong>模式不匹配。</strong><code>"Bash(git status)"</code> 仅精确匹配 <code>git status</code>；LingCode 实际运行的可能是 <code>git status --short</code>。改为 <code>"Bash(git status:*)"</code> 即可。</li>
+          </ul>
+          <div class="tip-box">
+            <strong>留意 LingCode 实际运行的命令。</strong>审批对话框会显示 LingCode 想要运行的精确命令字符串——复制它，写出对应的允许模式，之后相同请求就会静默通过。
+          </div>
+        </div>
+      </div>
+
+      <h2>持续迭代，不占用整天时间</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>不要一开始就试图写出完美的白名单。推荐的工作流：</p>
+          <ol>
+            <li>从一个小白名单起步（只读检查 + git status/diff）。</li>
+            <li>正常使用 LingCode。当你发现自己在一次会话中批准了同一条命令两次时，就把它加进去。</li>
+            <li>一周后，你会得到一份完全贴合自己实际工作流的个性化白名单——而不是别人猜测的版本。</li>
+          </ol>
+          <p>如果你不想手动整理，这里还有另一篇教程，它会扫描你过去的对话记录，根据你实际批准过的命令来生成白名单：<a href="/zh/tutorials/reduce-permission-prompts.html">通过白名单减少权限提示</a>。</p>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>整套流程——定位文件、理解格式、区分用户级与项目级、验证生效——已被打包成一个技能。将它放入你的技能目录，然后对 LingCode 说"configure settings.json"即可调用：</p>
+          <pre><code>---
+name: update-config
+description: Configure the Claude Code harness via settings.json — permissions allow/deny and env vars (NOT hooks; hooks have their own skill). Triggers: 'allow X command', 'add permission to allowlist', 'set DEBUG=true', 'environment variable for Claude Code', 'move permission to user settings', 'configure settings.json', 'permissions config'. Actions: edit ~/.claude/settings.json (user) or .claude/settings.local.json (project), append to permissions.allow / permissions.deny, set env keys. File shape: JSON with permissions, env, hooks. Skip for: theme/model switches (use /config command), hook setup (use add-custom-hooks skill).
+---
+
+Configure LingCode by editing settings.json directly. Settings live in
+two places that merge:
+
+- User file: ~/.claude/settings.json (applies to every project)
+- Project file: &lt;repo&gt;/.claude/settings.local.json (this repo only;
+  overrides user file)
+
+For permission changes:
+1. Open the relevant file. Create it with skeleton {permissions:
+   {allow: [], deny: []}, env: {}} if it doesn't exist.
+2. Identify the exact command string the user wants allowed or denied.
+   Bash commands use "Bash(&lt;pattern&gt;)" — pattern is literal or
+   prefix-glob with ":*".
+3. Add to permissions.allow or permissions.deny. Deny always wins.
+4. For tools other than Bash, use the tool name directly: "Read",
+   "Glob", "Grep".
+
+For env var changes:
+1. Add to the env object as "KEY": "value" strings.
+2. Long-lived secrets go in settings.local.json (gitignored), not the
+   shared settings.json.
+
+After editing, validate with `python3 -m json.tool` and ask LingCode
+to run a sample command to confirm the rule took effect. If the
+prompt still appears, the most likely cause is a glob mismatch — read
+the dialog's exact command string and write the pattern to match it.
+
+Scope user vs project deliberately: read-only universal commands (ls,
+cat, git status) belong in the user file; project-specific build and
+test commands belong in the project file.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/update-config/SKILL.md</code>——关于确切路径以及技能如何被发现，参见 <a href="/zh/tutorials/install-a-skill.html">安装技能</a>。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/add-custom-hooks.html" class="tutorial-next-card">
+            <h3>添加自定义钩子</h3>
+            <p>settings.json 中的第四个顶层键——在工具事件和生命周期钩子上运行自定义脚本</p>
+          </a>
+          <a href="/zh/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>权限模式</h3>
+            <p>在默认模式、接受编辑模式和计划模式之间切换，适应不同类型的工作</p>
+          </a>
+          <a href="/zh/tutorials/reduce-permission-prompts.html" class="tutorial-next-card">
+            <h3>减少权限提示</h3>
+            <p>从过去的对话记录生成白名单，无需手动编写</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创始人与追求真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/zh/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

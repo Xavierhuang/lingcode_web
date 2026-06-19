@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>远程配置与实验 —— 来自后端的功能开关和 A/B 变体 | LingCode Cloud 文档</title>
+  <meta name="description" content="无需发布新版本即可改变应用行为。在运行时用 client.config 从 LingCode Cloud 读取功能开关、可调参数和 A/B 实验变体——ready、get 与 all()——并在服务端翻转它们。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/config.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/config.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/config.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/config.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/config.html">
+  <meta property="og:title" content="远程配置与实验 —— LingCode Cloud">
+  <meta property="og:description" content="在运行时从后端下发的功能开关、可调参数和 A/B 实验变体。用 client.config 读取，在服务端翻转。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/config.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>远程配置</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● 指南</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>远程配置与实验</h1>
+      <p class="tldr"><strong>一句话：</strong>远程配置让你<em>无需发布新版本</em>就能改变应用的行为——功能开关、可调参数，以及在运行时从后端下发的 A/B 实验变体。你在应用里用 <code>lingcode.config</code> <strong>读取</strong>这些值；在服务端<strong>翻转</strong>它们。永远给 <code>get()</code> 传一个默认值，这样配置加载之前应用也能正常工作。</p>
+      <p class="intro">发布版本是一种缓慢、要么全有要么全无的决策方式。把 <code>new_checkout = true</code> 写死，就等于对所有用户一锤定音，唯一的退路是再走一次应用商店发版。远程配置把这件事倒过来：决策放在服务器上，应用在启动时读取它，于是你可以把一个开关往前推进、回拨一档，或者把流量拆进实验变体——这一切都不必动用户手里已经装好的那个二进制包。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>为什么要用远程配置</h2>
+      <p>三种活儿，一套机制。<strong>功能开关</strong>把某条代码路径打开或关闭（先暗发上线、之后再启用、出问题时立刻干掉一处回归）。<strong>可调参数</strong>暴露一个数字或一段文案，让你不用发版就能调整——一个分页大小、一个价格展示字符串、一个重试次数。<strong>实验</strong>把不同的变体发给不同的用户，让你测出哪一个胜出。这三者都不过是你的应用在运行时读取的键值对。</p>
+      <p>要记在脑子里的那条分界：<strong>你在客户端读取值，在后端设置值。</strong>客户端从不决定一个开关该是什么——它只是发问、拿到答案、然后分支。改变那个答案是一次服务端操作，会在下一次配置加载时生效，完全不涉及重新构建。</p>
+
+      <h2>SDK 接口</h2>
+      <p>一切都在 <code>client.config</code> 之下（在 <code>/try</code> 和 Mac 预览里，客户端已经被预先注入为 <code>lingcode</code>）：</p>
+      <ul>
+        <li><code>config.ready</code> → <code>Promise&lt;ConfigApi&gt;</code>。当这个客户端的远程配置加载完成后 resolve。首屏读取前先 <code>await</code> 它。</li>
+        <li><code>config.get(key, def?)</code> → 值。返回已配置的值，如果该键未设置则返回 <code>def</code>。实验变体也是通过 <code>get()</code> 下发的。</li>
+        <li><code>config.all()</code> → <code>Record&lt;string, any&gt;</code>。所有已解析的配置值。</li>
+      </ul>
+
+      <h2>读取一个开关</h2>
+      <p>等配置加载完成，用一个合理的默认值读取开关，然后分支：</p>
+      <pre><code>await lingcode.config.ready;
+
+const showNewCheckout = lingcode.config.get('new_checkout', false); // 默认 false
+
+if (showNewCheckout) {
+  renderNewCheckout();
+} else {
+  renderOldCheckout();
+}</code></pre>
+      <p>默认值不是摆设——它是配置还没加载、或者请求失败时应用所采用的那个值。挑一个<em>本身就正确</em>的默认值（这里是已有的结账流程），那么无论网络发生什么，你的应用都能优雅降级。</p>
+
+      <h2>跑一个实验</h2>
+      <p>实验就是一个有两个以上结果的开关：后端<strong>为每个客户端分配一个变体</strong>，你用 <code>get()</code> 读取它并据此分支。把它和<a href="/zh/docs/cloud/telemetry.html">数据分析</a>配对——在你关心的那个结果上调用 <code>logEvent</code>——这样你才能测出哪个变体真正胜出：</p>
+      <pre><code>await lingcode.config.ready;
+
+const variant = lingcode.config.get('checkout_button', 'control'); // 'control' | 'green' | 'urgent'
+
+renderCheckoutButton(variant);
+
+// 之后，当用户完成转化时——把这个结果归因到该变体
+async function onPurchase(amount) {
+  await lingcode.telemetry.logEvent('purchase', { variant, amount });
+}</code></pre>
+      <p>进来的是同一个客户端分配，出去的是结果事件——整个闭环就是这样。时间一长，数据分析会告诉你 <code>green</code> 或 <code>urgent</code> 是否击败了 <code>control</code>，你只需在服务端翻转配置，就能把胜者推全量。</p>
+
+      <h2>一次性读取全部</h2>
+      <p>当你想要完整的已解析集合时——用来填充一个设置界面，或记录某次会话跑在哪份配置下——就用 <code>all()</code>：</p>
+      <pre><code>await lingcode.config.ready;
+const cfg = lingcode.config.all(); // { new_checkout: true, checkout_button: 'green', page_size: 50, ... }</code></pre>
+
+      <div class="info-box">
+        <h3>配置该用来做什么——又不该做什么</h3>
+        <p>把远程配置当作<strong>功能开关、灰度放量、文案微调和可调数值</strong>的归宿。它<em>不是</em>放密钥的地方。私有密钥（Stripe secret、第三方 API key）应当放进<a href="/zh/docs/cloud/secrets.html">密钥保险库</a>，并从<a href="/zh/docs/cloud/functions.html">函数</a>里读取——函数运行在服务端。另外，要靠你的<strong>默认值</strong>：应用在每个开关都取默认值时都应表现正确，这样一次缓慢或失败的配置加载永远不会变成一个坏掉的应用。</p>
+      </div>
+
+      <div class="warn-box">
+        <strong>配置值是下发到客户端的。</strong>任何使用你应用的人都能读到它们——打开网络面板它们就在那儿。永远不要把任何敏感信息放进配置值里。它用来控制行为，不是用来放密钥。
+      </div>
+
+      <h2>底层原理（REST）</h2>
+      <p>SDK 从单个端点拉取配置，并按客户端作用域，这样每个客户端都能拿到属于自己的实验分配：</p>
+      <pre><code>GET https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/config?client_id=&lt;id&gt;</code></pre>
+      <p>响应是一个扁平的键值对对象：</p>
+      <pre><code>{
+  "new_checkout": true,
+  "checkout_button": "green",
+  "page_size": 50
+}</code></pre>
+      <p>如果请求失败，SDK 会抛出一个 <code>config_failed</code> 错误——这正是为什么每次 <code>get()</code> 调用都该带一个默认值。应用会继续跑在它的默认值上；你不必在调用处内联处理这个错误。</p>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/telemetry.html">
+            <span class="card-eyebrow">度量</span>
+            <h3>数据分析</h3>
+            <p>用 <code>logEvent</code> 记录事件，为你的实验变体打分，看看哪一个胜出。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/secrets.html">
+            <span class="card-eyebrow">安全</span>
+            <h3>密钥保险库</h3>
+            <p>私有密钥真正该待的地方——加密存放，由函数在服务端读取，永远不进客户端。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">参考</span>
+            <h3>API 参考</h3>
+            <p>完整的 SDK 接口，以及每一个 <code>/api/cloud/be/&lt;id&gt;/…</code> REST 端点及其结构。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

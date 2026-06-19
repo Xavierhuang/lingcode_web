@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode 是否具备 Hermes 风格的自我进化 AI 智能体？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="LingCode 将 Hermes Agent 的学习循环——持久记忆、智能体自主提案技能、全文会话检索——带入原生 macOS IDE，支持多种 AI 提供商，并在新技能激活前加入人工审核环节。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/hermes-style-self-improving-agent.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/hermes-style-self-improving-agent.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/hermes-style-self-improving-agent.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-02T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-02T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/hermes-style-self-improving-agent.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "LingCode 中的 Hermes 风格自我进化智能体",
+  "description": "LingCode 如何原生实现 Hermes Agent 的学习循环——持久记忆、智能体自主提案技能、全文会话检索——并支持多种 AI 提供商。",
+  "url": "https://lingcode.dev/zh/tutorials/hermes-style-self-improving-agent.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-02",
+  "dateModified": "2026-06-02",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/zh/tutorials/hermes-style-self-improving-agent.html" },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "LingCode 是否具备 Hermes 风格的自我进化 AI 智能体？"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "教程", "item": "https://lingcode.dev/zh/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "搜索", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "原生 Mac IDE", "item": "https://lingcode.dev/zh/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Hermes 风格自我进化智能体", "item": "https://lingcode.dev/zh/tutorials/hermes-style-self-improving-agent.html" }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "LingCode 使用的是 Hermes Agent 的代码库吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "不是。LingCode 独立实现了相同的学习循环概念——持久记忆、技能创建和会话检索——作为原生工具。其技能格式与 Hermes 使用的 agentskills.io 约定兼容，因此技能可以互通。" }
+    },
+    {
+      "@type": "Question",
+      "name": "LingCode 将智能体记忆存储在哪里？",
+      "acceptedAnswer": { "@type": "Answer", "text": "存储在你本地机器上的每个项目记忆文件和跨项目用户记忆文件中，通过专用的 memory_save 工具写入，IDE 会显示保存操作并应用大小限制——而不是让智能体自由编辑文件。" }
+    },
+    {
+      "@type": "Question",
+      "name": "智能体创建的技能会自动运行吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "不会。LingCode 的 skill_propose 工具会生成一份草稿，需要你审核并确认后才能激活。这个人工在环步骤是与全自动技能生成的刻意安全差异。" }
+    },
+    {
+      "@type": "Question",
+      "name": "学习循环是否适用于 Claude 以外的提供商？",
+      "acceptedAnswer": { "@type": "Answer", "text": "是的。记忆、技能提案和会话检索工具都内置于 LingCode 的原生智能体循环中，因此当你切换到 DeepSeek 或兼容 OpenAI 的提供商时，它们同样可用——不只限于 Claude。" }
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/hermes-style-self-improving-agent.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">原生 Mac IDE</a>
+      <span>/</span>
+      <span>Hermes 风格自我进化智能体</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-06-02</span>
+      </div>
+      <h1>LingCode 是否具备 Hermes 风格的自我进化智能体？</h1>
+      <p class="tldr"><strong>简而言之：</strong>是的。LingCode 实现了与 Nous Research 的 <strong>Hermes Agent</strong> 相同的学习循环——<strong>持久记忆</strong>、<strong>智能体自主提案技能</strong>和<strong>历史会话全文检索</strong>——但运行在原生 macOS IDE 内，支持多种 AI 提供商，并加入了人工审核环节，让你始终掌握主导权。</p>
+      <p class="intro">大多数 AI 编程智能体都是一次性的：完成任务后便什么都忘记了。Hermes Agent 在 2026 年引发广泛关注，正是因为它反其道而行——它会持续学习。LingCode 将同样的循环机制带入其内置智能体，让每一次会话都能降低下一次的成本，而无需将你的代码或记忆上传到他人的服务器。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>Hermes 学习循环是什么</h2>
+      <p>Hermes 将自身描述为"唯一内置学习循环的智能体——它从经验中创建技能，在使用中持续改进，主动提示自己持久化知识，并检索自身过往对话。"这个循环建立在三大支柱之上：</p>
+      <ul>
+        <li><strong>持久记忆</strong>——智能体能记住用户偏好、决策和反复出现的问题。</li>
+        <li><strong>技能创建</strong>——将重复操作转化为可复用的技能。</li>
+        <li><strong>会话召回</strong>——检索自身历史记录，而不是每次从零开始。</li>
+      </ul>
+
+      <h2>LingCode 如何原生实现相同的循环</h2>
+      <p>LingCode 没有 fork Hermes，而是将同样的三大支柱作为一等公民的本地工具，直接内置到其智能体中。</p>
+
+      <h3>1. 持久记忆与自我提示</h3>
+      <p>智能体配备了 <code>memory_save</code> 工具，可将持久化笔记写入每个项目的记忆文件和跨项目的用户记忆文件。它沿用了 Hermes 的自我提示机制：在可配置的轮次内（默认 8 轮）如果没有保存记忆，LingCode 会提醒智能体将值得记录的内容持久化——例如用户偏好、非显而易见的项目决策或反复出现的痛点。你可以在设置中调整或关闭这一频率。</p>
+
+      <h3>2. 技能创建——加入人工审核关卡</h3>
+      <p>当智能体发现自己多次执行了同一套多步骤流程时，可以调用 <code>skill_propose</code> 起草一个新的可复用技能（即斜杠命令）。这正是 Hermes 的"从经验中创建技能"——但有一个刻意的差异：在 LingCode 中，新技能会以<strong>草稿形式呈现，由你审核并确认</strong>后方可激活。你获得了不断积累的能力，同时避免了智能体悄悄改写自身行为的风险。</p>
+
+      <h3>3. 会话召回与全文检索</h3>
+      <p>LingCode 对你的历史智能体会话建立索引，并通过基于 SQLite FTS5 全文检索的 <code>session_search</code> 工具对外暴露。你可以询问"上周遇到的那个 bug"或"这个问题我在另一个项目里修过吗"，智能体会检索自己的历史记录——返回匹配片段、会话 ID 及各会话所属项目——而不是凭空猜测。</p>
+
+      <div class="info-box">
+        <h3>不只限于 Claude</h3>
+        <p>记忆、技能提案和会话工具都内置于 LingCode 的智能体循环中——因此当你切换提供商（DeepSeek 或任何兼容 OpenAI 的模型）时，学习循环依然随行。多提供商 IDE 的意义就在于：能力不应取决于你今天选择了哪个模型。</p>
+      </div>
+
+      <h2>LingCode 方案的差异所在</h2>
+      <table class="tutorial-table">
+        <thead>
+          <tr><th>能力</th><th>Hermes Agent</th><th>LingCode</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>持久记忆 + 自我提示</td><td>支持</td><td>支持</td></tr>
+          <tr><td>智能体创建技能</td><td>支持（全自动）</td><td>支持——以草稿提案，需你确认</td></tr>
+          <tr><td>会话检索</td><td>支持（FTS5）</td><td>支持（FTS5）</td></tr>
+          <tr><td>运行环境</td><td>无界面服务器 / 对话平台</td><td>原生 macOS IDE（及网页标签页）</td></tr>
+          <tr><td>技能格式</td><td>agentskills.io frontmatter</td><td>兼容 agentskills.io</td></tr>
+          <tr><td>支持模型</td><td>开源权重模型</td><td>多提供商（Claude + 可切换）</td></tr>
+        </tbody>
+      </table>
+      <p>核心差异在于：Hermes 运行在你需要 SSH 连入的服务器上；而 LingCode 的学习循环就在你实际编写代码的编辑器内——项目目录树、构建系统、模拟器和代码差异视图都触手可及。</p>
+
+      <h2>自我进化智能体为何重要</h2>
+      <p>一个会遗忘的智能体，意味着你每天早上都要重新给它讲解你的代码库。学习循环从根本上改变了这一成本结构：记忆捕捉项目背后的"为什么"，提案技能固化可重复工作流程的"怎么做"，而会话检索则确保机构知识不会随着对话结束而烟消云散。</p>
+
+      <h2>常见问题</h2>
+      <p><strong>LingCode 使用的是 Hermes Agent 的代码库吗？</strong><br>不是。LingCode 独立实现了相同的学习循环概念作为原生工具，其技能格式与 Hermes 使用的 agentskills.io 约定兼容——因此技能可以互通。</p>
+      <p><strong>LingCode 将智能体记忆存储在哪里？</strong><br>存储在你本地机器上的每个项目记忆文件和跨项目用户记忆文件中，通过专用的 <code>memory_save</code> 工具写入，IDE 会显示保存操作并应用大小限制。</p>
+      <p><strong>智能体创建的技能会自动运行吗？</strong><br>不会。<code>skill_propose</code> 会生成一份草稿，需要你审核并确认——这是刻意设计的安全步骤。</p>
+      <p><strong>网页版也支持学习循环吗？</strong><br>是的——在 Claude Code Native 标签页和网页标签页中均可使用，并支持 LingCode 的其他提供商。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/install-a-skill.html" class="tutorial-next-card">
+            <h3>安装技能</h3>
+            <p>为你的智能体添加可复用的斜杠命令</p>
+          </a>
+          <a href="/zh/tutorials/write-a-custom-skill.html" class="tutorial-next-card">
+            <h3>编写自定义技能</h3>
+            <p>亲自编写——了解智能体提案草稿所用的格式</p>
+          </a>
+          <a href="/zh/tutorials/brainstorm-before-you-build.html" class="tutorial-next-card">
+            <h3>动手前先头脑风暴</h3>
+            <p>在代码存在之前先明确需求范围</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+      <p>原生 AI 应用开发。专为想要快速交付的创始人和追求真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col"><h4>产品</h4><ul><li><a href="/try.html">Web (/try)</a></li><li><a href="/zh/cli.html">CLI</a></li><li><a href="/zh/features.html">Mac IDE</a></li><li><a href="/zh/pricing.html">定价</a></li><li><a href="/changelog.html">更新日志</a></li></ul></div>
+    <div class="footer-col"><h4>开发者</h4><ul><li><a href="/zh/docs.html">文档</a></li><li><a href="/zh/tutorials.html">教程</a></li><li><a href="/getting-started.html">入门</a></li><li><a href="/zh/cli.html">CLI 参考</a></li><li><a href="/zh/why-not-cursor.html">为何不用 Cursor</a></li></ul></div>
+    <div class="footer-col"><h4>社区</h4><ul><li><a href="/community.html">周五工作坊</a></li><li><a href="/community.html">高校合作</a></li><li><a href="/examples.html">案例展示</a></li><li><a href="/blog.html">博客</a></li><li><a href="/support.html">支持</a></li></ul></div>
+    <div class="footer-col"><h4>公司</h4><ul><li><a href="/manifesto.html">理念宣言</a></li><li><a href="/pitch.html">产品介绍</a></li><li><a href="/zh/privacy.html">隐私政策</a></li><li><a href="/signin.html">登录</a></li><li><a href="/signup.html">注册</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

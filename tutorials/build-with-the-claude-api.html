@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build with the Claude API — prompt caching, tools, and model migrations</title>
+  <meta name="description" content="A working Claude API integration without prompt caching is paying full price for tokens you've already paid for. LingCode wires the Anthropic SDK with caching, tool use, and model migrations the right way.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/build-with-the-claude-api.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/build-with-the-claude-api.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/build-with-the-claude-api.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/build-with-the-claude-api.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Build with the Claude API — prompt caching, tools, and model migrations",
+  "description": "A working Claude API integration without prompt caching is paying full price for tokens you've already paid for. Caching alone often cuts spend in half. This tutorial walks the canonical Anthropic SDK shape and the optimizations that actually move the bill — plus what changes (an",
+  "url": "https://lingcode.dev/tutorials/build-with-the-claude-api.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/build-with-the-claude-api.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Build with the Claude API — prompt caching, tools, and model migrations"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Build with the Claude API",
+      "item": "https://lingcode.dev/tutorials/build-with-the-claude-api.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/build-with-the-claude-api.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Build with the Claude API</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Build with the Claude API — prompt caching, tools, and model migrations</h1>
+      <p class="intro">A working Claude API integration without prompt caching is paying full price for tokens you've already paid for. Caching alone often cuts spend in half. This tutorial walks the canonical Anthropic SDK shape and the optimizations that actually move the bill — plus what changes (and doesn't) when a new model ships.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why "just works" is the expensive default</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>The smallest Anthropic SDK example in the docs does work — but it ships three soft defaults that cost real money at any non-toy traffic:</p>
+          <ul>
+            <li><strong>No prompt caching.</strong> Every request re-bills the full system prompt, the full tool spec, and any uploaded context. Cached tokens cost ~10% of base input tokens. Skipping caching on a chatbot with a 4 KB system prompt and 100 daily users is a recurring bill for nothing.</li>
+            <li><strong>Tool use written as string parsing.</strong> Hand-rolling "if the model says <code>SEARCH(...)</code>, run search" is the path of pain — fragile, no schema validation, no parallel tool calls. The SDK has a first-class <code>tools</code> shape; use it.</li>
+            <li><strong>Hard-coded model strings everywhere.</strong> When the next Sonnet or Opus ships, you want one line to change, not twelve. Centralize.</li>
+          </ul>
+          <p>LingCode knows the Anthropic SDK shape and writes integrations with caching, tool use, and a model constant by default — ask it to build the thing and you get the optimized version on the first pass.</p>
+        </div>
+      </div>
+
+      <h2>What you need</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong> — <a href="/LingCode-Installer.dmg" download>download the installer</a>.</li>
+            <li><strong>An Anthropic API key</strong> — from <a href="https://console.anthropic.com">console.anthropic.com</a>. Drop it in <code>.env</code> as <code>ANTHROPIC_API_KEY</code>.</li>
+            <li><strong>A Node or Python project</strong> — examples below are TypeScript (<code>@anthropic-ai/sdk</code>) because it covers the broadest shape; the Python <code>anthropic</code> SDK mirrors it method-for-method.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>The minimal canonical call</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Ask LingCode to scaffold the SDK setup. The shape it produces:</p>
+          <pre><code>// src/claude.ts
+import Anthropic from "@anthropic-ai/sdk";
+
+const MODEL = "claude-sonnet-4-7-20260101"; // one place to bump
+const client = new Anthropic(); // reads ANTHROPIC_API_KEY from env
+
+export async function ask(userText: string) {
+  const res = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    messages: [{ role: "user", content: userText }],
+  });
+  return res.content[0].type === "text" ? res.content[0].text : "";
+}</code></pre>
+          <p>Three things to notice. <code>MODEL</code> is a constant — every call routes through it. <code>max_tokens</code> is explicit — the SDK requires it. The response is a content-block array, not a string; the model can return multiple blocks (text, tool calls, thinking), so always check the type.</p>
+          <div class="tip-box">
+            <strong>The Python shape is identical.</strong> <code>from anthropic import Anthropic; client = Anthropic(); client.messages.create(...)</code>. Pick whichever language your backend is in; the API surface is the same.
+          </div>
+        </div>
+      </div>
+
+      <h2>Prompt caching — the one optimization you can't skip</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>If the system prompt is the same on every request — which it usually is — mark it cacheable and pay 10% of base price after the first call. Five minutes of work, sometimes half the bill.</p>
+          <pre><code>const SYSTEM_PROMPT = `You are a support agent for Acme Widgets.
+Your knowledge base:
+
+${KNOWLEDGE_BASE_TEXT}
+
+Always cite the section number when answering.`;
+
+const res = await client.messages.create({
+  model: MODEL,
+  max_tokens: 1024,
+  system: [
+    {
+      type: "text",
+      text: SYSTEM_PROMPT,
+      cache_control: { type: "ephemeral" },
+    },
+  ],
+  messages: [{ role: "user", content: userText }],
+});</code></pre>
+          <p>Two rules to internalize:</p>
+          <ul>
+            <li><strong>Cache the stable prefix.</strong> System prompts, tool specs, large documents the user is asking about — anything that doesn't change between turns. The cache key is the literal prefix bytes, so a single edited character invalidates the entry.</li>
+            <li><strong>There's a minimum size.</strong> Cached blocks have a token-count floor (1024 for Sonnet, 2048 for Haiku at time of writing). Tiny system prompts won't cache — and the SDK won't error, it just silently bills full price. Check <code>res.usage.cache_creation_input_tokens</code> and <code>cache_read_input_tokens</code> on the response to verify the cache actually hit.</li>
+          </ul>
+          <div class="warn-box">
+            <strong>Watch the TTL.</strong> Ephemeral cache entries live ~5 minutes since last hit. If your traffic is bursty (one request, then nothing for 10 minutes), you pay the full creation cost on every burst. For predictable high traffic, ephemeral is a clean win; for irregular traffic, weigh it.
+          </div>
+        </div>
+      </div>
+
+      <h2>Tool use — the real shape</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Tool use is a three-step protocol: you declare tools, the model emits a <code>tool_use</code> block, you reply with a <code>tool_result</code>. The SDK gives you typed shapes; don't reinvent it as string parsing.</p>
+          <pre><code>const tools = [
+  {
+    name: "get_weather",
+    description: "Get current weather for a city.",
+    input_schema: {
+      type: "object",
+      properties: {
+        city: { type: "string", description: "City name, e.g. 'Paris'." },
+      },
+      required: ["city"],
+    },
+  },
+];
+
+let messages = [{ role: "user", content: "What's the weather in Tokyo?" }];
+
+while (true) {
+  const res = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    tools,
+    messages,
+  });
+
+  if (res.stop_reason !== "tool_use") {
+    // Plain answer — done.
+    return res.content;
+  }
+
+  // The model wants a tool. Run it, reply, loop.
+  const toolUse = res.content.find((b) => b.type === "tool_use");
+  const result = await runTool(toolUse.name, toolUse.input);
+
+  messages.push({ role: "assistant", content: res.content });
+  messages.push({
+    role: "user",
+    content: [
+      {
+        type: "tool_result",
+        tool_use_id: toolUse.id,
+        content: JSON.stringify(result),
+      },
+    ],
+  });
+}</code></pre>
+          <p>The loop terminates when <code>stop_reason</code> is anything other than <code>tool_use</code> — typically <code>end_turn</code>. The model may emit multiple <code>tool_use</code> blocks in a single response (parallel tool calls); run them all and reply with all the <code>tool_result</code>s in one user message.</p>
+          <div class="tip-box">
+            <strong>Cache the tools array too.</strong> Tool specs are stable across requests — append <code>cache_control: { type: "ephemeral" }</code> to the last tool in the list to mark the whole block cacheable. Big tools array, same effect as a big system prompt.
+          </div>
+        </div>
+      </div>
+
+      <h2>Streaming — for chat UIs that aren't allowed to feel slow</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>The same call, streamed:</p>
+          <pre><code>const stream = client.messages.stream({
+  model: MODEL,
+  max_tokens: 1024,
+  messages: [{ role: "user", content: userText }],
+});
+
+for await (const event of stream) {
+  if (event.type === "content_block_delta" &&
+      event.delta.type === "text_delta") {
+    process.stdout.write(event.delta.text);
+  }
+}
+
+const final = await stream.finalMessage();
+console.log("usage:", final.usage);</code></pre>
+          <p>Streaming events include <code>message_start</code>, <code>content_block_start</code>, <code>content_block_delta</code>, <code>content_block_stop</code>, <code>message_delta</code>, <code>message_stop</code>. For most UIs you only render <code>text_delta</code> deltas; the rest are bookkeeping. <code>finalMessage()</code> resolves the assembled response — usage stats and stop reason live there.</p>
+        </div>
+      </div>
+
+      <h2>Other surfaces worth knowing exist</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>LingCode will wire any of these if you ask, but they're not free choices — each has a use case:</p>
+          <ul>
+            <li><strong>Batch API.</strong> Submit up to 100,000 requests as a single batch, results within 24h, 50% cheaper than synchronous. Right answer for nightly enrichment jobs; wrong answer for chat.</li>
+            <li><strong>Files API.</strong> Upload a PDF or document once, reference it by ID across requests. Pair with prompt caching when the same file is queried repeatedly.</li>
+            <li><strong>Citations.</strong> Pass documents as a content block with <code>citations: { enabled: true }</code> and the model returns citation objects pointing at the source spans. Real grounding, not vibes.</li>
+            <li><strong>Extended thinking.</strong> Set <code>thinking: { type: "enabled", budget_tokens: 5000 }</code> on hard problems. The model produces a <code>thinking</code> content block (preserved across tool use so it doesn't re-reason). Cost: those thinking tokens are billed. Worth it for math, code, multi-step planning; overkill for "summarize this paragraph."</li>
+            <li><strong>Memory.</strong> The new <code>memory</code> tool lets the model write durable notes across sessions. Useful for long-running agents; verify the model actually has the tool in its training before depending on it (check the model card).</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Migrating between model versions</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>When a new Sonnet or Opus ships, the migration is usually a one-line change — but the regression catch is on you. The API is stable across these releases; the model's behavior isn't.</p>
+          <pre><code>// Before
+const MODEL = "claude-sonnet-4-6-20251022";
+
+// After
+const MODEL = "claude-sonnet-4-7-20260101";</code></pre>
+          <p>What to check after the swap:</p>
+          <ul>
+            <li><strong>Run your existing eval suite.</strong> If you don't have one, this is the moment to write one — 20 representative inputs, expected outputs, diff the two model versions side by side.</li>
+            <li><strong>Re-check prompt caching.</strong> New model = new cache. The first request will be a cache miss; that's normal. Verify subsequent requests hit cache (<code>cache_read_input_tokens &gt; 0</code>).</li>
+            <li><strong>Re-check tool calling shape.</strong> Newer models sometimes prefer different tool argument structures. If a tool call regressed, the fix is usually tightening the tool description, not rolling back.</li>
+            <li><strong>Re-check max_tokens.</strong> Newer models may have larger output windows; consider bumping <code>max_tokens</code> if your prompts ever truncated.</li>
+          </ul>
+          <p>Retired-model swaps are the same shape — Anthropic publishes a sunset date, you change the constant before that date. LingCode reads the model deprecation pages when you ask "what's the current Sonnet model string" and writes the migration with a regression test.</p>
+          <div class="warn-box">
+            <strong>Don't pin to <code>claude-3-5-sonnet-latest</code>-style aliases in production.</strong> They drift under you. Pin to the dated snapshot (<code>claude-sonnet-4-7-20260101</code>) and migrate deliberately.
+          </div>
+        </div>
+      </div>
+
+      <h2>Cost telemetry — track the metric that matters</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Every Anthropic response carries usage stats. Log them:</p>
+          <pre><code>console.log({
+  input: res.usage.input_tokens,
+  output: res.usage.output_tokens,
+  cache_create: res.usage.cache_creation_input_tokens,
+  cache_read: res.usage.cache_read_input_tokens,
+});</code></pre>
+          <p>The two numbers worth watching: <code>cache_read_input_tokens / (cache_read + input + cache_create)</code> is your cache hit rate — anything above 50% on a chatbot means caching is working. <code>output_tokens / input_tokens</code> is your verbosity ratio — if it's climbing over weeks, your prompts are drifting toward longer answers and the bill is following.</p>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Package the whole workflow as a skill so LingCode picks the right API shape, caching strategy, and model constant every time you ask it to wire up Claude:</p>
+          <pre><code>---
+name: claude-api
+description: Build, debug, and optimize Claude API / Anthropic SDK apps in TypeScript or Python. Apps built with this skill should include prompt caching. Also handles migrating between Claude model versions (Sonnet/Opus/Haiku 4.5 → 4.6 → 4.7, retired-model replacements). Triggers: anthropic SDK import, @anthropic-ai/sdk usage, prompt caching questions, tool use loops, streaming, batch API, files API, citations, memory, thinking. Actions: build Claude app, add prompt caching, migrate model version, fix Anthropic API error, optimize tokens, wire tool use. Skip if: code imports openai or other-provider SDK.
+---
+
+When wiring or modifying Claude API code:
+
+1. Use @anthropic-ai/sdk (TS) or anthropic (Python). Same shape.
+2. Centralize the model string in one constant — never inline.
+   Pin to dated snapshots, not -latest aliases.
+3. Mark stable prefixes cacheable with
+   cache_control: { type: "ephemeral" }: system prompt, tools
+   array, large reused documents. Verify cache hits via
+   res.usage.cache_read_input_tokens.
+4. Use the SDK tool-use shape (tools: [...], tool_use block,
+   tool_result reply). Never string-parse tool calls.
+5. Handle parallel tool calls — a single response may contain
+   multiple tool_use blocks; run all, reply with all tool_results
+   in one user message.
+6. For chat UIs, stream content_block_delta events. Use
+   finalMessage() for the assembled response.
+7. Log usage stats on every call. Watch cache hit rate and
+   output/input ratio over time.
+8. On model migrations: change the constant, re-run the eval
+   suite, verify cache still hits, check tool-call shape didn't
+   regress.
+
+Prefer Batch API for offline enrichment (50% cheaper, 24h SLA).
+Prefer Files API + caching for repeated queries against the same
+document. Use extended thinking only when the problem warrants it
+(math, code, multi-step planning).</code></pre>
+          <p>Save as <code>~/.lingcode/skills/claude-api/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/setting-up-api-keys.html" class="tutorial-next-card">
+            <h3>Setting up API keys</h3>
+            <p>The right way to store and rotate ANTHROPIC_API_KEY and friends without leaking them</p>
+          </a>
+          <a href="/tutorials/dispatch-parallel-agents.html" class="tutorial-next-card">
+            <h3>Dispatch parallel agents</h3>
+            <p>When you have multiple independent Claude calls to run, parallelize the wall-clock</p>
+          </a>
+          <a href="/tutorials/run-a-prompt-on-a-schedule.html" class="tutorial-next-card">
+            <h3>Run a prompt on a schedule</h3>
+            <p>Cron a Claude call to run every morning, or loop one locally on an interval</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

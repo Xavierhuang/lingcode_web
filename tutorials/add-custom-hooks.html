@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I add custom hooks to LingCode (PreToolUse, UserPromptSubmit)? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Hooks let you run a shell command around agent actions. Block destructive tools, log every prompt, enforce a lint pass before commits. Real policy, not advice.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/add-custom-hooks.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/add-custom-hooks.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/add-custom-hooks.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/add-custom-hooks.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Add custom hooks",
+  "description": "A hook is a shell command LingCode runs at a specific point in the agent's lifecycle — before a tool call, after a prompt is submitted, when a session ends. Hooks enforce policy: not \"please don't do X\" written in a CLAUDE.md, but actual code that says no.",
+  "url": "https://lingcode.dev/tutorials/add-custom-hooks.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/add-custom-hooks.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Add custom hooks"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Add custom hooks",
+      "item": "https://lingcode.dev/tutorials/add-custom-hooks.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/add-custom-hooks.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Add custom hooks</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I add custom hooks to LingCode?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Edit <code>~/.claude/settings.json</code> (or <code>.claude/settings.json</code> in a project) and add a <code>hooks</code> entry mapping events (<code>PreToolUse</code>, <code>UserPromptSubmit</code>, <code>SessionStart</code>, <code>Stop</code>) to shell commands. The harness runs the command, not the agent — useful for guardrails and automation.</p>
+      <p class="intro">A hook is a shell command LingCode runs at a specific point in the agent's lifecycle — before a tool call, after a prompt is submitted, when a session ends. Hooks enforce policy: not "please don't do X" written in a CLAUDE.md, but actual code that says no.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>There are two ways to influence what the agent does. One is to tell it: in a CLAUDE.md, in a skill, in the prompt itself. Telling works most of the time. It also fails sometimes, because the agent is a model and models are probabilistic. For things that absolutely must happen — or must never happen — telling isn't enough. The rule you wrote down can be ignored under pressure, missed entirely on a fresh chat, or quietly violated when the agent decides the situation is different from the one you described.</p>
+      <p>The other way is to enforce it: code that runs as the agent works, around its actions. A <em>PreToolUse</em> hook fires before any tool call and can veto it. A <em>UserPromptSubmit</em> hook fires when you send a message and can log, modify, or block it. A <em>PostToolUse</em> hook fires after a successful tool call. A <em>SessionEnd</em> hook fires when the chat closes. Each hook is a shell command — your code — that gets context as environment variables and decides what happens next by its exit code and output.</p>
+      <p>Use hooks when the wrong outcome is expensive enough that a probabilistic safeguard isn't enough. "Never let the agent push to <code>main</code>." "Always run my linter before committing." "Log every shell command the agent ran today for audit." These are policy questions, not vibes — and hooks are how you make them code.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The four hook event types and when each fires</li>
+        <li>The hooks.json format</li>
+        <li>How to read the LINGCODE_* / CLAUDE_* env vars hooks receive</li>
+        <li>What a hook's exit code means (and why exit 1 to block is the convention)</li>
+        <li>Where to put hooks: project, user-wide, or inside a plugin</li>
+      </ul>
+
+      <h2>Step 1: The four events</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>What each one does</h3>
+          <ul>
+            <li><strong>UserPromptSubmit</strong> — fires every time you press send. Gets the prompt text. Can log it, modify it, or block the submission. Common use: redact secrets the user accidentally typed.</li>
+            <li><strong>PreToolUse</strong> — fires before any tool call. Gets the tool name and arguments. Can approve, log, or veto. Common use: refuse <code>shell</code> commands that match a dangerous pattern.</li>
+            <li><strong>PostToolUse</strong> — fires after a successful tool call. Gets the tool name, arguments, and result. Common use: write an audit log; trigger a downstream notification.</li>
+            <li><strong>SessionEnd</strong> — fires when the chat is closed or the agent exits. Common use: cleanup, rollup metrics, send a summary.</li>
+          </ul>
+          <p>The events are the same across both the Mac app's chat and the <a href="/tutorials/install-and-use-the-lingcode-cli.html">CLI</a>. A hook you write works in either context.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: The hooks.json format</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>A JSON file with one entry per hook</h3>
+          <p>Create <code>.claude/hooks/hooks.json</code> in your project (or <code>~/.claude/hooks/hooks.json</code> user-wide):</p>
+          <pre><code>{
+  "PreToolUse": [
+    {
+      "matcher": "shell",
+      "command": "./.claude/hooks/block-dangerous-shell.sh"
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "command": "./.claude/hooks/log-prompt.sh"
+    }
+  ]
+}</code></pre>
+          <p>Each event takes an array of hook entries. Each entry has at least a <code>command</code> (the shell command to run) and optionally a <code>matcher</code> (only fire for tool calls matching this pattern). The command can be a script path, an inline expression, anything your shell would accept.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: What the hook receives</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Env vars with everything the agent knew</h3>
+          <p>When the hook runs, LingCode sets a set of environment variables prefixed <code>LINGCODE_</code> (and aliased as <code>CLAUDE_</code> for Claude Code compatibility). The common ones:</p>
+          <ul>
+            <li><code>LINGCODE_EVENT</code> — the event name (<code>PreToolUse</code>, etc.)</li>
+            <li><code>LINGCODE_TOOL_NAME</code> — for tool-related events, the name of the tool</li>
+            <li><code>LINGCODE_TOOL_ARGS</code> — JSON of the tool's arguments</li>
+            <li><code>LINGCODE_PROMPT</code> — for <code>UserPromptSubmit</code>, the raw prompt text</li>
+            <li><code>LINGCODE_SESSION_ID</code> — a stable ID for the current conversation, useful for log correlation</li>
+            <li><code>LINGCODE_CWD</code> — the project's working directory</li>
+          </ul>
+          <p>Your hook reads these, does its work, and exits. Standard streams: stdin is empty, stdout is captured for context, stderr surfaces in the chat panel if the hook blocks.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Exit code 0 means allow; 1 means block</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The simplest possible contract</h3>
+          <p>A hook exits 0 to allow the event to continue, non-zero to block it. If a <code>PreToolUse</code> hook exits 1, the tool call is refused; the agent sees the refusal and adapts. If a <code>UserPromptSubmit</code> hook exits 1, the message is not sent. Stderr from a blocking hook becomes a message to the agent explaining why — write a clear one-line reason there.</p>
+          <p>For modifications (rewriting a prompt, redacting an argument), the hook writes the new value to stdout and exits 0. LingCode replaces the original with the hook's stdout. This is how a "redact secrets" hook works.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: A concrete example</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Block <code>git push --force</code> to main</h3>
+          <p>Create <code>.claude/hooks/block-force-push.sh</code>:</p>
+          <pre><code>#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${LINGCODE_TOOL_NAME}" == "shell" ]]; then
+  cmd=$(echo "$LINGCODE_TOOL_ARGS" | jq -r '.command // ""')
+  if echo "$cmd" | grep -qE 'git push (-f|--force).*main\b'; then
+    echo "Refused: --force push to main is not allowed. Open a PR instead." >&2
+    exit 1
+  fi
+fi
+exit 0</code></pre>
+          <p>Then in <code>.claude/hooks/hooks.json</code>:</p>
+          <pre><code>{
+  "PreToolUse": [
+    {
+      "matcher": "shell",
+      "command": "./.claude/hooks/block-force-push.sh"
+    }
+  ]
+}</code></pre>
+          <p>Make the script executable (<code>chmod +x</code>). From now on, any agent attempt to force-push to main is refused at the tool boundary — the agent sees the stderr message and tries a different approach. There's no way to talk it out of this rule; it's code now.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Sovereign over permission modes:</strong> A hook that blocks a tool blocks it in all <a href="/tutorials/permission-modes.html">permission modes</a>. Setting <code>acceptEdits</code> doesn't bypass hooks. This is intentional — hooks are policy, modes are convenience.
+      </div>
+
+      <h2>Step 6: Three places hooks can live</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Project, user-wide, or plugin-bundled</h3>
+          <ul>
+            <li><strong>Project-local:</strong> <code>.claude/hooks/</code> at the project root. Tracked in git so the whole team gets the rule.</li>
+            <li><strong>User-wide:</strong> <code>~/.claude/hooks/</code>. Right for personal habits (e.g. "always lint before committing across all my projects").</li>
+            <li><strong>Plugin-bundled:</strong> in a <a href="/tutorials/install-and-configure-plugins.html">plugin's</a> <code>hooks/</code> directory. Lets you distribute hooks reusably — but installing such a plugin triggers a consent prompt, because hooks can run shell.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't fail open.</strong> If your hook script has a bug and exits non-zero on every event, you've effectively blocked the agent. Test hook scripts in isolation (run the <code>.sh</code> file with the env vars set manually) before deploying. A failing hook is worse than a missing hook.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/write-a-custom-skill.html" class="tutorial-next-card">
+            <h3>Write a custom skill</h3>
+            <p>Soft instructions for the agent — pairs naturally with hard hooks</p>
+          </a>
+          <a href="/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>Install and configure plugins</h3>
+            <p>Bundle your hooks for distribution to a team</p>
+          </a>
+          <a href="/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>Permission modes</h3>
+            <p>How the mode system interacts with hooks</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

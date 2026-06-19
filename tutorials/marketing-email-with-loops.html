@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketing email with Loops — LingCode Tutorials</title>
+  <meta name="description" content="Newsletters, onboarding sequences, product announcements. Loops is built for SaaS lifecycle email — different problem than Postmark/Resend.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/marketing-email-with-loops.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/marketing-email-with-loops.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/marketing-email-with-loops.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/marketing-email-with-loops.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Marketing email with Loops",
+  "description": "Newsletters, onboarding sequences, product announcements, \"we miss you\" win-backs. Loops is built for SaaS lifecycle email — different problem from transactional senders like Resend or Postmark .",
+  "url": "https://lingcode.dev/tutorials/marketing-email-with-loops.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/marketing-email-with-loops.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Pick Loops when",
+      "url": "https://lingcode.dev/tutorials/marketing-email-with-loops.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Add and verify your sending domain",
+      "url": "https://lingcode.dev/tutorials/marketing-email-with-loops.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Send a one-off campaign (newsletter)",
+      "url": "https://lingcode.dev/tutorials/marketing-email-with-loops.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Build a lifecycle sequence (loop)",
+      "url": "https://lingcode.dev/tutorials/marketing-email-with-loops.html#step-4"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Marketing email with Loops",
+      "item": "https://lingcode.dev/tutorials/marketing-email-with-loops.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/marketing-email-with-loops.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Marketing email with Loops</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Marketing email with Loops</h1>
+      <p class="intro">Newsletters, onboarding sequences, product announcements, "we miss you" win-backs. <a href="https://loops.so/" target="_blank" rel="noopener">Loops</a> is built for SaaS lifecycle email — different problem from transactional senders like <a href="/tutorials/send-transactional-email-with-resend.html">Resend</a> or <a href="/tutorials/send-transactional-email-with-postmark.html">Postmark</a>.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Pick Loops when</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick Loops when</strong> — you want a marketing email tool that doesn't look like Mailchimp from 2008. Drag-and-drop sequences, an audience filter you can actually understand, a visual editor that produces clean HTML.</li>
+            <li><strong>Alternatives</strong> — <a href="https://customer.io/" target="_blank" rel="noopener">Customer.io</a> (more powerful, more complex), <a href="https://www.intercom.com/" target="_blank" rel="noopener">Intercom</a> (CRM + chat + email bundle), <a href="https://www.userlist.com/" target="_blank" rel="noopener">Userlist</a> (similar shape to Loops, cheaper), <a href="https://buttondown.com/" target="_blank" rel="noopener">Buttondown</a> (newsletter-only, markdown-first).</li>
+            <li><strong>Don't use Loops for</strong> — password resets, magic links, receipts, OTP codes. Those go through a transactional sender (Postmark / Resend / SES). Mixing them tanks deliverability on both.</li>
+            <li><strong>Sign up</strong> — <a href="https://app.loops.so/register" target="_blank" rel="noopener">app.loops.so/register</a>. Free tier: 1,000 contacts, unlimited emails. No credit card.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Add and verify your sending domain</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>In Loops dashboard → <strong>Settings → Sending domain</strong>. Type the domain you want emails to come from (e.g. <code>mail.yourapp.com</code> — use a subdomain so marketing email doesn't tank your root domain's reputation).</p>
+          <p>Loops shows you 3 DNS records to add: an MX, a TXT (SPF), and a CNAME (DKIM). Paste them into your DNS provider — <a href="/tutorials/buy-a-domain-from-cloudflare.html">Cloudflare</a>, <a href="/tutorials/buy-a-domain-from-namecheap.html">Namecheap</a>, <a href="/tutorials/connect-domain-to-server-with-dns.html">general DNS guide</a>.</p>
+          <p>Click <strong>Verify</strong>. Loops checks every minute — should turn green within 5–30 minutes. If it's stuck after an hour, your DNS provider is slow; check with <code>dig CNAME loops._domainkey.mail.yourapp.com</code>.</p>
+          <div class="tip-box">
+            <strong>Tip:</strong> Pre-warm. Send a few campaigns to <em>real engaged subscribers</em> before blasting your full list. Cold domains get filtered to spam.
+          </div>
+        </div>
+      </div>
+
+      <h2>Get your API key</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p><strong>Settings → API</strong> → click <strong>Generate API key</strong>. Copy it once — Loops won't show it again. Store in <code>.env</code> as <code>LOOPS_API_KEY</code>.</p>
+          <p>API docs: <a href="https://loops.so/docs/api-reference/intro" target="_blank" rel="noopener">loops.so/docs/api-reference</a>.</p>
+        </div>
+      </div>
+
+      <h2>Sync contacts from your app</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Every signup, every plan change, every cancellation — push the event to Loops. That's the only way segments stay accurate.</p>
+          <p>Install the SDK:</p>
+          <pre><code>npm install loops</code></pre>
+          <p>On signup:</p>
+          <pre><code>import { LoopsClient } from "loops";
+const loops = new LoopsClient(process.env.LOOPS_API_KEY);
+
+await loops.contacts.create({
+  email: user.email,
+  firstName: user.firstName,
+  userGroup: "trial",            // for segmentation
+  source: "website",
+  signupDate: new Date().toISOString(),
+});</code></pre>
+          <p>On plan upgrade:</p>
+          <pre><code>await loops.contacts.update({
+  email: user.email,
+  userGroup: "pro",
+  plan: "pro_monthly",
+});</code></pre>
+          <p>On cancellation:</p>
+          <pre><code>await loops.contacts.update({
+  email: user.email,
+  userGroup: "churned",
+  churnedAt: new Date().toISOString(),
+});</code></pre>
+          <p>Full schema: <a href="https://loops.so/docs/api-reference/create-contact" target="_blank" rel="noopener">Create contact</a>, <a href="https://loops.so/docs/api-reference/update-contact" target="_blank" rel="noopener">Update contact</a>.</p>
+        </div>
+      </div>
+
+      <h2>Send a one-off campaign (newsletter)</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Dashboard → <strong>Campaigns → New campaign</strong>. Drag blocks: text, image, button, divider. Loops generates email-client-safe HTML — no escape-into-iframe nonsense.</p>
+          <p>Audience: filter by any property you've synced. <code>userGroup = "pro"</code>. <code>signupDate &gt; 30 days ago</code>. <code>plan = "free" AND lastLogin &lt; 14 days ago</code>.</p>
+          <p>Preview in 6 email clients (Gmail, Outlook, iOS Mail, dark mode, etc) before sending. Loops bundles <a href="https://www.litmus.com/" target="_blank" rel="noopener">Litmus</a>-style previews into the editor.</p>
+          <p>Hit <strong>Send</strong> or schedule for later. Tracking opens/clicks is on by default.</p>
+        </div>
+      </div>
+
+      <h2>Build a lifecycle sequence (loop)</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>"Loops" are Loops's word for drip campaigns. <strong>Loops → New loop</strong> → pick a trigger:</p>
+          <ul>
+            <li><strong>Contact added</strong> — onboarding sequence</li>
+            <li><strong>Property changed</strong> — e.g. <code>plan</code> becomes "churned" → win-back sequence</li>
+            <li><strong>Event sent</strong> — your app fires a custom event via the SDK</li>
+          </ul>
+          <p>Drag email blocks onto the canvas. Add wait steps ("wait 2 days"). Add conditional branches ("if <code>hasShipped = true</code>, skip"). Save → activate.</p>
+          <p>Trigger from your app code:</p>
+          <pre><code>// Loops loops can also be triggered via event
+await loops.events.send({
+  email: user.email,
+  eventName: "completedOnboarding",
+});</code></pre>
+        </div>
+      </div>
+
+      <h2>Common failures</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Emails land in Gmail Promotions tab</strong> — that's actually correct for marketing email. Promotions ≠ spam. Don't try to escape it with workarounds; Gmail will eventually re-classify if users engage.</li>
+            <li><strong>Spam folder</strong> — check <a href="https://www.mail-tester.com/" target="_blank" rel="noopener">mail-tester.com</a>. Below 8/10 = fix SPF/DKIM/DMARC + content. If your DMARC isn't set, Loops won't even use the domain.</li>
+            <li><strong>Sync drift</strong> — your DB has a user but Loops doesn't. Cause: signup call to Loops API failed and you didn't retry. Wrap in try/catch + log; add a daily reconcile job pulling new users from DB and upserting to Loops.</li>
+            <li><strong>"Unsubscribe" not honored</strong> — Loops adds a footer link automatically. If users complain they still get email, check whether they unsubscribed from <em>marketing</em> only — your transactional sender (Postmark/Resend) is separate. Some users want only one.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Free</strong> — 1,000 contacts, unlimited sends. Loops branding in footer.</li>
+            <li><strong>Pro</strong> — $49/mo for 2,500 contacts, removes branding, A/B testing, advanced analytics. Each tier above adds contacts.</li>
+            <li><strong>API rate limit</strong> — 10 req/sec on free, higher on paid. Batch your sync if you have a large user list to backfill.</li>
+            <li><strong>Why pay vs. Mailchimp</strong> — UI is dramatically better (Mailchimp last redesigned in 2017). Audience filters use plain English. Sequences (Loops) are the headline feature; Mailchimp's "Customer Journeys" feel like 2014.</li>
+          </ul>
+          <p>Pricing page: <a href="https://loops.so/pricing" target="_blank" rel="noopener">loops.so/pricing</a>.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <ul>
+            <li><a href="https://loops.so/docs/intro" target="_blank" rel="noopener">Loops docs home</a></li>
+            <li><a href="https://loops.so/docs/api-reference/intro" target="_blank" rel="noopener">API reference</a></li>
+            <li><a href="https://github.com/loops-so/loops-node" target="_blank" rel="noopener">Node SDK on GitHub</a></li>
+            <li><a href="https://loops.so/docs/integrations/segment" target="_blank" rel="noopener">Segment integration</a> — if you already pipe events through <a href="https://segment.com/" target="_blank" rel="noopener">Segment</a>, skip the manual sync.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't mix marketing and transactional.</strong> Sending a "we miss you" win-back through your Postmark account flags Postmark's IP reputation. Sending a password reset through Loops gets it filtered. Two senders, two domains (or subdomains), zero crossover.
+      </div>
+
+      <div class="tutorial-next">
+        <h3>What's next</h3>
+        <div class="tutorial-next-cards">
+          <a href="/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h4>Transactional email with Resend</h4>
+            <p>The other half of the email stack — receipts, magic links, OTPs.</p>
+          </a>
+          <a href="/tutorials/product-analytics-with-posthog.html" class="tutorial-next-card">
+            <h4>Product analytics with PostHog</h4>
+            <p>Wire user events into PostHog and trigger Loops sequences from real behavior.</p>
+          </a>
+          <a href="/tutorials/log-management-with-axiom.html" class="tutorial-next-card">
+            <h4>Log management with Axiom</h4>
+            <p>If a sync fails silently, you want logs you can grep.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

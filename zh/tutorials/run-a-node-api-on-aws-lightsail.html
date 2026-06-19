@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在 AWS Lightsail 上运行 Node API — LingCode 教程</title>
+  <meta name="description" content="Lightsail 是 AWS 中简单、固定价格的选项。花 $5/月启动一台 Linux 服务器，通过 SSH 登录，运行你的 Node API。EC2 的形态，DigitalOcean 的定价。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/run-a-node-api-on-aws-lightsail.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/run-a-node-api-on-aws-lightsail.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/run-a-node-api-on-aws-lightsail.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/run-a-node-api-on-aws-lightsail.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "在 AWS Lightsail 上运行 Node API",
+  "description": "Lightsail 是 AWS 中简洁的一角。固定月费，一键创建 Linux 服务器，SSH 登录即可运行代码。没有 EC2 的附加费用，没有繁琐的 IAM 配置。这是在不承受 AWS 复杂性代价的前提下使用 AWS 的最佳选择。",
+  "url": "https://lingcode.dev/zh/tutorials/run-a-node-api-on-aws-lightsail.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/run-a-node-api-on-aws-lightsail.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "在 AWS Lightsail 上运行 Node API"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "在 AWS Lightsail 上运行 Node API",
+      "item": "https://lingcode.dev/zh/tutorials/run-a-node-api-on-aws-lightsail.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/run-a-node-api-on-aws-lightsail.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>在 AWS Lightsail 上运行 Node API</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>在 AWS Lightsail 上运行 Node API</h1>
+      <p class="intro">Lightsail 是 AWS 中简洁的一角。固定月费，一键创建 Linux 服务器，SSH 登录即可运行代码。没有 EC2 的附加费用，没有繁琐的 IAM 配置。这是在不承受 AWS 复杂性代价的前提下使用 AWS 的最佳选择。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>大多数想用小型 Linux 服务器运行 Node API 的人其实并不需要 AWS。DigitalOcean droplets、Hetzner Cloud、Fly machines——这些选择都更简单、更便宜、上手更快。选择 Lightsail 的理由通常只有两种：要么你已经有 AWS 基础设施（S3 存储桶、RDS 数据库、SES 邮件）需要与这台服务器集成；要么你公司有"只用 AWS"的规定。除此之外，Lightsail 不错，但并无突出优势。</p>
+      <p>Lightsail 之所以存在，是因为 <a href="/zh/tutorials/buy-a-server-from-aws-ec2.html">EC2</a> 对于"我只想要一台 $5 的 Linux 服务器"这个需求来说实在太复杂了。EC2 每个实例有六七项计费条目；Lightsail 只收一笔费用。EC2 的公网 IP 藏在弹性 IP 后面——附加时免费，一旦解绑就开始收费；Lightsail 的静态 IP 是包含在内的。EC2 有安全组、网络 ACL、VPC、子网和路由表；Lightsail 只有一个防火墙开关。代价是 Lightsail 的配置选项较少——如果你的工作负载需要更多控制，就该从 Lightsail 迁移到 EC2 了。</p>
+      <p>本教程将带你完成以下步骤：使用 Node.js 蓝图创建 Lightsail 实例、部署应用、用进程管理器持续运行它、开放防火墙端口、绑定域名，以及申请免费 TLS 证书。最终目标：让 <code>https://api.mybrand.com</code> 指向你的 Node API。实例创建我们会用 AWS 控制台（CLI 也可以，但控制台在这里更直观），其余步骤都在命令行完成。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>Lightsail 的定价模式及其包含的内容</li>
+        <li>Node.js 蓝图与纯 Ubuntu 的区别——该如何选择</li>
+        <li>部署代码（git clone 或 rsync）并通过 PM2 持续运行</li>
+        <li>开放防火墙端口——Lightsail 中你最常用的那个配置项</li>
+        <li>绑定自定义域名并申请免费 Let's Encrypt 证书</li>
+        <li>何时该从 Lightsail 迁移到 EC2 或 Fargate</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前提条件：</strong>一个 AWS 账号、本地 SSH 密钥（或愿意使用浏览器内置 SSH）、一个托管在 git 仓库中的可用 Node API，以及一个你能管理 DNS 的域名（<a href="/zh/tutorials/use-route-53-for-your-domain.html">Route 53</a> 或其他 DNS 服务商均可）。完成第 2 步（首次 SSH 登录）后，在部署任何代码之前，请先阅读<a href="/zh/tutorials/prepare-a-fresh-linux-server-for-production.html">为生产环境准备一台全新 Linux 服务器</a>——Bitnami 蓝图只加固了 Bitnami 服务本身，OS 层（系统更新、ufw、fail2ban、swap、unattended-upgrades）仍需手动配置。
+      </div>
+
+      <h2>第 1 步：创建实例</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>选择蓝图、规格和区域</h3>
+          <p>在 AWS 控制台中打开 Lightsail（注意：它有独立的控制台地址 <code>lightsail.aws.amazon.com</code>，与主 AWS 控制台分开——功能相同，URL 不同）。点击 <strong>Create instance</strong>（创建实例）：</p>
+          <ul>
+            <li><strong>Instance location（实例位置）：</strong>选择离你用户最近的区域。如果不确定，<code>us-east-1</code> 是个稳妥的默认选项。</li>
+            <li><strong>Platform（平台）：</strong>Linux/Unix。</li>
+            <li><strong>Blueprint（蓝图）：</strong>有两个合理选项。<em>"Node.js"</em> 预装了 Node、npm、nginx 和 PM2。<em>"OS Only → Ubuntu 22.04"</em> 是干净的裸系统，需要你自行安装 Node。追求速度就选 Node.js 蓝图；想要干净的起点就选 Ubuntu。</li>
+            <li><strong>Instance plan（实例套餐）：</strong>$5/月（512 MB 内存、1 vCPU、20 GB SSD、1 TB 流量）足以应对小型 Node API。如果觉得不放心，$10/月可以翻倍资源。</li>
+            <li><strong>Name（名称）：</strong>类似 <code>mybrand-api-prod</code> 这样的命名。</li>
+          </ul>
+          <p>点击 Create。实例在 60–90 秒内启动完毕。Lightsail 会分配一个公网 IP 和内部名称。新账号在 AWS 免费套餐下，第一个月免费。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：SSH 登录</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>浏览器 SSH 或本地密钥，任选其一</h3>
+          <p>两种方式：</p>
+          <ul>
+            <li><strong>浏览器 SSH：</strong>进入实例页面 → 点击 <strong>Connect using SSH</strong>。终端会在新标签页打开。无需配置，能穿透企业防火墙，但不保留滚动历史，复制粘贴也不方便。</li>
+            <li><strong>本地 SSH：</strong>下载默认密钥（Account → SSH keys → Default → Download）。保存到 <code>~/.ssh/lightsail.pem</code>，执行 <code>chmod 600 ~/.ssh/lightsail.pem</code>，然后：
+              <pre><code>ssh -i ~/.ssh/lightsail.pem bitnami@&lt;PUBLIC_IP&gt;
+# Node.js 蓝图的用户名是 bitnami，Ubuntu 蓝图的用户名是 ubuntu。</code></pre>
+            </li>
+          </ul>
+          <p>登录成功后，Node.js 蓝图的主目录下会有 <code>/opt/bitnami/</code>，里面包含 nginx 和预置的 Node 示例应用。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：部署代码</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>git clone 或 rsync，两种方式都可以</h3>
+          <pre><code># 方式 A：git clone（公开仓库或使用 deploy key）
+cd ~
+git clone https://github.com/you/your-api.git
+cd your-api
+npm ci --production
+# 在 /etc/environment 或应用读取的 .env 文件中设置环境变量。
+
+# 方式 B：从本地用 rsync 推送（服务器无法访问 git）
+# 在本地执行：
+rsync -avz --exclude node_modules \
+  -e "ssh -i ~/.ssh/lightsail.pem" \
+  ./ bitnami@&lt;PUBLIC_IP&gt;:/home/bitnami/your-api/
+# 然后在服务器上执行：
+cd ~/your-api
+npm ci --production</code></pre>
+          <p>先手动测试一下：执行 <code>node server.js</code>（或你的入口文件），确认应用能正常启动并监听端口——通常是 3000 或 8080。停止它（Ctrl+C）；下一步我们会让它持续运行。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：通过 PM2 持续运行</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>崩溃自动重启，重启后自动恢复</h3>
+          <p>Node.js 蓝图已预装 PM2。若使用纯 Ubuntu 蓝图，执行：<code>sudo npm i -g pm2</code>。</p>
+          <pre><code>cd ~/your-api
+pm2 start server.js --name api
+pm2 save
+pm2 startup
+# pm2 startup 会打印一条命令——以 root 身份执行它，
+# 将 PM2 注册为 systemd 服务，使其在重启后自动恢复。</code></pre>
+          <p>现在你的 API 已在 <code>http://&lt;PUBLIC_IP&gt;:3000</code>（或你应用监听的端口）上运行。测试一下：</p>
+          <pre><code>curl http://&lt;PUBLIC_IP&gt;:3000/health
+# 目前会超时——防火墙还没放行。那是第 5 步的内容。</code></pre>
+          <p>常用 PM2 命令：<code>pm2 logs api</code>（实时日志）、<code>pm2 restart api</code>、<code>pm2 monit</code>（交互式监控面板）。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：开放防火墙</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>两个端口：80 用于 HTTP，443 用于 HTTPS</h3>
+          <p>Lightsail 防火墙默认只开放 SSH（22 端口），其余全部屏蔽。开放 Web 端口：</p>
+          <ol>
+            <li>进入 Lightsail 控制台 → 你的实例 → <strong>Networking</strong> 标签页。</li>
+            <li>在 <strong>IPv4 Firewall</strong> 下，点击 <strong>Add rule</strong>。</li>
+            <li>添加：Application = HTTP，Port = 80。再添加：Application = HTTPS，Port = 443。</li>
+            <li>保存。</li>
+          </ol>
+          <p>不要直接将 3000 端口暴露到公网——nginx 会在你的 Node 应用前面监听 80/443 端口（蓝图已预装并运行 nginx），并将请求代理转发给 Node 进程。从本地执行 <code>curl http://&lt;PUBLIC_IP&gt;</code>，应该能看到默认的 nginx 页面或蓝图示例应用。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：配置 nginx 反向代理你的 API</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>编辑一个文件，重载 nginx</h3>
+          <p>在 Node.js 蓝图上，nginx 配置位于 <code>/opt/bitnami/nginx/conf/server_blocks/</code>。在该目录创建一个文件：</p>
+          <pre><code>sudo nano /opt/bitnami/nginx/conf/server_blocks/api.conf</code></pre>
+          <p>粘贴以下内容：</p>
+          <pre><code>server {
+    listen 80;
+    server_name api.mybrand.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+          <p>重载：<code>sudo /opt/bitnami/ctlscript.sh restart nginx</code>。现在 nginx 已将 <code>api.mybrand.com:80</code> 的请求代理到 <code>127.0.0.1:3000</code> 上的 Node 进程。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：绑定静态 IP 和域名</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>没有静态 IP，停机重启后 IP 会变</h3>
+          <p>Lightsail 的默认 IP 是"动态"的——重启能保留，但关机重开后会变。绑定真实域名需要一个固定不变的静态 IP：</p>
+          <ol>
+            <li>Lightsail → <strong>Networking</strong>（顶部标签页，不是实例内的那个）→ <strong>Create static IP</strong>。</li>
+            <li>选择与实例相同的区域，然后附加到该实例。</li>
+            <li>附加期间免费；一旦解绑但未使用，则按 $0.005/小时（约 $3.65/月）计费。这是 Lightsail 唯一容易踩坑的计费项。</li>
+          </ol>
+          <p>现在将你的域名指向静态 IP。在 Route 53（或你的 DNS 服务商）中：创建一条 <strong>A 记录</strong>，名称填 <code>api</code>，值填你的静态 IP。<a href="/zh/tutorials/connect-domain-to-server-with-dns.html">DNS 教程</a>涵盖了各类 DNS 记录的通用说明；这里是最直接的 A 记录场景。</p>
+        </div>
+      </div>
+
+      <h2>第 8 步：通过 Let's Encrypt 免费申请 TLS 证书</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>Bitnami 内置了一键申请脚本</h3>
+          <p>在 Node.js 蓝图上，certbot 已预装。SSH 登录后执行：</p>
+          <pre><code>sudo /opt/bitnami/bncert-tool</code></pre>
+          <p>该工具会询问你的域名、邮箱，以及是否启用 HTTP 转 HTTPS 重定向。选择启用重定向。它会自动修改 nginx 配置、签发证书并设置自动续期。整个过程两分钟，无需手动编辑 nginx。</p>
+          <p>若使用纯 Ubuntu 蓝图（无 Bitnami）：执行 <code>sudo apt install certbot python3-certbot-nginx</code>，然后 <code>sudo certbot --nginx -d api.mybrand.com --redirect</code>。效果相同，步骤稍多。</p>
+          <p>测试：<code>curl -I https://api.mybrand.com/health</code>。你应该看到 <code>HTTP/2 200</code>（或你的健康检查接口返回的状态码）。HTTP→HTTPS 重定向已生效；证书通过 cron 任务每 90 天自动续期。</p>
+        </div>
+      </div>
+
+      <h2>搭建完成后的部署流程</h2>
+      <p>每次推送更新代码时，常规工作流如下：</p>
+      <pre><code># 本地：推送到仓库
+git push origin main
+
+# 服务器：拉取并重启
+ssh -i ~/.ssh/lightsail.pem bitnami@&lt;STATIC_IP&gt;
+cd ~/your-api
+git pull
+npm ci --production  # 如果依赖有变化
+pm2 restart api</code></pre>
+      <p>想要更省事，可以在本地写一个 shell 脚本，通过 SSH 执行同样的命令：</p>
+      <pre><code>#!/usr/bin/env bash
+ssh -i ~/.ssh/lightsail.pem bitnami@&lt;STATIC_IP&gt; \
+  'cd ~/your-api &amp;&amp; git pull &amp;&amp; npm ci --production &amp;&amp; pm2 restart api'</code></pre>
+      <p>如果想用真正的 CI/CD，一个 SSH 进服务器并执行相同命令的 GitHub Actions workflow 大约只需 15 行代码。要实现零停机部署（更进一步），可以考虑 PM2 的 reload 命令，或将 PM2 与轻量级反向代理切换方案配合使用。</p>
+
+      <h2>何时该从 Lightsail 迁移出去</h2>
+      <p><strong>你需要自动扩缩容。</strong>Lightsail 是单实例方案。如果流量超过单台服务器的承载能力，你需要 EC2 + ALB + Auto Scaling Group，或者迁移到像 <a href="/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html">ECS Fargate</a> 这样的容器编排平台。</p>
+      <p><strong>你需要 VPC 对等连接或私有子网。</strong>Lightsail 实例运行在托管 VPC 中，无法与其他 VPC 对等互联。如果服务器需要访问 RDS、ElastiCache 或 AWS 侧的私有资源，EC2 才是正确选择。</p>
+      <p><strong>你需要超过 $80/月套餐（32 GB 内存、8 vCPU）的配置。</strong>Lightsail 的最大规格是固定的；超过这个上限，只能选择 EC2。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html" class="tutorial-next-card">
+            <h3>将容器部署到 ECS Fargate</h3>
+            <p>当你的 API 超出单台服务器的承载能力时，这是在 AWS 上的下一步</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-server-from-aws-ec2.html" class="tutorial-next-card">
+            <h3>从 EC2 购买服务器</h3>
+            <p>从 Lightsail 升级的另一条路——更多配置项，也有更多费用</p>
+          </a>
+          <a href="/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html" class="tutorial-next-card">
+            <h3>将静态网站部署到 S3 + CloudFront</h3>
+            <p>前端部分——将 Lightsail API 与 CloudFront 托管的前端配合使用</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资路演</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

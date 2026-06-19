@@ -1,0 +1,41 @@
+# prometheus.yml — COPY to prometheus.yml and fill in the two private IPs
+# (bootstrap-monitoring.sh does this from .env: DATA_PLANE_IP, API_IP). The
+# rendered prometheus.yml is gitignored.
+
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+scrape_configs:
+  - job_name: postgres
+    static_configs:
+      - targets: ['__DATA_PLANE_IP__:9187']
+  - job_name: pgbouncer
+    static_configs:
+      - targets: ['__DATA_PLANE_IP__:9127']
+  - job_name: node-dataplane
+    static_configs:
+      - targets: ['__DATA_PLANE_IP__:9100']
+
+  # LingCode API metrics. The app binds 127.0.0.1:3000, so expose /metrics on
+  # the API box's PRIVATE nginx vhost, restricted to this monitoring host, e.g.:
+  #   location = /metrics { allow __MONITORING_IP__; deny all; proxy_pass http://127.0.0.1:3000/metrics; }
+  # The token in metrics_token must equal METRICS_TOKEN in the API box .env.
+  - job_name: lingcode-api
+    metrics_path: /metrics
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/metrics_token
+    static_configs:
+      - targets: ['__API_IP__:443']
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Run lingcode serve as a backend — LingCode Tutorials</title>
+  <meta name="description" content="The lingcode serve command exposes the same agent loops as a local HTTP API with Server-Sent Events. Build your own UIs, bots, and scripts on top.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/run-lingcode-serve-as-backend.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/run-lingcode-serve-as-backend.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/run-lingcode-serve-as-backend.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/run-lingcode-serve-as-backend.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Run lingcode serve as a backend",
+  "description": "Everything LingCode does for its own chat panel — the agent loop, the tool dispatch, the streaming output — is available as a local HTTP API. Run lingcode serve and you have a backend you can build your own UIs and bots on top of.",
+  "url": "https://lingcode.dev/tutorials/run-lingcode-serve-as-backend.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/run-lingcode-serve-as-backend.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Run lingcode serve as a backend"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Run lingcode serve as a backend",
+      "item": "https://lingcode.dev/tutorials/run-lingcode-serve-as-backend.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/run-lingcode-serve-as-backend.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">Native Mac IDE</a>
+      <span>/</span>
+      <span>Run lingcode serve as a backend</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-advanced">● Advanced</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Run lingcode serve as a backend</h1>
+      <p class="intro">Everything LingCode does for its own chat panel — the agent loop, the tool dispatch, the streaming output — is available as a local HTTP API. Run <code>lingcode serve</code> and you have a backend you can build your own UIs and bots on top of.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Once you've used an agent for a while, you start noticing places where you wish the agent could go. A Slack bot that answers questions about your codebase. A Raycast extension that takes a prompt and pipes the answer to your clipboard. A small webpage on your laptop that gives a friend access to the agent for one specific task. A CI step that asks the agent to review the PR. The agent is good. The agent should be everywhere you want it.</p>
+      <p>Most of those projects don't need a new agent loop. They need a way to <em>call</em> the agent loop you already have, with auth, with streaming, over a network the way every other service talks. That's what <code>lingcode serve</code> is. The Swift CLI exposes the same three independent loops the Mac app and the REPL use — Claude via the Anthropic SDK, DeepSeek native, OpenAI-compatible — as a Server-Sent Events API behind a bearer token, listening on localhost.</p>
+      <p>The point of running it locally rather than as a hosted service is the credential boundary. Your API keys live in your Keychain. Your file access lives on your machine. <code>lingcode serve</code> doesn't change either; it just lets your other tools call into the agent over HTTP rather than spawning a subprocess. This tutorial covers starting the server, talking to it with curl, and the considerations that turn a local backend into something you'd actually build on.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Starting the server and where the bearer token lives</li>
+        <li>The shape of <code>POST /v1/agent/ask</code> and its SSE stream</li>
+        <li>Why localhost-only is non-negotiable for the default config</li>
+        <li>How keys and Keychain interact when calls come from a different process</li>
+        <li>The two integration patterns: per-user (each developer runs their own) vs. shared (one server, multiple clients)</li>
+      </ul>
+
+      <h2>Step 1: Start the server</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>One command, foreground or background</h3>
+          <p>Assuming the <a href="/tutorials/install-and-use-the-lingcode-cli.html">CLI is installed</a>, start it with:</p>
+          <pre><code>lingcode serve</code></pre>
+          <p>The server boots, prints the listening address (a localhost port), and reads <code>~/.lingcode/server.token</code> — generating one if it doesn't exist. The token file is <code>chmod 600</code>; treat it like an SSH key. Run with <code>--port &lt;N&gt;</code> to override the port, with <code>--token-file &lt;path&gt;</code> to use a token from somewhere else.</p>
+          <p>The server is <code>NWListener</code>-based — Apple's native networking stack, not a third-party HTTP framework. It binds to <code>127.0.0.1</code> by default and refuses to bind to any other interface without an explicit flag, on purpose.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Talk to it with curl</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>One POST, one streaming response</h3>
+          <p>The main endpoint is <code>POST /v1/agent/ask</code>. A minimal request:</p>
+          <pre><code>TOKEN=$(cat ~/.lingcode/server.token)
+curl -N -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"prompt":"What does package.json declare?","provider":"claude"}' \
+     http://127.0.0.1:&lt;port&gt;/v1/agent/ask</code></pre>
+          <p>The response is a stream of Server-Sent Events. Each <code>data:</code> line is one event — text deltas, tool calls, tool results, the final assistant message. Your client reads the stream and renders the events however it wants. The shape matches what the Mac app's chat panel renders internally.</p>
+          <p>The <code>-N</code> flag tells curl not to buffer — you want the stream as it arrives, not when it's done.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: The SSE event types</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>What your client has to handle</h3>
+          <p>The stream emits a small number of event types:</p>
+          <ul>
+            <li><strong>text_delta</strong> — chunks of the assistant's text response. Concatenate them as they arrive to render the message.</li>
+            <li><strong>tool_call</strong> — the agent decided to call a tool. Includes the tool name and arguments. Your client can show this as "calling X with Y…" in the UI.</li>
+            <li><strong>tool_result</strong> — what the tool returned. Often included for transparency but not always needed by the client.</li>
+            <li><strong>message_stop</strong> — the assistant's turn ended. End of stream for this request.</li>
+            <li><strong>error</strong> — something failed. The message field describes the failure; the stream closes after.</li>
+          </ul>
+          <p>For a minimal UI, you can ignore everything except <code>text_delta</code> and <code>message_stop</code>. For a richer one, render tool calls inline. The exact shape is documented in the OpenAPI spec the server exposes at <code>/openapi.json</code>.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Don't bind to 0.0.0.0</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The bearer token is not strong enough for the open internet</h3>
+          <p>The default <code>127.0.0.1</code> binding is intentional. The bearer token at <code>~/.lingcode/server.token</code> is enough to keep <em>local</em> processes honest — your tools talk to your server, no other user on the machine can. It is not, however, designed to defend against the open internet. The server doesn't rate-limit. It doesn't lock out after failed auth. It doesn't refuse requests with weird shapes.</p>
+          <p>If you want to expose the agent over a network, do it through a real reverse proxy with TLS, IP allowlisting, and rate limiting. Or, more usefully: have <em>each user</em> run their own <code>lingcode serve</code> on their own machine, and have your shared tooling talk to <code>localhost</code> on each developer's box. That keeps the API keys per-user and the threat surface tiny.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't put the token in a public repo.</strong> Treat it like an API key. If you accidentally commit it, regenerate by deleting <code>~/.lingcode/server.token</code> and restarting <code>lingcode serve</code> — a new one is created.
+      </div>
+
+      <h2>Step 5: How keys flow</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Keychain is the single source</h3>
+          <p>When your client posts to <code>/v1/agent/ask</code> with <code>provider:"claude"</code>, the server doesn't take an API key in the request — it pulls it from your macOS Keychain. The client just says "use Claude," and the server does the credentialing.</p>
+          <p>This means: the bearer token authenticates the <em>request</em>, but the API keys belong to the <em>account running lingcode serve</em>. If you and a teammate both want to use the server with your own keys, you both run your own server. There's no key delegation; you can't hand a token to a teammate and have it use their Claude key.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Two integration patterns</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Per-user vs. shared</h3>
+          <p><strong>Per-user.</strong> Each developer runs <code>lingcode serve</code> on their machine. Shared tooling (a Slack bot, an editor extension) is configured per-developer to point at their localhost. Each developer's tokens stay theirs; usage attributes correctly. Right for personal-productivity tools.</p>
+          <p><strong>Shared.</strong> One <code>lingcode serve</code> on a team box, behind a real reverse proxy with TLS and proper auth. Keys belong to the service account. All usage attributes to that account. Right for team-shared bots and CI integrations. Costs and rate limits accumulate centrally.</p>
+          <p>Pick the pattern that matches the use case. The same server binary supports both — the difference is in the deployment, not the code.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Run it as a launchd service:</strong> if you find yourself starting <code>lingcode serve</code> every morning, write a launchd plist that boots it on login. <code>lingcode serve --background</code> exits after detaching; pair with launchd's keepalive for resilience.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/install-and-use-the-lingcode-cli.html" class="tutorial-next-card">
+            <h3>Install and use the lingcode CLI</h3>
+            <p>The wider CLI surface; serve is one mode of several</p>
+          </a>
+          <a href="/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>Connect an MCP server</h3>
+            <p>The other half of "give the agent extra capabilities" — incoming tools rather than outgoing API</p>
+          </a>
+          <a href="/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>Permission modes</h3>
+            <p>Choose tty/deny-all/yolo carefully for server contexts — the wrong setting matters more in unattended mode</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

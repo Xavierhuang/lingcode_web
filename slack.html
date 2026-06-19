@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode for Slack — Ask your codebase & ship announcements</title>
+  <meta name="description" content="Add the LingCode bot to your Slack workspace. Mention @LingCode to ask questions about your project, and get automatic release announcements posted to your channel whenever you ship.">
+  <link rel="canonical" href="https://lingcode.dev/slack.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/slack.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/slack.html">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/slack.html">
+  <meta property="og:title" content="LingCode for Slack">
+  <meta property="og:description" content="Ask your codebase and post release announcements, right inside Slack.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="LingCode for Slack">
+  <meta name="twitter:description" content="Ask your codebase and post release announcements, right inside Slack.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .slack-hero { padding: 140px 32px 48px; text-align: center; }
+    .slack-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .slack-hero p.lede { color: var(--text-muted); font-size: 1.125rem; max-width: 560px; margin: 0 auto 28px; line-height: 1.6; }
+    .add-to-slack { display: inline-flex; align-items: center; }
+    .add-to-slack img { height: 48px; width: auto; }
+    .slack-note { color: var(--text-muted); font-size: 0.875rem; margin-top: 14px; }
+    .slack-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .slack-content h2 { font-size: 1.375rem; margin: 40px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .slack-content h2:first-of-type { margin-top: 8px; padding-top: 0; border-top: none; }
+    .slack-content p { margin: 0 0 12px; line-height: 1.7; color: var(--text-muted); }
+    .slack-content ol { margin: 0 0 16px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .slack-content li { margin-bottom: 8px; }
+    .slack-content code { background: var(--surface-2, rgba(127,127,127,0.12)); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    .slack-content a { color: var(--signal); text-decoration: none; }
+    .slack-content a:hover { text-decoration: underline; }
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 8px 0 0; }
+    .feature-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .feature-card h3 { margin: 0 0 8px; font-size: 1.05rem; }
+    .feature-card p { margin: 0; font-size: 0.95rem; }
+    @media (max-width: 600px) { .feature-grid { grid-template-columns: 1fr; } }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="slack-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Integration</p>
+        <h1>LingCode for Slack</h1>
+        <p class="lede">Bring your AI coding assistant into Slack. Mention <strong>@LingCode</strong> to ask questions about your project, and get automatic release announcements posted to your channel whenever you ship.</p>
+        <a class="add-to-slack" href="/api/slack/install" aria-label="Add LingCode to Slack">
+          <img alt="Add to Slack"
+               src="https://platform.slack-edge.com/img/add_to_slack.png"
+               srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" />
+        </a>
+        <p class="slack-note">Installs into the workspace you choose. You can remove it any time from your Slack admin.</p>
+      </div>
+    </section>
+
+    <article class="slack-content">
+      <h2>What it does</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>Ask your codebase</h3>
+          <p>Mention <code>@LingCode</code> in any channel to ask a question and get an instant AI answer — no switching to your IDE. Replies stay in-thread so the conversation reads cleanly.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Ship &amp; Announce</h3>
+          <p>When you ship from the LingCode Mac IDE, LingCode posts a release announcement to your chosen channel: a plain-English summary, the commits that went out, and changelog highlights.</p>
+        </div>
+      </div>
+
+      <h2>How to install</h2>
+      <ol>
+        <li>Click the <strong>Add to Slack</strong> button above.</li>
+        <li>Choose the workspace to install into and approve the requested permissions.</li>
+        <li>In Slack, invite the bot to a channel with <code>/invite @LingCode</code>, then try <code>@LingCode hello</code>.</li>
+        <li>To post release announcements, connect the same workspace from the LingCode Mac app under <strong>Settings → Ship &amp; Announce</strong> and pick a channel.</li>
+      </ol>
+
+      <h2>Permissions &amp; privacy</h2>
+      <p>LingCode requests only the scopes it needs to read mentions, read channel info for the channel picker, and post messages. It does not read your message history beyond the threads it is mentioned in. See our <a href="/privacy.html">Privacy Policy</a> for how data is handled.</p>
+
+      <h2>Support</h2>
+      <p>Questions or issues? Visit <a href="/support.html">lingcode.dev/support</a> or email <a href="mailto:hhuangweijia@gmail.com">hhuangweijia@gmail.com</a>.</p>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

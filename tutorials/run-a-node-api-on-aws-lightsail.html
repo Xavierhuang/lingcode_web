@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Run a Node API on AWS Lightsail — LingCode Tutorials</title>
+  <meta name="description" content="Lightsail is the simple, fixed-price corner of AWS. Spin up a $5/month Linux box, ssh in, run your Node API. EC2-shaped, DigitalOcean-priced.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/run-a-node-api-on-aws-lightsail.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/run-a-node-api-on-aws-lightsail.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/run-a-node-api-on-aws-lightsail.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/run-a-node-api-on-aws-lightsail.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Run a Node API on AWS Lightsail",
+  "description": "Lightsail is AWS's simple corner. A fixed monthly price, a single button to create a Linux box, ssh in, run your code. None of the EC2 add-on charges, none of the IAM ceremony. The honest case for being on AWS without paying the AWS-complexity tax.",
+  "url": "https://lingcode.dev/tutorials/run-a-node-api-on-aws-lightsail.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/run-a-node-api-on-aws-lightsail.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Run a Node API on AWS Lightsail"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Run a Node API on AWS Lightsail",
+      "item": "https://lingcode.dev/tutorials/run-a-node-api-on-aws-lightsail.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Run a Node API on AWS Lightsail</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Run a Node API on AWS Lightsail</h1>
+      <p class="intro">Lightsail is AWS's simple corner. A fixed monthly price, a single button to create a Linux box, ssh in, run your code. None of the EC2 add-on charges, none of the IAM ceremony. The honest case for being on AWS without paying the AWS-complexity tax.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Most people who want a small Linux server to run a Node API don't actually need AWS. DigitalOcean droplets, Hetzner Cloud, Fly machines — all simpler, all cheaper, all faster to set up. The reason to pick Lightsail anyway is one of two things: you already have AWS infrastructure (S3 buckets, RDS databases, SES email) that this server needs to talk to and you want the integration; or your company has an "AWS only" policy. Outside those, Lightsail is fine but not winning on merits.</p>
+      <p>The thing Lightsail gets right — the reason it exists — is that <a href="/tutorials/buy-a-server-from-aws-ec2.html">EC2</a> is genuinely too complicated for "I want a $5 Linux box." EC2's pricing has half a dozen line items per instance; Lightsail charges one. EC2 hides the public IP behind an Elastic IP that you can attach for free until you detach it, at which point you pay for it; Lightsail's static IP is included. EC2 has security groups, network ACLs, NACL associations, VPCs, subnets, and route tables; Lightsail has a firewall toggle. The trade-off is that Lightsail has fewer knobs — if your workload needs them, you grow out of Lightsail and move to EC2.</p>
+      <p>This tutorial walks creating a Lightsail instance with the Node.js blueprint, deploying your app, running it with a process manager, opening the firewall, attaching a domain, and getting a free TLS cert. End state: <code>https://api.mybrand.com</code> resolving to your Node API. We'll use the AWS console for the create-instance flow (the CLI works but the console is genuinely shorter here) and the shell for everything after.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Lightsail's pricing model and what it includes</li>
+        <li>The Node.js blueprint vs plain Ubuntu — which to pick</li>
+        <li>Deploying code (git clone or rsync) and running it persistently with PM2</li>
+        <li>Opening firewall ports — the one Lightsail knob you'll touch</li>
+        <li>Attaching a custom domain and getting a free Let's Encrypt cert</li>
+        <li>When you've outgrown Lightsail and should move to EC2 or Fargate</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> An AWS account, your local SSH key (or willingness to use the browser-based ssh), a working Node API in a git repo, and a domain whose DNS you control (<a href="/tutorials/use-route-53-for-your-domain.html">Route 53</a> or any other DNS provider). After Step 2 (first SSH), run through <a href="/tutorials/prepare-a-fresh-linux-server-for-production.html">Prepare a fresh Linux server for production</a> before deploying anything — the Bitnami blueprint hardens the Bitnami services but not the OS layer (system updates, ufw, fail2ban, swap, unattended-upgrades).
+      </div>
+
+      <h2>Step 1: Create the instance</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Pick a blueprint, a size, a region</h3>
+          <p>In the AWS console, open Lightsail (note: it has its own console at <code>lightsail.aws.amazon.com</code>, separate from the main AWS console — works the same, different URL). Click <strong>Create instance</strong>:</p>
+          <ul>
+            <li><strong>Instance location:</strong> pick the region closest to your users. <code>us-east-1</code> is fine if you're unsure.</li>
+            <li><strong>Platform:</strong> Linux/Unix.</li>
+            <li><strong>Blueprint:</strong> two reasonable options. <em>"Node.js"</em> ships Node, npm, nginx, and PM2 pre-installed. <em>"OS Only → Ubuntu 22.04"</em> is a plain box; you install Node yourself. Pick the Node.js blueprint for speed; pick Ubuntu if you want a known-clean starting point.</li>
+            <li><strong>Instance plan:</strong> $5/mo (512 MB RAM, 1 vCPU, 20 GB SSD, 1 TB transfer) handles a small Node API comfortably. $10/mo doubles everything if you're nervous.</li>
+            <li><strong>Name:</strong> something like <code>mybrand-api-prod</code>.</li>
+          </ul>
+          <p>Click Create. The instance boots in 60–90 seconds. Lightsail assigns it a public IP and an internal name. The first month is free under the AWS Free Tier for new accounts.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: SSH in</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Browser-based or your own key</h3>
+          <p>Two ways:</p>
+          <ul>
+            <li><strong>Browser SSH:</strong> instance page → <strong>Connect using SSH</strong>. A terminal opens in a new tab. Zero setup, works through corporate firewalls, but won't preserve scrollback and copy/paste is awkward.</li>
+            <li><strong>Local SSH:</strong> download the default key (Account → SSH keys → Default → Download). Save it to <code>~/.ssh/lightsail.pem</code>, <code>chmod 600 ~/.ssh/lightsail.pem</code>, then:
+              <pre><code>ssh -i ~/.ssh/lightsail.pem bitnami@&lt;PUBLIC_IP&gt;
+# Username is bitnami for the Node.js blueprint, ubuntu for the Ubuntu blueprint.</code></pre>
+            </li>
+          </ul>
+          <p>You're in. The Node.js blueprint puts you in a home directory with <code>/opt/bitnami/</code> holding nginx and the pre-baked Node sample app.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Deploy your code</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Git clone or rsync; both fine</h3>
+          <pre><code># Option A: git clone (public repo or deploy key)
+cd ~
+git clone https://github.com/you/your-api.git
+cd your-api
+npm ci --production
+# Set env vars in /etc/environment or a .env file your app reads.
+
+# Option B: rsync from your laptop (no git access on the server)
+# From your laptop:
+rsync -avz --exclude node_modules \
+  -e "ssh -i ~/.ssh/lightsail.pem" \
+  ./ bitnami@&lt;PUBLIC_IP&gt;:/home/bitnami/your-api/
+# Then on the server:
+cd ~/your-api
+npm ci --production</code></pre>
+          <p>Test it manually first: <code>node server.js</code> (or your entry). Make sure it boots and listens on a port — typically 3000 or 8080. Stop it (Ctrl+C); we'll run it persistently in the next step.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Run it persistently with PM2</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Restart on crash, restart on reboot</h3>
+          <p>PM2 is pre-installed on the Node.js blueprint. On a plain Ubuntu blueprint: <code>sudo npm i -g pm2</code>.</p>
+          <pre><code>cd ~/your-api
+pm2 start server.js --name api
+pm2 save
+pm2 startup
+# pm2 startup prints a command — run it as root to register PM2
+# as a systemd service so it survives reboots.</code></pre>
+          <p>Now your API is running on <code>http://&lt;PUBLIC_IP&gt;:3000</code> (or whatever port your app listens on). Test:</p>
+          <pre><code>curl http://&lt;PUBLIC_IP&gt;:3000/health
+# Currently this will time out — the firewall blocks it. That's Step 5.</code></pre>
+          <p>Useful PM2 commands: <code>pm2 logs api</code> (live logs), <code>pm2 restart api</code>, <code>pm2 monit</code> (interactive dashboard).</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Open the firewall</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Two ports: 80 for HTTP, 443 for HTTPS</h3>
+          <p>Lightsail's firewall blocks everything by default except SSH (22). Open the web ports:</p>
+          <ol>
+            <li>Lightsail console → your instance → <strong>Networking</strong> tab.</li>
+            <li>Under <strong>IPv4 Firewall</strong>, click <strong>Add rule</strong>.</li>
+            <li>Add: Application = HTTP, Port = 80. Add: Application = HTTPS, Port = 443.</li>
+            <li>Save.</li>
+          </ol>
+          <p>Don't open port 3000 directly to the public — nginx will sit in front of your Node app on 80/443 (the blueprint already has nginx running) and proxy requests internally to your Node process. Run <code>curl http://&lt;PUBLIC_IP&gt;</code> from your laptop; you should hit the default nginx page or the blueprint's sample app.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Configure nginx to proxy your API</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Edit one file; reload nginx</h3>
+          <p>On the Node.js blueprint, nginx config lives at <code>/opt/bitnami/nginx/conf/server_blocks/</code>. Create a file there:</p>
+          <pre><code>sudo nano /opt/bitnami/nginx/conf/server_blocks/api.conf</code></pre>
+          <p>Paste:</p>
+          <pre><code>server {
+    listen 80;
+    server_name api.mybrand.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+          <p>Reload: <code>sudo /opt/bitnami/ctlscript.sh restart nginx</code>. nginx is now proxying <code>api.mybrand.com:80</code> to your Node process on <code>127.0.0.1:3000</code>.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: Attach a static IP and the domain</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Without static IP, your IP changes on stop/start</h3>
+          <p>Lightsail's default IP is "dynamic" — survives reboots but not power-cycles. For a real domain you want a static IP that doesn't change:</p>
+          <ol>
+            <li>Lightsail → <strong>Networking</strong> (top-level tab, not the instance one) → <strong>Create static IP</strong>.</li>
+            <li>Pick the region matching your instance. Attach to the instance.</li>
+            <li>Free while attached; $0.005/hour (~$3.65/month) if you ever detach without using it. AWS pricing detail; the only Lightsail line that catches people.</li>
+          </ol>
+          <p>Now point your domain at the static IP. In Route 53 (or your DNS provider): create an <strong>A record</strong> with name <code>api</code> and value = your static IP. <a href="/tutorials/connect-domain-to-server-with-dns.html">DNS tutorial</a> covers the records in general; this is a straight A-record case.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: Free TLS via Let's Encrypt</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>Bitnami ships a script for this</h3>
+          <p>On the Node.js blueprint, certbot is pre-installed. SSH in and run:</p>
+          <pre><code>sudo /opt/bitnami/bncert-tool</code></pre>
+          <p>The tool asks for your domain name, your email, and whether you want HTTP-to-HTTPS redirect. Say yes to redirect. It modifies the nginx config, issues the cert, sets up auto-renewal. Two minutes, no manual nginx editing.</p>
+          <p>On a plain Ubuntu blueprint without Bitnami: <code>sudo apt install certbot python3-certbot-nginx</code>, then <code>sudo certbot --nginx -d api.mybrand.com --redirect</code>. Same result, slightly more steps.</p>
+          <p>Test: <code>curl -I https://api.mybrand.com/health</code>. You should see <code>HTTP/2 200</code> (or whatever your health endpoint returns). HTTP→HTTPS redirect is in place; cert auto-renews every 90 days via a cron job.</p>
+        </div>
+      </div>
+
+      <h2>The deploy loop after setup</h2>
+      <p>For pushes-deploy code updates, the steady-state workflow is:</p>
+      <pre><code># Local: push to your repo
+git push origin main
+
+# Server: pull + restart
+ssh -i ~/.ssh/lightsail.pem bitnami@&lt;STATIC_IP&gt;
+cd ~/your-api
+git pull
+npm ci --production  # if dependencies changed
+pm2 restart api</code></pre>
+      <p>For something snappier, write a shell script on your laptop that runs the same commands over ssh:</p>
+      <pre><code>#!/usr/bin/env bash
+ssh -i ~/.ssh/lightsail.pem bitnami@&lt;STATIC_IP&gt; \
+  'cd ~/your-api &amp;&amp; git pull &amp;&amp; npm ci --production &amp;&amp; pm2 restart api'</code></pre>
+      <p>For real CI/CD, a GitHub Actions workflow that ssh's in and runs the same is ~15 lines. For zero-downtime deploys (a meaningful step up), look at PM2's reload command or pair PM2 with a small reverse-proxy switch.</p>
+
+      <h2>When you've outgrown Lightsail</h2>
+      <p><strong>You need autoscaling.</strong> Lightsail is single-instance. If traffic outgrows one box, you need EC2 + ALB + Auto Scaling Group, or move to a container orchestrator like <a href="/tutorials/deploy-a-container-to-aws-ecs-fargate.html">ECS Fargate</a>.</p>
+      <p><strong>You need VPC peering or private subnets.</strong> Lightsail instances live in a managed VPC; you can't peer to other VPCs. If the server needs to talk to RDS / ElastiCache / private resources on the AWS side, EC2 is the path.</p>
+      <p><strong>You need more than the $80/month tier (32 GB RAM, 8 vCPU).</strong> Lightsail's largest size is fixed; beyond that, EC2 is the only option.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/deploy-a-container-to-aws-ecs-fargate.html" class="tutorial-next-card">
+            <h3>Deploy a container to ECS Fargate</h3>
+            <p>When your API outgrows a single box, this is the next step on AWS</p>
+          </a>
+          <a href="/tutorials/buy-a-server-from-aws-ec2.html" class="tutorial-next-card">
+            <h3>Buy a server from EC2</h3>
+            <p>The other path up from Lightsail — more knobs, more bills</p>
+          </a>
+          <a href="/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html" class="tutorial-next-card">
+            <h3>Deploy a static site to S3 + CloudFront</h3>
+            <p>The frontend half — pair the Lightsail API with a CloudFront-hosted frontend</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

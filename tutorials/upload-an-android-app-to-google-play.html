@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload an Android app to Google Play for the first time — LingCode Tutorials</title>
+  <meta name="description" content="From a signed Android App Bundle to a live Play Store listing. Signing keys, Play App Signing, internal testing tracks, store metadata, and the review-time reality.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/upload-an-android-app-to-google-play.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/upload-an-android-app-to-google-play.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/upload-an-android-app-to-google-play.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/upload-an-android-app-to-google-play.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Upload an Android app to Google Play for the first time",
+  "description": "From signed AAB to live Play Store listing. The upload itself is one click; everything around it — the signing key choice, the tracks, the metadata, the review wait — is where first-time publishers get stuck. This is the path through, written for someone who has shipped zero Andr",
+  "url": "https://lingcode.dev/tutorials/upload-an-android-app-to-google-play.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/upload-an-android-app-to-google-play.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Upload an Android app to Google Play for the first time"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Upload an Android app to Google Play for the first time",
+      "item": "https://lingcode.dev/tutorials/upload-an-android-app-to-google-play.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/upload-an-android-app-to-google-play.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Upload an Android app to Google Play for the first time</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-advanced">● Advanced</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Upload an Android app to Google Play for the first time</h1>
+      <p class="intro">From signed AAB to live Play Store listing. The upload itself is one click; everything around it — the signing key choice, the tracks, the metadata, the review wait — is where first-time publishers get stuck. This is the path through, written for someone who has shipped zero Android apps.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The Google Play upload pipeline is conceptually simpler than Apple's but practically heavier. Simpler because the binary itself ships immediately to your testers — there's no provisioning-profile dance, no entitlements file, no separate "development" vs "distribution" build. Heavier because Google asks you to fill out more paperwork than Apple does: a content rating questionnaire, a data safety form, target audience declarations, ad declarations, and government-ID verification for the developer account. Most of the first-time time isn't in the build; it's in the metadata.</p>
+      <p>The mental model that makes the rest comprehensible: you have a <strong>signing key</strong> that proves "this update came from the same publisher as the previous one." If you lose it, you can't update your app — ever. <strong>Play App Signing</strong> (Google's recommendation since 2017) splits this into two keys: an <em>upload key</em> on your machine that you can rotate if compromised, and an <em>app signing key</em> Google holds and uses to sign the actual binary that ships to devices. You almost always want Play App Signing unless you have a strong reason not to. The other half of the model is <strong>tracks</strong>: internal → closed → open → production, each with progressively more reach. You ship to internal first (up to 100 named testers, instantaneous), then closed (a private invite list, an hour to roll out), then open (anyone with the link), then production (everyone). Most first uploads go internal → fix things → production over a week.</p>
+      <p>This tutorial covers the one-time account setup, the signing-key decision, the first AAB build, the metadata required to even submit, the internal-track upload, and what to do when the review comes back asking questions. End state: your app live on the Play Store, downloadable to any Android device.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The $25 developer account, government-ID verification, and the new "tester before production" requirement</li>
+        <li>Signing keys: upload key vs app signing key, why Play App Signing is the default</li>
+        <li>Building a signed AAB (Android App Bundle), not an APK</li>
+        <li>The four release tracks (internal / closed / open / production) and which to start on</li>
+        <li>The metadata Google requires you can't skip: store listing, content rating, data safety, target audience, ad declarations</li>
+        <li>Review timing: first review (3–7 days) vs subsequent reviews (often hours)</li>
+        <li>Common first-submit rejections and how to pre-empt them</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> An Android app that builds and runs on an emulator (<a href="/tutorials/create-and-run-your-first-avd.html">AVD tutorial</a>), a Google account, $25 USD for the one-time developer registration fee, a government-issued ID (passport / driver's license — Google requires personal verification for new accounts since 2023), a 1024×500 feature graphic, an app icon (512×512 PNG), and at least 2 phone screenshots (16:9 portrait or landscape). The screenshots are the part most people forget until they're already at the upload screen.
+      </div>
+
+      <h2>Step 1: Create a Play Console developer account</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>One-time $25, government-ID verification</h3>
+          <p>Go to <a href="https://play.google.com/console/signup" target="_blank" rel="noopener">play.google.com/console/signup</a>. Sign in with the Google account you want to own the app. Pick <strong>Personal</strong> or <strong>Organization</strong>:</p>
+          <ul>
+            <li><strong>Personal</strong> — you're an individual publisher. Government ID verification required.</li>
+            <li><strong>Organization</strong> — a company entity owns the apps. Requires a D-U-N-S number for the business plus a verifiable phone number tied to the organization. Slower verification (1–2 weeks) but lets you publish as a brand instead of a person.</li>
+          </ul>
+          <p>Pay the $25 (lifetime fee — you can publish as many apps as you want on this account forever). Submit the ID. Wait for verification — usually 48 hours for personal accounts, longer for organizations.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>The "20 testers for 14 days" rule (new in 2024).</strong> Personal-account first-time publishers must enroll 20 closed-track testers and run the app on the closed track for at least 14 days before being allowed to push to production. Plan for this: start the closed test the same day your account is verified, even if the app is unfinished. The 14 days run in parallel with you finishing the metadata. Organization accounts are exempt from this rule.
+      </div>
+
+      <h2>Step 2: Decide on signing strategy</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Almost everyone should pick Play App Signing</h3>
+          <p>You're choosing one of two patterns:</p>
+          <ul>
+            <li><strong>Play App Signing (recommended for ~99% of cases).</strong> You generate an <em>upload key</em> locally; Google generates and holds an <em>app signing key</em>. Every AAB you upload is signed by your upload key, Play strips that, signs with the app key, and ships the result. If your upload key is compromised, you contact Google and rotate it; the app on users' devices keeps working because the app signing key never left Google.</li>
+            <li><strong>Self-managed signing (legacy).</strong> You generate one key, sign everything yourself, never upload the key to Google. If you lose the key, you can't update the app — period. The new app would be a separate listing under a different package ID. This pattern exists for organizations with legal reasons to never let Google touch the signing key. It's not what you want.</li>
+          </ul>
+          <p>Pick Play App Signing. The "upload key" you'll generate next is what your local builds sign with.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Generate an upload key</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>One keystore file, kept somewhere safe forever</h3>
+          <pre><code>keytool -genkey -v \
+  -keystore ~/keys/mybrand-upload.keystore \
+  -keyalg RSA -keysize 2048 -validity 25000 \
+  -alias mybrand-upload
+# Enter a password. Save it in your password manager.
+# Fill in the X.500 fields (name, organization, country).
+# 25000 days = ~68 years. Yes, really. Keystores aren't supposed to expire.</code></pre>
+          <p>Back this keystore up: cloud storage, encrypted USB, password manager attachment — anywhere it'll survive your laptop dying. Losing it means you can't push updates that bypass Google's escalation flow (which exists but is slow). Treat it like the deed to a property.</p>
+          <p>The keystore password and the key password (you'll be asked for both) can be the same; many people use the same for simplicity. Store both in your password manager.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Build a signed AAB</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>AAB, not APK — Play Console rejects APKs for new apps</h3>
+          <p>In <code>app/build.gradle.kts</code> (or <code>app/build.gradle</code> for Groovy DSL), add a release signing config:</p>
+          <pre><code>android {
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("UPLOAD_KEYSTORE_PATH") ?: "$rootDir/keystore-not-set")
+            storePassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD")
+            keyAlias = "mybrand-upload"
+            keyPassword = System.getenv("UPLOAD_KEY_PASSWORD")
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+}</code></pre>
+          <p>Build the bundle:</p>
+          <pre><code>export UPLOAD_KEYSTORE_PATH=~/keys/mybrand-upload.keystore
+export UPLOAD_KEYSTORE_PASSWORD='your-password'
+export UPLOAD_KEY_PASSWORD='your-password'
+./gradlew :app:bundleRelease
+
+# Output:
+# app/build/outputs/bundle/release/app-release.aab</code></pre>
+          <p>That's the file you upload. Verify it's signed:</p>
+          <pre><code>jarsigner -verify -verbose -certs app/build/outputs/bundle/release/app-release.aab
+# Last line should say: "jar verified."</code></pre>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Never commit the keystore to git.</strong> Even a private repo is a future-leak risk. <code>echo "*.keystore" &gt;&gt; .gitignore</code> and load credentials from env vars or a secret manager. CI builds should pull the keystore from an encrypted secret (GitHub Actions encrypted secrets, AWS Secrets Manager, etc.), never the repo.
+      </div>
+
+      <h2>Step 5: Create the app in Play Console</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>The shell of the listing</h3>
+          <p>Play Console → <strong>Create app</strong>. Fill in:</p>
+          <ul>
+            <li><strong>App name</strong> — what users see in the store. Max 30 chars. Can change later but the URL slug is set from it.</li>
+            <li><strong>Default language</strong> — the locale your store listing's primary copy is in. You can add other languages later.</li>
+            <li><strong>App or game</strong> — affects which category trees you can pick. Mostly cosmetic.</li>
+            <li><strong>Free or paid</strong> — paid is one-time purchase or subscription. Free apps can still have in-app purchases. <strong>You cannot change free → paid later</strong>, only paid → free. Pick conservatively.</li>
+          </ul>
+          <p>Submit. The app is now in Play Console as a draft. You can't publish anything yet; you need a signed AAB on a track and a bunch of metadata first.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Fill out the required metadata (this is most of the work)</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Six forms; none are optional</h3>
+          <p>In Play Console, sidebar <strong>App content</strong>, work through each item. Submitting without filling these in is the #1 first-upload error.</p>
+          <ul>
+            <li><strong>Privacy policy.</strong> A URL to a publicly accessible privacy policy document. If your app collects any data, this is mandatory. If it collects no data, you still need a one-line policy stating that. Generators exist (<a href="https://app-privacy-policy-generator.firebaseapp.com" target="_blank" rel="noopener">app-privacy-policy-generator.firebaseapp.com</a>); host the result somewhere durable.</li>
+            <li><strong>App access.</strong> If parts of your app require a login, you must provide test credentials so reviewers can access them. "Username: review@test.com, Password: ..." — Google reviewers actually use these.</li>
+            <li><strong>Ads.</strong> Yes or no. If yes, additional ad-content rating questions follow.</li>
+            <li><strong>Content rating.</strong> A questionnaire ("Does the app contain violence?", "References to gambling?") that generates an IARC rating. Takes 5–10 minutes. The rating affects which countries can see the app.</li>
+            <li><strong>Target audience and content.</strong> Age bands, with extra rules if you target under-13. "Mixed audience" is the safe pick for most consumer apps.</li>
+            <li><strong>Data safety.</strong> The heaviest form. Disclose every kind of data your app collects (location, contacts, photos, files, device IDs, etc.) and whether it's required, shared with third parties, encrypted in transit. <strong>The disclosures must match reality</strong> — Google does cross-check the app's runtime behavior against the form, and mismatches are a removal reason. Block out 20–40 minutes for this form on the first app.</li>
+            <li><strong>Government apps / News apps / Health apps / etc.</strong> Conditional declarations if your app falls in a regulated category.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 7: Build the store listing</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>What users see when they tap your app</h3>
+          <p>Sidebar <strong>Main store listing</strong>. Required assets:</p>
+          <ul>
+            <li><strong>App icon</strong> — 512×512 PNG, 32-bit, with alpha. The icon Google shows everywhere.</li>
+            <li><strong>Feature graphic</strong> — 1024×500 JPG/PNG. The wide banner shown at the top of your listing.</li>
+            <li><strong>Phone screenshots</strong> — at least 2, max 8. PNG or JPG, 16:9 or 9:16, between 320 and 3840 px on the shorter side. Take these from the AVD: <code>adb exec-out screencap -p &gt; screen.png</code>.</li>
+            <li><strong>Short description</strong> — 80 chars. Appears in search-result snippets.</li>
+            <li><strong>Full description</strong> — 4000 chars. The actual product page copy.</li>
+            <li><strong>Tablet screenshots</strong> — optional but recommended if you support tablets. Skipping these means tablet users see your phone screenshots in a less-flattering aspect ratio.</li>
+          </ul>
+          <p>The descriptions are the part most worth iterating on — they're also editable post-launch, so good-enough at first is fine. Icon and feature graphic are harder to redo without re-uploading.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: Upload to the internal testing track</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>The fastest path to the app installed on a real device</h3>
+          <p>Sidebar <strong>Testing</strong> → <strong>Internal testing</strong> → <strong>Create new release</strong>:</p>
+          <ul>
+            <li><strong>App signing</strong> — Play Console offers Play App Signing on first upload. Accept it.</li>
+            <li><strong>Upload AAB</strong> — drop in <code>app-release.aab</code> from Step 4. Upload takes 1–3 minutes.</li>
+            <li><strong>Release name</strong> — auto-fills from the version code. Leave it.</li>
+            <li><strong>Release notes</strong> — what changed. For the first release: "Initial release."</li>
+          </ul>
+          <p>Save → Review release → Start rollout to internal testing. The release is processing within 5 minutes.</p>
+          <p>Add testers: <strong>Internal testing</strong> → <strong>Testers</strong> tab → create an email list (paste up to 100 Gmail addresses, one per line). Save. Each tester gets a Play Store opt-in link they need to click before they can install the app.</p>
+          <p>Send the opt-in link to your testers. They click it, accept, then visit the app's Play Store page (or the direct internal-test link) and install. Within 5–10 minutes of release rollout, the app is installable on their device.</p>
+        </div>
+      </div>
+
+      <h2>Step 9: Promote to closed → open → production</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <h3>The progression that actually ships to the public</h3>
+          <p>Once internal testing confirms the build works:</p>
+          <ul>
+            <li><strong>Closed testing</strong> — a private group, usually email-list-based or Google Group. Same upload flow; Promote release from internal → closed. Use this for early-access users, beta programs. <strong>If you're on a personal account, this is the 14-day requirement.</strong></li>
+            <li><strong>Open testing (optional)</strong> — anyone with the link can join. Lower commitment than production. Useful for "soft launch" without the Play Store search visibility.</li>
+            <li><strong>Production</strong> — the public launch. Anyone in the supported countries can find and install your app. The first production release goes through full review (3–7 days); subsequent updates often clear in under 24 hours.</li>
+          </ul>
+          <p>For the first push to production: <strong>Production</strong> → <strong>Create new release</strong> → <strong>Promote from closed testing</strong>. Add release notes. Submit. Wait. Email lands when status changes.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Common first-submit rejections.</strong> Google's reviewers reject for specific, fixable reasons — almost never vague ones:
+        <ul>
+          <li><strong>Data safety mismatch</strong> — your form says you don't collect location, but the manifest declares <code>ACCESS_FINE_LOCATION</code>. Fix the form or remove the permission.</li>
+          <li><strong>Target API level too low</strong> — Play requires apps target a recent Android API (currently API 34 / Android 14 for new apps). Bump <code>targetSdkVersion</code> and rebuild.</li>
+          <li><strong>Missing privacy policy URL</strong> — the URL must resolve. A 404 is treated as missing.</li>
+          <li><strong>"Login required but no test credentials"</strong> — fill in App Access with working test credentials.</li>
+          <li><strong>Sensitive permissions without justification</strong> — for permissions like SMS, Call Log, or All Files Access, you must explain why the app needs them and use the official disclosure flows.</li>
+        </ul>
+      </div>
+
+      <h2>The deploy loop after the first release</h2>
+      <p>Once the app is live and you have Play App Signing set up, updates are dramatically faster than the first time:</p>
+      <pre><code># Bump versionCode and versionName in app/build.gradle.kts
+# Build a new signed AAB
+./gradlew :app:bundleRelease
+
+# Upload it via the Play Console UI, OR via the official gradle plugin:
+# https://github.com/Triple-T/gradle-play-publisher
+./gradlew publishReleaseBundle</code></pre>
+      <p>The gradle-play-publisher plugin authenticates with a service-account JSON key (download from Play Console → Settings → Developer account → API access) and lets you push releases from CI. After the first manual upload, every subsequent release can be one CI step.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/reupload-an-android-app.html" class="tutorial-next-card">
+            <h3>Reupload an Android app</h3>
+            <p>Once the first release is live, the update flow is shorter and faster</p>
+          </a>
+          <a href="/tutorials/create-and-run-your-first-avd.html" class="tutorial-next-card">
+            <h3>Create and run your first AVD</h3>
+            <p>The emulator setup most of this tutorial assumed</p>
+          </a>
+          <a href="/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>Upload to TestFlight with the agent</h3>
+            <p>The iOS counterpart — the same logical flow, very different mechanics</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

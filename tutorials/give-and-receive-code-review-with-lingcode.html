@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Give and receive code review with LingCode</title>
+  <meta name="description" content="Most review failures look like blind agreement or reflexive defense. Use LingCode to handle code review feedback with technical rigor — verify every claim, push back when wrong, implement when right.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/give-and-receive-code-review-with-lingcode.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Give and receive code review with LingCode",
+  "description": "Receiving code review has two failure modes — agreeing with everything (and shipping bad suggestions) or defending everything (and ignoring good ones). LingCode handles review feedback the way a careful engineer would: verify each claim against the code, push back when the review",
+  "url": "https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Verify each claim before classifying",
+      "url": "https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Run review-receiver on your own draft PR",
+      "url": "https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Use this in LingCode",
+      "url": "https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Give and receive code review",
+      "item": "https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/give-and-receive-code-review-with-lingcode.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Native Mac IDE</a>
+      <span>/</span>
+      <span>Give and receive code review</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Give and receive code review with LingCode</h1>
+      <p class="intro">Receiving code review has two failure modes — agreeing with everything (and shipping bad suggestions) or defending everything (and ignoring good ones). LingCode handles review feedback the way a careful engineer would: verify each claim against the code, push back when the reviewer is wrong, implement when they're right.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why "just do what the reviewer said" is the wrong default</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>When a PR comes back with review comments, the naïve workflow is "the reviewer is senior, apply the change." This breaks in two predictable ways:</p>
+          <ul>
+            <li><strong>Confident wrong feedback gets shipped.</strong> Reviewers misread context, miss a nearby helper, or apply a pattern that doesn't fit. Implemented blindly, the suggestion regresses behavior or adds dead code.</li>
+            <li><strong>Correct feedback gets argued away.</strong> The first instinct on "this is wrong" is to defend the design choice rather than re-read the code with fresh eyes. Real bugs survive.</li>
+          </ul>
+          <p>The skill in this tutorial gives LingCode an explicit protocol: read the comment, verify the claim against the code, classify it (agree / disagree / unclear), and only then act. The output is either a precise fix or a precise reply explaining why the suggestion doesn't apply.</p>
+        </div>
+      </div>
+
+      <h2>What you need</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong> — <a href="/LingCode-Installer.dmg" download>download the installer</a>.</li>
+            <li><strong>A PR with review comments.</strong> Works for GitHub, GitLab, and any reviewer-pasted-into-chat workflow. <code>gh pr view --comments</code> is the easiest pull path.</li>
+            <li><strong>The branch checked out locally</strong> so LingCode can read the code the reviewer was looking at — not just the diff.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Pull the review into LingCode</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Open the chat panel on the branch and ask LingCode to fetch the review thread, not just summarize the diff:</p>
+          <pre><code>Fetch review comments on this PR (use `gh pr view --comments` or
+`gh api`). For each comment, capture: file, line, reviewer's claim,
+and any suggested code. Don't act on anything yet — list them.</code></pre>
+          <p>You want the raw thread, line-anchored. A summary by a different model that's already collapsed five comments into "address feedback" is the version that ships bad fixes.</p>
+        </div>
+      </div>
+
+      <h2>Verify each claim before classifying</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>This is the step the skill exists to enforce. Ask LingCode to read the cited file, then verify whether the reviewer's claim holds:</p>
+          <pre><code>For each comment, open the referenced file and verify the claim:
+- Quote the actual code at that line.
+- State whether the reviewer's description of it is accurate.
+- Note any context they may have missed (helpers, callers, tests).
+- Only then classify: AGREE, DISAGREE, or UNCLEAR.
+
+Do not classify a comment AGREE without first reading the code.
+"Looks reasonable" is not verification.</code></pre>
+          <p>"Verify before classify" is the rule that kills the blind-agreement failure mode. If LingCode can't quote the code the reviewer is talking about, it doesn't get to agree with them.</p>
+          <div class="tip-box">
+            <strong>Tip:</strong> If a comment references a line that no longer exists (rebased, reformatted), flag it as UNCLEAR and ask the reviewer to re-anchor. Don't guess.
+          </div>
+        </div>
+      </div>
+
+      <h2>Treat disagreement as a first-class outcome</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>The defensive failure mode is treating every reviewer comment as a thing to satisfy. The productive one is treating "I disagree, here's why" as a normal response. Ask LingCode to write the rebuttal as carefully as the fix:</p>
+          <pre><code>For every DISAGREE classification, write a short reply (3-6 lines)
+that:
+1. Restates the reviewer's concern in your own words so they know
+   you read it.
+2. Quotes the code that actually addresses the concern, OR
+   explains the constraint they may have missed.
+3. Proposes a path forward — "leave as-is," "rename for clarity,"
+   "add a comment explaining the constraint."
+
+Don't be defensive. Don't be apologetic. Just be precise.</code></pre>
+          <p>The goal is a reply the reviewer can either accept or push back on with one more round. Vague "thanks, will look into it" responses are the worst outcome — they leave the thread open and the disagreement unresolved.</p>
+        </div>
+      </div>
+
+      <h2>Push back when the reviewer is technically wrong</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Some review comments are simply incorrect — wrong about the language, the framework, or the constraint. The skill teaches LingCode to say so plainly, with evidence:</p>
+          <pre><code>If a reviewer claim is technically incorrect (wrong about an API,
+a language behavior, a framework lifecycle, etc.), reply with:
+- The specific incorrect claim.
+- The actual behavior, with a link to docs or a small repro
+  snippet.
+- Why this matters for the PR — does it change the suggested fix?
+
+Be willing to write "this is not how X works" with evidence. That
+is not rude. Implementing wrong feedback to be polite is rude to
+the next maintainer.</code></pre>
+          <div class="warn-box">
+            <strong>The reviewer outranks you doesn't change the technical facts.</strong> If LingCode can quote authoritative docs or a minimal repro, the polite reply is the correct reply. Hand-waving agreement is the dishonest one.
+          </div>
+        </div>
+      </div>
+
+      <h2>Implement the AGREE pile in one batch</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Once verification and classification are done, the AGREE pile is mechanical. Have LingCode apply them in a single pass, then re-run tests:</p>
+          <pre><code>For every AGREE classification:
+1. Apply the suggested change (or a close variant if the suggestion
+   has a small flaw you noticed during verification).
+2. Run the affected tests.
+3. If anything fails, stop and surface the failure — don't paper
+   over it with a follow-up tweak.
+
+Then write one commit per logical group of related changes —
+not one commit per comment.</code></pre>
+          <p>One-commit-per-comment looks tidy on the PR but makes the diff hard to review. Group by intent: "address naming feedback," "tighten error handling around X," "add the missing test for Y."</p>
+        </div>
+      </div>
+
+      <h2>Handle "UNCLEAR" by asking, not by guessing</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>The UNCLEAR pile is where most accidental scope creep happens — LingCode guesses what the reviewer meant, implements something, and triggers a fresh round of comments. The protocol is to ask:</p>
+          <pre><code>For every UNCLEAR classification, write a reply that:
+- Quotes the comment.
+- States the two or three interpretations you considered.
+- Asks the reviewer which one they meant.
+
+Do not guess and implement. A clarifying question is cheap;
+re-reviewing a wrong implementation is not.</code></pre>
+          <p>This is also the right place to push back on out-of-scope feedback — "good idea, let's track it as a follow-up issue rather than expanding this PR." The reviewer will usually agree; if they don't, you've surfaced a real disagreement worth resolving before more code lands.</p>
+        </div>
+      </div>
+
+      <h2>Run review-receiver on your own draft PR</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Before posting the PR for human review at all, run LingCode's <code>/review</code> against your own branch and feed the output through this same protocol. You catch the "agree, fix it" feedback yourself before a human spends time on it, and you arrive at the human review with only the genuinely contentious comments left.</p>
+          <p>This compounds. Self-review with the receiving-review skill on top of <code>/review</code> means human reviewers get cleaner PRs, which means faster merges, which means smaller PRs next time.</p>
+          <div class="tip-box">
+            <strong>The two skills compose.</strong> <code>/review</code> generates feedback. This skill processes feedback. Together they turn a 60-comment first-pass review into a 5-comment second-pass discussion.
+          </div>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>The full protocol is packaged as a skill — drop it into your LingCode skills folder and ask LingCode to "process this PR's review comments" to invoke it:</p>
+          <pre><code>---
+name: receiving-code-review
+description: Use when receiving code review feedback, before implementing suggestions — especially if feedback seems unclear or technically questionable. Triggers: 'fix the review comments', 'address feedback', 'apply review', 'reviewer said X', PR comments fetched, code review thread, 'agree with the review and apply'. Actions: verify each claim against the actual code (quote the line), classify AGREE/DISAGREE/UNCLEAR, push back when wrong (write rebuttal with evidence), implement when right, ask reviewer when ambiguous. Anti-patterns: blind agreement, reflexive defense, summarizing reviews into 'address feedback' before reading line-by-line.
+---
+
+Process incoming code review feedback with technical rigor. The
+two failure modes are blind agreement (implement bad suggestions)
+and reflexive defense (ignore good ones). Avoid both.
+
+For each review comment:
+
+1. Fetch the raw thread (gh pr view --comments or equivalent).
+   Preserve file + line anchors. Do not summarize away detail.
+
+2. Verify the claim. Open the cited file. Quote the actual code.
+   State whether the reviewer's description is accurate. Note
+   missed context (helpers, callers, tests).
+
+3. Classify only after verification: AGREE, DISAGREE, UNCLEAR.
+   "Looks reasonable" is not verification.
+
+4. For AGREE: apply the change, run tests, group commits by
+   intent (not one per comment).
+
+5. For DISAGREE: write a short reply that restates the concern,
+   quotes the code that addresses it (or names the missed
+   constraint), and proposes a path forward. Not defensive,
+   not apologetic — precise.
+
+6. For technically-incorrect feedback: say so with evidence
+   (docs link or minimal repro). Politely implementing wrong
+   feedback is rude to the next maintainer.
+
+7. For UNCLEAR: ask the reviewer which interpretation they
+   meant. Do not guess and implement.
+
+Compose with /review on your own draft before posting for
+human review.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/receiving-code-review/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/finish-a-development-branch.html" class="tutorial-next-card">
+            <h3>Finish a development branch</h3>
+            <p>Once review is settled, walk the closing checklist — merge, PR, or scrap — without leaving loose ends</p>
+          </a>
+          <a href="/tutorials/write-an-implementation-plan-with-lingcode.html" class="tutorial-next-card">
+            <h3>Write an implementation plan</h3>
+            <p>Reviewers ask better questions when there's a plan to review against — write one before the diff exists</p>
+          </a>
+          <a href="/tutorials/test-driven-development-with-lingcode.html" class="tutorial-next-card">
+            <h3>Test-driven development</h3>
+            <p>Stop LingCode from writing plausible-looking code that doesn't work — let the test be the spec</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

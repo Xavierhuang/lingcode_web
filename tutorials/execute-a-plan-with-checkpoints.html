@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Execute a plan with checkpoints — keeping LingCode honest mid-run</title>
+  <meta name="description" content="Letting LingCode run a 12-step plan without checkpoints means re-reviewing 12 steps at the end — the worst time to catch architectural drift. Checkpoints make corrections cheap.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/execute-a-plan-with-checkpoints.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/execute-a-plan-with-checkpoints.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/execute-a-plan-with-checkpoints.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/execute-a-plan-with-checkpoints.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Execute a plan with checkpoints",
+  "description": "Letting LingCode run an entire 12-step plan without checkpoints means re-reviewing 12 steps at the end — the worst time to catch architectural drift. Checkpoints make corrections cheap.",
+  "url": "https://lingcode.dev/tutorials/execute-a-plan-with-checkpoints.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/execute-a-plan-with-checkpoints.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Execute a plan with checkpoints"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Execute a plan with checkpoints",
+      "item": "https://lingcode.dev/tutorials/execute-a-plan-with-checkpoints.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/execute-a-plan-with-checkpoints.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Native Mac IDE</a>
+      <span>/</span>
+      <span>Execute a plan with checkpoints</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Execute a plan with checkpoints</h1>
+      <p class="intro">Letting LingCode run an entire 12-step plan without checkpoints means re-reviewing 12 steps at the end — the worst time to catch architectural drift. Checkpoints make corrections cheap.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why end-of-run review is the most expensive review</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>LingCode is fast enough to power through a multi-step plan in one continuous run. That feels like a win until you read the diff at the end.</p>
+          <p>Three things happen when there are no mid-run checkpoints:</p>
+          <ul>
+            <li><strong>Architectural drift compounds.</strong> Step 2 picks a slightly-wrong pattern. Step 3 builds on it. By step 8, every file is shaped around the wrong pattern, and fixing it means redoing eight steps, not one. The right time to catch the step-2 mistake is right after step 2.</li>
+            <li><strong>Review fatigue kicks in.</strong> Reviewing one file is easy. Reviewing forty files of agent-written code in one sitting is grueling, and you'll skim. Skimmed reviews approve bugs.</li>
+            <li><strong>You lose the cheap rollback.</strong> If something's wrong at step 3 of 12, reverting one step is trivial. If something's wrong "somewhere in this 40-file diff," you're either accepting the whole thing or starting over.</li>
+          </ul>
+          <p>Checkpoints are the cure: after each plan step (or each pair of related steps), LingCode stops, summarizes what it changed, and waits for you to confirm before continuing. The cost is small interruptions. The payoff is catching drift while reverting is still one undo.</p>
+        </div>
+      </div>
+
+      <h2>What you need before you start</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>A plan file in the repo.</strong> If you don't have one, see <a href="/tutorials/write-an-implementation-plan-with-lingcode.html">Write an implementation plan with LingCode</a> first. The plan is what checkpoints check against.</li>
+            <li><strong>A clean working tree.</strong> Commit (or stash) any unrelated work. You want the checkpoint diffs to show <em>only</em> what LingCode did for the current step.</li>
+            <li><strong>Tests that run.</strong> Even if coverage is thin, you need a "tests pass" baseline so step-by-step verification has signal. If the suite is broken before you start, fix it before you start.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Kick off with explicit checkpoint rules</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Tell LingCode to execute the plan one step at a time and stop after each. The default behavior is to power through; you have to opt out of that explicitly:</p>
+          <pre><code>Execute IMPLEMENTATION_PLAN.md one step at a time.
+
+After each step:
+1. Summarize what you changed (files touched, behavior before
+   vs. after) in 3-5 lines.
+2. Run the verification specified for that step in the plan.
+   Paste the actual output, not "looks good."
+3. Stop and wait for me to confirm before starting the next
+   step. Do not roll into the next step.
+
+If a step fails verification, stop and diagnose — don't move on
+hoping a later step will fix it. If the plan is wrong, propose
+a plan amendment rather than silently deviating.
+
+Start with step 1.</code></pre>
+          <p>The three rules — summarize, verify, stop — are the whole skill. Everything else in this tutorial is how to keep LingCode on them when it drifts.</p>
+        </div>
+      </div>
+
+      <h2>Review the summary, not the diff</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>When LingCode hands back its checkpoint summary, read the summary first. Compare it to what the plan said this step would do.</p>
+          <ul>
+            <li><strong>Matches the plan?</strong> Skim the diff to confirm, then approve.</li>
+            <li><strong>Did more than the plan?</strong> Push back. "Step 2 was supposed to add the database column. You also added the API endpoint — that's step 3. Revert the endpoint and let me approve it as its own step." Out-of-scope work hidden inside a checkpoint is the most common drift pattern.</li>
+            <li><strong>Did less than the plan?</strong> Ask what's missing. Sometimes LingCode hit an unexpected dependency and quietly punted; you want that surfaced, not skipped.</li>
+            <li><strong>Did something different?</strong> Pause for a real review. Either the plan needs to change (amend it explicitly) or the change needs to revert.</li>
+          </ul>
+          <div class="tip-box">
+            <strong>The summary is a contract, not a recap.</strong> If LingCode's summary doesn't match the diff, that's a signal — either the summary is wrong, or LingCode doesn't fully grasp what it did. Either way, slow down.
+          </div>
+        </div>
+      </div>
+
+      <h2>Verify with the command the plan specified</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Each plan step should have specified how to verify it — see the plan-writing tutorial for why. At the checkpoint, run (or have LingCode run) that exact command and look at the actual output.</p>
+          <p>"Looks right" is not verification. "<code>xcodebuild test -scheme MyApp</code> exited 0 with 47 tests passing, 0 failures" is. Demand the latter.</p>
+          <p>If the verification fails, you've caught the problem at the exact step it appeared. Diagnose now, before step N+1 builds on top of it.</p>
+          <div class="warn-box">
+            <strong>Don't let LingCode push past a red verification.</strong> "I'll fix that in a later step" is the failure mode this skill exists to prevent. If step N is broken, step N is where it gets fixed.
+          </div>
+        </div>
+      </div>
+
+      <h2>Commit per checkpoint, not per plan</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>When a checkpoint passes — summary matches, verification green — commit the step on its own:</p>
+          <pre><code>git add -A
+git commit -m "Step 2: Add user_quota table and migration"</code></pre>
+          <p>Per-checkpoint commits do three things:</p>
+          <ul>
+            <li><strong>Make rollback trivial.</strong> If step 5 turns out to have been wrong, <code>git revert</code> on one commit, not a forty-file unpick.</li>
+            <li><strong>Give reviewers a story.</strong> The PR shows up as eight commits matching the eight plan steps, in order. Far easier to follow than one mega-diff.</li>
+            <li><strong>Anchor LingCode's context.</strong> When you say "go back to how step 4 left things," there's a real commit to reset to.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Handle plan amendments deliberately</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>About half the time, executing a plan teaches you something that means the plan should change. That's fine — but the amendment is its own step.</p>
+          <p>When LingCode (or you) notices the plan needs to change:</p>
+          <pre><code>Don't deviate silently. Update IMPLEMENTATION_PLAN.md to
+reflect the new approach for steps 5-8, explain in 2 lines
+why we're changing course, and commit just the plan edit:
+
+git commit -m "Amend plan: switch step 5 from REST to GraphQL
+because the existing schema is already exposed there"
+
+Then wait for me to confirm before continuing execution.</code></pre>
+          <p>The plan is your contract. When the contract changes, it changes in writing and gets signed off — not in passing inside a code commit.</p>
+        </div>
+      </div>
+
+      <h2>Recover from a bad step</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>If a checkpoint reveals the last step was wrong — wrong approach, broken verification, scope creep — recover deliberately:</p>
+          <ol>
+            <li><strong>Revert the commit.</strong> <code>git revert HEAD</code>, or <code>git reset --hard HEAD~1</code> if it wasn't pushed and you want a clean history.</li>
+            <li><strong>Update the plan, if the step itself was wrong.</strong> The original plan led you here; if you don't amend it, you'll get back to the same spot.</li>
+            <li><strong>Re-run the step.</strong> Now from a known-good state, with corrected instructions.</li>
+          </ol>
+          <p>This is exactly the workflow checkpoints exist to enable. Without them, "revert one step" isn't an option — the wrong code is mixed in with seven other steps of right code.</p>
+        </div>
+      </div>
+
+      <h2>What "done" looks like</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>When the last plan step passes its checkpoint, the work is done — but verify one more thing:</p>
+          <ul>
+            <li><strong>Run the full plan's verification end-to-end.</strong> Each step verified itself; now confirm they compose. "Each test passes individually" doesn't always mean "the whole suite passes together."</li>
+            <li><strong>Re-read the plan's non-goals.</strong> Make sure nothing scope-crept across the run. Mid-run scope creep is more obvious at checkpoints, but it's worth a final pass.</li>
+            <li><strong>Check the git log.</strong> Eight steps, eight commits, in order. If the log is messier than that, squash before opening the PR.</li>
+          </ul>
+          <p>Open the PR with the plan file referenced in the body. Reviewers get the same checkpoint structure you did, just on read-only.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Checkpoints aren't just for big plans.</strong> Even on a four-step plan, asking LingCode to stop after each step catches the same drift problems. The overhead is small; the upside is the same.
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Package the execution workflow as a skill so LingCode applies it automatically whenever it's running a plan:</p>
+          <pre><code>---
+name: executing-plans
+description: Use when you have a written implementation plan to execute in a separate session with review checkpoints. Triggers: 'execute the plan', 'work through the plan', 'implement IMPLEMENTATION_PLAN.md', 'do steps 1-5', 'start the plan'. Actions: stepwise execution, summarize each step, verify with real output, per-step commit, deliberate plan amendment, bad-step recovery. Stops mid-plan if a step changes architecture. Output: clean diffs per step + verification evidence.
+---
+
+Execute the referenced plan file (IMPLEMENTATION_PLAN.md by
+default) one step at a time.
+
+For each step:
+1. Read the step from the plan file. Confirm understanding of
+   what changes, why ordered here, and how to verify.
+2. Make the changes.
+3. Summarize: 3-5 lines covering files touched and behavior
+   before vs. after.
+4. Run the verification command specified by the plan. Paste
+   the actual output.
+5. Commit the step on its own with message "Step N:
+   <description>".
+6. Stop. Wait for user confirmation before starting the next
+   step.
+
+Never roll into a later step without confirmation. If a
+verification fails, stop and diagnose — do not push past red.
+If the plan turns out to be wrong, amend the plan file with a
+brief reason, commit the amendment by itself, and wait for
+sign-off before continuing.
+
+At the end, run the full plan's verification end-to-end and
+confirm nothing in the non-goals list crept in.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/executing-plans/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/write-an-implementation-plan-with-lingcode.html" class="tutorial-next-card">
+            <h3>Write an implementation plan</h3>
+            <p>If you don't have a plan yet, that's the prerequisite for everything in this tutorial</p>
+          </a>
+          <a href="/tutorials/stress-test-your-plan-with-grill-me.html" class="tutorial-next-card">
+            <h3>Stress-test your plan with /grill-me</h3>
+            <p>Before you execute, have LingCode interrogate the plan and surface hidden assumptions</p>
+          </a>
+          <a href="/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html" class="tutorial-next-card">
+            <h3>A real five-phase plan in action</h3>
+            <p>See checkpoints applied to a multi-week native-migration project, phase by phase</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

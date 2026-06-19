@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Backends — LingCode Cloud</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"></noscript>
+  <link rel="stylesheet" href="/style.css?v=20260531a" />
+  <style>
+    :root {
+      --c-bg: #f6f7f9; --c-panel: #ffffff; --c-panel-2: #f4f5f8;
+      --c-border: #ecedf1; --c-border-2: #e0e2e8;
+      --c-text: #15171c; --c-muted: #5f6470; --c-faint: #9aa0ab;
+      --c-accent: #5b5bf6; --c-accent-soft: #eef0fe;
+      --c-live: #11885a; --c-danger: #e5484d;
+      /* refined-light refresh (2026-06): layered card/tile shadow */
+      --c-shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.05);
+    }
+    /* The site-nav is position:fixed, so clear it (marketing pages do this per-
+       page). Without this the sidebar + headings sit hidden under the nav. */
+    body { background: var(--c-bg) !important; background-image: none !important; padding-top: 64px; }
+    .cx { display: flex; min-height: calc(100vh - 64px); font-family: 'Geist', system-ui, sans-serif; color: var(--c-text); }
+    /* ── sidebar ── */
+    .cx-side { width: 244px; flex-shrink: 0; border-right: 1px solid var(--c-border); background: #fbfbfd; display: flex; flex-direction: column; }
+    .cx-switch { padding: 14px 14px 10px; border-bottom: 1px solid var(--c-border); }
+    .cx-switch-btn { width: 100%; text-align: left; background: var(--c-panel); border: 1px solid var(--c-border-2); border-radius: 10px; padding: 10px 12px; cursor: pointer; font-family: inherit; color: var(--c-text); display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 1px rgba(16,24,40,.03); }
+    .cx-switch-btn:hover { border-color: var(--c-border-2); }
+    .cx-switch-btn .nm { font-weight: 600; font-size: .86rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cx-switch-btn .ar { color: var(--c-faint); font-size: .7rem; }
+    .cx-switch-menu { margin-top: 6px; border: 1px solid var(--c-border); border-radius: 9px; overflow: hidden; }
+    .cx-switch-menu button { display: block; width: 100%; text-align: left; background: var(--c-panel); border: 0; border-bottom: 1px solid var(--c-border); padding: 8px 11px; cursor: pointer; font-family: inherit; font-size: .82rem; color: var(--c-text); }
+    .cx-switch-menu button:last-child { border-bottom: 0; }
+    .cx-switch-menu button:hover { background: var(--c-panel-2); }
+    .cx-switch-menu button.on { color: var(--c-accent); font-weight: 600; }
+    .cx-nav { padding: 10px; }
+    .cx-nav-item { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; background: transparent; border: 0; border-radius: 9px; padding: 8px 10px; margin-bottom: 1px; cursor: pointer; font-family: inherit; font-size: .86rem; font-weight: 500; color: var(--c-muted); }
+    .cx-nav-item:hover { background: var(--c-panel-2); color: var(--c-text); }
+    .cx-nav-item.on { background: var(--c-accent-soft); color: var(--c-accent); font-weight: 600; box-shadow: inset 0 0 0 1px #e2e3fb; }
+    .cx-nav-item .ic { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 7px; background: var(--c-panel-2); font-size: .78rem; }
+    .cx-nav-item.on .ic { background: var(--c-accent); color: #fff; }
+    .cx-sub { padding: 4px 8px 16px; }
+    .cx-sub-label { font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; color: var(--c-faint); padding: 8px 10px 4px; }
+    .cx-table-btn { display: flex; align-items: center; gap: 7px; width: 100%; text-align: left; background: transparent; border: 0; border-radius: 7px; padding: 6px 10px; cursor: pointer; font-family: 'Geist Mono', monospace; font-size: .76rem; color: var(--c-muted); }
+    .cx-table-btn:hover { background: var(--c-panel-2); color: var(--c-text); }
+    .cx-table-btn.on { background: var(--c-accent-soft); color: var(--c-accent); }
+    /* ── main ── */
+    .cx-main { flex: 1; min-width: 0; padding: 22px 26px 70px; overflow: auto; }
+    .cx-h { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+    .cx-h h1 { font-size: 1.4rem; font-weight: 650; letter-spacing: -.025em; margin: 0; flex: 1; }
+    .cx-pill { font-size: .64rem; padding: 2px 8px; border-radius: 99px; vertical-align: middle; }
+    .cx-pill.live { background: #e9f9f0; color: var(--c-live); box-shadow: inset 0 0 0 1px #c8eed8; font-weight: 600; }
+    .cx-pill.other { background: #eee; color: #888; }
+    .btn2 { background: var(--c-panel); border: 1px solid var(--c-border-2); color: var(--c-text); border-radius: 9px; padding: 6px 12px; font-size: .8rem; font-weight: 500; cursor: pointer; font-family: inherit; box-shadow: 0 1px 1px rgba(16,24,40,.03); transition: background .12s, border-color .12s; }
+    .btn2:hover { background: var(--c-panel-2); border-color: var(--c-border-2); }
+    .btn2.primary { background: var(--c-accent); border-color: var(--c-accent); color: #fff; box-shadow: 0 1px 3px rgba(91,91,246,.38); }
+    .btn2.primary:hover { filter: brightness(1.06); }
+    .btn2.danger { color: var(--c-danger); border-color: #f3c9ca; }
+    .btn2.sm { padding: 3px 9px; font-size: .72rem; }
+    .card { background: var(--c-panel); border: 1px solid var(--c-border); border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; box-shadow: var(--c-shadow); }
+    .card h2 { font-size: .9rem; font-weight: 650; letter-spacing: -.01em; margin: 0 0 12px; }
+    .kv { display: flex; gap: 10px; align-items: center; font-size: .82rem; margin: 7px 0; flex-wrap: wrap; }
+    .kv .k { color: var(--c-muted); min-width: 96px; }
+    .kv code, code.mono { background: var(--c-panel-2); padding: 3px 8px; border-radius: 6px; font-family: 'Geist Mono', monospace; font-size: .76rem; word-break: break-all; max-width: 100%; }
+    .muted { color: var(--c-muted); font-size: .85rem; line-height: 1.6; }
+    .faint { color: var(--c-faint); font-size: .78rem; }
+    /* grid */
+    .grid-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+    .grid-search { flex: 1; min-width: 160px; background: var(--c-panel); border: 1px solid var(--c-border-2); border-radius: 8px; padding: 6px 11px; font-family: inherit; font-size: .8rem; color: var(--c-text); }
+    .fld { background: var(--c-panel-2); border: 1px solid var(--c-border-2); border-radius: 8px; padding: 7px 10px; font-family: inherit; font-size: .8rem; color: var(--c-text); }
+    .grid-wrap { overflow-x: auto; border: 1px solid var(--c-border); border-radius: 12px; background: var(--c-panel); box-shadow: var(--c-shadow); }
+    table.grid { border-collapse: collapse; width: 100%; font-size: .78rem; }
+    table.grid th, table.grid td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--c-border); white-space: nowrap; }
+    table.grid th { color: var(--c-muted); font-weight: 600; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; background: #fafbfc; position: sticky; top: 0; cursor: pointer; user-select: none; }
+    table.grid th:hover { color: var(--c-text); }
+    table.grid td { font-family: 'Geist Mono', monospace; max-width: 360px; overflow: hidden; text-overflow: ellipsis; }
+    table.grid tr:hover td { background: #f7f8ff; }
+    .grid-actions { text-align: right; white-space: nowrap; }
+    textarea.sql { width: 100%; font-family: 'Geist Mono', monospace; font-size: .8rem; background: var(--c-panel); color: var(--c-text); border: 1px solid var(--c-border-2); border-radius: 9px; padding: 12px; min-height: 120px; resize: vertical; }
+    .empty { text-align: center; padding: 48px 0; color: var(--c-muted); }
+    /* modal */
+    .ov { position: fixed; inset: 0; background: rgba(20,20,30,.45); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: var(--c-panel); border: 1px solid var(--c-border); border-radius: 14px; max-width: 480px; width: 100%; padding: 22px 24px; max-height: 86vh; overflow: auto; }
+.modal.wide { max-width: 880px; }
+    .modal h3 { margin: 0 0 14px; font-size: 1rem; }
+    .modal label { display: block; margin: 9px 0; font-size: .76rem; color: var(--c-muted); }
+    .modal input { display: block; width: 100%; margin-top: 4px; background: var(--c-panel-2); border: 1px solid var(--c-border-2); border-radius: 7px; padding: 7px 10px; font-family: 'Geist Mono', monospace; font-size: .8rem; color: var(--c-text); box-sizing: border-box; }
+    .modal textarea { display: block; width: 100%; margin-top: 4px; background: var(--c-panel-2); border: 1px solid var(--c-border-2); border-radius: 7px; padding: 7px 10px; font-family: 'Geist Mono', monospace; font-size: .8rem; color: var(--c-text); box-sizing: border-box; resize: vertical; min-height: 64px; }
+    .modal select { display: block; width: 100%; margin-top: 4px; background: var(--c-panel-2); border: 1px solid var(--c-border-2); border-radius: 7px; padding: 7px 10px; font-family: inherit; font-size: .8rem; color: var(--c-text); box-sizing: border-box; }
+    .modal label.inline { display: flex; align-items: center; gap: 7px; }
+    .modal label.inline input { width: auto; margin: 0; }
+    /* ── overview stat tiles ── */
+    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-bottom: 16px; }
+    .tile { background: var(--c-panel); border: 1px solid var(--c-border); border-radius: 14px; padding: 16px 18px; box-shadow: var(--c-shadow); transition: box-shadow .15s, transform .15s; }
+    .tile:hover { box-shadow: 0 6px 18px rgba(16,24,40,.09); transform: translateY(-1px); }
+    .tile .n { font-size: 1.7rem; font-weight: 680; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+    .tile .l { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; color: var(--c-faint); margin-top: 6px; }
+    /* ── logs ── */
+    .lvl { font-family: 'Geist Mono', monospace; font-size: .66rem; text-transform: uppercase; padding: 1px 7px; border-radius: 5px; }
+    .lvl.info { background: var(--c-panel-2); color: var(--c-muted); }
+    .lvl.error { background: #fdecec; color: var(--c-danger); }
+    .lvl.warn { background: #fff4e0; color: #b7791f; }
+    /* ── storage thumbnails ── */
+    .thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid var(--c-border); background: var(--c-panel-2); }
+    .thumb-ph { width: 40px; height: 40px; border-radius: 6px; border: 1px solid var(--c-border); background: var(--c-panel-2); display: inline-flex; align-items: center; justify-content: center; color: var(--c-faint); font-size: .9rem; }
+    /* ── usage chart ── */
+    .chart { width: 100%; height: 160px; display: block; }
+    .chart .axis { stroke: var(--c-border); stroke-width: 1; }
+    /* ── toast ── */
+    .toast-wrap { position: fixed; bottom: 20px; right: 20px; z-index: 9500; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: var(--c-text); color: #fff; padding: 10px 14px; border-radius: 9px; font-size: .8rem; box-shadow: 0 6px 24px rgba(0,0,0,.2); animation: toast-in .18s ease; max-width: 320px; }
+    .toast.err { background: var(--c-danger); }
+    .toast.ok { background: var(--c-live); }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    /* ── skeleton ── */
+    .sk { background: linear-gradient(90deg, var(--c-panel-2) 25%, #ececf4 37%, var(--c-panel-2) 63%); background-size: 400% 100%; animation: sk 1.2s ease infinite; border-radius: 7px; height: 14px; margin: 8px 0; }
+    @keyframes sk { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+    /* ── segmented / misc ── */
+    .seg { display: inline-flex; align-items: center; gap: 6px; }
+    .hamburger { display: none; }
+    @media (max-width: 760px) {
+      .cx-side { display: none; position: fixed; top: 64px; left: 0; bottom: 0; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,.12); }
+      .cx-side.open { display: flex; }
+      .cx-main { padding: 16px; }
+      .hamburger { display: inline-flex; }
+      .tiles { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/account.html" id="nav-account" hidden>Account</a>
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div id="root"><div class="empty">Loading…</div></div>
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+  <script src="/nav.js?v=202605131900" defer></script>
+  <script src="/nav-auth.js" defer></script>
+  <script>
+  (function () {
+    var root = document.getElementById('root');
+    var S = { backends: [], active: null, view: 'overview', tables: [], table: null,
+              cols: [], rows: [], pk: [], colMeta: [], total: 0, order: null, dir: 'asc', offset: 0, limit: 50, q: '',
+              switchOpen: false, sideOpen: false, live: false, es: null };
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+    function toast(msg, kind) {
+      var w = document.getElementById('toast-wrap'); if (!w) return;
+      var t = document.createElement('div'); t.className = 'toast' + (kind ? ' ' + kind : ''); t.textContent = msg;
+      w.appendChild(t); setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 250); }, kind === 'err' ? 4200 : 2600);
+    }
+    function skel(n) { var s = ''; for (var i = 0; i < (n || 4); i++) s += '<div class="sk" style="width:' + (60 + (i * 37) % 40) + '%"></div>'; return '<div class="card">' + s + '</div>'; }
+    function fmtBytes(b) { b = Number(b) || 0; if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB'; if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB'; return (b / 1073741824).toFixed(2) + ' GB'; }
+    function fileToB64(file) { return new Promise(function (resolve, reject) { var r = new FileReader(); r.onload = function () { resolve(String(r.result).split(',')[1] || ''); }; r.onerror = reject; r.readAsDataURL(file); }); }
+    function csvCell(v) { var s = (v === null || v === undefined) ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v)); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+    function downloadCSV(name, cols, rows) {
+      var lines = [cols.map(csvCell).join(',')].concat(rows.map(function (row) { return cols.map(function (c) { return csvCell(row[c]); }).join(','); }));
+      var blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name + '.csv'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    }
+    // Export the WHOLE table (not just the visible page) by walking pages of 200,
+    // capped at 50k rows so a giant table can't hang the browser.
+    function exportTableCSV() {
+      var table = S.table, cap = 50000, all = [], cols = S.cols.slice();
+      toast('Exporting ' + table + '…');
+      var fetchPage = function (offset) {
+        return api(base() + '/tables/' + encodeURIComponent(table) + '/rows?limit=200&offset=' + offset).then(function (r) {
+          if (S.table !== table) return; // user navigated away
+          var d = (r.j && r.j.data) || {}, rows = d.rows || [];
+          if (!cols.length && rows[0]) cols = Object.keys(rows[0]);
+          all = all.concat(rows);
+          if (rows.length === 200 && all.length < cap) return fetchPage(offset + 200);
+          downloadCSV(table, cols, all);
+          toast('Exported ' + all.length + ' row' + (all.length === 1 ? '' : 's') + (all.length >= cap ? ' (capped)' : ''), 'ok');
+        });
+      };
+      fetchPage(0).catch(function () { toast('Export failed', 'err'); });
+    }
+    function api(path, opts) {
+      return fetch(path, Object.assign({ credentials: 'include', cache: 'no-store' }, opts || {})).then(function (r) {
+        return r.json().then(function (j) { return { ok: r.ok && j && j.ok !== false, status: r.status, j: j }; }).catch(function () { return { ok: false, status: r.status, j: null }; });
+      });
+    }
+    function apiW(p, m, b) { return api(p, { method: m, headers: { 'content-type': 'application/json' }, body: b ? JSON.stringify(b) : undefined }); }
+    function fmtDate(s) { try { return new Date(s).toLocaleString(); } catch (e) { return s || ''; } }
+    function beName(b) { return (b && b.label && String(b.label).trim()) ? String(b.label).trim() : (b.project_key || b.backend_id || '').replace(/^proj_/, '').slice(0, 12); }
+    function cur() { return S.backends.filter(function (b) { return b.backend_id === S.active; })[0]; }
+    function base() { return '/api/cloud/account/backends/' + encodeURIComponent(S.active); }
+    function cellText(v) { if (v === null || v === undefined) return ''; if (typeof v === 'object') return JSON.stringify(v); return String(v); }
+
+    // ── boot ──
+    function load() {
+      api('/api/cloud/account/backends').then(function (r) {
+        if (r.status === 401) return signedOut();
+        if (!r.ok) { root.innerHTML = '<div class="empty">Couldn’t load backends.</div>'; return; }
+        S.backends = (r.j && r.j.data) || [];
+        if (!S.backends.length) return emptyState();
+        // Deep-link: ?backend=<id> (e.g. from the project control panel's
+        // "Open console") auto-selects that backend if the user can see it.
+        if (!S.active) {
+          var wanted = new URLSearchParams(location.search).get('backend');
+          if (wanted && S.backends.some(function (b) { return b.backend_id === wanted; })) S.active = wanted;
+        }
+        if (!S.active || !cur()) S.active = S.backends[0].backend_id;
+        renderShell(); loadTables();
+      });
+    }
+    function signedOut() { root.innerHTML = '<div class="empty"><p class="muted">Sign in to manage your backends.</p><p style="margin-top:12px"><a class="btn btn-primary" href="/signin.html?next=/backends.html">Sign in</a></p></div>'; }
+    function emptyState() {
+      root.innerHTML = '<div class="empty"><h2>No backends yet</h2><p class="muted" style="max-width:520px;margin:10px auto 0">In the LingCode IDE: <b>Account → LingCode Cloud → Connect Backend to This Project</b>, then ask the agent to build something that needs data or accounts — a managed Postgres backend appears here automatically.</p></div>';
+    }
+
+    // ── shell (sidebar + main) ──
+    function renderShell() {
+      var b = cur();
+      var navItems = [['overview', '⌂', 'Overview'], ['database', '▤', 'Database'], ['storage', '▣', 'Storage'], ['functions', 'ƒ', 'Functions'], ['push', '◔', 'Push'], ['telemetry', '∿', 'Telemetry'], ['experiments', '⚗', 'Experiments'], ['logs', '☰', 'Logs'], ['auth', '◉', 'Authentication'], ['sql', '⌘', 'SQL'], ['settings', '⚙', 'Settings']];
+      var sw = '<div class="cx-switch"><button class="cx-switch-btn" id="sw-btn"><span class="nm">' + esc(beName(b)) + '</span><span class="ar">▾</span></button>'
+        + (S.switchOpen ? '<div class="cx-switch-menu">' + S.backends.map(function (x) {
+            return '<button data-be="' + esc(x.backend_id) + '" class="' + (x.backend_id === S.active ? 'on' : '') + '">' + esc(beName(x)) + '</button>';
+          }).join('') + '</div>' : '') + '</div>';
+      var nav = '<div class="cx-nav">' + navItems.map(function (it) {
+        return '<button class="cx-nav-item ' + (S.view === it[0] ? 'on' : '') + '" data-view="' + it[0] + '"><span class="ic">' + it[1] + '</span>' + it[2] + '</button>';
+      }).join('') + '</div>';
+      var sub = '';
+      if (S.view === 'database') {
+        sub = '<div class="cx-sub"><div class="cx-sub-label">Tables</div>'
+          + (S.tables.length ? S.tables.map(function (t) {
+              return '<button class="cx-table-btn ' + (S.table === t ? 'on' : '') + '" data-table="' + esc(t) + '"><span>▦</span>' + esc(t) + '</button>';
+            }).join('') : '<p class="faint" style="padding:6px 10px">No tables yet.</p>') + '</div>';
+      }
+      root.innerHTML = '<div class="cx"><aside class="cx-side' + (S.sideOpen ? ' open' : '') + '">' + sw + nav + sub + '</aside><main class="cx-main">'
+        + '<button class="btn2 sm hamburger" id="cx-burger" style="margin-bottom:12px">☰ Menu</button><div id="cx-main"></div></main></div>';
+
+      document.getElementById('sw-btn').onclick = function () { S.switchOpen = !S.switchOpen; renderShell(); };
+      document.getElementById('cx-burger').onclick = function () { S.sideOpen = !S.sideOpen; renderShell(); };
+      Array.prototype.forEach.call(root.querySelectorAll('[data-be]'), function (el) { el.onclick = function () { stopLive(); S.active = el.getAttribute('data-be'); S.switchOpen = false; S.table = null; S.view = 'overview'; S.sideOpen = false; renderShell(); loadTables(); }; });
+      Array.prototype.forEach.call(root.querySelectorAll('[data-view]'), function (el) { el.onclick = function () { stopLive(); S.view = el.getAttribute('data-view'); S.sideOpen = false; renderShell(); }; });
+      Array.prototype.forEach.call(root.querySelectorAll('[data-table]'), function (el) { el.onclick = function () { openTable(el.getAttribute('data-table')); }; });
+      renderView();
+    }
+    // light re-render of just the sidebar active states without rebuilding main
+    function renderShell2() {
+      Array.prototype.forEach.call(root.querySelectorAll('.cx-nav-item'), function (el) { el.classList.toggle('on', el.getAttribute('data-view') === S.view); });
+    }
+
+    function loadTables() {
+      api(base() + '/tables').then(function (r) {
+        S.tables = (r.ok && r.j && r.j.data) || [];
+        S.tables = S.tables.map(function (t) { return typeof t === 'string' ? t : (t.name || t.table_name || ''); }).filter(Boolean);
+        if (S.view === 'database' && !S.table && S.tables.length) S.table = S.tables[0];
+        renderShell();
+      });
+    }
+
+    function main() { return document.getElementById('cx-main'); }
+
+    // ── views ──
+    function renderView() {
+      if (S.view === 'overview') return renderOverview();
+      if (S.view === 'database') return renderDatabase();
+      if (S.view === 'storage') return renderStorage();
+      if (S.view === 'functions') return renderFunctions();
+      if (S.view === 'push') return renderPush();
+      if (S.view === 'telemetry') return renderTelemetry();
+      if (S.view === 'experiments') return renderExperiments();
+      if (S.view === 'logs') return renderLogs();
+      if (S.view === 'auth') return renderAuth();
+      if (S.view === 'sql') return renderSQL();
+      if (S.view === 'settings') return renderSettings();
+    }
+    function stopLive() { S.live = false; if (S.es) { try { S.es.close(); } catch (_) {} S.es = null; } }
+
+    // OVERVIEW
+    function renderOverview() {
+      var m = main(); var b = cur(); if (!m || !b) return;
+      m.innerHTML = '<div class="cx-h"><h1>Overview</h1><span class="cx-pill ' + (b.status === 'live' ? 'live' : 'other') + '">' + esc(b.status) + '</span></div>'
+        + '<div id="ov-tiles">' + skel(2) + '</div><div class="card"><h2>Recent activity</h2><div id="ov-logs"><p class="muted">Loading…</p></div></div>';
+      Promise.all([
+        api(base() + '/overview'), api(base() + '/storage/objects'), api(base() + '/users'), api(base() + '/logs')
+      ]).then(function (res) {
+        var ov = (res[0].ok && res[0].j && res[0].j.data) || {};
+        var objs = (res[1].ok && res[1].j && res[1].j.data) || [];
+        var users = (res[2].ok && res[2].j && res[2].j.data) || [];
+        var logs = (res[3].ok && res[3].j && res[3].j.data) || [];
+        var usage = ov.usage || {}; var bytes = objs.reduce(function (a, o) { return a + (Number(o.bytes) || 0); }, 0);
+        var storMax = Number(usage.maxStorageBytes) || 0;
+        var storUsed = usage.storageUsedBytes != null ? Number(usage.storageUsedBytes) : bytes;
+        var tiles = [
+          ['Status', esc(ov.status || b.status || '—')], ['Tables', ov.table_count != null ? ov.table_count : '—'],
+          ['Total rows', ov.total_rows != null ? ov.total_rows.toLocaleString() : '—'],
+          ['Users', users.length], ['Storage objects', objs.length],
+          ['Storage', storMax > 0 ? (fmtBytes(storUsed) + ' / ' + fmtBytes(storMax)) : fmtBytes(storUsed)],
+          ['Rows read', usage.reads != null ? usage.reads : '—'], ['Rows written', usage.writes != null ? usage.writes : '—']
+        ];
+        var tilesHtml = '<div class="tiles">' + tiles.map(function (t) {
+          return '<div class="tile"><div class="n">' + t[1] + '</div><div class="l">' + t[0] + '</div></div>';
+        }).join('') + '</div>';
+        // Usage-vs-quota bars (storage + tables/users/files) from the overview's limits.
+        // Each bar turns amber at 80% and red at 95% and shows an Upgrade nudge, so users
+        // see a wall coming instead of hitting a bare 402.
+        var lim = ov.limits || {};
+        var ident = function (n) { return n; };
+        function quotaBar(label, used, max, fmt) {
+          if (!(max > 0)) return '';
+          used = Number(used) || 0;
+          var pct = Math.min(100, Math.round(used / max * 100));
+          var color = pct >= 95 ? 'var(--c-danger)' : (pct >= 80 ? '#e0a800' : 'var(--c-accent)');
+          var h = '<div class="card" style="margin-top:12px">'
+            + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><strong>' + label + '</strong>'
+            + '<span class="muted">' + fmt(used) + ' / ' + fmt(max) + ' (' + pct + '%)</span></div>'
+            + '<div style="height:8px;border-radius:4px;background:rgba(0,0,0,.08);overflow:hidden">'
+            + '<div style="height:8px;border-radius:4px;background:' + color + ';width:' + pct + '%"></div></div>';
+          if (pct >= 95) h += '<p class="muted" style="margin:10px 0 0;color:var(--c-danger)">🔴 ' + label + ' at ' + pct + '% — you\'ll be blocked at 100%. <a href="/pricing.html">Upgrade</a>.</p>';
+          else if (pct >= 80) h += '<p class="muted" style="margin:10px 0 0;color:#b26b00">⚠ ' + label + ' at ' + pct + '% — approaching your plan limit. <a href="/pricing.html">Upgrade</a> for more.</p>';
+          return h + '</div>';
+        }
+        var storHtml = quotaBar('Storage', storUsed, storMax, fmtBytes)
+          + quotaBar('Database tables', ov.table_count, lim.maxTables, ident)
+          + quotaBar('Auth users', users.length, lim.maxUsers, ident)
+          + quotaBar('Files', objs.length, lim.maxObjects, ident);
+        var box = document.getElementById('ov-tiles'); if (box) box.innerHTML = tilesHtml + storHtml;
+        var lb = document.getElementById('ov-logs'); if (lb) {
+          if (!logs.length) { lb.innerHTML = '<p class="muted">No activity yet.</p>'; return; }
+          lb.innerHTML = logsTable(logs.slice(0, 8));
+        }
+      });
+    }
+
+    // STORAGE
+    function renderStorage() {
+      var m = main(); var b = cur(); if (!m || !b) return;
+      m.innerHTML = '<div class="cx-h"><h1>Storage</h1><button class="btn2 sm" id="st-refresh">Refresh</button>'
+        + '<button class="btn2 sm primary" id="st-upload">↑ Upload file</button><input type="file" id="st-file" hidden/></div>'
+        + '<div id="st-body">' + skel(3) + '</div>';
+      document.getElementById('st-refresh').onclick = loadStorage;
+      var fi = document.getElementById('st-file');
+      document.getElementById('st-upload').onclick = function () { fi.click(); };
+      fi.onchange = function () { if (fi.files && fi.files[0]) uploadFile(fi.files[0]); };
+      loadStorage();
+    }
+    function loadStorage() {
+      var body = document.getElementById('st-body'); if (body) body.innerHTML = skel(3);
+      api(base() + '/storage/objects').then(function (r) {
+        var body = document.getElementById('st-body'); if (!body) return;
+        if (!r.ok) { body.innerHTML = '<div class="card empty"><p class="muted">Couldn’t load storage.</p></div>'; return; }
+        var objs = (r.j && r.j.data) || [];
+        if (!objs.length) { body.innerHTML = '<div class="card empty"><p class="muted">No files yet. Upload one, or your app can POST to the storage API.</p></div>'; return; }
+        body.innerHTML = '<div class="grid-wrap"><table class="grid"><thead><tr><th></th><th>Path</th><th>Type</th><th>Size</th><th>Uploaded</th><th></th></tr></thead><tbody>'
+          + objs.map(function (o) {
+            var isImg = /^image\//.test(o.content_type || '');
+            var thumb = isImg ? '<img class="thumb" loading="lazy" src="' + esc(o.url) + '"/>' : '<span class="thumb-ph">▦</span>';
+            return '<tr><td>' + thumb + '</td><td title="' + esc(o.path) + '">' + esc(o.bucket + '/' + o.path) + '</td><td>' + esc(o.content_type || '') + '</td><td>' + fmtBytes(o.bytes) + '</td><td>' + esc(fmtDate(o.created_at)) + '</td>'
+              + '<td class="grid-actions"><button class="btn2 sm" data-url="' + esc(o.url) + '">Copy URL</button> <button class="btn2 sm danger" data-del=\'' + esc(JSON.stringify({ bucket: o.bucket, path: o.path })) + '\'>Del</button></td></tr>';
+          }).join('') + '</tbody></table></div><p class="faint" style="margin-top:8px">' + objs.length + ' file' + (objs.length === 1 ? '' : 's') + '</p>';
+        Array.prototype.forEach.call(body.querySelectorAll('[data-url]'), function (el) { el.onclick = function () { navigator.clipboard.writeText(el.getAttribute('data-url') || ''); toast('Public URL copied', 'ok'); }; });
+        Array.prototype.forEach.call(body.querySelectorAll('[data-del]'), function (el) { el.onclick = function () {
+          var o = JSON.parse(el.getAttribute('data-del')); if (!confirm('Delete ' + o.path + '?')) return;
+          apiW(base() + '/storage/objects', 'DELETE', o).then(function (r) { if (r.ok) { toast('Deleted', 'ok'); loadStorage(); } else toast('Delete failed', 'err'); });
+        }; });
+      });
+    }
+    function uploadFile(file) {
+      if (file.size > 25 * 1048576) { toast('File too large (max ~25 MB)', 'err'); return; }
+      toast('Uploading ' + file.name + '…');
+      fileToB64(file).then(function (b64) {
+        return apiW(base() + '/storage/objects', 'POST', { path: file.name, content_type: file.type || 'application/octet-stream', data_b64: b64 });
+      }).then(function (r) {
+        if (r.ok) { toast('Uploaded ' + file.name, 'ok'); loadStorage(); }
+        else toast((r.j && (r.j.message || r.j.error)) || 'Upload failed', 'err');
+      }).catch(function () { toast('Upload failed', 'err'); });
+    }
+
+    // FUNCTIONS — author + test serverless functions (sandboxed Deno).
+    var FN_SAMPLE = 'export default async function handler(input, ctx) {\n  // input = the JSON your app POSTs; ctx = { secrets, backendId, gateway }\n  return { hello: input?.name ?? "world" };\n}';
+    function renderFunctions() {
+      var m = main(); var b = cur(); if (!m || !b) return;
+      m.innerHTML = '<div class="cx-h"><h1>Functions</h1><button class="btn2 sm" id="fn-refresh">Refresh</button>'
+        + '<button class="btn2 sm primary" id="fn-new">+ New function</button></div>'
+        + '<div id="fn-warn"></div><div id="fn-body">' + skel(2) + '</div>';
+      document.getElementById('fn-refresh').onclick = loadFunctions;
+      document.getElementById('fn-new').onclick = function () { openFnEditor({ slug: '', source: FN_SAMPLE, secrets: [], isNew: true }); };
+      loadFunctions();
+    }
+    // Example payloads for the built-in templates' copy-snippet button.
+    var TEMPLATE_EXAMPLES = {
+      'echo': { name: 'sky' },
+      'send-email': { to: 'user@example.com', subject: 'Hi', html: '<b>Hello</b>' },
+      'elevenlabs-tts': { text: 'Hello world', voice_id: '21m00Tcm4TlvDq8ikWAM' },
+      'twilio-sms': { to: '+15550001111', body: 'Hello from my app' },
+      'resend-byo': { from: 'you@yourdomain.com', to: 'user@example.com', subject: 'Hi', html: '<b>Hello</b>' },
+      'http-fetch': { url: 'https://api.example.com/thing', method: 'POST', headers: { authorization: 'Bearer {{MY_KEY}}' }, body: { hi: true } }
+    };
+    // Jump to Settings → Secrets and prefill the secret key the user needs to add.
+    function gotoSecret(name) {
+      stopLive(); S.view = 'settings'; S.sideOpen = false; renderShell();
+      setTimeout(function () { var i = document.getElementById('s-sec-key'); if (i) { if (name) i.value = name; i.focus(); try { i.scrollIntoView({ block: 'center' }); } catch (_) {} } }, 60);
+    }
+    function templateGalleryHtml(templates, setSecrets) {
+      if (!templates || !templates.length) return '';
+      var cards = templates.map(function (t) {
+        var req = t.required_secrets || [];
+        var badges = req.length ? req.map(function (k) {
+          var ok = !!setSecrets[k];
+          return '<span class="lvl ' + (ok ? 'info' : 'warn') + '" style="margin-right:6px" title="' + (ok ? 'set' : 'not set') + '">' + (ok ? '✓ ' : '⚠ ') + esc(k) + '</span>';
+        }).join('') : '<span class="faint">no secrets needed</span>';
+        var missing = req.filter(function (k) { return !setSecrets[k]; });
+        var snippet = "await lingcode.functions.invoke('" + t.slug + "', " + JSON.stringify(TEMPLATE_EXAMPLES[t.slug] || {}) + ");";
+        return '<div class="card" style="margin-top:10px">'
+          + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><code>' + esc(t.slug) + '</code><b>' + esc(t.name) + '</b></div>'
+          + '<p class="muted" style="margin:6px 0 8px">' + esc(t.description) + '</p>'
+          + '<div style="margin-bottom:8px">' + badges + '</div>'
+          + '<div class="kv"><span class="k">Invoke</span><code class="mono" style="flex:1;overflow:auto;white-space:nowrap;padding:6px 8px">' + esc(snippet) + '</code></div>'
+          + '<div style="display:flex;gap:8px;margin-top:8px">'
+          + '<button class="btn2 sm" data-copysnip="' + esc(snippet) + '">Copy invoke snippet</button>'
+          + (missing.length ? '<button class="btn2 sm primary" data-addsec="' + esc(missing[0]) + '">Set ' + esc(missing[0]) + '</button>' : '')
+          + '</div></div>';
+      }).join('');
+      return '<div class="cx-h" style="margin-top:20px"><h2 style="margin:0">Built-in templates</h2></div>'
+        + '<p class="muted" style="margin:0 0 6px">Ready-made functions your app can call with <code>lingcode.functions.invoke(slug, payload)</code> — no code to write. Add any required secret under Settings → Secrets.</p>'
+        + cards;
+    }
+    function loadFunctions() {
+      var body = document.getElementById('fn-body'); if (body) body.innerHTML = skel(2);
+      // Fetch saved functions + templates (one call) and the set secret names (to
+      // badge which template secrets are configured) in parallel.
+      Promise.all([api(base() + '/functions'), api(base() + '/secrets')]).then(function (rs) {
+        var r = rs[0], rsec = rs[1];
+        var body = document.getElementById('fn-body'); var warn = document.getElementById('fn-warn');
+        if (!body) return;
+        if (!r.ok) { body.innerHTML = '<div class="card empty"><p class="muted">Couldn’t load functions.</p></div>'; return; }
+        var data = (r.j && r.j.data) || {};
+        var fns = data.functions || [];
+        var setSecrets = {};
+        if (rsec && rsec.ok && rsec.j && Array.isArray(rsec.j.data)) rsec.j.data.forEach(function (s) { if (s && s.key) setSecrets[s.key] = true; });
+        if (warn) warn.innerHTML = data.runtime_available ? '' : '<div class="card" style="border-color:#f3c9ca"><p class="muted" style="margin:0">⚠ The functions runtime (Deno) isn’t installed on this server yet — custom functions won’t run until it is. Built-in templates still work.</p></div>';
+        var savedHtml;
+        if (!fns.length) {
+          savedHtml = '<div class="card empty"><p class="muted">No custom functions yet. Click <b>+ New function</b> to write one, or use a built-in template below — your app calls either with <code>lingcode.functions.invoke(slug, payload)</code>.</p></div>';
+        } else {
+          savedHtml = '<div class="grid-wrap"><table class="grid"><thead><tr><th>Slug</th><th>Status</th><th>Secrets</th><th>Updated</th><th></th></tr></thead><tbody>'
+            + fns.map(function (f) {
+              return '<tr><td><code>' + esc(f.slug) + '</code></td><td><span class="lvl ' + (f.enabled ? 'info' : '') + '">' + (f.enabled ? 'enabled' : 'disabled') + '</span></td><td>' + esc((f.secrets || []).join(', ') || '—') + '</td><td>' + esc(fmtDate(f.updated_at)) + '</td>'
+                + '<td class="grid-actions"><button class="btn2 sm" data-edit=\'' + esc(JSON.stringify(f)) + '\'>Edit</button> <button class="btn2 sm danger" data-del="' + esc(f.slug) + '">Del</button></td></tr>';
+            }).join('') + '</tbody></table></div>';
+        }
+        body.innerHTML = savedHtml + templateGalleryHtml(data.templates || [], setSecrets);
+        Array.prototype.forEach.call(body.querySelectorAll('[data-edit]'), function (el) { el.onclick = function () { openFnEditor(JSON.parse(el.getAttribute('data-edit'))); }; });
+        Array.prototype.forEach.call(body.querySelectorAll('[data-del]'), function (el) { el.onclick = function () {
+          var slug = el.getAttribute('data-del'); if (!confirm('Delete function "' + slug + '"?')) return;
+          apiW(base() + '/functions/' + encodeURIComponent(slug), 'DELETE').then(function (r) { if (r.ok) { toast('Deleted', 'ok'); loadFunctions(); } else toast('Delete failed', 'err'); });
+        }; });
+        Array.prototype.forEach.call(body.querySelectorAll('[data-copysnip]'), function (el) { el.onclick = function () { navigator.clipboard.writeText(el.getAttribute('data-copysnip') || ''); toast('Snippet copied', 'ok'); }; });
+        Array.prototype.forEach.call(body.querySelectorAll('[data-addsec]'), function (el) { el.onclick = function () { gotoSecret(el.getAttribute('data-addsec')); }; });
+      });
+    }
+    function openFnEditor(f) {
+      var m = main(); if (!m) return;
+      var slug = f.slug || '';
+      m.innerHTML = '<div class="cx-h"><h1>' + (f.isNew ? 'New function' : 'Edit: ' + esc(slug)) + '</h1><button class="btn2 sm" id="fn-back">← Back</button></div>'
+        + '<div class="card"><div class="kv"><span class="k">Slug</span><input id="fn-slug" class="mono" ' + (f.isNew ? '' : 'readonly') + ' value="' + esc(slug) + '" placeholder="my-function" style="flex:1;padding:6px 8px"/></div>'
+        + '<div class="kv"><span class="k">Secret names</span><input id="fn-secrets" class="mono" value="' + esc((f.secrets || []).join(', ')) + '" placeholder="STRIPE_KEY, SENDGRID_KEY (comma-separated, optional)" style="flex:1;padding:6px 8px"/></div>'
+        + '<p class="faint" style="margin:6px 0 0">Write an <code>export default</code> handler. Runs in a sandboxed Deno process. <code>ctx = { secrets, backendId, gateway, request, db, storage }</code>: <code>ctx.db.query(sql, params)</code> runs SQL (JOINs/transactions, RLS-scoped); <code>ctx.storage</code> reads/writes files; <code>ctx.request</code> is the inbound HTTP request (method/headers/rawBody) so a function can be a webhook receiver; return <code>{ __http:true, status, headers, body }</code> for a raw HTTP response.</p></div>'
+        + '<textarea id="fn-src" class="sql" spellcheck="false" style="min-height:260px;width:100%;font-family:ui-monospace,monospace">' + esc(f.source || FN_SAMPLE) + '</textarea>'
+        + '<div style="display:flex;gap:8px;align-items:center;margin-top:10px"><button class="btn2 primary" id="fn-save">Save</button><button class="btn2" id="fn-test">▶ Test run</button><label class="faint" style="margin-left:auto"><input type="checkbox" id="fn-enabled" ' + (f.enabled === false ? '' : 'checked') + '/> enabled</label></div>'
+        + '<div class="card" style="margin-top:10px;display:none" id="fn-test-card"><h2>Test</h2><div class="kv"><span class="k">Input JSON</span><input id="fn-input" class="mono" value=\'{"name":"sky"}\' style="flex:1;padding:6px 8px"/></div><pre id="fn-out" class="mono" style="white-space:pre-wrap;margin:8px 0 0;font-size:.8rem"></pre></div>'
+        + (f.isNew ? '' : ('<div class="card" style="margin-top:10px" id="fn-sched-card"><h2>Schedules</h2>'
+          + '<p class="muted" style="margin:0 0 8px">Run this function automatically on a CRON schedule (UTC — 5 fields: <code>min hour dom month dow</code>). It runs server-side with full <code>ctx</code>; input is <code>{ scheduled:true, time }</code>.</p>'
+          + '<div id="fn-sched-body">' + skel(1) + '</div>'
+          + '<div class="kv" style="margin-top:8px"><span class="k">CRON</span><input id="fn-sched-cron" class="mono" placeholder="0 9 * * 1   (Mondays 09:00 UTC)" style="flex:1;padding:6px 8px"/><button class="btn2 sm primary" id="fn-sched-add">Add</button></div></div>'));
+      document.getElementById('fn-back').onclick = function () { renderFunctions(); };
+      function save(cb) {
+        var s = (document.getElementById('fn-slug').value || '').trim().toLowerCase();
+        if (!s) { toast('Slug required', 'err'); return; }
+        var secrets = (document.getElementById('fn-secrets').value || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+        var body = { source: document.getElementById('fn-src').value, enabled: document.getElementById('fn-enabled').checked, secrets: secrets };
+        apiW(base() + '/functions/' + encodeURIComponent(s), 'PUT', body).then(function (r) {
+          if (r.ok) { toast('Saved', 'ok'); if (cb) cb(s); }
+          else toast((r.j && (r.j.message || r.j.error)) || 'Save failed', 'err');
+        });
+      }
+      document.getElementById('fn-save').onclick = function () { save(function () { loadFunctions(); }); };
+      document.getElementById('fn-test').onclick = function () {
+        var card = document.getElementById('fn-test-card'); card.style.display = '';
+        var out = document.getElementById('fn-out'); out.textContent = 'Running…';
+        var input; try { input = JSON.parse(document.getElementById('fn-input').value || '{}'); } catch (e) { out.textContent = 'Input is not valid JSON.'; return; }
+        var s = (document.getElementById('fn-slug').value || '').trim().toLowerCase() || 'untitled';
+        apiW(base() + '/functions/' + encodeURIComponent(s) + '/test', 'POST', { source: document.getElementById('fn-src').value, input: input }).then(function (r) {
+          if (!r.ok) { out.textContent = (r.j && (r.j.message || r.j.error)) || 'Test failed (runtime unavailable?)'; return; }
+          var d = (r.j && r.j.data) || {};
+          out.textContent = (d.ok ? '✓ ' + JSON.stringify(d.data, null, 2) : '✗ ' + (d.error || 'error')) + (d.logs ? '\n\n--- logs ---\n' + d.logs : '');
+        });
+      };
+      // Schedules (existing functions only): list / add / delete CRON entries.
+      if (!f.isNew) {
+        var schedSlug = slug;
+        var schedPath = base() + '/functions/' + encodeURIComponent(schedSlug) + '/schedules';
+        function loadSchedules() {
+          var b = document.getElementById('fn-sched-body'); if (!b) return; b.innerHTML = skel(1);
+          api(schedPath).then(function (r) {
+            var b2 = document.getElementById('fn-sched-body'); if (!b2) return;
+            var list = (r.ok && r.j && r.j.data) || [];
+            if (!list.length) { b2.innerHTML = '<p class="faint" style="margin:0">No schedules yet.</p>'; return; }
+            b2.innerHTML = list.map(function (s) {
+              var last = s.last_run_at ? new Date(s.last_run_at).toISOString().replace('T', ' ').slice(0, 16) + ' UTC' : '—';
+              return '<div class="kv"><code class="mono" style="flex:1">' + esc(s.schedule || s.cron || '') + '</code>'
+                + '<span class="faint" style="margin:0 8px">last: ' + esc(last) + (s.last_status ? ' (' + esc(String(s.last_status)) + ')' : '') + '</span>'
+                + '<button class="btn2 sm" data-sdel="' + esc(s.id) + '">Delete</button></div>';
+            }).join('');
+            Array.prototype.forEach.call(b2.querySelectorAll('[data-sdel]'), function (el) {
+              el.onclick = function () {
+                apiW(schedPath + '/' + encodeURIComponent(el.getAttribute('data-sdel')), 'DELETE').then(function (r2) {
+                  if (r2.ok) { toast('Removed', 'ok'); loadSchedules(); } else toast('Remove failed', 'err');
+                });
+              };
+            });
+          });
+        }
+        document.getElementById('fn-sched-add').onclick = function () {
+          var cron = (document.getElementById('fn-sched-cron').value || '').trim();
+          if (!cron) { toast('Enter a CRON expression', 'err'); return; }
+          apiW(schedPath, 'POST', { schedule: cron }).then(function (r) {
+            if (r.ok) { toast('Scheduled', 'ok'); document.getElementById('fn-sched-cron').value = ''; loadSchedules(); }
+            else toast((r.j && (r.j.message || r.j.error)) || 'Schedule failed', 'err');
+          });
+        };
+        loadSchedules();
+      }
+    }
+
+    // PUSH — Web Push (VAPID) status, BYO FCM, and a send-test box.
+    function renderPush() {
+      var m = main(); var b = cur(); if (!m || !b) return;
+      m.innerHTML = '<div class="cx-h"><h1>Push notifications</h1><button class="btn2 sm" id="pu-refresh">Refresh</button></div><div id="pu-body">' + skel(2) + '</div>';
+      document.getElementById('pu-refresh').onclick = loadPush;
+      loadPush();
+    }
+    function loadPush() {
+      var body = document.getElementById('pu-body'); if (body) body.innerHTML = skel(2);
+      api(base() + '/push/config').then(function (r) {
+        var body = document.getElementById('pu-body'); if (!body) return;
+        if (!r.ok) { body.innerHTML = '<div class="card empty"><p class="muted">Couldn’t load push config.</p></div>'; return; }
+        var d = (r.j && r.j.data) || {};
+        var warn = d.available ? '' : '<div class="card" style="border-color:#f3c9ca"><p class="muted" style="margin:0">⚠ The push runtime isn’t installed on this server yet — subscriptions and sends won’t work until it is.</p></div>';
+        body.innerHTML = warn
+          + '<div class="card"><h2>Web Push (VAPID)</h2><p class="muted" style="margin:0 0 8px">Works out of the box for web apps — no setup. Your app subscribes with <code>lingcode.push.subscribe()</code>.</p>'
+          + '<div class="kv"><span class="k">Public key</span><code class="mono" style="word-break:break-all;flex:1">' + esc(d.vapid_public || '—') + '</code></div>'
+          + '<div class="kv"><span class="k">Subscribers</span><code class="mono">' + (d.subscriber_count || 0) + '</code></div></div>'
+          + '<div class="card"><h2>Send a test</h2><div class="kv"><span class="k">Title</span><input id="pu-title" value="Hello" style="flex:1;padding:6px 8px"/></div>'
+          + '<div class="kv"><span class="k">Body</span><input id="pu-bodytxt" value="It works 🎉" style="flex:1;padding:6px 8px"/></div>'
+          + '<div class="kv"><span class="k">URL</span><input id="pu-url" value="/" style="flex:1;padding:6px 8px"/></div>'
+          + '<div style="margin-top:8px"><button class="btn2 primary" id="pu-send">Send to all subscribers</button> <span id="pu-result" class="faint"></span></div></div>'
+          + '<div class="card"><h2>Mobile push (BYO Firebase)</h2><p class="muted" style="margin:0 0 8px">Optional — only if you also ship a native Android app. Paste a Firebase service-account JSON; it’s encrypted at rest. ' + (d.fcm_configured ? '<b>Configured ✓</b>' : 'Not configured.') + '</p>'
+          + '<textarea id="pu-fcm" class="sql" spellcheck="false" placeholder=\'{ "type": "service_account", "project_id": "...", "client_email": "...", "private_key": "..." }\' style="min-height:120px;width:100%;font-family:ui-monospace,monospace"></textarea>'
+          + '<div style="margin-top:8px;display:flex;gap:8px"><button class="btn2" id="pu-fcm-save">Save FCM</button>' + (d.fcm_configured ? '<button class="btn2 danger" id="pu-fcm-clear">Remove</button>' : '') + '</div></div>';
+        document.getElementById('pu-send').onclick = function () {
+          var res = document.getElementById('pu-result'); res.textContent = 'Sending…';
+          apiW(base() + '/push/send', 'POST', { title: document.getElementById('pu-title').value, body: document.getElementById('pu-bodytxt').value, url: document.getElementById('pu-url').value }).then(function (r) {
+            if (!r.ok) { res.textContent = (r.j && (r.j.message || r.j.error)) || 'Send failed'; return; }
+            var x = (r.j && r.j.data) || {}; res.textContent = 'Sent ' + x.sent + ' / ' + x.total + (x.pruned ? ' (pruned ' + x.pruned + ' dead)' : '') + (x.failed ? ' · ' + x.failed + ' failed' : '');
+          });
+        };
+        var saveBtn = document.getElementById('pu-fcm-save');
+        if (saveBtn) saveBtn.onclick = function () {
+          apiW(base() + '/push/config', 'PUT', { fcm_service_account: document.getElementById('pu-fcm').value }).then(function (r) {
+            if (r.ok) { toast('FCM saved', 'ok'); loadPush(); } else toast((r.j && (r.j.message || r.j.error)) || 'Save failed', 'err');
+          });
+        };
+        var clearBtn = document.getElementById('pu-fcm-clear');
+        if (clearBtn) clearBtn.onclick = function () {
+          if (!confirm('Remove the stored Firebase credentials?')) return;
+          apiW(base() + '/push/config', 'PUT', { fcm_service_account: null }).then(function (r) { if (r.ok) { toast('Removed', 'ok'); loadPush(); } });
+        };
+      });
+    }
+
+    // TELEMETRY (Analytics / Crashlytics / Performance / Releases)
+    function renderTelemetry() {
+      var m = main(); var b = cur(); if (!m || !b) return;
+      if (!S.telSub) S.telSub = 'analytics';
+      var tabs = [['analytics', 'Analytics'], ['active-users', 'Active users'], ['retention', 'Retention'], ['funnel', 'Funnels'], ['engagement', 'Engagement'], ['conversions', 'Conversions'], ['realtime', 'Realtime'], ['crashes', 'Crashlytics'], ['performance', 'Performance'], ['releases', 'Releases']];
+      var showSeg = { 'active-users': 1, 'retention': 1, 'funnel': 1, 'engagement': 1 }[S.telSub];
+      m.innerHTML = '<div class="cx-h"><h1>Telemetry</h1>'
+        + (showSeg ? '<select class="btn2 sm" id="tel-seg" style="margin-right:6px"><option>All users</option></select>' : '')
+        + '<a class="btn2 sm" href="' + base() + '/telemetry/export?days=30" download style="text-decoration:none;margin-right:6px">Export CSV</a>'
+        + '<button class="btn2 sm" id="tel-refresh">Refresh</button></div>'
+        + '<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">'
+        + tabs.map(function (t) { return '<button class="btn2 sm ' + (S.telSub === t[0] ? 'primary' : '') + '" data-tel="' + t[0] + '">' + t[1] + '</button>'; }).join('')
+        + '</div><div id="tel-body">' + skel(2) + '</div>';
+      document.getElementById('tel-refresh').onclick = loadTelemetry;
+      Array.prototype.forEach.call(m.querySelectorAll('[data-tel]'), function (el) {
+        el.onclick = function () { stopRealtime(); S.telSub = el.getAttribute('data-tel'); renderTelemetry(); };
+      });
+      if (showSeg) populateSegments();
+      loadTelemetry();
+    }
+    function populateSegments() {
+      var sel = document.getElementById('tel-seg'); if (!sel) return;
+      var build = function (segs) {
+        var sel = document.getElementById('tel-seg'); if (!sel) return;
+        var opts = '<option value="">All users</option>';
+        (segs.versions || []).forEach(function (v) { opts += '<option value="version:' + esc(v) + '">Version = ' + esc(v) + '</option>'; });
+        (segs.platforms || []).forEach(function (p) { opts += '<option value="platform:' + esc(p) + '">Platform = ' + esc(p) + '</option>'; });
+        (segs.countries || []).forEach(function (c) { opts += '<option value="country:' + esc(c) + '">Country = ' + esc(c) + '</option>'; });
+        Object.keys(segs.props || {}).forEach(function (k) { (segs.props[k] || []).forEach(function (v) { opts += '<option value="prop:' + esc(k) + ':' + esc(v) + '">' + esc(k) + ' = ' + esc(v) + '</option>'; }); });
+        (segs.events || []).forEach(function (e) { opts += '<option value="event:' + esc(e) + '">Did ' + esc(e) + '</option>'; });
+        opts += '<option value="dormant:7">Dormant · 7d+ inactive</option><option value="dormant:14">Dormant · 14d+ inactive</option><option value="dormant:30">Dormant · 30d+ inactive</option>';
+        sel.innerHTML = opts;
+        sel.value = S.telSeg || '';
+        sel.onchange = function () { S.telSeg = sel.value; loadTelemetry(); };
+      };
+      if (S.telSegments) return build(S.telSegments);
+      api(base() + '/telemetry/segments').then(function (r) { S.telSegments = (r.ok && r.j && r.j.data) || {}; build(S.telSegments); });
+    }
+    function loadTelemetry() {
+      var body = document.getElementById('tel-body'); if (!body) return;
+      var sub = S.telSub;
+      var segQ = (S.telSeg ? '&seg=' + encodeURIComponent(S.telSeg) : '');
+      if (sub === 'funnel') return renderFunnelBuilder(body);
+      if (sub === 'realtime') return renderRealtime(body);
+      body.innerHTML = skel(2);
+      api(base() + '/telemetry/' + sub + '?days=30' + segQ).then(function (r) {
+        var body = document.getElementById('tel-body'); if (!body) return;
+        if (!r.ok) { body.innerHTML = '<div class="card empty"><p class="muted">Couldn’t load telemetry.</p></div>'; return; }
+        var d = (r.j && r.j.data);
+        if (sub === 'analytics') {
+          var top = (d && d.top) || [], series = (d && d.series) || [];
+          var total = series.reduce(function (a, x) { return a + (x.total || 0); }, 0);
+          body.innerHTML = '<div class="card"><h2>Events (last 30 days)</h2><div class="kv"><span class="k">Total</span><code class="mono">' + total + '</code></div>'
+            + (top.length
+              ? '<p class="muted" style="margin:8px 0 4px">Click an event to see its param breakdown.</p><div class="grid-wrap"><table class="grid"><thead><tr><th>Event</th><th>Count</th></tr></thead><tbody>'
+                + top.map(function (e) { return '<tr><td><a href="#" data-evt="' + esc(e.event_name) + '" style="color:var(--c-accent)">' + esc(e.event_name) + '</a></td><td>' + e.total + '</td></tr>'; }).join('') + '</tbody></table></div>'
+              : '<p class="muted" style="margin:10px 0 0">No events yet. From your app: <code>lingcode.telemetry.logEvent("signup")</code>.</p>') + '</div>';
+          Array.prototype.forEach.call(body.querySelectorAll('[data-evt]'), function (el) {
+            el.onclick = function (ev) { ev.preventDefault(); renderEventParams(el.getAttribute('data-evt')); };
+          });
+        } else if (sub === 'active-users') {
+          var series = (d && d.series) || [];
+          var mx = series.reduce(function (a, x) { return Math.max(a, x.dau || 0); }, 1);
+          body.innerHTML = '<div class="card"><h2>Active users (last 30 days)</h2>'
+            + '<div class="kv"><span class="k">WAU (7d)</span><code class="mono">' + ((d && d.wau) || 0) + '</code></div>'
+            + '<div class="kv"><span class="k">MAU (30d)</span><code class="mono">' + ((d && d.mau) || 0) + '</code></div>'
+            + (series.length
+              ? '<div class="grid-wrap" style="margin-top:10px"><table class="grid"><thead><tr><th>Day</th><th>DAU</th><th>&nbsp;</th></tr></thead><tbody>'
+                + series.map(function (s) { var w = Math.round((s.dau / mx) * 100); return '<tr><td>' + esc(s.day) + '</td><td>' + s.dau + '</td><td style="width:200px"><div style="height:8px;border-radius:4px;background:var(--c-accent);width:' + w + '%"></div></td></tr>'; }).join('') + '</tbody></table></div>'
+              : '<p class="muted" style="margin:10px 0 0">No active users yet — these come from the SDK\'s pseudonymous client id (sent automatically).</p>') + '</div>';
+        } else if (sub === 'retention') {
+          var cohorts = (d && d.cohorts) || [], offs = (d && d.offsets) || [1, 7, 30];
+          body.innerHTML = '<div class="card"><h2>Retention by cohort</h2><p class="muted" style="margin:0 0 8px">% of each day\'s new users still active N days later.</p>'
+            + (cohorts.length
+              ? '<div class="grid-wrap"><table class="grid"><thead><tr><th>Cohort (first seen)</th><th>New users</th>' + offs.map(function (n) { return '<th>Day ' + n + '</th>'; }).join('') + '</tr></thead><tbody>'
+                + cohorts.map(function (c) { return '<tr><td>' + esc(c.cohort) + '</td><td>' + c.size + '</td>' + offs.map(function (n) { return '<td>' + (c.retention[n] || 0) + '%</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>'
+              : '<p class="muted">No cohort data yet.</p>') + '</div>';
+        } else if (sub === 'engagement') {
+          renderEngagement(body, d);
+        } else if (sub === 'conversions') {
+          var rows = (d && d.conversions) || [];
+          body.innerHTML = '<div class="card"><h2>Conversions</h2><p class="muted" style="margin:0 0 8px">Mark events as conversions to track their rate (distinct converters ÷ active users, 30d).</p>'
+            + '<div style="display:flex;gap:6px;margin-bottom:10px"><input class="grid-search" id="conv-name" placeholder="event name e.g. subscribe" style="flex:0 0 260px"/><button class="btn2 sm primary" id="conv-add">Mark as conversion</button></div>'
+            + (rows.length
+              ? '<div class="grid-wrap"><table class="grid"><thead><tr><th>Event</th><th>Converters</th><th>Rate</th><th></th></tr></thead><tbody>'
+                + rows.map(function (c) { return '<tr><td>' + esc(c.event_name) + '</td><td>' + c.converters + '</td><td>' + c.rate + '%</td><td><button class="btn2 sm" data-unconv="' + esc(c.event_name) + '">Remove</button></td></tr>'; }).join('') + '</tbody></table></div>'
+              : '<p class="muted">No conversions marked yet.</p>') + '</div>';
+          document.getElementById('conv-add').onclick = function () {
+            var n = (document.getElementById('conv-name').value || '').trim(); if (!n) return;
+            apiW(base() + '/telemetry/conversions', 'PUT', { event_name: n, is_key: true }).then(function () { loadTelemetry(); });
+          };
+          Array.prototype.forEach.call(body.querySelectorAll('[data-unconv]'), function (el) {
+            el.onclick = function () { apiW(base() + '/telemetry/conversions', 'PUT', { event_name: el.getAttribute('data-unconv'), is_key: false }).then(function () { loadTelemetry(); }); };
+          });
+        } else if (sub === 'crashes') {
+          var rows = d || [];
+          body.innerHTML = '<div class="card"><h2>Crashes</h2>' + (rows.length
+            ? '<div class="grid-wrap"><table class="grid"><thead><tr><th>Message</th><th>Version</th><th>Count</th><th>Last seen</th></tr></thead><tbody>'
+              + rows.map(function (c) { return '<tr><td title="' + esc(c.message || '') + '" style="max-width:380px">' + esc(c.message || '') + '</td><td>' + esc(c.app_version || '') + '</td><td>' + c.count + '</td><td>' + esc(fmtDate(c.last_seen)) + '</td></tr>'; }).join('') + '</tbody></table></div>'
+            : '<p class="muted" style="margin:10px 0 0">No crashes reported. From your app: <code>lingcode.telemetry.recordError(err)</code>.</p>') + '</div>';
+        } else if (sub === 'performance') {
+          var rows = d || [];
+          body.innerHTML = '<div class="card"><h2>Performance traces</h2>' + (rows.length
+            ? '<div class="grid-wrap"><table class="grid"><thead><tr><th>Metric</th><th>Count</th><th>Avg (ms)</th><th>Max (ms)</th></tr></thead><tbody>'
+              + rows.map(function (p) { return '<tr><td>' + esc(p.metric) + '</td><td>' + p.count + '</td><td>' + p.avg_ms + '</td><td>' + p.max_ms + '</td></tr>'; }).join('') + '</tbody></table></div>'
+            : '<p class="muted" style="margin:10px 0 0">No traces yet. From your app: <code>lingcode.telemetry.trace("load", ms)</code>.</p>') + '</div>';
+        } else {
+          var rows = d || [];
+          body.innerHTML = '<div class="card"><h2>Release health (last 30 days)</h2><p class="muted" style="margin:0 0 8px">Events &amp; crashes grouped by the <code>app_version</code> you tag events with.</p>' + (rows.length
+            ? '<div class="grid-wrap"><table class="grid"><thead><tr><th>App version</th><th>Events</th><th>Crashes</th></tr></thead><tbody>'
+              + rows.map(function (v) { return '<tr><td>' + esc(v.app_version) + '</td><td>' + v.events + '</td><td>' + v.crashes + '</td></tr>'; }).join('') + '</tbody></table></div>'
+            : '<p class="muted">No release data yet.</p>') + '</div>';
+        }
+      });
+    }
+    function renderEventParams(name) {
+      var body = document.getElementById('tel-body'); if (!body) return; body.innerHTML = skel(2);
+      api(base() + '/telemetry/events/' + encodeURIComponent(name) + '?days=30').then(function (r) {
+        var body = document.getElementById('tel-body'); if (!body) return;
+        var d = r.ok && r.j && r.j.data;
+        var keys = d ? Object.keys(d.params || {}) : [];
+        body.innerHTML = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">' + esc(name) + ' <span class="muted" style="font-weight:400">· ' + ((d && d.total) || 0) + ' events</span></h2><button class="btn2 sm" id="ev-back">← Back</button></div>'
+          + (keys.length
+            ? keys.map(function (k) { return '<h3 style="margin:14px 0 4px;font-size:.85rem">' + esc(k) + '</h3><div class="grid-wrap"><table class="grid"><thead><tr><th>Value</th><th>Count</th></tr></thead><tbody>' + d.params[k].map(function (v) { return '<tr><td>' + esc(v.value) + '</td><td>' + v.count + '</td></tr>'; }).join('') + '</tbody></table></div>'; }).join('')
+            : '<p class="muted" style="margin:10px 0 0">No params logged for this event.</p>') + '</div>';
+        document.getElementById('ev-back').onclick = function () { S.telSub = 'analytics'; renderTelemetry(); };
+      });
+    }
+    function renderEngagement(body, d) {
+      var series = (d && d.series) || [];
+      var mx = series.reduce(function (a, x) { return Math.max(a, x.avg_engagement_sec || 0); }, 1);
+      body.innerHTML = '<div class="card"><h2>Engagement (last 30 days)</h2>'
+        + '<div class="kv"><span class="k">Engaged sessions (&ge;10s)</span><code class="mono">' + ((d && d.engaged_sessions) || 0) + ' / ' + ((d && d.total_sessions) || 0) + ' (' + ((d && d.engaged_rate) || 0) + '%)</code></div>'
+        + (series.length
+          ? '<div class="grid-wrap" style="margin-top:10px"><table class="grid"><thead><tr><th>Day</th><th>Avg engagement / user</th><th>Total min</th><th>&nbsp;</th></tr></thead><tbody>'
+            + series.map(function (s) { var w = Math.round((s.avg_engagement_sec / mx) * 100); return '<tr><td>' + esc(s.day) + '</td><td>' + s.avg_engagement_sec + 's</td><td>' + s.total_engagement_min + '</td><td style="width:160px"><div style="height:8px;border-radius:4px;background:var(--c-accent);width:' + w + '%"></div></td></tr>'; }).join('') + '</tbody></table></div>'
+          : '<p class="muted" style="margin:10px 0 0">No engagement data yet — the SDK emits user_engagement automatically when the page is backgrounded.</p>') + '</div>';
+    }
+    function stopRealtime() { if (S.rtTimer) { clearInterval(S.rtTimer); S.rtTimer = null; } }
+    function renderRealtime(body) {
+      stopRealtime();
+      body.innerHTML = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Realtime <span class="muted" style="font-weight:400">· last 30 min, live</span></h2><span class="muted" id="rt-active"></span></div><div id="rt-list" style="margin-top:10px"></div></div>';
+      var tick = function () {
+        if (!document.getElementById('rt-list')) { stopRealtime(); return; }
+        api(base() + '/telemetry/realtime').then(function (r) {
+          var list = document.getElementById('rt-list'); if (!list) { stopRealtime(); return; }
+          var d = (r.ok && r.j && r.j.data) || { events: [], active: 0 };
+          var act = document.getElementById('rt-active'); if (act) act.textContent = d.active + ' active user' + (d.active === 1 ? '' : 's');
+          list.innerHTML = (d.events && d.events.length)
+            ? '<div class="grid-wrap"><table class="grid"><thead><tr><th>Time</th><th>Event</th><th>Client</th><th>Params</th></tr></thead><tbody>'
+              + d.events.map(function (e) { return '<tr><td>' + esc(new Date(e.ts).toLocaleTimeString()) + '</td><td>' + esc(e.name) + '</td><td>' + esc((e.client_id || '').slice(0, 8)) + '</td><td style="max-width:260px">' + esc(e.params ? JSON.stringify(e.params) : '') + '</td></tr>'; }).join('') + '</tbody></table></div>'
+            : '<p class="muted">No events in the last 30 minutes. Fire one from your app to see it appear here live.</p>';
+        });
+      };
+      tick();
+      S.rtTimer = setInterval(tick, 4000);
+    }
+    function renderFunnelBuilder(body) {
+      if (!S.funnelSteps) S.funnelSteps = '';
+      body.innerHTML = '<div class="card"><h2>Funnels</h2><p class="muted" style="margin:0 0 8px">Comma-separated event names, in order. See how many users complete each step (last 30 days).</p>'
+        + '<div style="display:flex;gap:6px;margin-bottom:12px"><input class="grid-search" id="fn-steps" placeholder="e.g. signup, view_profile, subscribe" value="' + esc(S.funnelSteps) + '" style="flex:1"/><button class="btn2 sm primary" id="fn-run">Run</button></div>'
+        + '<div id="fn-result"></div></div>';
+      document.getElementById('fn-run').onclick = function () {
+        var steps = (document.getElementById('fn-steps').value || '').trim(); S.funnelSteps = steps;
+        if (steps.split(',').filter(function (s) { return s.trim(); }).length < 2) { document.getElementById('fn-result').innerHTML = '<p class="muted">Enter at least 2 events.</p>'; return; }
+        document.getElementById('fn-result').innerHTML = skel(1);
+        api(base() + '/telemetry/funnel?days=30' + (S.telSeg ? '&seg=' + encodeURIComponent(S.telSeg) : '') + '&steps=' + encodeURIComponent(steps)).then(function (r) {
+          var el = document.getElementById('fn-result'); if (!el) return;
+          if (!r.ok || !r.j || !r.j.data) { el.innerHTML = '<p class="muted">Couldn’t run funnel.</p>'; return; }
+          var d = r.j.data, mx = (d[0] && d[0].count) || 1;
+          el.innerHTML = '<div class="grid-wrap"><table class="grid"><thead><tr><th>Step</th><th>Users</th><th>%</th><th>&nbsp;</th></tr></thead><tbody>'
+            + d.map(function (s) { var w = Math.round((s.count / mx) * 100); return '<tr><td>' + esc(s.step) + '</td><td>' + s.count + '</td><td>' + s.pct + '%</td><td style="width:200px"><div style="height:8px;border-radius:4px;background:var(--c-accent);width:' + w + '%"></div></td></tr>'; }).join('') + '</tbody></table></div>';
+        });
+      };
+    }
+
+    // EXPERIMENTS (A/B + Remote Config)
+    function renderExperiments() {
+      var m = main(); var b = cur(); if (!m || !b) return;
+      m.innerHTML = '<div class="cx-h"><h1>Experiments <span class="muted" style="font-weight:400">· A/B + Remote Config</span></h1><button class="btn2 sm primary" id="exp-new">New experiment</button></div>'
+        + '<p class="muted" style="margin:0 0 12px">Define a config key with weighted variants. Clients are bucketed deterministically and each gets a sticky <code>exp_&lt;key&gt;</code> user property — so you measure impact via the segment dropdown in Telemetry (compare variants on conversion / retention / funnels). Read values in your app with <code>lingcode.config.get("key")</code>.</p>'
+        + '<div id="exp-body">' + skel(2) + '</div>';
+      document.getElementById('exp-new').onclick = function () { expEditForm(null); };
+      loadExperiments();
+    }
+    function expValStr(v) { try { return JSON.stringify(v === undefined ? '' : v); } catch (e) { return '""'; } }
+    function loadExperiments() {
+      var body = document.getElementById('exp-body'); if (!body) return; body.innerHTML = skel(2);
+      api(base() + '/experiments').then(function (r) {
+        var body = document.getElementById('exp-body'); if (!body) return;
+        var rows = (r.ok && r.j && r.j.data) || [];
+        if (!rows.length) { body.innerHTML = '<div class="card empty"><p class="muted">No experiments yet. Click “New experiment” to create one.</p></div>'; return; }
+        body.innerHTML = rows.map(function (e) {
+          var vs = (e.variants || []).map(function (v) { return esc(v.name) + ' (' + v.weight + ') = ' + esc(expValStr(v.value)); }).join(' · ');
+          return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><b>' + esc(e.param_key) + '</b> <span class="lvl ' + (e.status === 'running' ? 'info' : 'warn') + '">' + esc(e.status) + '</span></div><div style="display:flex;gap:6px"><button class="btn2 sm" data-edit="' + esc(e.id) + '">Edit</button><button class="btn2 sm" data-del="' + esc(e.id) + '">Delete</button></div></div><p class="muted" style="margin:8px 0 0;font-size:.78rem">' + vs + '</p></div>';
+        }).join('');
+        Array.prototype.forEach.call(body.querySelectorAll('[data-edit]'), function (el) { el.onclick = function () { var id = el.getAttribute('data-edit'); expEditForm(rows.filter(function (x) { return x.id === id; })[0]); }; });
+        Array.prototype.forEach.call(body.querySelectorAll('[data-del]'), function (el) { el.onclick = function () { if (!confirm('Delete this experiment?')) return; api(base() + '/experiments/' + encodeURIComponent(el.getAttribute('data-del')), { method: 'DELETE' }).then(loadExperiments); }; });
+      });
+    }
+    function expVarRow(v) {
+      return '<div style="display:flex;gap:6px;margin-bottom:6px" data-vrow><input class="grid-search" placeholder="name" value="' + esc(v.name || '') + '" data-vn style="flex:0 0 120px"><input class="grid-search" placeholder="value (JSON)" value="' + esc(expValStr(v.value)) + '" data-vv style="flex:1"><input class="grid-search" placeholder="weight" type="number" min="0" value="' + (v.weight || 1) + '" data-vw style="flex:0 0 80px"></div>';
+    }
+    function expEditForm(exp) {
+      var body = document.getElementById('exp-body'); if (!body) return;
+      var vars = (exp && exp.variants && exp.variants.length) ? exp.variants : [{ name: 'control', value: 'a', weight: 50 }, { name: 'variant', value: 'b', weight: 50 }];
+      body.innerHTML = '<div class="card"><h2>' + (exp ? 'Edit' : 'New') + ' experiment</h2>'
+        + '<label class="faint">Config key</label><input class="grid-search" id="exp-key" value="' + esc(exp ? exp.param_key : '') + '" placeholder="e.g. cta_color" style="width:100%;margin:4px 0 12px;box-sizing:border-box">'
+        + '<label class="faint">Variants — name · value (JSON) · weight</label><div id="exp-vars" style="margin:4px 0">' + vars.map(expVarRow).join('') + '</div>'
+        + '<button class="btn2 sm" id="exp-addvar">+ variant</button>'
+        + '<div style="margin-top:12px"><label class="faint"><input type="checkbox" id="exp-running" ' + (!exp || exp.status === 'running' ? 'checked' : '') + '> Running</label></div>'
+        + '<div style="display:flex;gap:6px;margin-top:14px"><button class="btn2 sm primary" id="exp-save">Save</button><button class="btn2 sm" id="exp-cancel">Cancel</button></div></div>';
+      document.getElementById('exp-addvar').onclick = function () { var d = document.createElement('div'); d.innerHTML = expVarRow({ name: '', value: '', weight: 1 }); document.getElementById('exp-vars').appendChild(d.firstChild); };
+      document.getElementById('exp-cancel').onclick = loadExperiments;
+      document.getElementById('exp-save').onclick = function () {
+        var key = (document.getElementById('exp-key').value || '').trim();
+        var variants = [];
+        Array.prototype.forEach.call(document.querySelectorAll('#exp-vars [data-vrow]'), function (row) {
+          var n = (row.querySelector('[data-vn]').value || '').trim(); if (!n) return;
+          var vraw = row.querySelector('[data-vv]').value; var val; try { val = JSON.parse(vraw); } catch (e) { val = vraw; }
+          variants.push({ name: n, value: val, weight: Number(row.querySelector('[data-vw]').value) || 1 });
+        });
+        if (!key || variants.length < 2) { alert('Need a config key and at least 2 variants.'); return; }
+        var payload = { param_key: key, variants: variants, status: document.getElementById('exp-running').checked ? 'running' : 'stopped' };
+        if (exp) payload.id = exp.id;
+        apiW(base() + '/experiments', 'PUT', payload).then(function (r) { if (r.ok) loadExperiments(); else alert('Save failed'); });
+      };
+    }
+
+    // LOGS
+    function logsTable(logs) {
+      return '<div class="grid-wrap"><table class="grid"><thead><tr><th>Time</th><th>Source</th><th>Level</th><th>Message</th></tr></thead><tbody>'
+        + logs.map(function (l) {
+          var lvl = (l.level || 'info').toLowerCase(); var cls = lvl === 'error' ? 'error' : (lvl === 'warn' ? 'warn' : 'info');
+          return '<tr><td>' + esc(fmtDate(l.ts)) + '</td><td>' + esc(l.source || '') + '</td><td><span class="lvl ' + cls + '">' + esc(lvl) + '</span></td><td title="' + esc(l.message || '') + '" style="max-width:520px">' + esc(l.message || '') + '</td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+    function renderLogs() {
+      var m = main(); if (!m) return;
+      m.innerHTML = '<div class="cx-h"><h1>Logs</h1>'
+        + '<select id="lg-src" class="fld" style="margin-right:6px;padding:4px 8px"><option value="all">All sources</option><option value="audit">Audit</option><option value="auth">Auth</option><option value="control">Control</option></select>'
+        + '<label class="faint seg" style="margin-right:6px"><input type="checkbox" id="lg-auto"/> Auto-refresh</label><button class="btn2 sm" id="lg-refresh">Refresh</button></div>'
+        + '<div id="lg-body">' + skel(5) + '</div>';
+      document.getElementById('lg-refresh').onclick = loadLogs;
+      document.getElementById('lg-src').value = S.logSrc || 'all';
+      document.getElementById('lg-src').onchange = function (e) { S.logSrc = e.target.value; loadLogs(); };
+      document.getElementById('lg-auto').onchange = function (e) {
+        if (S.logTimer) { clearInterval(S.logTimer); S.logTimer = null; }
+        if (e.target.checked) S.logTimer = setInterval(function () { if (S.view === 'logs') loadLogs(); else { clearInterval(S.logTimer); S.logTimer = null; } }, 5000);
+      };
+      loadLogs();
+    }
+    function loadLogs() {
+      api(base() + '/logs').then(function (r) {
+        var body = document.getElementById('lg-body'); if (!body) return;
+        if (!r.ok) { body.innerHTML = '<div class="card empty"><p class="muted">Couldn’t load logs.</p></div>'; return; }
+        var logs = (r.j && r.j.data) || [];
+        var src = S.logSrc || 'all';
+        if (src !== 'all') logs = logs.filter(function (l) { return (l.source || '') === src; });
+        if (!logs.length) { body.innerHTML = '<div class="card empty"><p class="muted">No ' + (src === 'all' ? '' : esc(src) + ' ') + 'logs yet.</p></div>'; return; }
+        body.innerHTML = logsTable(logs) + '<p class="faint" style="margin-top:8px">' + logs.length + ' event' + (logs.length === 1 ? '' : 's') + ' (most recent first)</p>';
+      });
+    }
+
+    // DATABASE
+    function renderDatabase() {
+      var m = main(); if (!m) return;
+      m.innerHTML = '<div class="cx-h"><h1>Database</h1><button class="btn2 sm primary" id="g-newtable">+ New table</button></div>';
+      if (!S.tables.length) { m.innerHTML += '<div class="card empty"><p class="muted">No tables yet. Click <b>+ New table</b>, use the <b>SQL</b> tab, or ask the agent to run a migration.</p></div>'; document.getElementById('g-newtable').onclick = newTable; return; }
+      if (!S.table) S.table = S.tables[0];
+      if (S.table && !S.colMeta.length) loadColumns();
+      var hasVec = (S.colMeta || []).some(function (c) { return c.udt === 'vector'; });
+      m.innerHTML = '<div class="cx-h"><h1>' + esc(S.table) + '</h1>'
+        + '<button class="btn2 sm" id="g-refresh">Refresh</button>'
+        + '<button class="btn2 sm" id="g-cols">Edit columns</button>'
+        + '<button class="btn2 sm" id="g-schema">Schema</button>'
+        + '<button class="btn2 sm" id="g-advisors">Advisors</button>'
+        + (hasVec ? '<button class="btn2 sm" id="g-vec">Vector search</button>' : '')
+        + '<button class="btn2 sm" id="g-fts">Search</button>'
+        + '<button class="btn2 sm" id="g-csv">Export CSV</button>'
+        + '<label class="faint seg"><input type="checkbox" id="g-live"' + (S.live ? ' checked' : '') + '/> Live</label>'
+        + '<button class="btn2 sm" id="g-newtable">+ New table</button>'
+        + '<button class="btn2 sm primary" id="g-add">+ Insert row</button></div>'
+        + '<div class="grid-toolbar"><input class="grid-search" id="g-search" placeholder="Filter loaded rows…" value="' + esc(S.q) + '"/>'
+        + '<button class="btn2 sm" id="g-prev"' + (S.offset <= 0 ? ' disabled' : '') + '>‹ Prev</button>'
+        + '<span class="faint" id="g-range"></span>'
+        + '<button class="btn2 sm" id="g-next">Next ›</button></div>'
+        + '<div id="g-body"><p class="muted">Loading…</p></div>';
+      document.getElementById('g-refresh').onclick = loadRows;
+      document.getElementById('g-newtable').onclick = newTable;
+      document.getElementById('g-cols').onclick = editColumns;
+      document.getElementById('g-schema').onclick = schemaModal;
+      document.getElementById('g-advisors').onclick = advisorsModal;
+      document.getElementById('g-fts').onclick = searchModal;
+      document.getElementById('g-csv').onclick = exportTableCSV;
+      document.getElementById('g-add').onclick = function () { editRow(-1); };
+      document.getElementById('g-prev').onclick = function () { if (S.offset > 0) { S.offset = Math.max(0, S.offset - S.limit); loadRows(); } };
+      document.getElementById('g-next').onclick = function () { if (S.offset + S.limit < S.total) { S.offset += S.limit; loadRows(); } };
+      document.getElementById('g-search').oninput = function (e) { S.q = e.target.value; renderRows(); };
+      document.getElementById('g-live').onchange = function (e) { if (e.target.checked) startLive(); else stopLive(); };
+      if (hasVec) document.getElementById('g-vec').onclick = vectorSearchModal;
+      loadRows();
+    }
+    function openTable(t) { stopLive(); S.table = t; S.view = 'database'; S.offset = 0; S.q = ''; S.order = null; S.colMeta = []; S.colLoading = false; renderShell(); }
+    function loadColumns() {
+      if (S.colLoading) return; S.colLoading = true;
+      var t = S.table;
+      api(base() + '/tables/' + encodeURIComponent(t) + '/columns').then(function (r) {
+        S.colLoading = false;
+        if (S.table !== t) return;
+        S.colMeta = (r.ok && r.j && r.j.data) || [];
+        // re-render so column types + the vector-search button reflect metadata
+        if (S.view === 'database' && S.colMeta.length) renderShell();
+      });
+    }
+    function colType(c) { var m = (S.colMeta || []).filter(function (x) { return x.column === c; })[0]; return m ? m.udt : null; }
+
+    function loadRows() {
+      var m = main(); var body = document.getElementById('g-body'); if (body) body.innerHTML = '<p class="muted">Loading…</p>';
+      var qs = '?limit=' + S.limit + '&offset=' + S.offset + (S.order ? '&order=' + encodeURIComponent(S.order) + '&dir=' + S.dir : '');
+      var t = S.table;
+      api(base() + '/tables/' + encodeURIComponent(t) + '/rows' + qs).then(function (r) {
+        if (S.table !== t) return;
+        var body = document.getElementById('g-body'); if (!body) return;
+        if (!r.ok) { body.innerHTML = '<p class="muted">Couldn’t load rows.</p>'; return; }
+        var d = (r.j && r.j.data) || {};
+        S.rows = d.rows || []; S.cols = d.fields || (S.rows[0] ? Object.keys(S.rows[0]) : []); S.pk = d.primary_key || []; S.total = d.total != null ? d.total : S.rows.length;
+        renderRows();
+      });
+    }
+    function visibleRows() {
+      if (!S.q) return S.rows;
+      var q = S.q.toLowerCase();
+      return S.rows.filter(function (row) { return S.cols.some(function (c) { return cellText(row[c]).toLowerCase().indexOf(q) >= 0; }); });
+    }
+    function renderRows() {
+      var body = document.getElementById('g-body'); if (!body) return;
+      var rows = visibleRows(), canEdit = S.pk.length > 0;
+      var range = document.getElementById('g-range'); if (range) range.textContent = S.rows.length ? (S.offset + 1) + '–' + (S.offset + S.rows.length) + ' of ' + S.total : '0 of ' + S.total;
+      var nextBtn = document.getElementById('g-next'); if (nextBtn) nextBtn.disabled = (S.offset + S.limit) >= S.total;
+      if (!S.rows.length) { body.innerHTML = '<div class="card empty"><p class="muted">No rows.</p></div>'; return; }
+      var head = '<tr>' + S.cols.map(function (c) {
+        var arrow = S.order === c ? (S.dir === 'asc' ? ' ↑' : ' ↓') : '';
+        var ty = colType(c);
+        return '<th data-sort="' + esc(c) + '" title="' + esc(ty || '') + '">' + esc(c) + (S.pk.indexOf(c) >= 0 ? ' 🔑' : '') + (ty ? '<span class="faint" style="font-weight:400"> ' + esc(ty) + '</span>' : '') + arrow + '</th>';
+      }).join('') + '<th></th></tr>';
+      var trs = rows.map(function (row) {
+        var idx = S.rows.indexOf(row);
+        var tds = S.cols.map(function (c) { return '<td title="' + esc(cellText(row[c])) + '">' + esc(cellText(row[c])) + '</td>'; }).join('');
+        var act = canEdit ? '<td class="grid-actions"><button class="btn2 sm" data-edit="' + idx + '">Edit</button> <button class="btn2 sm" data-del="' + idx + '">Del</button></td>' : '<td></td>';
+        return '<tr>' + tds + act + '</tr>';
+      }).join('');
+      body.innerHTML = '<div class="grid-wrap"><table class="grid"><thead>' + head + '</thead><tbody>' + trs + '</tbody></table></div>'
+        + '<p class="faint" style="margin-top:8px">' + rows.length + ' row' + (rows.length === 1 ? '' : 's') + (S.q ? ' (filtered)' : '') + (canEdit ? ' · 🔑 primary key' : ' · no primary key — read-only') + '</p>';
+      Array.prototype.forEach.call(body.querySelectorAll('[data-sort]'), function (th) { th.onclick = function () { var c = th.getAttribute('data-sort'); if (S.order === c) S.dir = S.dir === 'asc' ? 'desc' : 'asc'; else { S.order = c; S.dir = 'asc'; } S.offset = 0; loadRows(); }; });
+      Array.prototype.forEach.call(body.querySelectorAll('[data-edit]'), function (el) { el.onclick = function () { editRow(Number(el.getAttribute('data-edit'))); }; });
+      Array.prototype.forEach.call(body.querySelectorAll('[data-del]'), function (el) { el.onclick = function () { delRow(Number(el.getAttribute('data-del'))); }; });
+    }
+
+    // Pick an input widget by column udt type. Returns HTML; the [data-col]
+    // element carries data-kind so saving can coerce back to the right JS type.
+    function fieldFor(c, raw) {
+      var ty = colType(c) || ''; var pk = S.pk.indexOf(c) >= 0;
+      var lab = esc(c) + (pk ? ' 🔑' : '') + (ty ? ' <span class="faint">' + esc(ty) + '</span>' : '');
+      var isNull = raw === null || raw === undefined;
+      var nullBox = '<label class="inline" style="margin-top:2px"><input type="checkbox" data-null="' + esc(c) + '"' + (isNull ? ' checked' : '') + '/> <span class="faint">null</span></label>';
+      if (ty === 'bool') return '<label>' + lab + '<select data-col="' + esc(c) + '" data-kind="bool"><option value=""' + (isNull ? ' selected' : '') + '>—</option><option value="true"' + (raw === true ? ' selected' : '') + '>true</option><option value="false"' + (raw === false ? ' selected' : '') + '>false</option></select></label>';
+      var kind = 'text', type = 'text';
+      if (/^timestamp/.test(ty) || ty === 'date') { kind = 'date'; type = (ty === 'date') ? 'date' : 'datetime-local'; }
+      else if (/^(int|float|numeric|double|real|serial|bigint|smallint)/.test(ty)) { kind = 'num'; type = 'number'; }
+      if (ty === 'json' || ty === 'jsonb' || ty === 'text') {
+        return '<label>' + lab + '<textarea data-col="' + esc(c) + '" data-kind="' + (ty === 'text' ? 'text' : 'json') + '">' + esc(isNull ? '' : cellText(raw)) + '</textarea></label>' + nullBox;
+      }
+      var val = isNull ? '' : (type === 'datetime-local' ? String(cellText(raw)).replace(' ', 'T').slice(0, 16) : cellText(raw));
+      return '<label>' + lab + '<input type="' + type + '" data-col="' + esc(c) + '" data-kind="' + kind + '" value="' + esc(val) + '"/></label>' + nullBox;
+    }
+    function editRow(i) {
+      var row = i >= 0 ? S.rows[i] : {};
+      var ov = document.createElement('div'); ov.className = 'ov';
+      ov.innerHTML = '<div class="modal"><h3>' + (i >= 0 ? 'Edit row' : 'Insert row') + ' · ' + esc(S.table) + '</h3>'
+        + S.cols.map(function (c) { return fieldFor(c, i >= 0 ? row[c] : undefined); }).join('')
+        + '<p class="faint" id="m-msg" style="min-height:1em;margin:8px 0 0"></p>'
+        + '<div style="text-align:right;margin-top:12px"><button class="btn2" id="m-cancel">Cancel</button> <button class="btn2 primary" id="m-save">Save</button></div></div>';
+      document.body.appendChild(ov);
+      bindModalKeys(ov);
+      ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+      ov.querySelector('#m-cancel').onclick = function () { ov.remove(); };
+      ov.querySelector('#m-save').onclick = function () {
+        var msg = ov.querySelector('#m-msg'); msg.textContent = 'Saving…';
+        var vals = {};
+        S.cols.forEach(function (c) {
+          var nb = ov.querySelector('[data-null="' + cssEsc(c) + '"]');
+          if (nb && nb.checked) { vals[c] = null; return; }
+          var inp = ov.querySelector('[data-col="' + cssEsc(c) + '"]'); if (!inp) return;
+          var v = inp.value, kind = inp.getAttribute('data-kind');
+          if (v === '') { vals[c] = null; }
+          else if (kind === 'bool') { vals[c] = v === 'true'; }
+          else if (kind === 'num') { vals[c] = Number(v); }
+          else if (kind === 'json') { try { vals[c] = JSON.parse(v); } catch (_) { vals[c] = v; } }
+          else { vals[c] = v; }
+        });
+        var done = function (r) { if (!r.ok) { msg.textContent = (r.j && (r.j.message || r.j.error)) || 'Failed'; toast('Save failed', 'err'); return; } ov.remove(); toast('Saved', 'ok'); loadRows(); };
+        var p = base() + '/tables/' + encodeURIComponent(S.table) + '/rows';
+        if (i < 0) { apiW(p, 'POST', { row: vals }).then(done); return; }
+        var where = {}; S.pk.forEach(function (k) { where[k] = S.rows[i][k]; });
+        var patch = {}; S.cols.forEach(function (c) { if (JSON.stringify(vals[c]) !== JSON.stringify(S.rows[i][c] === undefined ? null : S.rows[i][c])) patch[c] = vals[c]; });
+        if (!Object.keys(patch).length) { ov.remove(); return; }
+        apiW(p, 'PATCH', { where: where, patch: patch }).then(done);
+      };
+    }
+    function cssEsc(s) { return String(s).replace(/["\\]/g, '\\$&'); }
+    function delRow(i) {
+      if (!S.pk.length || !confirm('Delete this row? This cannot be undone.')) return;
+      var where = {}; S.pk.forEach(function (k) { where[k] = S.rows[i][k]; });
+      apiW(base() + '/tables/' + encodeURIComponent(S.table) + '/rows', 'DELETE', { where: where }).then(function (r) { if (r.ok) { toast('Row deleted', 'ok'); loadRows(); } else toast((r.j && (r.j.message || r.j.error)) || 'Delete failed', 'err'); });
+    }
+
+    // Focus the first field and let Esc close any modal (keyboard polish).
+    function bindModalKeys(ov) {
+      var first = ov.querySelector('input, textarea, select'); if (first) { try { first.focus(); } catch (_) {} }
+      var onKey = function (e) { if (e.key === 'Escape') { ov.remove(); document.removeEventListener('keydown', onKey); } };
+      document.addEventListener('keydown', onKey);
+      // stop listening once the overlay is gone
+      var obs = new MutationObserver(function () { if (!document.body.contains(ov)) { document.removeEventListener('keydown', onKey); obs.disconnect(); } });
+      obs.observe(document.body, { childList: true });
+    }
+
+    // ── schema editor: new table / edit columns (via migrate route) ──────
+    function modal(title, bodyHtml, onSave, saveLabel) {
+      var ov = document.createElement('div'); ov.className = 'ov';
+      ov.innerHTML = '<div class="modal"><h3>' + esc(title) + '</h3>' + bodyHtml
+        + '<p class="faint" id="mm-msg" style="min-height:1em;margin:8px 0 0"></p>'
+        + '<div style="text-align:right;margin-top:12px"><button class="btn2" id="mm-cancel">Cancel</button> <button class="btn2 primary" id="mm-save">' + esc(saveLabel || 'Save') + '</button></div></div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+      ov.querySelector('#mm-cancel').onclick = function () { ov.remove(); };
+      ov.querySelector('#mm-save').onclick = function () { onSave(ov, ov.querySelector('#mm-msg')); };
+      bindModalKeys(ov);
+      return ov;
+    }
+    function runMigration(sql, ov, msg, okMsg) {
+      msg.textContent = 'Running…';
+      apiW(base() + '/sql/migrate', 'POST', { sql: sql }).then(function (r) {
+        if (!r.ok) { msg.textContent = (r.j && (r.j.message || r.j.error)) || 'Failed'; return; }
+        ov.remove(); toast(okMsg || 'Done', 'ok'); S.colMeta = []; loadTables();
+      });
+    }
+    var PG_TYPES = ['text', 'int', 'bigint', 'numeric', 'boolean', 'uuid', 'timestamptz', 'date', 'jsonb', 'serial', 'vector(1536)'];
+    function typeOptions(sel) { return PG_TYPES.map(function (t) { return '<option' + (t === sel ? ' selected' : '') + '>' + t + '</option>'; }).join(''); }
+    function newTable() {
+      var ov = modal('New table',
+        '<label>Table name<input id="nt-name" placeholder="notes"/></label>'
+        + '<p class="faint" style="margin:10px 0 4px">Columns (an <code>id</code> primary key is added automatically)</p>'
+        + '<div id="nt-cols"></div><button class="btn2 sm" id="nt-add" style="margin-top:6px">+ Column</button>',
+        function (ov, msg) {
+          var name = (ov.querySelector('#nt-name').value || '').trim();
+          if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) { msg.textContent = 'Invalid table name.'; return; }
+          var defs = ['id serial primary key'];
+          Array.prototype.forEach.call(ov.querySelectorAll('.nt-row'), function (rowEl) {
+            var cn = (rowEl.querySelector('[data-cn]').value || '').trim();
+            var ct = rowEl.querySelector('[data-ct]').value;
+            if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(cn)) defs.push('"' + cn + '" ' + ct);
+          });
+          runMigration('create table "' + name + '" (' + defs.join(', ') + ');', ov, msg, 'Table created');
+        }, 'Create table');
+      var add = function () {
+        var d = document.createElement('div'); d.className = 'nt-row kv'; d.style.margin = '6px 0';
+        d.innerHTML = '<input data-cn placeholder="column" style="flex:1"/><select data-ct>' + typeOptions('text') + '</select><button class="btn2 sm" data-rm>✕</button>';
+        d.querySelector('[data-rm]').onclick = function () { d.remove(); };
+        ov.querySelector('#nt-cols').appendChild(d);
+      };
+      ov.querySelector('#nt-add').onclick = add; add();
+    }
+    function editColumns() {
+      var rows = (S.colMeta || []).map(function (c) {
+        return '<div class="kv" style="margin:5px 0"><code class="mono" style="flex:1">' + esc(c.column) + '</code><span class="faint">' + esc(c.udt) + '</span>'
+          + (S.pk.indexOf(c.column) >= 0 ? '<span class="faint">🔑</span>' : '<button class="btn2 sm danger" data-drop="' + esc(c.column) + '">Drop</button>') + '</div>';
+      }).join('');
+      var ov = modal('Columns · ' + S.table,
+        rows + '<hr style="border:0;border-top:1px solid var(--c-border);margin:14px 0"/>'
+        + '<p class="faint" style="margin:0 0 6px">Add column</p>'
+        + '<div class="kv"><input id="ac-name" placeholder="column" style="flex:1"/><select id="ac-type">' + typeOptions('text') + '</select></div>',
+        function (ov, msg) {
+          var cn = (ov.querySelector('#ac-name').value || '').trim();
+          if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(cn)) { msg.textContent = 'Enter a valid column name to add (or Cancel).'; return; }
+          runMigration('alter table "' + S.table + '" add column "' + cn + '" ' + ov.querySelector('#ac-type').value + ';', ov, msg, 'Column added');
+        }, 'Add column');
+      Array.prototype.forEach.call(ov.querySelectorAll('[data-drop]'), function (el) { el.onclick = function () {
+        var c = el.getAttribute('data-drop'); if (!confirm('Drop column "' + c + '"? Data in it is lost.')) return;
+        runMigration('alter table "' + S.table + '" drop column "' + c + '";', ov, ov.querySelector('#mm-msg'), 'Column dropped');
+      }; });
+    }
+
+    // ── pgvector similarity search (admin scope, owner sees all rows) ─────
+    function vectorSearchModal() {
+      var vcols = (S.colMeta || []).filter(function (c) { return c.udt === 'vector'; }).map(function (c) { return c.column; });
+      var ov = modal('Vector search · ' + S.table,
+        '<label>Vector column<select id="vs-col">' + vcols.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select></label>'
+        + '<label>Query embedding (JSON array)<textarea id="vs-q" placeholder="[0.01, -0.2, ...]"></textarea></label>'
+        + '<label>Metric<select id="vs-metric"><option value="cosine">cosine</option><option value="l2">l2</option><option value="ip">inner product</option></select></label>'
+        + '<label>Limit<input id="vs-limit" type="number" value="10"/></label>'
+        + '<div id="vs-out" style="margin-top:10px"></div>',
+        function (ov, msg) {
+          var col = ov.querySelector('#vs-col').value; var raw = (ov.querySelector('#vs-q').value || '').trim();
+          var emb; try { emb = JSON.parse(raw); } catch (_) { msg.textContent = 'Embedding must be a JSON array.'; return; }
+          if (!Array.isArray(emb)) { msg.textContent = 'Embedding must be a JSON array.'; return; }
+          msg.textContent = 'Searching…';
+          apiW(base() + '/vector/search', 'POST', { table: S.table, column: col, embedding: emb, metric: ov.querySelector('#vs-metric').value, limit: Number(ov.querySelector('#vs-limit').value) || 10 }).then(function (r) {
+            if (!r.ok) { msg.textContent = (r.j && (r.j.message || r.j.error)) || 'Failed'; return; }
+            msg.textContent = '';
+            var d = (r.j && r.j.data) || {}, rows = d.rows || [], cols = d.fields || (rows[0] ? Object.keys(rows[0]) : []);
+            ov.querySelector('#vs-out').innerHTML = rows.length
+              ? '<div class="grid-wrap"><table class="grid"><thead><tr>' + cols.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>'
+                + rows.map(function (row) { return '<tr>' + cols.map(function (c) { return '<td title="' + esc(cellText(row[c])) + '">' + esc(cellText(row[c])) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>'
+              : '<p class="faint">No matches.</p>';
+          });
+        }, 'Search');
+    }
+
+    // ── schema inspector: columns, RLS policies, indexes, foreign keys ───
+    function schemaModal() {
+      var t = S.table;
+      var ov = modal('Schema · ' + t,
+        '<div id="sc-cols"><p class="muted">Loading…</p></div>'
+        + '<h3 style="margin:14px 0 6px">RLS policies</h3><div id="sc-pol"><p class="faint">Loading…</p></div>'
+        + '<h3 style="margin:14px 0 6px">Indexes</h3><div id="sc-idx"><p class="faint">Loading…</p></div>'
+        + '<h3 style="margin:14px 0 6px">Foreign keys</h3><div id="sc-fk"><p class="faint">Loading…</p></div>',
+        function (ov) { ov.remove(); }, 'Close'); // read-only inspector
+      ov.querySelector('.modal').classList.add('wide'); // roomy for inspector tables
+      var gw = function (head, rows) {
+        if (!rows.length) return '<p class="faint">None.</p>';
+        return '<div class="grid-wrap"><table class="grid"><thead><tr>' + head.map(function (h) { return '<th>' + esc(h[1]) + '</th>'; }).join('') + '</tr></thead><tbody>'
+          + rows.map(function (row) { return '<tr>' + head.map(function (h) { return '<td title="' + esc(cellText(row[h[0]])) + '">' + esc(cellText(row[h[0]])) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>';
+      };
+      api(base() + '/tables/' + encodeURIComponent(t) + '/columns/details').then(function (r) {
+        var box = ov.querySelector('#sc-cols'); if (!box) return;
+        var d = (r.ok && r.j && r.j.data) || [];
+        box.innerHTML = '<h3 style="margin:0 0 6px">Columns</h3>' + gw([['name', 'Column'], ['data_type', 'Type'], ['is_nullable', 'Nullable'], ['is_identity', 'Identity'], ['is_generated', 'Generated'], ['is_unique', 'Unique'], ['default_value', 'Default'], ['check', 'Check'], ['comment', 'Comment']], d);
+      });
+      api(base() + '/tables/' + encodeURIComponent(t) + '/policies').then(function (r) {
+        var box = ov.querySelector('#sc-pol'); if (!box) return;
+        box.innerHTML = gw([['name', 'Name'], ['command', 'Command'], ['action', 'Action'], ['roles', 'Roles'], ['definition', 'USING'], ['check', 'WITH CHECK']], (r.ok && r.j && r.j.data) || []);
+      });
+      api(base() + '/tables/' + encodeURIComponent(t) + '/indexes').then(function (r) {
+        var box = ov.querySelector('#sc-idx'); if (!box) return;
+        box.innerHTML = gw([['name', 'Name'], ['is_primary', 'PK'], ['is_unique', 'Unique'], ['access_method', 'Method'], ['columns', 'Columns'], ['definition', 'Definition']], (r.ok && r.j && r.j.data) || []);
+      });
+      api(base() + '/tables/' + encodeURIComponent(t) + '/foreign-keys').then(function (r) {
+        var box = ov.querySelector('#sc-fk'); if (!box) return;
+        box.innerHTML = gw([['constraint_name', 'Name'], ['source_columns', 'Columns'], ['target_table', 'References'], ['target_columns', 'Target cols'], ['on_delete', 'On delete'], ['on_update', 'On update']], (r.ok && r.j && r.j.data) || []);
+      });
+    }
+
+    // ── schema advisors: security + performance lints across the backend ──
+    function advisorsModal() {
+      var ov = modal('Advisors · ' + esc(beName(cur())),
+        '<p class="muted" style="margin:-4px 0 10px">Security &amp; performance checks across this backend’s schema.</p><div id="adv-body"><p class="faint">Scanning…</p></div>',
+        function (ov) { ov.remove(); }, 'Close');
+      ov.querySelector('.modal').classList.add('wide');
+      api(base() + '/advisors').then(function (r) {
+        var box = ov.querySelector('#adv-body'); if (!box) return;
+        if (!r.ok) { box.innerHTML = '<p class="muted">Couldn’t run advisors.</p>'; return; }
+        var rows = (r.j && r.j.data) || [];
+        if (!rows.length) { box.innerHTML = '<p class="faint">✓ No issues found — RLS is on, and keys/indexes look healthy.</p>'; return; }
+        var card = function (a) {
+          var lvl = a.level === 'error' ? 'error' : (a.level === 'warn' ? 'warn' : 'info');
+          return '<div class="card" style="margin:8px 0;padding:12px 14px">'
+            + '<div class="kv" style="margin:0"><span class="lvl ' + lvl + '">' + esc(a.level) + '</span><b>' + esc(a.title) + '</b>' + (a.table ? '<code class="mono">' + esc(a.table) + '</code>' : '') + '</div>'
+            + '<p class="muted" style="margin:6px 0 0">' + esc(a.detail) + '</p></div>';
+        };
+        var sec = rows.filter(function (x) { return x.category === 'security'; });
+        var perf = rows.filter(function (x) { return x.category === 'performance'; });
+        box.innerHTML = (sec.length ? '<h3 style="margin:4px 0 4px">Security · ' + sec.length + '</h3>' + sec.map(card).join('') : '')
+          + (perf.length ? '<h3 style="margin:16px 0 4px">Performance · ' + perf.length + '</h3>' + perf.map(card).join('') : '');
+      });
+    }
+
+    // ── full-text / hybrid search (admin scope) ──────────────────────────
+    function searchModal() {
+      var textCols = (S.colMeta || []).filter(function (c) { return /text|char|tsvector/.test(c.udt || c.type || ''); }).map(function (c) { return c.column; });
+      var vecCols = (S.colMeta || []).filter(function (c) { return c.udt === 'vector'; }).map(function (c) { return c.column; });
+      var colOpts = function (cols) { return cols.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join(''); };
+      var hasVec = vecCols.length > 0;
+      var ov = modal('Search · ' + S.table,
+        '<label>Mode<select id="se-mode"><option value="text">Full-text</option>' + (hasVec ? '<option value="hybrid">Hybrid (text + vector)</option>' : '') + '</select></label>'
+        + '<label>Query text<input id="se-q" placeholder="search terms"/></label>'
+        + '<label>Text column<select id="se-col">' + colOpts(textCols) + '</select></label>'
+        + '<div id="se-vecwrap" style="display:none"><label>Vector column<select id="se-vcol">' + colOpts(vecCols) + '</select></label>'
+        + '<p class="faint" style="margin:2px 0 0">The query text is embedded automatically for hybrid ranking.</p></div>'
+        + '<label>Limit<input id="se-limit" type="number" value="10"/></label>'
+        + '<div id="se-out" style="margin-top:10px"></div>',
+        function (ov, msg) {
+          var mode = ov.querySelector('#se-mode').value;
+          var query = (ov.querySelector('#se-q').value || '').trim();
+          if (!query) { msg.textContent = 'Enter a query.'; return; }
+          var limit = Number(ov.querySelector('#se-limit').value) || 10;
+          var render = function (r) {
+            if (!r.ok) { msg.textContent = (r.j && (r.j.message || r.j.error)) || 'Search failed'; return; }
+            msg.textContent = '';
+            var d = (r.j && r.j.data) || {}, rows = (d.rows || d) || [], cols = rows[0] ? Object.keys(rows[0]) : [];
+            ov.querySelector('#se-out').innerHTML = rows.length
+              ? '<div class="grid-wrap"><table class="grid"><thead><tr>' + cols.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>'
+                + rows.map(function (row) { return '<tr>' + cols.map(function (c) { return '<td title="' + esc(cellText(row[c])) + '">' + esc(cellText(row[c])) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>'
+              : '<p class="faint">No matches.</p>';
+          };
+          if (mode === 'hybrid') {
+            // Embed the query text server-side, then fuse FTS + vector.
+            msg.textContent = 'Embedding query…';
+            apiW(base() + '/vector/embed', 'POST', { input: query }).then(function (er) {
+              if (!er.ok || !er.j || !er.j.data || !er.j.data.embedding) {
+                msg.textContent = (er.j && er.j.error === 'embeddings_not_configured')
+                  ? 'Managed embeddings aren’t enabled on this server — use Full-text mode.'
+                  : ((er.j && (er.j.message || er.j.error)) || 'Could not embed the query.');
+                return;
+              }
+              msg.textContent = 'Searching…';
+              apiW(base() + '/search/hybrid', 'POST', {
+                table: S.table, text_column: ov.querySelector('#se-col').value,
+                vector_column: ov.querySelector('#se-vcol').value, query: query,
+                embedding: er.j.data.embedding, limit: limit,
+              }).then(render);
+            });
+          } else {
+            msg.textContent = 'Searching…';
+            apiW(base() + '/search/text', 'POST', { table: S.table, column: ov.querySelector('#se-col').value, query: query, limit: limit }).then(render);
+          }
+        }, 'Search');
+      ov.querySelector('.modal').classList.add('wide'); // results tables can be wide
+      ov.querySelector('#se-mode').onchange = function (e) { ov.querySelector('#se-vecwrap').style.display = e.target.value === 'hybrid' ? '' : 'none'; };
+    }
+
+    // ── realtime tail: live-prepend incoming rows (owner SSE) ────────────
+    function startLive() {
+      stopLive(); S.live = true;
+      try {
+        S.es = new EventSource(base() + '/realtime?table=' + encodeURIComponent(S.table));
+        S.es.addEventListener('change', function (ev) {
+          try {
+            var d = JSON.parse(ev.data); if (d.table !== S.table) return;
+            if (d.type === 'INSERT' && d.row) { S.rows.unshift(d.row); if (S.rows.length > S.limit) S.rows.pop(); S.total++; renderRows(); toast('+1 row (live)', 'ok'); }
+            else { loadRows(); }
+          } catch (_) {}
+        });
+        S.es.onerror = function () { /* browser auto-reconnects */ };
+        toast('Live updates on', 'ok');
+      } catch (_) { S.live = false; toast('Live not supported', 'err'); }
+    }
+
+    // AUTH
+    function renderAuth() {
+      var m = main(); if (!m) return;
+      m.innerHTML = '<div class="cx-h"><h1>Authentication</h1></div>'
+        + '<div class="card"><h2>Users</h2><div id="au-body"><p class="muted">Loading…</p></div></div>'
+        + '<div class="card"><h2>Social sign-in</h2><p class="muted" style="margin:0 0 10px">Google &amp; GitHub work out of the box. Bring your own OAuth app to use your own branding / consent screen; Apple requires your own credentials.</p><div id="au-providers">' + skel(3) + '</div></div>'
+        + '<div class="card"><h2>Email templates</h2><p class="muted" style="margin:0 0 10px">Customize the managed magic-link and one-time-code emails. Keep the required placeholder or the email can’t be sent.</p><div id="au-email">' + skel(3) + '</div></div>'
+        + '<div class="card"><h2>Multi-factor authentication</h2><p class="muted" style="margin:0 0 10px">When required, signed-in users must verify a TOTP code (authenticator app) before the data API will serve their requests. Apps enroll factors via <code>auth.enrollMfa()</code> / <code>auth.verifyMfa()</code>.</p><div id="au-mfa"><p class="faint">Loading…</p></div></div>';
+      loadAuthUsers(); loadProviders(); loadEmailTemplates(); loadAuthSettings();
+    }
+    // ── MFA-required toggle — uses /auth-settings (GET/PUT) ─────────────
+    function loadAuthSettings() {
+      api(base() + '/auth-settings').then(function (r) {
+        var box = document.getElementById('au-mfa'); if (!box) return;
+        if (!r.ok) { box.innerHTML = '<p class="muted">Couldn’t load auth settings.</p>'; return; }
+        var on = !!(r.j && r.j.data && r.j.data.mfa_required);
+        box.innerHTML = '<label class="seg"><input type="checkbox" id="mfa-req"' + (on ? ' checked' : '') + '/> Require MFA for all signed-in users</label>';
+        document.getElementById('mfa-req').onchange = function (e) {
+          var want = e.target.checked;
+          apiW(base() + '/auth-settings', 'PUT', { mfa_required: want }).then(function (r) {
+            if (!r.ok) { e.target.checked = !want; toast((r.j && (r.j.message || r.j.error)) || 'Failed', 'err'); }
+            else toast(want ? 'MFA now required' : 'MFA no longer required', 'ok');
+          });
+        };
+      });
+    }
+    function loadAuthUsers() {
+      api(base() + '/users').then(function (r) {
+        var box = document.getElementById('au-body'); if (!box) return;
+        if (!r.ok) { box.innerHTML = '<p class="muted">Couldn’t load users.</p>'; return; }
+        var u = (r.j && r.j.data) || [];
+        if (!u.length) { box.innerHTML = '<p class="muted">No users have signed up yet. Built-in: email/password, magic-link, OTP, Google, GitHub.</p>'; return; }
+        box.innerHTML = '<p class="faint" style="margin:0 0 10px">' + u.length + ' user' + (u.length === 1 ? '' : 's') + '</p><div class="grid-wrap"><table class="grid"><thead><tr><th>Email</th><th>Created</th><th></th></tr></thead><tbody>'
+          + u.map(function (x) { return '<tr><td>' + esc(x.email) + '</td><td>' + esc(fmtDate(x.created_at)) + '</td><td class="grid-actions"><button class="btn2 sm danger" data-du="' + esc(x.id) + '">Remove</button></td></tr>'; }).join('') + '</tbody></table></div>';
+        Array.prototype.forEach.call(box.querySelectorAll('[data-du]'), function (el) { el.onclick = function () { if (!confirm('Remove this user?')) return; apiW(base() + '/users/' + encodeURIComponent(el.getAttribute('data-du')), 'DELETE').then(function (r) { if (r.ok) loadAuthUsers(); }); }; });
+      });
+    }
+    // ── OAuth (BYO) provider editor — uses /auth/providers (GET/PUT/DELETE) ──
+    var OAUTH_PROVIDERS = [['google', 'Google'], ['github', 'GitHub'], ['apple', 'Apple']];
+    function loadProviders() {
+      api(base() + '/auth/providers').then(function (r) {
+        var box = document.getElementById('au-providers'); if (!box) return;
+        if (!r.ok) { box.innerHTML = '<p class="muted">Couldn’t load providers.</p>'; return; }
+        var d = (r.j && r.j.data) || {}; var byo = d.byo || {}; var managed = d.managed || {}; var cbBase = d.callback_base || '';
+        box.innerHTML = OAUTH_PROVIDERS.map(function (p) {
+          var key = p[0], cfg = byo[key]; var hasByo = !!cfg;
+          var badge = hasByo ? '<span class="lvl info">your app' + (cfg.enabled ? '' : ' · off') + '</span>' : (managed[key] ? '<span class="lvl info" style="opacity:.8">managed ✓</span>' : '<span class="lvl">unavailable</span>');
+          var cb = cbBase + '/' + key + '/callback';
+          var apple = key === 'apple';
+          return '<div class="card" style="background:var(--c-panel-2);margin:10px 0 0;padding:14px 16px">'
+            + '<div class="kv" style="margin:0 0 8px"><b style="flex:1">' + esc(p[1]) + '</b>' + badge + '</div>'
+            + '<label style="font-size:.76rem;color:var(--c-muted)">Client ID<input data-pid="' + key + '" data-f="client_id" value="' + esc(cfg ? cfg.client_id : '') + '" placeholder="' + (managed[key] ? 'leave blank to use managed' : '') + '" style="display:block;width:100%;margin-top:4px;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-family:Geist Mono,monospace;font-size:.76rem;box-sizing:border-box"/></label>'
+            + '<label style="font-size:.76rem;color:var(--c-muted);margin-top:8px;display:block">Client secret' + (apple ? ' / .p8 key' : '') + '<input data-pid="' + key + '" data-f="client_secret" type="password" placeholder="' + (hasByo ? '•••••• (leave blank to keep)' : 'paste secret') + '" style="display:block;width:100%;margin-top:4px;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-family:Geist Mono,monospace;font-size:.76rem;box-sizing:border-box"/></label>'
+            + (apple ? '<div class="kv" style="margin-top:8px;gap:8px"><input data-pid="apple" data-f="team_id" placeholder="Team ID" style="flex:1;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-size:.76rem"/><input data-pid="apple" data-f="key_id" placeholder="Key ID" style="flex:1;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-size:.76rem"/><input data-pid="apple" data-f="bundle_id" placeholder="Bundle ID" style="flex:1;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-size:.76rem"/></div>' : '')
+            + '<div class="kv" style="margin-top:10px"><label class="seg faint" style="flex:1"><input type="checkbox" data-pid="' + key + '" data-f="enabled"' + (!cfg || cfg.enabled ? ' checked' : '') + '/> Enabled</label>'
+            + '<button class="btn2 sm primary" data-save="' + key + '">Save</button>' + (hasByo ? ' <button class="btn2 sm danger" data-rm="' + key + '">Remove</button>' : '') + '</div>'
+            + '<p class="faint" style="margin:8px 0 0">Redirect/callback URL → <code class="mono">' + esc(cb) + '</code> <button class="btn2 sm" data-copy="' + esc(cb) + '">Copy</button></p>'
+            + '</div>';
+        }).join('');
+        Array.prototype.forEach.call(box.querySelectorAll('[data-copy]'), function (el) { el.onclick = function () { navigator.clipboard.writeText(el.getAttribute('data-copy') || ''); toast('Copied', 'ok'); }; });
+        Array.prototype.forEach.call(box.querySelectorAll('[data-save]'), function (el) { el.onclick = function () { saveProvider(box, el.getAttribute('data-save')); }; });
+        Array.prototype.forEach.call(box.querySelectorAll('[data-rm]'), function (el) { el.onclick = function () {
+          var key = el.getAttribute('data-rm'); if (!confirm('Remove your ' + key + ' OAuth config?')) return;
+          apiW(base() + '/auth/providers/' + key, 'DELETE').then(function (r) { if (r.ok) { toast('Removed', 'ok'); loadProviders(); } else toast('Failed', 'err'); });
+        }; });
+      });
+    }
+    function saveProvider(box, key) {
+      var body = {}; Array.prototype.forEach.call(box.querySelectorAll('[data-pid="' + key + '"]'), function (inp) {
+        var f = inp.getAttribute('data-f');
+        if (f === 'enabled') body.enabled = inp.checked;
+        else { var v = (inp.value || '').trim(); if (v) body[f] = v; }
+      });
+      if (!body.client_id) { toast('Client ID required', 'err'); return; }
+      apiW(base() + '/auth/providers/' + key, 'PUT', body).then(function (r) {
+        if (r.ok) { toast(key + ' saved', 'ok'); loadProviders(); } else toast((r.j && (r.j.message || r.j.error)) || 'Failed', 'err');
+      });
+    }
+    // ── Email template editor — uses /email-templates (GET/PUT/DELETE) ──────
+    function loadEmailTemplates() {
+      api(base() + '/email-templates').then(function (r) {
+        var box = document.getElementById('au-email'); if (!box) return;
+        if (!r.ok) { box.innerHTML = '<p class="muted">Couldn’t load templates.</p>'; return; }
+        var tpls = (r.j && r.j.data) || [];
+        box.innerHTML = tpls.map(function (t) {
+          var title = t.kind === 'otp' ? 'One-time code email' : 'Magic-link email';
+          return '<div class="card" style="background:var(--c-panel-2);margin:10px 0 0;padding:14px 16px">'
+            + '<div class="kv" style="margin:0 0 8px"><b style="flex:1">' + esc(title) + '</b>' + (t.is_custom ? '<span class="lvl info">custom</span>' : '<span class="lvl">default</span>') + '</div>'
+            + '<label class="faint" style="display:block">Subject<input data-tk="' + t.kind + '" data-f="subject" value="' + esc(t.subject) + '" style="display:block;width:100%;margin-top:4px;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-size:.8rem;box-sizing:border-box"/></label>'
+            + '<label class="faint" style="display:block;margin-top:8px">HTML body<textarea data-tk="' + t.kind + '" data-f="html" class="sql" style="min-height:120px;margin-top:4px">' + esc(t.html) + '</textarea></label>'
+            + '<p class="faint" style="margin:6px 0 0">Placeholders: ' + t.placeholders.map(function (p) { return '<code class="mono">' + esc(p) + '</code>'; }).join(' ') + '</p>'
+            + '<div style="text-align:right;margin-top:10px"><button class="btn2 sm" data-reset="' + t.kind + '"' + (t.is_custom ? '' : ' disabled') + '>Reset to default</button> <button class="btn2 sm primary" data-savetpl="' + t.kind + '">Save</button></div>'
+            + '</div>';
+        }).join('');
+        Array.prototype.forEach.call(box.querySelectorAll('[data-savetpl]'), function (el) { el.onclick = function () {
+          var kind = el.getAttribute('data-savetpl');
+          var subject = box.querySelector('[data-tk="' + kind + '"][data-f="subject"]').value;
+          var html = box.querySelector('[data-tk="' + kind + '"][data-f="html"]').value;
+          apiW(base() + '/email-templates/' + kind, 'PUT', { subject: subject, html: html }).then(function (r) {
+            if (r.ok) { toast('Template saved', 'ok'); loadEmailTemplates(); } else toast((r.j && (r.j.message || r.j.error)) || 'Failed', 'err');
+          });
+        }; });
+        Array.prototype.forEach.call(box.querySelectorAll('[data-reset]'), function (el) { el.onclick = function () {
+          var kind = el.getAttribute('data-reset'); if (!confirm('Reset the ' + kind + ' email to the default?')) return;
+          apiW(base() + '/email-templates/' + kind, 'DELETE').then(function (r) { if (r.ok) { toast('Reset to default', 'ok'); loadEmailTemplates(); } else toast('Failed', 'err'); });
+        }; });
+      });
+    }
+
+    // SQL
+    function renderSQL() {
+      var m = main(); if (!m) return;
+      m.innerHTML = '<div class="cx-h"><h1>SQL</h1></div>'
+        + '<div class="card"><h2>Query</h2><p class="muted" style="margin:0 0 10px">Read-only SELECT / WITH. Results below.</p>'
+        + '<textarea class="sql" id="q-sql" placeholder="select * from your_table limit 20;"></textarea>'
+        + '<div style="margin-top:10px"><button class="btn2 primary" id="q-run">Run</button> <span class="faint" id="q-msg"></span></div>'
+        + '<div id="q-out" style="margin-top:14px"></div></div>'
+        + '<div class="card"><h2>Run migration</h2><p class="muted" style="margin:0 0 10px">CREATE / ALTER / DROP to change your schema.</p>'
+        + '<textarea class="sql" id="mig-sql" placeholder="create table notes (id serial primary key, body text, user_id uuid, created_at timestamptz default now());"></textarea>'
+        + '<div style="margin-top:10px"><button class="btn2" id="mig-run">Run migration</button> <span class="faint" id="mig-msg"></span></div></div>';
+      document.getElementById('q-run').onclick = function () {
+        var sql = document.getElementById('q-sql').value.trim(), msg = document.getElementById('q-msg'); if (!sql) return;
+        msg.textContent = 'Running…';
+        apiW(base() + '/sql/query', 'POST', { sql: sql }).then(function (r) {
+          if (!r.ok) { msg.textContent = (r.j && (r.j.message || r.j.error)) || 'Failed'; document.getElementById('q-out').innerHTML = ''; return; }
+          msg.textContent = '';
+          var d = (r.j && r.j.data) || {}, rows = d.rows || [], cols = d.fields || (rows[0] ? Object.keys(rows[0]) : []);
+          if (!rows.length) { document.getElementById('q-out').innerHTML = '<p class="faint">0 rows.</p>'; return; }
+          document.getElementById('q-out').innerHTML = '<div class="grid-wrap"><table class="grid"><thead><tr>' + cols.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>'
+            + rows.map(function (row) { return '<tr>' + cols.map(function (c) { return '<td title="' + esc(cellText(row[c])) + '">' + esc(cellText(row[c])) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div><p class="faint" style="margin-top:6px">' + rows.length + ' rows</p>';
+        });
+      };
+      document.getElementById('mig-run').onclick = function () {
+        var sql = document.getElementById('mig-sql').value.trim(), msg = document.getElementById('mig-msg'); if (!sql) return;
+        msg.textContent = 'Running…';
+        apiW(base() + '/sql/migrate', 'POST', { sql: sql }).then(function (r) {
+          if (!r.ok) { msg.textContent = (r.j && (r.j.message || r.j.error)) || 'Failed'; return; }
+          msg.textContent = 'Done.'; document.getElementById('mig-sql').value = ''; S.colMeta = []; loadTables();
+        });
+      };
+    }
+
+    // SETTINGS
+    function renderSettings() {
+      var m = main(); var b = cur(); if (!m || !b) return;
+      function kv(k, v, copy) { return '<div class="kv"><span class="k">' + esc(k) + '</span><code class="mono">' + esc(v) + '</code>' + (copy ? ' <button class="btn2 sm" data-copy="' + esc(v) + '">Copy</button>' : '') + '</div>'; }
+      var mcpServers = {}; mcpServers['lingcode-' + beName(b)] = { url: (b.gateway_url || '').replace(/\/api\/cloud\/.*/, '') + '/api/cloud/mcp', headers: { Authorization: 'Bearer ' + (b.anon_key || '<anon key>') } };
+      var mcpSnippet = JSON.stringify({ mcpServers: mcpServers }, null, 2);
+      m.innerHTML = '<div class="cx-h"><h1>Settings</h1><span class="cx-pill ' + (b.status === 'live' ? 'live' : 'other') + '">' + esc(b.status) + '</span></div>'
+        + '<div class="card"><h2>Project</h2>' + kv('Name', beName(b))
+        + (b.project_id
+            ? '<div class="kv"><span class="k">Collaborators</span><a class="btn2 sm" href="/project.html?id=' + esc(b.project_id) + '">Invite &amp; transfer ownership →</a></div>'
+            : '<div class="kv"><span class="k">Collaborators</span><span class="muted">Not in a project yet — connect this backend to a project (from the Mac app) to invite people.</span></div>')
+        + '<div style="margin-top:8px"><button class="btn2 sm" id="s-rename">Rename</button></div></div>'
+        + '<div class="card"><h2>Connection</h2>' + kv('Backend ID', b.backend_id) + kv('Data URL', b.gateway_url, true) + kv('Anon key', b.anon_key, true)
+        + '<p class="muted" style="margin-top:10px">Connect from any MCP client (Claude Desktop, Cursor) over the account MCP — it routes by your project key. Apps call the Data URL with the anon key (or a user session JWT).</p></div>'
+        + '<div class="card"><h2>Auth providers</h2><div id="s-providers"><p class="muted">Checking…</p></div></div>'
+        + '<div class="card"><h2>MCP connection</h2><p class="muted" style="margin:0 0 10px">Paste into Claude Desktop / Cursor MCP config.</p><textarea class="sql" id="s-mcp" readonly style="min-height:130px">' + esc(mcpSnippet) + '</textarea><div style="margin-top:8px"><button class="btn2 sm" data-copy="' + esc(mcpSnippet) + '">Copy snippet</button></div></div>'
+        + '<div class="card"><h2>Secrets &amp; integrations</h2>'
+        + '<p class="muted" style="margin:0 0 10px">Store 3rd-party API keys (e.g. <code class="mono">ELEVENLABS_API_KEY</code>) encrypted at rest. Functions read them server-side — keys never reach your app. Then call e.g. <code class="mono">client.functions.invoke("elevenlabs-tts", { text })</code>, or <code class="mono">"http-fetch"</code> for any allow-listed API.</p>'
+        + '<div id="s-secrets"><p class="faint">Loading…</p></div>'
+        + '<div class="kv" style="margin-top:10px"><input id="s-sec-key" class="fld" placeholder="ELEVENLABS_API_KEY" style="flex:1;min-width:150px"/><input id="s-sec-val" class="fld" type="password" placeholder="value" style="flex:2;min-width:160px"/><button class="btn2 sm primary" id="s-sec-add">Add secret</button></div>'
+        + '<hr style="border:0;border-top:1px solid var(--c-border);margin:16px 0"/>'
+        + '<h2 style="font-size:.85rem">Allowed fetch hosts</h2>'
+        + '<p class="muted" style="margin:0 0 8px">Domains the generic <code class="mono">http-fetch</code> function may call (comma-separated). Empty = blocked. All requests are SSRF-guarded (https-only, no internal/private addresses).</p>'
+        + '<div class="kv"><input id="s-fetch-hosts" class="fld" placeholder="api.elevenlabs.io, api.openai.com" style="flex:1;min-width:220px"/><button class="btn2 sm" id="s-fetch-save">Save hosts</button></div></div>'
+        + '<div class="card"><h2>Usage (last 30 days)</h2><div id="s-usage"><p class="muted">Loading…</p></div></div>'
+        + '<div class="card"><h2>API docs</h2><div id="s-apidocs"></div></div>'
+        + '<div class="card"><h2>Custom domain</h2><p class="muted" style="margin:0 0 10px">Point your own domain at an app you deployed to LingCode Cloud (the Cloud button in the Mac IDE). HTTPS is issued automatically once DNS points at us.</p><button class="btn2 sm" id="s-domains">Manage domains…</button></div>'
+        + '<div class="card"><h2>Deploy history</h2><p class="muted" style="margin:0 0 10px">Every deploy of a Cloud app is a restorable version. Roll back to a previous one in one click — code only; your database and its data are never touched.</p><button class="btn2 sm" id="s-versions">Versions &amp; rollback…</button></div>'
+        + '<div class="card" style="border-color:#f3c9ca"><h2 style="color:var(--c-danger)">Danger zone</h2><p class="muted" style="margin:0 0 12px">Permanently delete this backend and all its data.</p><button class="btn2 danger" id="s-drop">Delete backend…</button></div>';
+      renderProviders(); renderUsageChart(); renderApiDocs(b);
+      Array.prototype.forEach.call(m.querySelectorAll('[data-copy]'), function (el) { el.onclick = function () { navigator.clipboard.writeText(el.getAttribute('data-copy') || ''); var was = el.textContent; el.textContent = 'Copied'; toast('Copied', 'ok'); setTimeout(function () { el.textContent = was; }, 1200); }; });
+      document.getElementById('s-rename').onclick = function () {
+        var next = prompt('Project name:', beName(b)); if (next == null) return; next = next.trim();
+        apiW(base(), 'PATCH', { label: next }).then(function (r) { if (r.ok) { b.label = next; renderShell(); } });
+      };
+      document.getElementById('s-drop').onclick = function () {
+        var k = beName(b);
+        if (prompt('This permanently deletes the backend and ALL its data.\nType "' + k + '" to confirm:') !== k) return;
+        apiW(base(), 'DELETE').then(function (r) { if (!r.ok) { toast((r.j && (r.j.message || r.j.error)) || 'Failed', 'err'); return; } S.active = null; S.table = null; load(); });
+      };
+      var sd = document.getElementById('s-domains');
+      if (sd) sd.onclick = manageCloudDomains;
+      var sv = document.getElementById('s-versions');
+      if (sv) sv.onclick = manageDeployHistory;
+      // ── Secrets + fetch allow-list ──
+      loadSecretsCard(); loadFetchHosts();
+      document.getElementById('s-sec-add').onclick = function () {
+        var k = (document.getElementById('s-sec-key').value || '').trim();
+        var v = document.getElementById('s-sec-val').value || '';
+        if (!/^[A-Z][A-Z0-9_]{0,63}$/.test(k)) { toast('Key must be UPPER_SNAKE (e.g. ELEVENLABS_API_KEY)', 'err'); return; }
+        if (!v) { toast('Enter a value', 'err'); return; }
+        apiW(base() + '/secrets/' + encodeURIComponent(k), 'PUT', { value: v }).then(function (r) {
+          if (r.ok) { document.getElementById('s-sec-key').value = ''; document.getElementById('s-sec-val').value = ''; toast('Secret saved', 'ok'); loadSecretsCard(); }
+          else toast((r.j && (r.j.message || r.j.error)) || 'Failed', 'err');
+        });
+      };
+      document.getElementById('s-fetch-save').onclick = function () {
+        apiW(base() + '/fetch-hosts', 'PUT', { hosts: (document.getElementById('s-fetch-hosts').value || '') }).then(function (r) {
+          if (r.ok) { toast('Allow-list saved', 'ok'); loadFetchHosts(); }
+          else toast((r.j && (r.j.message || r.j.error)) || 'Failed', 'err');
+        });
+      };
+    }
+    function loadSecretsCard() {
+      api(base() + '/secrets').then(function (r) {
+        var box = document.getElementById('s-secrets'); if (!box) return;
+        if (r.status === 503) { box.innerHTML = '<p class="muted">Secret storage isn’t enabled on this server.</p>'; return; }
+        if (!r.ok) { box.innerHTML = '<p class="muted">Couldn’t load secrets.</p>'; return; }
+        var rows = (r.j && r.j.data) || [];
+        box.innerHTML = rows.length
+          ? rows.map(function (s) { return '<div class="kv"><code class="mono" style="flex:1">' + esc(s.key) + '</code><span class="faint">updated ' + esc(fmtDate(s.updated_at)) + '</span><button class="btn2 sm danger" data-delsec="' + esc(s.key) + '">Delete</button></div>'; }).join('')
+          : '<p class="faint">No secrets yet.</p>';
+        Array.prototype.forEach.call(box.querySelectorAll('[data-delsec]'), function (el) { el.onclick = function () { var k = el.getAttribute('data-delsec'); if (!confirm('Delete secret ' + k + '?')) return; apiW(base() + '/secrets/' + encodeURIComponent(k), 'DELETE').then(function () { toast('Deleted', 'ok'); loadSecretsCard(); }); }; });
+      });
+    }
+    function loadFetchHosts() {
+      api(base() + '/fetch-hosts').then(function (r) { var el = document.getElementById('s-fetch-hosts'); if (el && r.ok && r.j && r.j.data) el.value = (r.j.data.hosts || []).join(', '); });
+    }
+
+    // ── Custom domains for deployed Cloud Apps ───────────────────────────
+    // In-place manager (no bounce to the account page). Cloud Apps are
+    // account-level (a deployed frontend isn't tied to a specific DB backend),
+    // so this lists ALL the account's deployed apps and manages domains per app.
+    function manageCloudDomains() {
+      var ov = document.createElement('div'); ov.className = 'ov';
+      ov.innerHTML = '<div class="modal"><h3>Custom domains</h3>'
+        + '<p class="muted" style="margin:-6px 0 12px;font-size:.8rem">Point your own domain at an app deployed to LingCode Cloud. HTTPS is issued automatically once DNS points at us.</p>'
+        + '<div id="cdm-inner"><p class="faint">Loading deployed apps…</p></div>'
+        + '<div style="text-align:right;margin-top:12px"><button class="btn2" id="cdm-close">Close</button></div></div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+      ov.querySelector('#cdm-close').onclick = function () { ov.remove(); };
+      bindModalKeys(ov);
+      var inner = ov.querySelector('#cdm-inner');
+      api('/api/account/cloud-apps').then(function (r) {
+        var apps = (r.ok && r.j && r.j.items) || [];
+        if (!apps.length) { inner.innerHTML = '<p class="muted">No deployed apps yet. Deploy a project to LingCode Cloud from the Mac IDE (the Cloud button in the toolbar), then attach a domain here.</p>'; return; }
+        inner.innerHTML = (apps.length > 1
+          ? '<label>App<select id="cdm-app">' + apps.map(function (a) { return '<option value="' + esc(a.id) + '">' + esc(a.title) + '</option>'; }).join('') + '</select></label>'
+          : '<p class="faint" style="margin:0 0 8px"><b>' + esc(apps[0].title) + '</b></p>')
+          + '<div id="cdm-domains" style="margin-top:6px"></div>';
+        var selEl = inner.querySelector('#cdm-app');
+        if (selEl) selEl.onchange = function () { renderDomains(selEl.value); };
+        renderDomains(apps[0].id);
+      });
+
+      function renderDomains(appId) {
+        var dbox = ov.querySelector('#cdm-domains'); if (!dbox) return;
+        var base = '/api/account/cloud-apps/' + encodeURIComponent(appId) + '/custom-domains';
+        dbox.innerHTML = '<p class="faint">Loading…</p>';
+        function dnsBlock(d) {
+          return '<div style="background:var(--c-panel-2);border:1px solid var(--c-border-2);border-radius:7px;padding:8px 10px;font-size:.72rem;font-family:Geist Mono,monospace;margin-top:6px">'
+            + 'Subdomain: <b>CNAME</b> ' + esc(d) + ' → <b>apps.lingcode.dev</b><br>'
+            + 'Root/apex: <b>A</b> ' + esc(d) + ' → <b>138.197.107.228</b><br>'
+            + '<span class="faint">DNS-only — not a Cloudflare-proxied (orange-cloud) record.</span></div>';
+        }
+        function siblingOf(d) {
+          if (d.indexOf('.') < 0) return null;
+          if (d.indexOf('www.') === 0) return d.slice(4);
+          if (d.split('.').length === 2) return 'www.' + d;
+          return null;
+        }
+        function render(rows) {
+          dbox.innerHTML = (rows.length ? rows.map(function (r) {
+            return '<div style="border:1px solid var(--c-border-2);border-radius:7px;padding:9px 11px;margin-bottom:8px">'
+              + '<div style="display:flex;align-items:center;gap:8px"><b style="flex:1">' + esc(r.domain) + '</b>'
+              + '<span class="cdm-st" data-d="' + esc(r.domain) + '" style="font-size:.7rem;color:var(--c-muted)">checking…</span>'
+              + '<a href="https://' + esc(r.domain) + '" target="_blank" rel="noopener" style="font-size:.74rem;color:var(--c-accent)">open ↗</a>'
+              + '<button class="btn2 sm" data-rm="' + esc(r.domain) + '">Remove</button></div>'
+              + dnsBlock(r.domain) + '</div>';
+          }).join('') : '<p class="muted" style="font-size:.85rem">No domains yet.</p>')
+            + '<div style="display:flex;gap:8px;margin-top:6px"><input id="cdm-in" placeholder="app.yoursite.com" style="flex:1"/><button class="btn2 primary" id="cdm-add">Add</button></div>'
+            + '<label class="inline" style="margin-top:8px"><input type="checkbox" id="cdm-sib" checked/> Also add the apex/www counterpart</label>'
+            + '<p class="faint" id="cdm-msg" style="min-height:1em;margin:6px 0 0"></p>';
+          Array.prototype.forEach.call(dbox.querySelectorAll('[data-rm]'), function (b) {
+            b.onclick = function () { if (!confirm('Remove ' + b.getAttribute('data-rm') + '?')) return; apiW(base + '/' + encodeURIComponent(b.getAttribute('data-rm')), 'DELETE').then(load); };
+          });
+          Array.prototype.forEach.call(dbox.querySelectorAll('.cdm-st'), function (el) {
+            api(base + '/' + encodeURIComponent(el.getAttribute('data-d')) + '/status').then(function (s) {
+              if (s.ok && s.j && s.j.pointed) { el.textContent = '✓ verified'; el.style.color = '#00a86b'; }
+              else { el.textContent = '⏳ pending DNS'; el.style.color = '#d08700'; }
+            });
+          });
+          var addBtn = dbox.querySelector('#cdm-add');
+          if (addBtn) addBtn.onclick = function () {
+            var inp = dbox.querySelector('#cdm-in'), msg = dbox.querySelector('#cdm-msg');
+            var d = inp.value.trim().toLowerCase().replace(/\.$/, ''); if (!d) return;
+            var targets = [d]; var sib = siblingOf(d);
+            if (sib && dbox.querySelector('#cdm-sib').checked) targets.push(sib);
+            msg.textContent = 'Adding…';
+            var firstErr = null, chain = Promise.resolve();
+            targets.forEach(function (t) {
+              chain = chain.then(function () { return apiW(base, 'POST', { domain: t }).then(function (res) { if (!res.ok && !firstErr) firstErr = (res.j && (res.j.message || res.j.error)) || 'Failed'; }); });
+            });
+            chain.then(function () { msg.textContent = firstErr || 'Added — set the DNS below, then it goes live in a few minutes.'; load(); });
+          };
+        }
+        function load() { api(base).then(function (r) { render((r.ok && r.j && r.j.data) || []); }); }
+        load();
+      }
+    }
+    // ── Deploy history + one-click rollback for deployed Cloud Apps ──────
+    // Cloud Apps are account-level, so this lists ALL deployed apps and shows
+    // each one's restorable version history. Rollback re-serves a prior
+    // version's code — the managed database and its data are never touched.
+    function manageDeployHistory() {
+      var ov = document.createElement('div'); ov.className = 'ov';
+      ov.innerHTML = '<div class="modal"><h3>Deploy history &amp; rollback</h3>'
+        + '<p class="muted" style="margin:-6px 0 12px;font-size:.8rem">Every deploy is a restorable version. Rolling back swaps the served code only — your database and its data are never affected.</p>'
+        + '<div id="dh-inner"><p class="faint">Loading deployed apps…</p></div>'
+        + '<div style="text-align:right;margin-top:12px"><button class="btn2" id="dh-close">Close</button></div></div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+      ov.querySelector('#dh-close').onclick = function () { ov.remove(); };
+      bindModalKeys(ov);
+      var inner = ov.querySelector('#dh-inner');
+      api('/api/account/cloud-apps').then(function (r) {
+        var apps = (r.ok && r.j && r.j.items) || [];
+        if (!apps.length) { inner.innerHTML = '<p class="muted">No deployed apps yet. Deploy a project to LingCode Cloud from the Mac IDE (the Cloud button in the toolbar) to start a version history.</p>'; return; }
+        inner.innerHTML = (apps.length > 1
+          ? '<label>App<select id="dh-app">' + apps.map(function (a) { return '<option value="' + esc(a.id) + '">' + esc(a.title) + '</option>'; }).join('') + '</select></label>'
+          : '<p class="faint" style="margin:0 0 8px"><b>' + esc(apps[0].title) + '</b></p>')
+          + '<div id="dh-list" style="margin-top:6px"></div>';
+        var selEl = inner.querySelector('#dh-app');
+        if (selEl) selEl.onchange = function () { renderVersions(selEl.value); };
+        renderVersions(apps[0].id);
+      });
+
+      function renderVersions(appId) {
+        var box = ov.querySelector('#dh-list'); if (!box) return;
+        var base = '/api/account/cloud-apps/' + encodeURIComponent(appId);
+        box.innerHTML = '<p class="faint">Loading versions…</p>';
+        api(base + '/deployments').then(function (r) {
+          var items = (r.ok && r.j && r.j.items) || [];
+          if (!items.length) { box.innerHTML = '<p class="muted" style="font-size:.85rem">No version history yet — it starts on your next deploy.</p>'; return; }
+          box.innerHTML = items.map(function (d) {
+            var isCur = d.status === 'live';
+            var src = d.source_version ? ' <span class="faint">(restored v' + d.source_version + ')</span>' : '';
+            return '<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--c-border-2);border-radius:7px;padding:9px 11px;margin-bottom:8px">'
+              + '<div style="flex:1;min-width:0"><b>v' + d.version + '</b>' + (isCur ? ' <span style="font-size:.68rem;color:#00a86b">● current</span>' : '') + src
+              + '<div class="faint" style="font-size:.72rem;margin-top:2px">' + esc(fmtDate(d.created_at)) + ' · ' + fmtBytes(d.total_bytes) + ' · ' + (d.file_count || 0) + ' files' + (d.note ? ' · ' + esc(d.note) : '') + '</div></div>'
+              + (isCur ? '' : '<button class="btn2 sm" data-rb="' + d.version + '">Roll back</button>')
+              + '</div>';
+          }).join('') + '<p class="faint" id="dh-msg" style="min-height:1em;margin:4px 0 0"></p>';
+          Array.prototype.forEach.call(box.querySelectorAll('[data-rb]'), function (btn) {
+            btn.onclick = function () {
+              var v = Number(btn.getAttribute('data-rb'));
+              if (!confirm('Roll the app back to v' + v + '?\n\nThis re-serves that version\'s code as a new version. Your database and its data are NOT affected.')) return;
+              var msg = box.querySelector('#dh-msg'); if (msg) msg.textContent = 'Rolling back…';
+              apiW(base + '/rollback', 'POST', { version: v }).then(function (res) {
+                if (!res.ok) { if (msg) msg.textContent = (res.j && (res.j.message || res.j.error)) || 'Rollback failed'; return; }
+                toast('Rolled back to v' + v, 'ok');
+                renderVersions(appId);
+              });
+            };
+          });
+        });
+      }
+    }
+
+    function renderProviders() {
+      var box = document.getElementById('s-providers'); if (!box) return;
+      // Built-in tenant auth methods (managed by LingCode Cloud). Apple is BYO.
+      var provs = [['Email + password', true], ['Magic link', true], ['One-time code (OTP)', true], ['Google', true], ['GitHub', true], ['Apple', false]];
+      box.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:10px">' + provs.map(function (p) {
+        return '<span class="lvl ' + (p[1] ? 'info' : '') + '" style="font-size:.72rem;padding:3px 9px' + (p[1] ? '' : ';opacity:.55') + '">' + (p[1] ? '✓' : 'BYO') + ' ' + esc(p[0]) + '</span>';
+      }).join('') + '</div><p class="muted" style="margin-top:10px">All listed methods work out of the box; Apple sign-in needs your own service ID/key.</p>';
+    }
+    function renderUsageChart() {
+      api(base() + '/usage?days=30').then(function (r) {
+        var box = document.getElementById('s-usage'); if (!box) return;
+        var data = (r.ok && r.j && r.j.data) || [];
+        if (!data.length) { box.innerHTML = '<p class="muted">No usage recorded yet.</p>'; return; }
+        var reads = data.map(function (d) { return Number(d.db_rows_read) || 0; });
+        var writes = data.map(function (d) { return Number(d.db_rows_written) || 0; });
+        box.innerHTML = sparkChart(data.map(function (d) { return d.day; }), [{ vals: reads, color: 'var(--c-accent)', label: 'reads' }, { vals: writes, color: 'var(--c-live)', label: 'writes' }]);
+      });
+    }
+    // Minimal inline-SVG multi-series line chart. No deps.
+    function sparkChart(labels, series) {
+      var W = 600, H = 160, pad = 24; var n = labels.length;
+      var max = Math.max(1, Math.max.apply(null, series.map(function (s) { return Math.max.apply(null, s.vals.concat([0])); })));
+      var x = function (i) { return pad + (n <= 1 ? 0 : (i * (W - 2 * pad) / (n - 1))); };
+      var y = function (v) { return H - pad - (v / max) * (H - 2 * pad); };
+      var paths = series.map(function (s) {
+        var d = s.vals.map(function (v, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' ');
+        return '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="2"/>';
+      }).join('');
+      var legend = series.map(function (s) { return '<span class="faint" style="margin-right:14px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + s.color + ';margin-right:5px"></span>' + esc(s.label) + '</span>'; }).join('');
+      return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none"><line class="axis" x1="' + pad + '" y1="' + (H - pad) + '" x2="' + (W - pad) + '" y2="' + (H - pad) + '"/>' + paths + '</svg>'
+        + '<div style="margin-top:6px">' + legend + ' <span class="faint">· peak ' + max + '/day · ' + n + ' day' + (n === 1 ? '' : 's') + '</span></div>';
+    }
+    function renderApiDocs(b) {
+      var box = document.getElementById('s-apidocs'); if (!box) return;
+      var url = b.gateway_url || ('/api/cloud/be/' + b.backend_id); var key = b.anon_key || '<anon key>';
+      var t = S.table || (S.tables[0] || 'your_table');
+      var snip = function (title, code) { return '<p class="faint" style="margin:12px 0 4px">' + esc(title) + '</p><textarea class="sql" readonly style="min-height:80px">' + esc(code) + '</textarea>'; };
+      var absUrl = (url.charAt(0) === '/') ? 'https://lingcode.dev' + url : url;
+      var connect = '<script src="https://lingcode.dev/sdk/lingcode-v1.js"><\/script>\n<script>\n  const lingcode = LingCode.createClient("' + url + '", "' + key + '");\n<\/script>';
+      box.innerHTML = '<p class="muted" style="margin:0 0 4px"><b>Recommended:</b> drop in the client SDK, then write Supabase-style code. Examples for <code>' + esc(t) + '</code>:</p>'
+        + snip('Connect (one time)', connect)
+        + snip('Select rows', 'const { data, error } = await lingcode.from("' + t + '").order("id", { ascending:false }).limit(20).select();')
+        + snip('Insert a row', 'await lingcode.from("' + t + '").insert({ /* ... */ });')
+        + snip('Update / delete (filter required)', 'await lingcode.from("' + t + '").eq("id", 1).update({ /* ... */ });\nawait lingcode.from("' + t + '").eq("id", 1).delete();')
+        + snip('Sign in (passwordless)', 'await lingcode.auth.sendMagicLink({ email });\n// the SDK finalizes the link on return; await lingcode.ready then lingcode.auth.getUser()')
+        + snip('Realtime', 'const off = lingcode.from("' + t + '").subscribe(({ type, row }) => { /* patch UI */ });')
+        + snip('Upload a file', 'await lingcode.storage.from("public").upload("hello.txt", new Blob(["hi"]));')
+        + '<p class="muted" style="margin:16px 0 4px">Analytics — track usage (shows in the Telemetry tab):</p>'
+        + snip('Web (JS)', 'lingcode.telemetry.logEvent("signup", { plan: "pro" });\nlingcode.telemetry.setUserId("user_123");\nlingcode.telemetry.setUserProperties({ plan: "pro" });\nlingcode.telemetry.logScreen("Home");')
+        + snip('Native (Swift — add the LingCodeAnalytics Swift package)', 'import LingCodeAnalytics\n\nlet analytics = LingCodeAnalytics(\n  url: "' + absUrl + '", anonKey: "' + key + '", appVersion: "1.0.0")\nanalytics.logEvent("signup", params: ["plan": "pro"])\nanalytics.setUserId("user_123")\nanalytics.setUserProperties(["plan": "pro"])')
+        + '<p class="muted" style="margin:16px 0 4px">Advanced — raw HTTP (no SDK):</p>'
+        + snip('Select rows (fetch)', 'fetch("' + url + '/select", {\n  method: "POST",\n  headers: { Authorization: "Bearer ' + key + '", "Content-Type": "application/json" },\n  body: JSON.stringify({ table: "' + t + '", limit: 20 })\n}).then(r => r.json())');
+    }
+
+    load();
+  })();
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

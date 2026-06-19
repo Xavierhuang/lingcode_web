@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用 LingCode 系统化调试</title>
+  <meta name="description" content="大多数调试不过是凭猜测做模式匹配，然后逐一验证猜测。用 LingCode 进行系统化调试——复现、隔离、假设、验证、缩小范围——只有在此之后才提出修复方案。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/debug-systematically-with-lingcode.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/debug-systematically-with-lingcode.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/debug-systematically-with-lingcode.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/debug-systematically-with-lingcode.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "用 LingCode 系统化调试",
+  "description": "大多数"调试"不过是凭猜测做模式匹配，然后逐一验证猜测。系统化调试每一步看起来更慢，整体却更快：复现、隔离、假设、验证、缩小范围——只有在此之后才提出修复方案。只要你提供方法，LingCode 就会遵循这套方法。",
+  "url": "https://lingcode.dev/zh/tutorials/debug-systematically-with-lingcode.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/debug-systematically-with-lingcode.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "用 LingCode 系统化调试"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "技巧与窍门",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "系统化调试",
+      "item": "https://lingcode.dev/zh/tutorials/debug-systematically-with-lingcode.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/debug-systematically-with-lingcode.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">技巧与窍门</a>
+      <span>/</span>
+      <span>系统化调试</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>用 LingCode 系统化调试</h1>
+      <p class="intro">大多数"调试"不过是凭猜测做模式匹配，然后逐一验证猜测。系统化调试每一步看起来更慢，整体却更快：复现、隔离、假设、验证、缩小范围——只有<em>这之后</em>才提出修复方案。只要你提供方法，LingCode 就会遵循这套方法。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么"猜测-打补丁"是条慢路</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>感觉很快的调试循环是这样的：读报错堆栈，凭报错的形态猜一个原因，试着修复，看看错误是否消失。它感觉很快，是因为每次迭代都很短。但它其实很慢，原因如下：</p>
+          <ul>
+            <li><strong>第一个猜测几乎从来不是根本原因</strong>——它不过是最近见过的相似模式，是相关性，而非因果关系。</li>
+            <li><strong>如果没有先隔离问题，你根本无法判断修复是否有效。</strong>错误停止发生可能出于任何原因，你就宣告解决了，直到它在凌晨两点卷土重来。</li>
+            <li><strong>"不再崩溃"不等于"问题已修复。"</strong>在症状周围套一个 try/catch 看起来测试通过，却掩盖了底层的状态损坏。</li>
+          </ul>
+          <p>系统化调试用快速迭代带来的多巴胺，换取"我知道哪里出错了，也知道我的修复针对的就是那个问题"的确定性。本教程中的技能为 LingCode 提供了一套明确的五步协议，让它不会替你陷入模式匹配模式。</p>
+        </div>
+      </div>
+
+      <h2>你需要准备什么</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong>——<a href="/LingCode-Installer.dmg" download>下载安装包</a>。</li>
+            <li><strong>一个 Bug</strong>——测试失败、崩溃、输出错误，或者"之前还好用的"。</li>
+            <li><strong>能够在本地运行出错的代码。</strong>无法复现的 Bug 是另一个更难的问题。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第一步——复现，先于阅读任何代码</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>LingCode 要做的第一件事是在本地复现 Bug，并记录精确的命令、输入和观察到的输出。不是阅读源码，不是推测，只是复现：</p>
+          <pre><code>Before reading any source, reproduce the bug. Report:
+- Exact command run.
+- Exact input (paste it; don't paraphrase).
+- Exact output / error / stack trace (paste verbatim).
+- Whether it's deterministic (run it 3 times — same result?).
+
+If you can't reproduce, stop. Ask for: the minimal failing
+input, environment differences, or a recording. Don't guess
+at causes for bugs you haven't seen.</code></pre>
+          <p>如果 LingCode 无法复现 Bug，后续每一步都是在走过场。诚实的回答是"我需要一个可复现的案例"——而不是尝试修复。</p>
+          <div class="tip-box">
+            <strong>确定性与偶发性的区别很重要。</strong>如果 Bug 每五次只触发一次，在继续之前先缩小控制偶发性的变量（时序、顺序、随机性）。靠"改了点什么，没再见到它"解决的偶发性 Bug 迟早会回来。
+          </div>
+        </div>
+      </div>
+
+      <h2>第二步——隔离出最小的失败用例</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>大多数 Bug 报告都包裹在一个完整的应用、一套很长的测试或复杂的输入里。LingCode 接下来的任务是一层层剥开，直到 Bug 能从最小的测试中触发：</p>
+          <pre><code>Reduce the failing case. Aim for:
+- A single failing test (or a 10-line script) that triggers
+  the bug.
+- The smallest input that still reproduces.
+- The narrowest call path — strip middleware, unrelated
+  state, optional config.
+
+Each reduction must still reproduce. If a reduction stops
+reproducing, you've found something — either the bug is in
+the part you removed, or your reduction was wrong. Note it.</code></pre>
+          <p>"每次缩减都必须仍能复现"是铁律。一路删代码直到 Bug 消失，却<em>不追究原因</em>，就是在修错东西。</p>
+        </div>
+      </div>
+
+      <h2>第三步——提出可证伪的假设</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>现在——也只有现在——LingCode 才阅读代码并形成理论。这个理论必须附带一个可以验证的预测：</p>
+          <pre><code>Form a single hypothesis. It must:
+- Name the specific function / state / interaction you think
+  is wrong.
+- Predict what will happen if your hypothesis is correct
+  AND a tweak is applied that should change behavior.
+- Predict what will happen if your hypothesis is wrong.
+
+"I think it's a race condition" is not a hypothesis. "I think
+read_config() returns before write_config() completes on cold
+start, so adding a 100ms sleep before read should make the
+bug rarer but not gone" is a hypothesis.</code></pre>
+          <p>同时持有两个假设没问题。持有三个则说明你并没有真正在读代码——你只是在头脑风暴。先缩小范围，再去验证。</p>
+        </div>
+      </div>
+
+      <h2>第四步——验证假设，而非验证修复</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>这一步是系统化调试与"猜测-打补丁"的分水岭。验证的目的是证明假设是对是错——而不是让 Bug 消失：</p>
+          <pre><code>Test the hypothesis. Pick the cheapest probe that distinguishes
+right-from-wrong:
+- A print / log at the suspected boundary, showing the value
+  you predicted.
+- A breakpoint or debugger inspection.
+- A unit test that exercises the suspected interaction.
+- A diff of the value before and after the suspected mutation.
+
+If the probe contradicts the hypothesis, the hypothesis is
+wrong. Go back to step 3. Do not "adjust" the hypothesis to
+fit — write a new one.</code></pre>
+          <div class="warn-box">
+            <strong>"错误消失了"不是验证。</strong>错误消失可能有许多与你的理论无关的原因——缓存、时序、测试环境的副作用。只有当探针显示出你预测的结果时，假设才算得到证实。
+          </div>
+        </div>
+      </div>
+
+      <h2>第五步——缩小到最小修复</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>一旦假设得到证实，LingCode 就编写能解决实际原因而非症状的最小改动：</p>
+          <pre><code>Propose the fix. It should:
+- Address the cause identified in step 4, not the symptom in
+  step 1.
+- Be the smallest change that achieves that.
+- Come with a regression test that fails before the fix and
+  passes after. (No regression test = no proof the fix works.)
+
+Then re-run the original reproduction from step 2.
+If it still fires, the fix is incomplete — go back to step 3.
+If it doesn't, run the full test suite to check for collateral
+damage. Document one-line cause + one-line fix in the commit
+message.</code></pre>
+          <p>回归测试是证明你理解了这个 Bug 的凭证。如果你写不出能捕捉它的测试，说明你并没有真正理解它——只是让它暂时停止发生而已。</p>
+        </div>
+      </div>
+
+      <h2>何时打破协议</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>系统化调试是正确的默认做法。但有两种情况下它属于过度：</p>
+          <ul>
+            <li><strong>简单的拼写错误和明显的错误。</strong>第 42 行出现"Cannot read property 'name' of undefined"，而第 41 行没有 await 一个异步调用——直接修复就好，不必郑重其事地做假设。</li>
+            <li><strong>生产环境火情。</strong>如果用户服务中断，正确的行动是最快的已知缓解措施（回滚、关闭功能开关、重启）。之后在事后复盘时，在系统稳定的情况下再进行系统化调试。</li>
+          </ul>
+          <p>介于两者之间的一切——偶发性测试失败、"在我这里好用"的报告、间歇性崩溃、莫名其妙的性能下降——这套协议都物有所值。让 LingCode 在一开始就问清楚"这是火情还是调查？"：</p>
+          <pre><code>Before debugging, classify:
+- FIRE: users down, ship a mitigation now, investigate after.
+- INVESTIGATION: bug is contained, follow the 5 steps.
+- TYPO: obvious error visible in the diff, just fix it.
+
+Don't run a full systematic-debug ritual on a typo.
+Don't skip steps on an investigation because it "looks easy."</code></pre>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用这套方法</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>完整的调试协议已打包为一个技能——将它放入你的 LingCode 技能文件夹，LingCode 就会在遇到任何测试失败或崩溃时自动调用它：</p>
+          <pre><code>---
+name: systematic-debugging
+description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes. Triggers: 'this is broken', 'why does X fail', 'debug this', 'find the bug', stack trace pasted, failing test output, runtime exception, 'doesn't work', 'unexpected behavior'. Actions: five-step protocol — reproduce → isolate → hypothesize → test the hypothesis (not the fix) → narrow to minimal fix with a regression test. Triage gate: FIRE (drop everything) / INVESTIGATION (full protocol) / TYPO (one-line fix, skip protocol). Anti-pattern: pattern-match-and-guess, fix-before-reproducing.
+---
+
+Debug systematically, not by pattern-matching. Most "fixes"
+that make errors disappear without proving cause come back.
+
+Classify first: FIRE (mitigate now), INVESTIGATION (follow
+the protocol), or TYPO (just fix it).
+
+For INVESTIGATIONS:
+
+1. REPRODUCE. Before reading any source. Capture exact
+   command, input, output. Confirm determinism. If you
+   can't reproduce, stop and ask — don't guess.
+
+2. ISOLATE. Reduce to the smallest failing case. Each
+   reduction must still reproduce. If a reduction stops
+   reproducing, investigate why before continuing.
+
+3. HYPOTHESIZE. One specific theory naming function /
+   state / interaction. Include a falsifiable prediction:
+   what should happen if right, what if wrong.
+
+4. TEST the hypothesis, not the fix. Use the cheapest
+   probe that distinguishes right from wrong (log, debugger,
+   diff). "The error went away" is not confirmation —
+   the probe must show what you predicted.
+
+5. NARROW to a minimal fix that addresses the cause, not
+   the symptom. Write a regression test that fails before
+   and passes after. Re-run original repro. If it still
+   fires, the fix is incomplete.
+
+Document cause + fix in one line each in the commit.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/systematic-debugging/SKILL.md</code>——参见<a href="/zh/tutorials/install-a-skill.html">安装技能</a>了解确切位置以及技能的发现方式。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/test-driven-development-with-lingcode.html" class="tutorial-next-card">
+            <h3>测试驱动开发</h3>
+            <p>第五步中的回归测试，如果你先写了失败测试会更容易完成——TDD 是调试的倍增器</p>
+          </a>
+          <a href="/zh/tutorials/give-and-receive-code-review-with-lingcode.html" class="tutorial-next-card">
+            <h3>进行与接受代码审查</h3>
+            <p>Bug 修复后，PR 的审查反馈值得与调试过程同等的严谨对待</p>
+          </a>
+          <a href="/zh/tutorials/finish-a-development-branch.html" class="tutorial-next-card">
+            <h3>完结开发分支</h3>
+            <p>修复落地后，按照收尾清单操作，让修复分支干净地合入主线</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

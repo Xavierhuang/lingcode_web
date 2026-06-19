@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何在 LingCode 对话中途切换 AI 提供商？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="在 LingCode 对话途中切换 Claude、DeepSeek、GPT-4 及其他 AI 提供商。同一对话，不同模型——无需重新提供上下文。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/switch-providers-mid-conversation.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/switch-providers-mid-conversation.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/switch-providers-mid-conversation.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/switch-providers-mid-conversation.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "对话途中切换提供商",
+  "description": "当 Claude 在重构时卡住，把同一段对话交给 DeepSeek 或 GPT-4，无需从头开始。LingCode 会将对话历史带入新提供商，让你保留上下文，只是换了一个"心情"。",
+  "url": "https://lingcode.dev/zh/tutorials/switch-providers-mid-conversation.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/switch-providers-mid-conversation.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "对话途中切换提供商"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "对话途中切换提供商",
+      "item": "https://lingcode.dev/zh/tutorials/switch-providers-mid-conversation.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/switch-providers-mid-conversation.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">原生 Mac IDE</a>
+      <span>/</span>
+      <span>对话途中切换提供商</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何在 LingCode 对话中途切换 AI 提供商？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>点击对话面板顶部的提供商下拉菜单，选择不同的模型——LingCode 会将对话历史带入新提供商。当某个模型在重构时卡住时，可以将同一段对话切换到另一个提供商，无需重新提供上下文。</p>
+      <p class="intro">当 Claude 在重构时卡住，把同一段对话交给 DeepSeek 或 GPT-4，无需从头开始。LingCode 会将对话历史带入新提供商，让你保留上下文，只是换了一个"心情"。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>AI 智能体在任务上失败，最常见的原因不是任务太难——而是你恰好选择的模型不适合这项工作。有些模型擅长漫长、细致的重构，却在简单的文本编辑上卡壳。另一些模型速度快、成本低，但在复杂的多文件修改中会丢失主线。对于"该用哪个模型"这个问题，诚实的答案是：<em>取决于这一轮的任务，你在第一次响应后就能知道答案</em>。因为刚开始用某个模型就坚持用下去，哪怕它明显在挣扎，是一个值得改掉的习惯。</p>
+      <p>切换模型的"贵"方法是在另一个提供商里开一个新对话，把之前说过的内容重新解释一遍。这样做可行，但很繁琐——而且之前对话中的细节都会丢失。"便宜"的方法是<em>在原地</em>切换提供商，让新模型继承整段历史。新提供商会读取之前说了什么、尝试了什么、拒绝了什么，然后带着完整上下文接下一轮。</p>
+      <p>LingCode 底层运行着三个独立的智能体循环——分别对应 Claude、DeepSeek 以及十三个 OpenAI 兼容提供商——并将对话历史序列化为下一个提供商所期望的格式。在你的对话面板里，这只是一次下拉菜单的点击。本教程将告诉你：这次点击什么时候值得，什么内容会延续，什么不会，以及什么时候重新开始才是更好的选择。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>为什么"模型不适合任务"是最容易修复的失败模式</li>
+        <li>如何从对话面板切换提供商</li>
+        <li>什么内容会延续（历史记录），什么不会（工具状态）</li>
+        <li>什么时候应该重新开始，什么时候应该中途切换</li>
+      </ul>
+
+      <h2>第一步：识别提供商不适合当前任务的信号</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>四个警示信号</h3>
+          <p>出现以下任一情况时，考虑切换提供商：</p>
+          <ul>
+            <li><strong>反复重复自己。</strong>尽管你说了"不，改成 X"，智能体还是一再提出同样的修改。这往往是模型锚定在它的第一个答案上。</li>
+            <li><strong>长编辑时丢失主线。</strong>在冗长的多文件编辑中忘记了早先的约束。不同模型有不同的有效上下文长度。</li>
+            <li><strong>当前模型慢，换一个更快。</strong>如果你用的是思考型模型，但任务只是机械操作，换一个不需要思考的快速模型可以节省三分之二的时间。</li>
+            <li><strong>工具调用错误循环。</strong>同一个工具、同一个错误参数，连续出现三次。有些模型更善于推理出正确做法。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第二步：通过提供商选择器切换</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>从对话面板操作</h3>
+          <p>对话面板顶部有一个提供商选择器——显示当前模型的下拉菜单（例如"Claude Opus 4.7"或"DeepSeek V4 Pro"）。点击它，从列表中选择不同的提供商或模型。</p>
+          <p>对话面板会以新提供商重新加载。你的现有消息历史保留在面板中。发送下一轮消息，新提供商就会收到完整的对话作为上下文。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>可用提供商：</strong>Claude（默认）、DeepSeek、LingModel（内置，免费）、GPT-4 / OpenAI、Gemini、Mistral、Groq，以及 7 个以上 OpenAI 兼容提供商和一个自定义端点槽位。每个提供商都需要在设置中填入 API Key——LingModel 除外。
+      </div>
+
+      <h2>第三步：了解哪些内容会延续</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>历史记录会延续，进行中的工具状态不会</h3>
+          <p>会带到新提供商的内容：</p>
+          <ul>
+            <li>之前所有的用户/助手消息——原文保留。</li>
+            <li>工作区的系统提示词/指令。</li>
+            <li>对话中引用的文件（新提供商会按需重新读取）。</li>
+          </ul>
+          <p>不会带过去的内容：</p>
+          <ul>
+            <li>进行中的工具调用。切换时会干净地取消该调用——新提供商会看到被取消的那一轮，并自行决定是否重试。</li>
+            <li>提供商专属的缓存状态。Anthropic 的提示词缓存、OpenAI 的会话记忆等——每个提供商都从零开始。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第四步：有时候重新开始更好</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>当历史记录本身成为问题时</h3>
+          <p>如果对话里充斥着失败的尝试，新提供商也会继承所有这些噪音。过长的失败历史会拖累任何模型。这种情况下，点击<strong>新对话</strong>，粘贴一段对实际目标的清晰总结，让新提供商在干净的状态下重新开始。</p>
+          <p>一个粗略的经验法则：如果你连续发送了超过约 10 条更正，这段对话已经"中毒"。此时应该同时切换提供商和清空历史记录。</p>
+        </div>
+      </div>
+
+      <h2>第五步：将特定提供商与特定任务配对</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>各提供商的典型优势</h3>
+          <ul>
+            <li><strong>Claude</strong>——漫长、细致的重构；结构化的工具使用；跨越多轮的智能体循环。</li>
+            <li><strong>DeepSeek</strong>——性价比高的通用编码；在 Python 和主流 Swift 上表现出色；速度快。</li>
+            <li><strong>GPT-4 / GPT-5</strong>——知识广博，适合陌生框架；UI 设计判断力强。</li>
+            <li><strong>LingModel</strong>——内置，零配置，免费；把常规任务路由到这里，将付费 API Key 留给难题。</li>
+            <li><strong>Gemini</strong>——长上下文检索能力强；适合在大型代码库中"找出所有用到 X 的地方"。</li>
+          </ul>
+          <p>这些只是倾向，不是定律——每次新版本发布都会重新调整。通过频繁切换，形成你自己的使用偏好。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>费用提示：</strong>切换提供商也意味着切换计费方。如果你是因为成本而从 Claude 切换到 DeepSeek，这很好。但如果你只是为了重试某件事，把 LingModel（免费）换成 GPT-4（付费），那你的钱包就要跟着承担了——请仔细查看你切换的提供商的计费细则。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/setting-up-api-keys.html" class="tutorial-next-card">
+            <h3>配置 API Key</h3>
+            <p>添加提供商密钥以解锁 Claude、DeepSeek、GPT-4 等</p>
+          </a>
+          <a href="/zh/tutorials/understanding-providers.html" class="tutorial-next-card">
+            <h3>了解提供商</h3>
+            <p>深入了解各提供商擅长哪类任务</p>
+          </a>
+          <a href="/zh/tutorials/running-across-all-providers.html" class="tutorial-next-card">
+            <h3>跨提供商运行</h3>
+            <p>在你已配置的所有提供商上对比相同的提示词</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创始人和需要真实工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why versionCode Breaks Your Second Deploy | LingCode</title>
+  <meta name="description" content="Build numbers, versionCode, and why every store enforces monotonic integers. The history, the tradeoff, and how to stop tripping over it.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/learn-version-code.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Why versionCode Breaks Your Second Deploy">
+  <meta property="og:description" content="Monotonic integers, rollback safety, and crash-report aggregation — the reasons every store makes you bump build numbers.">
+  <meta property="og:url" content="https://lingcode.dev/learn-version-code.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.375rem; margin: 40px 0 16px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content p { margin: 0 0 16px; line-height: 1.75; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.75; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Deep dive · Deploy fundamentals</p>
+        <h1>Why versionCode breaks your second deploy</h1>
+        <p>Build numbers aren't there to annoy you. They're the primary key both stores use to order time itself.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2>The ritual humiliation</h2>
+      <p>Your first deploy to the App Store or Play Console works. You celebrate. You make a small fix, hit Deploy again, and get:</p>
+      <pre><code>ERROR ITMS-90189: "Redundant Binary Upload. ... bundle version 1"
+# or
+versionCodeTooLow: Version code 42 has already been used.</code></pre>
+      <p>Welcome to the most-Googled deploy error of all time. What's going on?</p>
+
+      <h2>Two numbers, two purposes</h2>
+      <p>Every Apple and Google app has <em>two</em> version identifiers that travel together, and most developers routinely confuse them:</p>
+      <ul>
+        <li><strong>Version / <a href="/glossary.html#version-code">versionName</a>:</strong> the human-facing string. <code>"1.2.3"</code>. Shown on the app's Store listing. Apple calls this <code>CFBundleShortVersionString</code>; Android calls it <code>versionName</code>. You pick whatever makes marketing sense — SemVer, calendar versioning, whatever.</li>
+        <li><strong>Build number / versionCode:</strong> an integer. Apple calls this <code>CFBundleVersion</code>; Android calls it <code>versionCode</code>. <em>This</em> is the one the store uses to order uploads.</li>
+      </ul>
+      <p>The rule both stores enforce: <strong>every upload must have a strictly greater build number</strong> than every previous upload <em>for the same user-facing version</em> (Apple) or <em>ever</em> (Google).</p>
+
+      <h2>Why stores need a monotonic integer</h2>
+      <p>It's tempting to read "just bump the number" as arbitrary gatekeeping. It's not. Three concrete things depend on it:</p>
+
+      <p><strong>1. Unambiguous rollback ordering.</strong> When you discover a crash in build 47 and need to revert, the store needs to know which build is "older." Comparing integers is unambiguous; comparing semver strings is not (<code>1.2.0</code> vs <code>1.2.10</code> — string comparison says <code>1.2.10 &lt; 1.2.2</code>). Both Apple's TestFlight rollback and Google Play's staged-rollout halt rely on integer comparison.</p>
+
+      <p><strong>2. Crash-report aggregation.</strong> Firebase Crashlytics, App Store Connect's crash reporting, Google Play Console's vitals — all of them bucket crash instances by (versionName, build). If you let two uploads share a build number, one bucket holds crashes from two different binaries, and the aggregation lies. The constraint exists so every crash report points at exactly one binary.</p>
+
+      <p><strong>3. Device-side upgrade logic.</strong> Android's package manager upgrades an installed app only if the incoming APK's <code>versionCode</code> is strictly greater than the installed one. If you upload the same versionCode twice, even users who notice the "update available" prompt can't actually install it over the existing build — because by the OS's rule, it <em>is</em> the existing build.</p>
+
+      <h2>Why Apple requires it per-Version and Google requires it forever</h2>
+      <p>There's a subtle difference worth internalizing:</p>
+      <ul>
+        <li><strong>Apple:</strong> build numbers must be strictly increasing <em>within a given user-facing Version</em>. You can have <code>1.2.3 (42)</code> then <code>1.2.3 (43)</code>, and later ship <code>1.3.0 (1)</code> — Apple resets the counter scope when you move to a new Version string.</li>
+        <li><strong>Google:</strong> versionCode must be strictly increasing <em>across all uploads ever</em>, regardless of versionName. Once you've shipped versionCode 100, you can never ship 99 again — even under a different versionName.</li>
+      </ul>
+      <p>Google's rule is simpler to reason about. Apple's is more forgiving if you want to reset the counter at each marketing release. Most mature projects ignore the scoping and just keep a global counter on both platforms.</p>
+
+      <h2>Two strategies that actually work</h2>
+      <p><strong>Strategy 1 — tie the build number to time.</strong> Use <code>$(date +%Y%m%d%H%M)</code> as your build number. Monotonic by definition, reset concerns solved, and you can recover the upload time by looking at the number. Downside: large numbers (>2 billion on Android blows past <code>Integer.MAX_VALUE</code>), so some teams cap at <code>$(date +%Y%m%d)%04d</code> and pad a sequence suffix.</p>
+
+      <p><strong>Strategy 2 — bump automatically on every archive.</strong> Use <code>agvtool next-version -all</code> on Apple, or a gradle regex on Android's <code>build.gradle</code>. This is what LingCode's <em>Auto-bump build number</em> and <em>Auto-bump versionCode</em> checkboxes do — rewrite the project file before the archive step, so the bump is durable and committed to your repo.</p>
+
+      <h2>Symptoms and fixes</h2>
+      <ul>
+        <li><strong>"Redundant Binary Upload" / ITMS-90189</strong> — Apple. Bump <code>CFBundleVersion</code> (the <em>Build</em> field in Xcode's target General tab), not <em>Version</em>.</li>
+        <li><strong>"versionCodeTooLow"</strong> — Google. Bump <code>versionCode</code> in <code>app/build.gradle</code>'s <code>defaultConfig</code>.</li>
+        <li><strong>Upload succeeds but the Store still shows the old build</strong> — rare, but usually means you uploaded a new binary with the same Version and Build numbers. The Store accepted the upload but deduplicated it against the existing record. Bump and retry.</li>
+      </ul>
+
+      <h2>The takeaway</h2>
+      <p>Build numbers aren't metadata — they're the primary key each store uses to order your uploads. The stricter-seeming rule (Google's "forever monotonic") is easier to live with than the more forgiving rule (Apple's "per-Version") because you stop having to think about scopes. Pick a strategy, automate it, and forget about it.</p>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">More deep dives:</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;"><a href="/learn-code-signing.html">How App Store code signing actually works</a> · <a href="/learn-jwt-auth.html">JWT auth in 5 minutes</a> · <a href="/learn-service-accounts.html">What a service account really is</a></p>
+        <a href="/deploy.html">Pick a deploy target →</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Install Postgres and Redis on your server — LingCode Tutorials</title>
+  <meta name="description" content="Install Postgres and Redis on your own Linux server, with the auth and binding defaults that aren't on by default. Self-host vs managed, the honest comparison.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/install-postgres-and-redis-on-your-server.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/install-postgres-and-redis-on-your-server.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/install-postgres-and-redis-on-your-server.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/install-postgres-and-redis-on-your-server.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Install Postgres and Redis on your server",
+  "description": "Both ship with installation defaults that are convenient on a laptop and dangerous on a public server. This tutorial walks the install, the auth and binding adjustments that turn them into something safe to run, and the honest case for when you should give up and pay for managed",
+  "url": "https://lingcode.dev/tutorials/install-postgres-and-redis-on-your-server.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/install-postgres-and-redis-on-your-server.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Install Postgres and Redis on your server"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Install Postgres and Redis on your server",
+      "item": "https://lingcode.dev/tutorials/install-postgres-and-redis-on-your-server.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/install-postgres-and-redis-on-your-server.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Install Postgres and Redis on your server</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Install Postgres and Redis on your server</h1>
+      <p class="intro">Both ship with installation defaults that are convenient on a laptop and dangerous on a public server. This tutorial walks the install, the auth and binding adjustments that turn them into something safe to run, and the honest case for when you should give up and pay for managed instead.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>"Self-host or managed" is the question that comes before the install commands. Managed Postgres (AWS RDS, Supabase, Neon, Crunchy) and managed Redis (ElastiCache, Upstash) cost more per gigabyte but give you backups, failover, version upgrades, monitoring, and IAM-integrated auth without you running cron jobs. Self-hosted on the same VPS as your app costs almost nothing and is fine for personal projects; it stops being fine the moment downtime would matter or the dataset gets larger than you'd want to lose. The honest break-even is "would a six-hour outage during a database upgrade be acceptable?" — if no, you want managed.</p>
+      <p>The two services in this tutorial have different default-safety profiles. <strong>Postgres</strong>'s out-of-the-box config on Ubuntu binds to <code>127.0.0.1</code> and uses <em>peer</em> authentication (your Unix username has to match the Postgres role), which is genuinely secure by default. <strong>Redis</strong>'s out-of-the-box config also binds to localhost, but if you change the bind address without setting a password you get the worst-case scenario: an open Redis on a public IP, which is one of the most-exploited misconfigurations on the internet. The steps for each reflect this: Postgres just needs a database and a user for your app; Redis needs auth set up before you touch <em>anything</em> network-related.</p>
+      <p>This tutorial assumes your box has been through <a href="/tutorials/prepare-a-fresh-linux-server-for-production.html">the basic hardening checklist</a> — non-root user with sudo, firewall on, SSH key-only. Without that, no amount of database config helps. After the steps, you have a Postgres database with an app-scoped user, a Redis instance with auth enabled, both bound only to localhost (the app and database on the same box), and a backup script for the data that matters.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The self-host vs managed decision (with numbers)</li>
+        <li>Installing Postgres on Ubuntu and creating an app-scoped role + database</li>
+        <li>The <code>pg_hba.conf</code> auth methods, what each means, when to use which</li>
+        <li>A <code>pg_dump</code>-to-S3 backup script you can drop into cron</li>
+        <li>Installing Redis with auth from the start (not retrofit)</li>
+        <li>Redis persistence: RDB snapshots vs AOF append-log, and which to pick</li>
+        <li>When to outgrow self-hosted and move to RDS / ElastiCache / Supabase</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> A hardened Ubuntu 22.04 or 24.04 server (<a href="/tutorials/prepare-a-fresh-linux-server-for-production.html">checklist here</a>), shell access as a sudo-capable non-root user, your application running on the same box (or willingness to do the network-binding work in the optional sections). If your database needs to live on a different box than your app, the security setup is meaningfully harder — that case is called out at the end of each install.
+      </div>
+
+      <h2>Step 1: Decide — self-host or managed?</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>The "would six hours of downtime be okay?" question</h3>
+          <p>Reasons self-hosted is fine:</p>
+          <ul>
+            <li>Personal project, hobby site, or low-traffic SaaS in early stages.</li>
+            <li>You'd rather spend $0/month and run a backup script than $20+/month for a managed instance.</li>
+            <li>Dataset is under a few GB and you can recreate it from a backup if something catastrophic happens.</li>
+          </ul>
+          <p>Reasons to pay for managed:</p>
+          <ul>
+            <li>You have paying customers whose data must survive any single-machine failure.</li>
+            <li>You don't want to run point-in-time recovery scripts at 3 AM.</li>
+            <li>You want major-version upgrades that don't require a maintenance window you plan personally.</li>
+            <li>You're already on AWS / GCP and the latency to a managed instance in the same region is identical to a local one.</li>
+          </ul>
+          <p>Rough costs at small scale: Supabase free tier (Postgres) supports projects up to 500 MB; Upstash free Redis covers 256 MB. Above that, the cheapest managed Postgres runs $10–25/month; the cheapest managed Redis runs $5–10/month. Self-hosted on an existing VPS is free.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Install Postgres</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>One apt command, then verify</h3>
+          <pre><code>sudo apt update
+sudo apt install -y postgresql postgresql-contrib
+
+# Postgres starts automatically. Verify:
+sudo systemctl status postgresql
+# Active: active (exited) is correct — the wrapper unit is "exited",
+# but the actual cluster (postgresql@&lt;ver&gt;-main.service) is running.
+
+# Check the version that landed:
+psql --version</code></pre>
+          <p>Ubuntu 22.04 ships Postgres 14; Ubuntu 24.04 ships 16. For a newer version, add the official Postgres apt repo (<code>apt.postgresql.org</code>) and install <code>postgresql-17</code> instead. The setup below works on any version &gt;= 12.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Create an app role and database</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>One role + one database per application; never use the postgres superuser</h3>
+          <p>Postgres ships with a Unix user <code>postgres</code> that has full database superuser rights via "peer" auth — your Unix user has to match. Switch to it to administer the cluster:</p>
+          <pre><code>sudo -u postgres psql</code></pre>
+          <p>You're in the <code>psql</code> prompt as the superuser. Create a role and a database for your app:</p>
+          <pre><code>-- Replace mybrand_app and the password.
+CREATE ROLE mybrand_app WITH LOGIN PASSWORD 'long-random-password-from-pwgen';
+CREATE DATABASE mybrand_prod OWNER mybrand_app;
+
+-- Verify:
+\du
+\l
+\q</code></pre>
+          <p>Generate the password locally with <code>pwgen -s 32 1</code> or <code>openssl rand -base64 24</code> — long, random, stored in your password manager. Your app will use it via an env var, never typed by hand.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Configure authentication in <code>pg_hba.conf</code></h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>What method Postgres uses to verify "who is asking"</h3>
+          <p>The default <code>pg_hba.conf</code> on Ubuntu has these meaningful lines (paraphrased):</p>
+          <pre><code># Unix socket (local pipe, not network) — peer auth (Unix user must match role)
+local   all             postgres                                peer
+local   all             all                                     peer
+
+# TCP from 127.0.0.1 — scram-sha-256 (password auth)
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256</code></pre>
+          <p>For an app on the same box connecting to <code>127.0.0.1:5432</code>, this is already correct — the app authenticates with the password from Step 3. Nothing to change.</p>
+          <p>If your app connects via Unix socket (no password) instead, change the <code>local all all peer</code> line to:</p>
+          <pre><code>local   all             mybrand_app                             scram-sha-256
+local   all             all                                     peer</code></pre>
+          <p>This says: the app role uses password auth even on Unix socket; everyone else uses peer auth. Reload Postgres after any change to this file: <code>sudo systemctl reload postgresql</code>.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>App connection string:</strong> <code>postgresql://mybrand_app:&lt;password&gt;@127.0.0.1:5432/mybrand_prod</code>. Put this in a <code>.env</code> file your app reads, not in the repo. From Node: <code>process.env.DATABASE_URL</code>; the <code>pg</code> driver parses the URL itself.
+      </div>
+
+      <h2>Step 5: Schedule backups</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>The unbackup'd database is the production database you don't have</h3>
+          <p>Daily snapshot via <code>pg_dump</code>, compressed, shipped to S3 (or any object store). Save as <code>/usr/local/bin/pg-backup.sh</code>:</p>
+          <pre><code>#!/usr/bin/env bash
+set -e
+DB=mybrand_prod
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+BACKUP_DIR=/var/backups/postgres
+S3_BUCKET=s3://mybrand-backups/postgres
+
+mkdir -p "$BACKUP_DIR"
+sudo -u postgres pg_dump -Fc "$DB" | gzip &gt; "$BACKUP_DIR/$DB-$TIMESTAMP.dump.gz"
+
+# Ship to S3. Configure AWS CLI as the deploy user first (aws configure).
+aws s3 cp "$BACKUP_DIR/$DB-$TIMESTAMP.dump.gz" "$S3_BUCKET/$DB-$TIMESTAMP.dump.gz"
+
+# Keep 14 days locally; S3 retention is set via lifecycle policy on the bucket.
+find "$BACKUP_DIR" -type f -mtime +14 -delete</code></pre>
+          <p><code>chmod +x</code> the script. Add a cron entry as the deploy user:</p>
+          <pre><code>crontab -e
+# Add:
+30 3 * * * /usr/local/bin/pg-backup.sh &gt;&gt; /var/log/pg-backup.log 2&gt;&amp;1</code></pre>
+          <p>The harder, more important second step: <strong>practice a restore</strong>. On a different box, <code>aws s3 cp</code> a recent dump back down, <code>gunzip</code>, <code>pg_restore</code>, verify the row count. A backup you've never restored is hope, not a backup.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Install Redis</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Install + set auth in the same breath</h3>
+          <pre><code>sudo apt install -y redis-server
+# Service starts automatically, bound to 127.0.0.1 by default. Good.
+
+# Set a password BEFORE doing anything else network-related.
+# Generate one:
+REDIS_PASSWORD=$(openssl rand -base64 24)
+echo "$REDIS_PASSWORD"
+# Save it to your password manager. You'll set it as an env var for the app too.</code></pre>
+          <p>Edit Redis config:</p>
+          <pre><code>sudo nano /etc/redis/redis.conf
+
+# Find and set:
+requirepass &lt;THE_PASSWORD_FROM_ABOVE&gt;
+# (Make sure there's NO # at the start of the line.)
+
+# Verify the bind line is:
+bind 127.0.0.1 -::1
+# (This is the default. Do NOT change to 0.0.0.0 unless you're absolutely
+#  sure you want Redis exposed to the network, and have the firewall + auth
+#  set up correctly.)
+
+# Disable the COMMAND command in production (optional, paranoia level):
+rename-command CONFIG ""
+rename-command FLUSHALL ""</code></pre>
+          <p>Reload:</p>
+          <pre><code>sudo systemctl restart redis-server
+redis-cli
+# Inside redis-cli:
+AUTH &lt;the password&gt;
+PING    # → PONG
+exit</code></pre>
+          <p>Connection string for your app: <code>redis://default:&lt;password&gt;@127.0.0.1:6379</code>. (<code>default</code> is the implicit username when only <code>requirepass</code> is set; if you set up Redis ACLs with named users, the username matters.)</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't expose Redis to the public internet without TLS + ACLs.</strong> A Redis on a public IP, with only <code>requirepass</code>, gets brute-forced quickly. If your app and Redis are on different boxes, use private VPC IPs, set up a SSH tunnel, or use TLS with client certs (Redis 6+). For most projects: just keep Redis on the same box as the app and bind to <code>127.0.0.1</code>.
+      </div>
+
+      <h2>Step 7: Pick a Redis persistence mode</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>RDB for snapshots, AOF for write-log, or neither for pure cache</h3>
+          <p>Redis can be used three ways, each with a different persistence story:</p>
+          <ul>
+            <li><strong>Pure cache</strong> — sessions, query caches, ephemeral data you can regenerate. Disable persistence to avoid disk overhead: <code>save ""</code> in <code>redis.conf</code>, <code>appendonly no</code>. On restart, you start with an empty Redis; the app refills it.</li>
+            <li><strong>Snapshot persistence (RDB, the default)</strong> — Redis dumps a binary snapshot to disk on a schedule. Default <code>save 3600 1 300 100 60 10000</code> means "after 1 change in an hour, 100 in 5 minutes, or 10000 in a minute, write to disk." Recovery loses anything since the last snapshot. Good for "I'd like data to survive a restart but I can tolerate losing minutes."</li>
+            <li><strong>Append-only log (AOF)</strong> — Redis writes every command to a log; on restart, replays the log. Set <code>appendonly yes</code> in <code>redis.conf</code>. Recovery loses at most 1 second of commands (default fsync policy <code>everysec</code>). Use when Redis is your primary store, not a cache.</li>
+          </ul>
+          <p>For most app caches: RDB defaults are fine; don't change anything. For session stores or queues: set <code>appendonly yes</code> too. Reload: <code>sudo systemctl restart redis-server</code>.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: Verify the whole pipeline</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>From your app, end to end</h3>
+          <pre><code># Verify Postgres connection (replace credentials):
+psql "postgresql://mybrand_app:PASSWORD@127.0.0.1:5432/mybrand_prod" -c "SELECT version();"
+
+# Verify Redis connection:
+redis-cli -a "REDIS_PASSWORD" ping    # → PONG
+
+# Verify the firewall isn't leaking (from your laptop, not the server):
+nc -zv &lt;SERVER_IP&gt; 5432    # → Connection refused (good — Postgres is not public)
+nc -zv &lt;SERVER_IP&gt; 6379    # → Connection refused (good — Redis is not public)</code></pre>
+          <p>If <code>nc</code> from your laptop <em>connects</em> to either port, something's wrong — the service is bound to <code>0.0.0.0</code> or the firewall is missing a deny rule. Fix immediately; an open Redis is exploited within hours.</p>
+        </div>
+      </div>
+
+      <h2>When to outgrow self-hosted</h2>
+      <p><strong>Your database is multi-GB and growing.</strong> Backups stop fitting in your overnight window. PITR (point-in-time recovery) starts mattering. Move Postgres to <strong>RDS</strong> (AWS), <strong>Supabase</strong> (Postgres-flavored DX), or <strong>Neon</strong> (serverless, cheap at low traffic).</p>
+      <p><strong>You need replication or failover.</strong> Setting up Postgres streaming replication or Redis Sentinel by hand is a real project. Managed instances do it as a config toggle.</p>
+      <p><strong>You're running more than one app on the same database.</strong> The single-VPS pattern stops scaling when multiple services compete for connections. Move to a dedicated managed instance; your app servers stay simple.</p>
+      <p><strong>The on-call burden hurts.</strong> If "Postgres ran out of disk at 2 AM" has happened once, it'll happen again. Managed instances handle disk auto-grow and alert proactively.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/prepare-a-fresh-linux-server-for-production.html" class="tutorial-next-card">
+            <h3>Prepare a fresh Linux server for production</h3>
+            <p>The hardening that should be done before this tutorial</p>
+          </a>
+          <a href="/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>Run a Node API on Lightsail</h3>
+            <p>The deploy story for the app that talks to these databases</p>
+          </a>
+          <a href="/tutorials/deploy-a-container-to-aws-ecs-fargate.html" class="tutorial-next-card">
+            <h3>Deploy a container to ECS Fargate</h3>
+            <p>When the app outgrows a single box, pair with managed Postgres (RDS) instead</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在分支上运行 /security-review — LingCode 教程</title>
+  <meta name="description" content="/security-review 以威胁视角审查你的分支改动，专注于身份验证、输入校验、敏感凭据、注入漏洞——这些是普通代码审查容易忽略的地方。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/run-security-review.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/run-security-review.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/run-security-review.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/run-security-review.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "在分支上运行 /security-review",
+  "description": "/security-review 是 /review 的专项版本。输入相同——你分支上的待合并改动——但视角不同：威胁面、敏感凭据、输入校验、鉴权检查。这些是普通审查因为要关注太多东西而容易略过的内容。",
+  "url": "https://lingcode.dev/zh/tutorials/run-security-review.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/run-security-review.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "在分支上运行 /security-review"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "在分支上运行 /security-review",
+      "item": "https://lingcode.dev/zh/tutorials/run-security-review.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/run-security-review.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>在分支上运行 /security-review</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>在分支上运行 /security-review</h1>
+      <p class="intro"><code>/security-review</code> 是 <code>/review</code> 的专项版本。输入相同——你分支上的待合并改动——但视角不同：威胁面、敏感凭据、输入校验、鉴权检查。这些是普通审查因为要关注太多东西而容易略过的内容。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>代码中的安全问题有一个特性，使它们在常规审查中格外难以发现：它们看起来<em>并没有错</em>。不安全的 SQL 字符串拼接能正常解析，未经鉴权的端点能编译通过、测试也通过，硬编码的 API 密钥在生产环境正常运行——直到泄漏那天。懂得该看什么的审查者能发现这些问题；而疲惫不堪、已经看了七个 PR、只想确认整体正确性的审查者则会直接略过。</p>
+      <p>通用的审查提示词会对所有方面求平均。它能发现一些安全问题，但并不稳定。专项安全审查会引导模型用特定视角扫描——"外部输入在哪里进入代码，使用前是否经过校验？"——这一转变就改变了能发现什么。同一个智能体，同一个 diff，同一份代码，结果却大不相同。</p>
+      <p><code>/security-review</code> 技能正是这样的提示词。它针对分支上的待合并改动（尚未合并到基础分支的所有内容）运行，按严重程度对发现的问题进行分类，并告诉你哪些必须在发布前修复，哪些属于"要不要开个 ticket"的级别。凡是涉及公开接口、处理敏感凭据或跨信任边界传输数据的改动，在合并前都应该跑一遍。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li><code>/security-review</code> 检查哪些类别的问题</li>
+        <li>如何在当前分支上运行它</li>
+        <li>严重程度是如何划分的，各等级意味着什么</li>
+        <li>后续跟进：从发现问题到修复问题</li>
+        <li>它能做什么，真正的安全审计从哪里开始</li>
+      </ul>
+
+      <h2>第一步：在功能分支上运行</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>一条命令，范围限于当前分支</h3>
+          <p>切换到你想审查的分支，在聊天面板中输入：</p>
+          <pre><code>/security-review</code></pre>
+          <p>智能体会对比基础分支（通常是 <code>main</code>）做 diff，读取每个变更文件及足够的上下文来理解改动，然后逐项检查安全清单。输出是一份结构化的问题列表，按严重程度排序。</p>
+          <p>与 <code>/review</code> 不同，这个命令专门忽略代码风格和大多数通用 bug——它只用一个视角审查<em>你的改动</em>，而不是从所有角度审查。</p>
+        </div>
+      </div>
+
+      <h2>第二步：了解检查的内容</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>六大类别</h3>
+          <p>审查（大致）覆盖以下类别：</p>
+          <ul>
+            <li><strong>输入处理</strong> — 外部输入在哪里进入系统？使用前是否经过校验？SQL 查询是用参数化方式还是字符串拼接构建的？文件路径是否检查了路径穿越？</li>
+            <li><strong>鉴权与授权</strong> — 新端点、现有端点上的新操作。该要求鉴权的地方是否有鉴权？是否检查了角色和权限范围？</li>
+            <li><strong>敏感凭据</strong> — 硬编码的密钥、令牌、密码、内部 URL；日志中打印了凭据；提交了含有敏感信息的配置文件。</li>
+            <li><strong>注入面</strong> — SQL、Shell、模板引擎。任何用户输入被拼接到会被执行或解释的内容中的地方。</li>
+            <li><strong>加密与随机性</strong> — 使用了不安全算法（将 MD5 用于安全用途、ECB 模式等），在需要 CSPRNG 的地方使用了 <code>Math.random()</code>。</li>
+            <li><strong>数据泄露</strong> — 端点返回的用户数据超出调用方应有的权限；错误信息泄露了实现细节。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第三步：仔细阅读严重程度</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>三个等级，只有前两个会阻止发布</h3>
+          <p>问题按严重程度标记：</p>
+          <ul>
+            <li><strong>高</strong> — 可被利用，且存在合理的攻击路径。修复前不得合并。示例：来自用户输入的 SQL 注入、返回用户数据的未鉴权端点、硬编码的生产环境凭据。</li>
+            <li><strong>中</strong> — 有隐患但影响范围有限。尽量在本 PR 内修复；无法修复则开 ticket 跟进。示例：密码强度要求过弱、敏感端点缺少限流、Cookie 属性不安全。</li>
+            <li><strong>低</strong> — 纵深防御类。值得最终修复，但不构成阻塞。示例：日志输出略微冗余、响应中缺少某个目前不会泄露信息的 header。</li>
+          </ul>
+          <p>不要因为不是"高"就忽视"中"级问题。现实中大多数安全事故都是从若干"中"级问题叠加开始的。</p>
+        </div>
+      </div>
+
+      <h2>第四步：对每个问题进行跟进</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>请智能体给出修复方案</h3>
+          <p>针对每个发现的问题，下一步的提示词通常是以下几种变体之一：</p>
+          <ul>
+            <li>"Show me the unsafe code." — 智能体会引用对应代码行并展示上下文。</li>
+            <li>"Propose a fix." — 智能体建议修改方案。</li>
+            <li>"Apply the fix." — 智能体直接进行修改（受你当前<a href="/zh/tutorials/permission-modes.html">权限模式</a>约束）。</li>
+            <li>"Add a test that would catch this regression." — 智能体专门针对它标记的问题编写测试。</li>
+          </ul>
+          <p>最后一条价值极高。修复了漏洞但没有配套测试，迟早会回归。将测试与修复绑定，能有效防止这种情况。</p>
+        </div>
+      </div>
+
+      <h2>第五步：处理误报</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>部分发现是误报，告诉智能体原因</h3>
+          <p>静态安全审查总会有误报。智能体可能看到一个 SQL 查询，<em>看起来</em>像字符串拼接，但实际上是通过它不认识的封装使用了参数化 API；也可能把"缺少鉴权检查"标在一个已被上层中间件保护的端点上。</p>
+          <p>如果你不认同，直接说明："This is fine because <code>queryWithBind</code> is parameterized — see <code>db/helpers.ts</code>."智能体会修正判断。如果误报是结构性的（代码库中有一种模式让智能体反复误读），可以在 <a href="/zh/tutorials/generate-a-claude-md-with-init.html">CLAUDE.md</a> 中加一条说明："We use <code>queryWithBind</code> for safe parameterized queries — it's not concatenation."</p>
+        </div>
+      </div>
+
+      <h2>第六步：它的边界，以及真正审计从哪里开始</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>这是一份清单，不是审计</h3>
+          <p><code>/security-review</code> 能发现一个有用的子集——那种出现在代码中、出现在这个 diff 里、具备安全背景的细心审查者同样会发现的问题。它做不到的是：</p>
+          <ul>
+            <li><strong>架构审查。</strong>"这套鉴权方案整体上是否合理？"——这是真正审计才能回答的问题，不是 diff 扫描。</li>
+            <li><strong>密码学协议审查。</strong>来自数学层面的问题，而非代码层面。</li>
+            <li><strong>威胁建模。</strong>你该关注哪类攻击者？哪些资产最重要？<code>/security-review</code> 假设的是通用威胁；高风险系统需要专门的威胁模型。</li>
+            <li><strong>依赖分析。</strong>CVE 追踪、SBOM、许可证问题——这些需要专用工具（Dependabot、Snyk 等）。</li>
+          </ul>
+          <p>对于安全失误代价高昂的系统（支付、身份、基础设施），将 <code>/security-review</code> 与定期的人工审计结合使用。智能体是下限，人工是上限。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>如果发现描述的是未修复的问题，不要将其粘贴到公开 ticket 中。</strong>"我们结账流程里有一个 SQL 注入"这类信息，应该只让负责修复的人看到。先私下分类处理；修复完成后再开公开 ticket。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/review-pull-requests-with-review.html" class="tutorial-next-card">
+            <h3>使用 /review 审查 Pull Request</h3>
+            <p>通用审查技能，与安全审查配合使用</p>
+          </a>
+          <a href="/zh/tutorials/add-custom-hooks.html" class="tutorial-next-card">
+            <h3>添加自定义钩子</h3>
+            <p>对于"永不记录 API 密钥"等规则，将其编写为智能体无法绕过的钩子</p>
+          </a>
+          <a href="/zh/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>权限模式</h3>
+            <p>在计划模式下运行 /security-review 以进行严格的只读扫描</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要发布产品的创始人和想要真正趁手工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五研讨会</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演讲</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

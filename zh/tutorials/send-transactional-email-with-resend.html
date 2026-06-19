@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 Resend 发送事务性邮件 — LingCode 教程</title>
+  <meta name="description" content="Resend 是面向开发者的电子邮件 API——SDK 轻巧、免费额度慷慨、支持现代 HTML 模板。本教程带你完成配置、跳过验证坑点，并避免邮件落入垃圾箱。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/send-transactional-email-with-resend.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/send-transactional-email-with-resend.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/send-transactional-email-with-resend.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/send-transactional-email-with-resend.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Resend 发送事务性邮件",
+  "description": "Resend 是面向开发者的电子邮件 API——SDK 轻巧、免费额度慷慨、支持真正的 HTML 模板。配置过程约需十分钟，耗时最长的是为域名配置 DNS 记录，而不是写代码。",
+  "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-resend.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-resend.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 Resend 发送事务性邮件"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "使用 Resend 发送事务性邮件",
+      "item": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-resend.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/send-transactional-email-with-resend.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>使用 Resend 发送事务性邮件</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 Resend 发送事务性邮件</h1>
+      <p class="intro">Resend 是面向开发者的电子邮件 API——SDK 轻巧、免费额度慷慨、支持真正的 HTML 模板。只要你接受"最慢的步骤是配置域名 DNS，而不是写代码"这个现实，整个配置过程十分钟就能搞定。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>从 Web 应用发送邮件，看起来简单，真正做起来才知道坑在哪里。你写一个小函数，向邮件服务商的 API 发起 POST 请求，测试邮件顺利发出，还落进了 Gmail 收件箱——大功告成。然后流量进入生产环境，邮件开始落进垃圾箱，甚至直接被收件服务器拒绝。代码没有任何改动，问题根本不在代码。</p>
+      <p>邮件送达率主要取决于三条 DNS 记录——SPF、DKIM 和 DMARC——它们告诉收件服务器："是的，这个服务商有权代表这个域名发送邮件，以下是验证方式。"没有这些记录，现代收件方（Gmail、Apple Mail、Outlook）轻则把你的邮件扔进垃圾箱，重则直接拒收。配置这些记录之所以麻烦，是因为它们必须挂在你<em>实际用于发件</em>的域名上，也就是说要去域名注册商那里改 DNS，然后等待生效。</p>
+      <p>Resend 的价值主张是"让这整套流程变得最简单"。仪表板会明确告诉你要添加哪些 DNS 记录，并自动验证。SDK 轻量好用。免费套餐（每月 3,000 封、每日 100 封）足以应对几乎所有独立项目。它的 HTML 邮件模板基于 React 组件，这在邮件服务领域颇为少见，比拖拽 WYSIWYG 编辑器舒服得多。本教程涵盖完整的配置流程；核心原则同样适用于其他现代邮件服务商（Postmark、SendGrid、Loops 等），只是具体操作以 Resend 为准。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>为什么 DNS 配置才是最耗时的步骤（以及每条记录的作用）</li>
+        <li>创建 Resend 账号并验证域名</li>
+        <li>用 SDK 发送第一封邮件</li>
+        <li>用 React Email 制作邮件模板</li>
+        <li>邮件落入垃圾箱时怎么排查</li>
+      </ul>
+
+      <h2>第一步：确定发件域名</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>用你自己的域名</h3>
+          <p>邮件应该从你拥有的域名发出——<code>hello@yourapp.com</code>，而不是 <code>yourapp@gmail.com</code>。原因有两个：</p>
+          <ul>
+            <li><strong>信任感。</strong>收件人看到的是"来自你的真实品牌"，而不是"来自一个任何人都能注册的免费邮箱"。</li>
+            <li><strong>送达率。</strong>自己掌控的域名可以配置 SPF/DKIM/DMARC 记录；免费邮箱地址做不到这一点。</li>
+          </ul>
+          <p>还没有域名的话，请参阅<a href="/zh/tutorials/buy-a-domain-from-cloudflare.html">域名注册教程</a>。你也可以使用专门用于事务邮件的子域名——比如 <code>mail.yourapp.com</code> 或 <code>notifications.yourapp.com</code>——这是个好习惯，因为它能将发件信誉与根域名上的其他业务隔离开来。</p>
+        </div>
+      </div>
+
+      <h2>第二步：创建 Resend 账号</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>在 resend.com 注册</h3>
+          <p>注册账号。免费套餐提供每月 3,000 封、每日 100 封的发送量，发件地址是共享的 <code>onboarding@resend.dev</code>。这足够用来测试 SDK，但不适合对外发给真实用户——因为 <code>resend.dev</code> 发出的邮件看起来不像是来自你的品牌，收件人可能会产生疑虑。</p>
+          <p>要用自己的域名发件，就需要先添加并验证域名，这就是下一步的内容。</p>
+        </div>
+      </div>
+
+      <h2>第三步：在仪表板中添加域名</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Resend → Domains → Add Domain</h3>
+          <p>点击 <strong>Add Domain</strong>，输入你要用于发件的域名（或子域名），点击 <strong>Add</strong>。Resend 会列出需要添加的 DNS 记录，通常有 3 到 5 条：一条 SPF、两到三条 DKIM（取决于配置）、可选的 DMARC，以及一条 MX 记录（如果你希望退信通知也通过 Resend 接收的话）。</p>
+          <p>这些记录看起来有些复杂，但你不需要理解背后的密码学原理——只需逐条原样复制到你的 DNS 服务商即可。</p>
+        </div>
+      </div>
+
+      <h2>第四步：在 DNS 服务商处添加记录</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>严格按照 Resend 的说明操作</h3>
+          <p>对于 Resend 列出的每条记录，前往你的 DNS 服务商（如需了解 DNS 操作，请参阅 <a href="/zh/tutorials/connect-domain-to-server-with-dns.html">DNS 教程</a>），依次添加：</p>
+          <ul>
+            <li><strong>类型（Type）：</strong>与 Resend 显示的一致（TXT、CNAME、MX 等）。</li>
+            <li><strong>名称/主机（Name/Host）：</strong>完全一致。不同服务商格式略有差异，有的只需填 <code>resend</code>，有的需要填 <code>resend.yourdomain.com</code>，保持一致即可。</li>
+            <li><strong>值（Value）：</strong>原样粘贴，注意不要有多余空格——DNS 的值是精确字符串。</li>
+            <li><strong>TTL：</strong>默认值即可。</li>
+          </ul>
+          <p>全部添加完成后，在 Resend 中点击 <strong>Verify DNS Records</strong>。DNS 生效可能需要几分钟到几小时不等。Resend 会自动定期重新检查，所有记录解析正常后会显示"已验证"状态。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>每条记录的实际作用：</strong>SPF（TXT 记录）声明哪些邮件服务器有权代表你的域名发送邮件。DKIM（TXT 或 CNAME）是一种加密签名，证明邮件确实来自这些服务器且未被篡改。DMARC（<code>_dmarc</code> 处的 TXT）告诉收件方，当 SPF 或 DKIM 验证失败时该怎么办——隔离、拒绝，还是仅上报。三者合力，构成现代邮件"这封邮件是合法的"的完整握手机制。
+      </div>
+
+      <h2>第五步：获取 API 密钥</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Resend → API Keys → Create</h3>
+          <p>点击 <strong>Create API Key</strong>，为密钥命名（例如"production"），选择权限（通常选 <em>Sending access</em>——限制权限比完全访问更安全）。复制密钥（<code>re_…</code>），它只显示这一次。</p>
+          <p>将其写入后端的环境文件：<code>RESEND_API_KEY=re_…</code>。和往常一样，不要提交到 git。</p>
+        </div>
+      </div>
+
+      <h2>第六步：发送第一封邮件</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>SDK 调用方式</h3>
+          <p>在项目中安装 SDK：</p>
+          <pre><code>npm install resend
+# or: pip install resend, or: gem install resend</code></pre>
+          <p>发送一封测试邮件：</p>
+          <pre><code>import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+await resend.emails.send({
+  from: 'You &lt;hello@yourdomain.com&gt;',
+  to: ['recipient@example.com'],
+  subject: 'Hello from Resend',
+  html: '&lt;p&gt;This is the body of the email.&lt;/p&gt;',
+});</code></pre>
+          <p>查看收件箱。如果邮件到达，说明配置成功。如果没有收到，打开 Resend 仪表板的 <strong>Emails</strong> 日志——它记录了每次发送尝试及其状态（已送达、退信、进入垃圾箱等）以及接收方的响应信息。</p>
+        </div>
+      </div>
+
+      <h2>第七步：用 React Email 制作真正的模板</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>或者直接用你喜欢的 HTML</h3>
+          <p>对于一次性邮件，直接写 HTML 字符串完全够用。但对于需要反复发送的内容（欢迎邮件、收据、密码重置），使用模板会更省心。Resend 官方推荐的方案是 <strong>React Email</strong>——把邮件写成 React 组件，发送时渲染为 HTML。</p>
+          <pre><code>import { Resend } from 'resend';
+import { ReceiptEmail } from './emails/Receipt';
+
+await resend.emails.send({
+  from: 'Receipts &lt;receipts@yourdomain.com&gt;',
+  to: customer.email,
+  subject: `Receipt for $${amount}`,
+  react: ReceiptEmail({ customerName: customer.name, amount, items }),
+});</code></pre>
+          <p>React Email 组件提供了邮件安全的原生元素（<code>&lt;Container&gt;</code>、<code>&lt;Text&gt;</code>、<code>&lt;Button&gt;</code>），最终渲染为邮件客户端所要求的基于表格的 HTML。你写现代 JSX，库来处理那些复古的底层标记。</p>
+        </div>
+      </div>
+
+      <h2>第八步：邮件落入垃圾箱时怎么办</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>送达率排查清单</h3>
+          <p>邮件进垃圾箱，通常是以下原因之一：</p>
+          <ul>
+            <li><strong>DNS 记录未完全验证。</strong>检查 Resend 仪表板。可能部分记录已生效，部分还没有。所有记录都必须变为绿色。</li>
+            <li><strong>发件域名与 DKIM 域名不一致。</strong>如果你为 <code>mail.yourdomain.com</code> 配置了 DKIM，却从 <code>hello@yourdomain.com</code> 发件，DKIM 签名无法授权这个 From 地址。要么改为从 <code>hello@mail.yourdomain.com</code> 发件，要么为根域名单独配置 DKIM。</li>
+            <li><strong>邮件内容看起来像垃圾邮件。</strong>全大写、大量"FREE!!!"、过多 emoji、可疑的链接模式。用 <code>mail-tester.com</code> 测试——它会给出评分并解释扣分原因。</li>
+            <li><strong>域名太新、发送量太大。</strong>新域名没有发件信誉，邮件服务商会保持警惕，直到你持续发出看起来正常的邮件一到两周。发送量要循序渐进地提升。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>永远不要用事务邮件账号发送营销邮件。</strong>Resend 的服务条款（以及类似服务商）明确规定，事务邮件套餐仅用于非营销邮件——收据、密码重置、安全提醒、系统通知。用事务账号发送订阅通讯可能导致账号被封禁。营销邮件请使用专门的平台（Loops、Customer.io、ConvertKit）。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/set-up-stripe-webhooks.html" class="tutorial-next-card">
+            <h3>配置 Stripe Webhooks</h3>
+            <p>天然的配套——Webhook 触发后，用 Resend 发送收据</p>
+          </a>
+          <a href="/zh/tutorials/set-up-stripe-api-keys.html" class="tutorial-next-card">
+            <h3>配置 Stripe API 密钥</h3>
+            <p>还没配置 Stripe？从这里开始</p>
+          </a>
+          <a href="/zh/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>通过 DNS 将域名连接到服务器</h3>
+            <p>邮件记录所在的 DNS 层</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">投资介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

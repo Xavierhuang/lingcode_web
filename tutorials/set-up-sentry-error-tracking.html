@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set up Sentry error tracking — LingCode Tutorials</title>
+  <meta name="description" content="Add Sentry to your app to catch errors in production. Sign up, install the SDK, initialize with the DSN, ship. Every download link in one place.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-sentry-error-tracking.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Set up Sentry error tracking",
+  "description": "Catch errors in production before users have to tell you. Sign up, install the SDK, paste a DSN, ship. Five minutes for a usable setup; another fifteen for source maps and releases.",
+  "url": "https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Create a project",
+      "url": "https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Install the SDK (Node example)",
+      "url": "https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Send a test error",
+      "url": "https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Upload source maps (for readable stack traces in JS)",
+      "url": "https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Set up alerts",
+      "url": "https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html#step-5"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Set up Sentry error tracking",
+      "item": "https://lingcode.dev/tutorials/set-up-sentry-error-tracking.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/set-up-sentry-error-tracking.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Backend integrations</a>
+      <span>/</span>
+      <span>Set up Sentry error tracking</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Set up Sentry error tracking</h1>
+      <p class="intro">Catch errors in production before users have to tell you. Sign up, install the SDK, paste a DSN, ship. Five minutes for a usable setup; another fifteen for source maps and releases.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>What you need</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>A Sentry account</strong> — <a href="https://sentry.io/signup/" target="_blank" rel="noopener">Sign up at sentry.io ↗</a>. Free tier covers 5K events/month + 10K replays — plenty for a side project or small SaaS.</li>
+            <li><strong>Your app's runtime</strong> — Sentry has SDKs for almost every platform. Common ones:
+              <ul>
+                <li><a href="https://docs.sentry.io/platforms/javascript/" target="_blank" rel="noopener">Browser JavaScript ↗</a></li>
+                <li><a href="https://docs.sentry.io/platforms/javascript/guides/node/" target="_blank" rel="noopener">Node.js / Express ↗</a></li>
+                <li><a href="https://docs.sentry.io/platforms/javascript/guides/nextjs/" target="_blank" rel="noopener">Next.js ↗</a></li>
+                <li><a href="https://docs.sentry.io/platforms/python/" target="_blank" rel="noopener">Python (Django / Flask / FastAPI) ↗</a></li>
+                <li><a href="https://docs.sentry.io/platforms/apple/" target="_blank" rel="noopener">Swift / iOS / macOS ↗</a></li>
+                <li><a href="https://docs.sentry.io/platforms/android/" target="_blank" rel="noopener">Android (Kotlin / Java) ↗</a></li>
+                <li><a href="https://docs.sentry.io/platforms/react-native/" target="_blank" rel="noopener">React Native ↗</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Create a project</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>In <a href="https://sentry.io/" target="_blank" rel="noopener">sentry.io ↗</a>, click <strong>Projects → Create Project</strong>. Pick your platform (e.g., "Node.js", "Next.js"). Name it. Click <strong>Create Project</strong>.</p>
+          <p>Sentry shows you the <strong>DSN</strong> — a URL that looks like:</p>
+          <pre><code>https://abc123def456@o12345.ingest.us.sentry.io/678901</code></pre>
+          <p>Copy it. Store in your backend env:</p>
+          <pre><code>SENTRY_DSN=https://abc123def456@o12345.ingest.us.sentry.io/678901</code></pre>
+          <p>The DSN is not secret in the way an API key is — it's safe in client-side bundles — but treat it as configuration.</p>
+        </div>
+      </div>
+
+      <h2>Install the SDK (Node example)</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <pre><code>npm install --save @sentry/node</code></pre>
+          <p>Other runtimes: <code>npm install @sentry/react</code>, <code>pip install --upgrade sentry-sdk</code>, etc. Check the platform-specific page from Step 0.</p>
+        </div>
+      </div>
+
+      <h2>Initialize as early as possible</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Initialize Sentry before your app does anything else. In Node, that's the very first line of your entrypoint:</p>
+          <pre><code>// Must be the FIRST import in your app's entry file
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: 1.0,   // 100% perf monitoring while you're learning; lower later
+  environment: process.env.NODE_ENV || "development",
+});
+
+// ... rest of your app</code></pre>
+          <p>For browser JS / Next.js / Python, the shape is the same: <code>Sentry.init({ dsn: ..., ... })</code>, called once at startup. Each platform's docs (Step 0) shows where exactly.</p>
+        </div>
+      </div>
+
+      <h2>Send a test error</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Throw something on purpose to confirm Sentry is wired up:</p>
+          <pre><code>Sentry.captureException(new Error("Sentry test from my app"));</code></pre>
+          <p>Or trigger an actual uncaught error — Sentry installs global handlers automatically, so any uncaught exception or unhandled promise rejection is reported without you doing anything.</p>
+          <p>Go to <a href="https://sentry.io/issues/" target="_blank" rel="noopener">sentry.io → Issues ↗</a>. Your test error should appear within a few seconds. Click it to see the stack trace, request context, breadcrumbs.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>If the error doesn't show up:</strong> check <a href="https://sentry.io/settings/account/api/" target="_blank" rel="noopener">Sentry → Settings → Quotas ↗</a> (you might have already used your free tier elsewhere) and confirm the DSN matches the project you're viewing. SDK init silently no-ops on a bad DSN.
+      </div>
+
+      <h2>Track releases (so you know which version broke)</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Pass your app's version to Sentry. Now every error is tagged with which release it came from — you can see "this bug appeared in 1.4.2."</p>
+          <pre><code>Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  release: "myapp@" + process.env.APP_VERSION,  // e.g. myapp@1.4.2
+  environment: process.env.NODE_ENV,
+});</code></pre>
+          <p>Combine with the <a href="https://docs.sentry.io/product/cli/" target="_blank" rel="noopener">Sentry CLI ↗</a> in your deploy pipeline to create release records:</p>
+          <pre><code>sentry-cli releases new "myapp@$APP_VERSION"
+sentry-cli releases finalize "myapp@$APP_VERSION"</code></pre>
+        </div>
+      </div>
+
+      <h2>Upload source maps (for readable stack traces in JS)</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Production JS is minified. Without source maps, your Sentry stack traces look like <code>a.b.c at e.min.js:1:1234</code> — useless.</p>
+          <p>The official wizards do this for you:</p>
+          <pre><code># Next.js
+npx @sentry/wizard@latest -i nextjs
+
+# React (Vite)
+npx @sentry/wizard@latest -i sourcemaps</code></pre>
+          <p>Or manually with <a href="https://docs.sentry.io/cli/releases/#sentry-cli-sourcemaps" target="_blank" rel="noopener">sentry-cli sourcemaps ↗</a>. Native iOS/Android: the SDKs handle dSYMs / mapping files automatically via Gradle/CocoaPods plugins.</p>
+        </div>
+      </div>
+
+      <h2>Filter what you don't want to track</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Once errors start flowing, you'll see noise (Chrome extension errors, expected validation errors, dev-mode bugs). Filter:</p>
+          <pre><code>Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  beforeSend(event, hint) {
+    // Skip dev errors
+    if (process.env.NODE_ENV === "development") return null;
+    // Skip known noise
+    const err = hint.originalException;
+    if (err &amp;&amp; err.message &amp;&amp; err.message.includes("ResizeObserver loop")) {
+      return null;
+    }
+    return event;
+  },
+  ignoreErrors: [
+    "ResizeObserver loop limit exceeded",
+    /^Network request failed$/,
+  ],
+});</code></pre>
+          <p>Each ignored pattern saves event quota and reduces alert noise. Tune over time.</p>
+        </div>
+      </div>
+
+      <h2>Set up alerts</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Default project settings already email you on new issues. To configure:</p>
+          <p>Sentry → your project → <strong>Alerts → Create Alert</strong>. Common rules:</p>
+          <ul>
+            <li><strong>Spike alert</strong> — fires when a single issue's event count exceeds a threshold (e.g., 100 events in 1 hour).</li>
+            <li><strong>New issue alert</strong> — fires when a new error type appears in production.</li>
+            <li><strong>Regression alert</strong> — fires when a previously-resolved issue reappears in a newer release.</li>
+          </ul>
+          <p>Route to Slack / PagerDuty / email via the alert integrations. <a href="https://docs.sentry.io/product/alerts/" target="_blank" rel="noopener">Alerts docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>What's in an issue page</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Click any issue in the dashboard:</p>
+          <ul>
+            <li><strong>Stack trace</strong> with code context (the surrounding lines, not just file:line).</li>
+            <li><strong>Breadcrumbs</strong> — the last N user/system events before the error (clicks, network requests, console logs).</li>
+            <li><strong>Tags</strong> — environment, release, OS, browser, user ID.</li>
+            <li><strong>Affected users</strong> — distinct user count (anonymous or identified).</li>
+            <li><strong>Session Replay</strong> (if enabled) — actual video-like replay of what the user did before the error. <a href="https://docs.sentry.io/product/explore/session-replay/" target="_blank" rel="noopener">Session Replay ↗</a>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't log PII to Sentry.</strong> Stack traces are fine; passwords, full credit cards, government IDs in error messages are not. Use <code>beforeSend</code> to scrub, or set <code>sendDefaultPii: false</code> (the default). <a href="https://docs.sentry.io/platforms/javascript/data-management/sensitive-data/" target="_blank" rel="noopener">Sensitive data docs ↗</a>.
+      </div>
+
+      <h2>Pricing reality check</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>Free tier: 5,000 errors + 10,000 performance events + 50 replays per month. Real production apps hit this fast if you have any uncaught error in a hot loop.</p>
+          <p>Paid tiers start around $26/mo for Team. Worth it once your app has real users. <a href="https://sentry.io/pricing/" target="_blank" rel="noopener">Sentry pricing ↗</a>.</p>
+          <p>Self-hosted alternative: Sentry's source is open. You can <a href="https://develop.sentry.dev/self-hosted/" target="_blank" rel="noopener">self-host ↗</a>, but the operational burden is real (Docker Compose, ClickHouse, Postgres, Redis). Most people don't.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://docs.sentry.io/" target="_blank" rel="noopener">Sentry docs ↗</a></li>
+        <li><a href="https://docs.sentry.io/platforms/" target="_blank" rel="noopener">All platform SDKs ↗</a></li>
+        <li><a href="https://docs.sentry.io/product/releases/" target="_blank" rel="noopener">Releases &amp; deploys ↗</a></li>
+        <li><a href="https://docs.sentry.io/cli/" target="_blank" rel="noopener">Sentry CLI ↗</a></li>
+        <li><a href="https://docs.sentry.io/product/explore/session-replay/" target="_blank" rel="noopener">Session Replay ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-stripe-webhooks.html" class="tutorial-next-card">
+            <h3>Set up Stripe webhooks</h3>
+            <p>Wrap your webhook handler in Sentry's instrumentation to catch payment errors</p>
+          </a>
+          <a href="/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>Sign in with Google (OAuth)</h3>
+            <p>Identify users in Sentry by their account, not just an anonymous session</p>
+          </a>
+          <a href="/tutorials/redeploy-a-website.html" class="tutorial-next-card">
+            <h3>Redeploy a website</h3>
+            <p>Tie Sentry releases to your deploys so errors are tagged with the version that introduced them</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy a server from AWS EC2 — LingCode Tutorials</title>
+  <meta name="description" content="EC2 is AWS's virtual server product — the biggest, most flexible, most complex of any VPS. When you need EC2; when you don't; and how to launch one without the bill surprising you.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/buy-a-server-from-aws-ec2.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/buy-a-server-from-aws-ec2.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/buy-a-server-from-aws-ec2.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/buy-a-server-from-aws-ec2.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Buy a server from AWS EC2",
+  "description": "EC2 is the most powerful, most flexible, most expensive, and most complicated way to rent a Linux server. If your reason for being on AWS isn't already obvious, it isn't EC2. If it is — IAM, VPCs, ALBs, S3, the rest of the AWS ecosystem — EC2 is how you compute alongside all of t",
+  "url": "https://lingcode.dev/tutorials/buy-a-server-from-aws-ec2.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/buy-a-server-from-aws-ec2.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Buy a server from AWS EC2"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Buy a server from AWS EC2",
+      "item": "https://lingcode.dev/tutorials/buy-a-server-from-aws-ec2.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/buy-a-server-from-aws-ec2.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Buy a server from AWS EC2</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Buy a server from AWS EC2</h1>
+      <p class="intro">EC2 is the most powerful, most flexible, most expensive, and most complicated way to rent a Linux server. If your reason for being on AWS isn't already obvious, it isn't EC2. If it is — IAM, VPCs, ALBs, S3, the rest of the AWS ecosystem — EC2 is how you compute alongside all of them.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Almost every developer who buys their first AWS server pays AWS more than they expected. Sometimes a lot more. The reason is that EC2 prices are not the bill — the bill is the EC2 instance plus its EBS volume plus its EIP if attached plus its data transfer plus its CloudWatch metrics plus any NAT Gateway it talks through. Each line item is reasonable in isolation; together they make AWS look two to four times more expensive than a same-shaped DigitalOcean droplet. The headline "$5 droplet vs. $4 t3.micro" comparison is misleading because the t3.micro doesn't include a public IP, doesn't include enough storage, and accrues bandwidth charges where DigitalOcean has a generous included allowance.</p>
+      <p>The honest reason to use EC2 is that you're already deeply on AWS. Your code needs IAM roles to talk to S3 or DynamoDB. You're behind an Application Load Balancer. You're using AWS-native managed databases. You have a CloudFormation or CDK or Terraform stack that already expects EC2. None of these are wrong — and in those contexts EC2 is excellent. For a single small project that doesn't need any of that, you'd be better served at DigitalOcean or Hetzner.</p>
+      <p>This tutorial walks the launch flow, points out the line items that pad the bill, and explains the AWS-specific concepts (AMI, security group, key pair, EBS) that make EC2 different from every other VPS in this guide. We won't sugar-coat the complexity; we'll just give you the path through it.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The AWS-specific vocabulary: AMI, instance type, security group, EBS, EIP</li>
+        <li>Free tier vs. real billing — which gives you what for how long</li>
+        <li>Launching a t3.micro the right way</li>
+        <li>The bill components you'll actually pay</li>
+        <li>When to skip EC2 entirely</li>
+      </ul>
+
+      <h2>Step 1: Decide if EC2 is the right answer</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Three good reasons; otherwise pick elsewhere</h3>
+          <p>You probably want EC2 if any of these are true:</p>
+          <ul>
+            <li><strong>You need IAM roles on the instance</strong> to talk to other AWS services. Putting AWS keys in env vars is fine for development; for production, roles attached to the instance are the right pattern.</li>
+            <li><strong>You're already on AWS for other reasons</strong> — using S3 / RDS / SQS / etc. The data-transfer math gets better when the EC2 talks to AWS services in the same region.</li>
+            <li><strong>You need very specific compute</strong> (GPUs, ARM Graviton at scale, lots of memory, EBS-optimized I/O). AWS's instance type catalog has shapes the indie VPSs don't.</li>
+          </ul>
+          <p>If none of these apply, <a href="/tutorials/buy-a-server-from-digitalocean.html">DigitalOcean</a> or <a href="/tutorials/buy-a-server-from-hetzner.html">Hetzner</a> is cheaper, simpler, and faster to onboard.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Learn the vocabulary</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>What each AWS term means</h3>
+          <ul>
+            <li><strong>AMI (Amazon Machine Image).</strong> The OS image. "Ubuntu 24.04 LTS" is an AMI; AWS publishes one per region. You can also make your own.</li>
+            <li><strong>Instance type.</strong> The VM shape — <code>t3.micro</code> (1 vCPU / 1 GB, burstable), <code>t3.small</code> (1 vCPU / 2 GB), up through massive enterprise sizes. The <code>t</code> family is general-purpose burstable; <code>m</code> is balanced; <code>c</code> is compute-optimized; <code>r</code> is memory-optimized.</li>
+            <li><strong>Security group.</strong> A virtual firewall attached to the instance. You define allowed inbound/outbound rules. Default-deny inbound.</li>
+            <li><strong>Key pair.</strong> AWS-managed SSH key. You generate or upload one before launching; it's installed on the instance at boot.</li>
+            <li><strong>EBS volume.</strong> The persistent disk. Default is a small root volume; you can attach more. EBS bills per GB-month independently of the instance.</li>
+            <li><strong>EIP (Elastic IP).</strong> A static public IPv4 that survives instance stop/start. Free while attached to a running instance; <strong>billable when detached or unattached</strong> — this is the most common "I forgot about that" line item.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 3: Launch a t3.micro</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>From the EC2 console</h3>
+          <p>In the AWS console, open EC2. Click <strong>Launch instances</strong>. Configure:</p>
+          <ul>
+            <li><strong>Name:</strong> something memorable.</li>
+            <li><strong>AMI:</strong> "Ubuntu Server 24.04 LTS." Filter to Free Tier eligible if you want.</li>
+            <li><strong>Instance type:</strong> <code>t3.micro</code> for general use, or <code>t4g.micro</code> for ARM (Graviton) — slightly cheaper, same shape.</li>
+            <li><strong>Key pair:</strong> create a new one or pick an existing. If creating, download the .pem file — you only get it once.</li>
+            <li><strong>Network settings:</strong> default VPC, "Allow SSH from anywhere" (or better, "Allow SSH from My IP"). For HTTP/HTTPS web servers, also allow ports 80/443.</li>
+            <li><strong>Configure storage:</strong> 8 GB is the default; bump to 20 GB if you'll need it. The first 30 GB is free under the AWS Free Tier for 12 months.</li>
+          </ul>
+          <p>Click <strong>Launch instance</strong>. Wait a minute. The instance enters "running" state and gets a public IPv4.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>The default public IPv4 changes on stop/start.</strong> If you stop the instance (not just reboot) and start it again, the IP changes. For anything pointed at by DNS, attach an Elastic IP — but only attach it while the instance is running, or you'll be billed for the unattached EIP.
+      </div>
+
+      <h2>Step 4: SSH in</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Use the key pair you downloaded</h3>
+          <pre><code># If you downloaded the .pem file, chmod it
+chmod 600 ~/Downloads/my-key.pem
+
+# Connect (default user for Ubuntu AMIs is 'ubuntu')
+ssh -i ~/Downloads/my-key.pem ubuntu@&lt;public-ip&gt;</code></pre>
+          <p>You're now on the instance as the <code>ubuntu</code> user, which has sudo. Different AMIs have different default users: <code>ec2-user</code> for Amazon Linux, <code>admin</code> for Debian, <code>centos</code> for older CentOS, etc.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Hardening — mostly the same</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Standard Ubuntu hygiene</h3>
+          <pre><code>sudo apt update &amp;&amp; sudo apt upgrade -y
+
+# Optional: create a non-default user (the 'ubuntu' user is fine for most projects)
+sudo adduser deploy
+sudo usermod -aG sudo deploy
+sudo rsync --archive --chown=deploy:deploy /home/ubuntu/.ssh /home/deploy</code></pre>
+          <p>The firewall is already in place via the EC2 Security Group (network layer); <code>ufw</code> on top of that is belt-and-suspenders — useful but not strictly needed since the Security Group already blocks unwanted inbound. Most AWS-native users leave host-level firewall off and manage everything in Security Groups.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>The full hardening checklist lives in its own tutorial.</strong> EC2's Security Group covers the network layer; the OS layer still needs the rest — SSH key-only + no root login, fail2ban, swap, log rotation, unattended security updates. Walk through <a href="/tutorials/prepare-a-fresh-linux-server-for-production.html">Prepare a fresh Linux server for production</a> before pointing a domain at this box. Twenty minutes; pays back the first time it matters.
+      </div>
+
+      <h2>Step 6: The bill components</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>What you're actually paying for</h3>
+          <p>A running t3.micro with default storage and a public IPv4 (while attached) costs, approximately:</p>
+          <ul>
+            <li><strong>t3.micro compute:</strong> $0.0104/hour = ~$7.50/month.</li>
+            <li><strong>EBS root volume (8 GB gp3):</strong> ~$0.65/month.</li>
+            <li><strong>Public IPv4 (attached, since Feb 2024 AWS charges for these):</strong> $3.65/month.</li>
+            <li><strong>Data transfer out:</strong> first 100 GB/month free, then $0.09/GB. Hard to predict.</li>
+          </ul>
+          <p>Total: roughly $12/month for the baseline. Free Tier covers <em>most</em> of this for the first 12 months of your AWS account; after that, you're paying real money for what would be $5–7 elsewhere.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Set up a billing alert.</strong> AWS Billing console → Budgets → Create a budget. Configure an email alert at $5, $10, $20 — whatever's high enough to be informative without spamming. The bill-surprise stories aren't malice; they're "I forgot I had two instances and a NAT gateway running."
+      </div>
+
+      <h2>Step 7: Point your domain</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>EIP or hostname; via Route 53 or any DNS</h3>
+          <p>For a stable public IP, attach an Elastic IP. Then in your DNS provider, A record pointing at the EIP.</p>
+          <p>If you're using <a href="/tutorials/buy-a-domain-from-aws-route53.html">Route 53</a>, you can use an Alias record at the apex pointing directly at an ALB or CloudFront — but for a single EC2, a normal A record at any DNS provider works fine.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: When to skip EC2</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>Three concrete cases</h3>
+          <ul>
+            <li><strong>You're learning Linux server administration.</strong> The cognitive overhead of AWS concepts (VPC, security group, IAM, ENI) gets in the way. <a href="/tutorials/buy-a-server-from-digitalocean.html">DigitalOcean</a> is friendlier; the Linux skills transfer.</li>
+            <li><strong>You want predictable monthly cost.</strong> EC2's bill has too many independent line items. DO and Hetzner are flat.</li>
+            <li><strong>You don't need any AWS-specific service.</strong> EC2 in isolation is overpriced for what it is. Use it because of the ecosystem, not despite it.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Terminating an instance doesn't delete its EBS volume by default</strong> on all AMIs (the behavior depends on a flag). If you terminate and your storage cost doesn't go away, check the Volumes page in the EC2 console — orphaned EBS volumes are a classic stealth cost.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/buy-a-domain-from-aws-route53.html" class="tutorial-next-card">
+            <h3>Buy a domain from AWS Route 53</h3>
+            <p>If you're on AWS for compute, keep DNS there too — Alias records save real complexity</p>
+          </a>
+          <a href="/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-next-card">
+            <h3>Buy a server from DigitalOcean</h3>
+            <p>If EC2 felt heavy, here's the alternative: same shape, fewer concepts</p>
+          </a>
+          <a href="/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>Connect your domain to a server</h3>
+            <p>The DNS step — same regardless of which cloud you're on</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

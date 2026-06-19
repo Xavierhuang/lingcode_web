@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uptime monitoring with Better Stack — LingCode Tutorials</title>
+  <meta name="description" content="Watch your site from outside. Get paged when it goes down. Sign up, add a monitor, hook up Slack/SMS/email. Free for 10 monitors at 3-min intervals.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Uptime monitoring with Better Stack",
+  "description": "Get paged when your site goes down — by something other than your customers. Sign up, point at your URL, pick how you want to be notified. Free tier covers 10 monitors at 3-minute intervals.",
+  "url": "https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Sign up",
+      "url": "https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Add your first monitor",
+      "url": "https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Add a health endpoint to your app",
+      "url": "https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Set up notification channels",
+      "url": "https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Set escalation policies",
+      "url": "https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html#step-5"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "name": "Publish a status page",
+      "url": "https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html#step-6"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Uptime monitoring with Better Stack",
+      "item": "https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/uptime-monitoring-with-better-stack.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Backend integrations</a>
+      <span>/</span>
+      <span>Uptime monitoring with Better Stack</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Uptime monitoring with Better Stack</h1>
+      <p class="intro">Get paged when your site goes down — by something other than your customers. Sign up, point at your URL, pick how you want to be notified. Free tier covers 10 monitors at 3-minute intervals.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why uptime monitoring is different from error tracking</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>You have <a href="/tutorials/set-up-sentry-error-tracking.html">Sentry</a> for errors in your app's code. That tells you when something inside the app crashed. It does <em>not</em> tell you:</p>
+          <ul>
+            <li>Your server is down (no app to crash).</li>
+            <li>Your DNS is misconfigured (no requests reaching the app).</li>
+            <li>Your TLS cert expired (browser refusing to connect).</li>
+            <li>Your CDN provider is having an outage.</li>
+            <li>Your hosting account got suspended.</li>
+          </ul>
+          <p>All these need external monitoring — something polling your site from outside, telling you when it can't reach you. Cheap insurance.</p>
+        </div>
+      </div>
+
+      <h2>When to pick Better Stack (and alternatives)</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick Better Stack when</strong> — you want one product that does monitoring + on-call scheduling + status page + log management. Modern UI; generous free tier.</li>
+            <li><strong>Pick <a href="https://uptimerobot.com/" target="_blank" rel="noopener">UptimeRobot ↗</a></strong> for the cheapest credible option (free tier with 50 monitors).</li>
+            <li><strong>Pick <a href="https://www.pingdom.com/" target="_blank" rel="noopener">Pingdom ↗</a></strong> for the most established / enterprise-trusted brand.</li>
+            <li><strong>Pick <a href="https://www.datadoghq.com/product/synthetic-monitoring/" target="_blank" rel="noopener">Datadog Synthetics ↗</a></strong> if you're already on Datadog for app monitoring.</li>
+            <li><strong>Pick a status page service</strong> (<a href="https://www.atlassian.com/software/statuspage" target="_blank" rel="noopener">Statuspage ↗</a>, <a href="https://instatus.com/" target="_blank" rel="noopener">Instatus ↗</a>) for customer-facing communication only.</li>
+          </ul>
+          <p>Better Stack covers most of those in one tool. Useful when you're not yet at the scale that justifies separate vendors for each thing.</p>
+        </div>
+      </div>
+
+      <h2>Sign up</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Sign up at <a href="https://betterstack.com/users/sign-up" target="_blank" rel="noopener">betterstack.com ↗</a>. Free tier: 10 monitors at 3-minute check intervals, 30 SMS credits/month, 1 status page, 1 GB of logs.</p>
+          <p>If you only need uptime monitoring, pick the <strong>Uptime</strong> product. Better Stack also sells Logs (log management) and Telemetry (APM) as separate products you can ignore initially.</p>
+        </div>
+      </div>
+
+      <h2>Add your first monitor</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Dashboard → <strong>Monitors → Create monitor</strong>. Configure:</p>
+          <ul>
+            <li><strong>URL</strong> — what to check. Use your real production URL.</li>
+            <li><strong>Check frequency</strong> — every 30 seconds (paid) / 3 minutes (free). Faster check = faster paging.</li>
+            <li><strong>HTTP method</strong> — GET by default. For health endpoints, POST or HEAD also work.</li>
+            <li><strong>Regions</strong> — Better Stack checks from multiple geographic locations and only alerts if multiple regions agree the site is down. Avoids false positives from a single bad checker.</li>
+            <li><strong>Expected status code</strong> — usually 200. If your health endpoint returns 204, set it accordingly.</li>
+            <li><strong>Expected response body</strong> (optional) — for content checks. "If the response doesn't contain 'OK', alert."</li>
+            <li><strong>SSL/TLS check</strong> — alert when cert is within N days of expiring. Default 14 days. <strong>Always enable this.</strong></li>
+          </ul>
+          <p>Save. Better Stack starts checking immediately.</p>
+        </div>
+      </div>
+
+      <h2>Add a health endpoint to your app</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Better Stack works fine checking your homepage, but a dedicated health endpoint is better. It lets you verify your app + critical dependencies are working, not just that some page returns HTML.</p>
+          <pre><code>// Node + Express
+app.get("/api/health", async (req, res) =&gt; {
+  try {
+    // Check DB
+    await db.raw("SELECT 1");
+    // Check Redis / queue / etc.
+    // await redis.ping();
+    res.status(200).json({ status: "ok" });
+  } catch (err) {
+    res.status(503).json({ status: "degraded", error: err.message });
+  }
+});</code></pre>
+          <p>Point Better Stack at <code>https://yourdomain.com/api/health</code>. Now you alert when your app or its dependencies are broken, not just when the front-end won't load.</p>
+        </div>
+      </div>
+
+      <h2>Set up notification channels</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>By default, Better Stack emails you on incident. For a real on-call setup, add channels:</p>
+          <p>Dashboard → <strong>On-call → Integrations</strong>. Connect:</p>
+          <ul>
+            <li><strong>Slack / Microsoft Teams</strong> — bot posts in a channel when incidents fire.</li>
+            <li><strong>Phone call</strong> — Better Stack calls you. (Uses SMS credits.)</li>
+            <li><strong>SMS</strong> — text message.</li>
+            <li><strong>Push notifications</strong> via the Better Stack mobile app.</li>
+            <li><strong>PagerDuty / Opsgenie</strong> — if you already use those for orchestration.</li>
+            <li><strong>Discord</strong> — webhook integration.</li>
+            <li><strong>Webhook</strong> — for anything custom.</li>
+          </ul>
+          <p>For a side project, push notification + Slack is enough. For production with real customers, add SMS or phone as the escalation step.</p>
+        </div>
+      </div>
+
+      <h2>Set escalation policies</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>If you're not paged immediately or you don't acknowledge, what happens next?</p>
+          <p>Dashboard → <strong>On-call → Escalation policies</strong>. Define a chain:</p>
+          <ol>
+            <li>Immediately — push + Slack.</li>
+            <li>After 5 min if not acknowledged — SMS.</li>
+            <li>After 10 min — phone call.</li>
+            <li>After 15 min — escalate to teammate.</li>
+          </ol>
+          <p>You don't need this on day 1. Add as your business gets bigger and downtime becomes more expensive.</p>
+        </div>
+      </div>
+
+      <h2>Acknowledge + resolve incidents</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>When an incident fires, you get notifications via every channel you set up. Open Better Stack → click <strong>Acknowledge</strong>. This stops further pages, signals you're investigating.</p>
+          <p>When the site is back: Better Stack auto-detects recovery on the next successful check and marks the incident as resolved. Optional post-mortem note can be added in the incident detail page.</p>
+          <p>Average time to detect is ~3 minutes on free tier (check interval). On paid tier with 30-second intervals, ~30 seconds.</p>
+        </div>
+      </div>
+
+      <h2>Publish a status page</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Customer-facing communication during incidents matters. Better Stack ships a free status page that auto-updates from your monitors.</p>
+          <p>Dashboard → <strong>Status pages → Create status page</strong>:</p>
+          <ul>
+            <li>Pick which monitors to display publicly. Hide internal ones.</li>
+            <li>Group monitors by service ("API", "Web", "CDN").</li>
+            <li>Custom domain: <code>status.yourdomain.com</code> via CNAME at your <a href="/tutorials/connect-domain-to-server-with-dns.html">DNS provider</a>.</li>
+            <li>Customize colors, logo, page header text.</li>
+            <li>Subscriptions: visitors can subscribe to email / SMS / RSS updates.</li>
+          </ul>
+          <p>Manually post incident updates ("we're seeing issues with checkout; investigating") and they appear on the status page + go out to subscribers.</p>
+        </div>
+      </div>
+
+      <h2>Heartbeats — for cron jobs and async</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>"Did my nightly backup script run?" Uptime monitors check incoming HTTP; heartbeats check the absence of outgoing pings.</p>
+          <p>Dashboard → <strong>Heartbeats → Create heartbeat</strong>. Configure the expected interval (e.g., every 24h ± 1h). Better Stack gives you a unique URL.</p>
+          <p>In your cron / script, ping the URL on every successful run:</p>
+          <pre><code>#!/usr/bin/env bash
+./run-backup.sh &amp;&amp; curl -s https://uptime.betterstack.com/api/v1/heartbeat/xxxxxxxx</code></pre>
+          <p>If Better Stack doesn't see a ping within the expected interval, it fires an incident. Perfect for catching silently-broken scheduled jobs.</p>
+        </div>
+      </div>
+
+      <h2>API monitoring with response validation</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>For APIs, "did it return 200" isn't enough. You also want to check the response shape didn't break.</p>
+          <p>Better Stack monitor settings → <strong>Advanced → Expected response body</strong>. Provide a string to match, or a regex. Example:</p>
+          <pre><code>Expected response body: "\"status\":\"ok\""</code></pre>
+          <p>Or use the JSON body check: assert that <code>$.user.id</code> exists, <code>$.health</code> equals <code>"ok"</code>, etc. Fires an incident if the schema breaks even though the status code is 200.</p>
+        </div>
+      </div>
+
+      <h2>Common pitfalls</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Alerts during deploys</strong> — your site is briefly down during a deploy. Solutions: (1) hook your deploy script to pause Better Stack monitoring during the deploy via API, or (2) deploy with zero-downtime strategies so it stays up.</li>
+            <li><strong>Cron pinging the heartbeat even on failure</strong> — make sure your script only pings on success (use <code>&amp;&amp;</code>, not <code>;</code>). Otherwise the heartbeat fires "alive" when the backup actually failed.</li>
+            <li><strong>Alert fatigue</strong> — if you have 20 monitors and 5 are flapping (failing intermittently), real incidents get ignored. Fix flapping monitors (tune the check, the threshold, or the underlying issue) or you'll learn to ignore alerts.</li>
+            <li><strong>False positives from a single region</strong> — Better Stack defaults to "alert when 2+ regions agree it's down" but this can be tuned. If one region keeps falsely reporting downtime, remove that region from the monitor.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>The right cadence isn't always fastest.</strong> 30-second checks catch outages faster but burn through your monthly check budget. For most personal/small business projects, 3-minute checks are plenty — you'll know about an outage within 5 minutes either way.
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <p>Free: 10 monitors, 3-min interval, 30 SMS credits/month, status page. Team: $25/mo — 50 monitors, 30-sec interval, 100 SMS. Pro: $80/mo — more of everything. <a href="https://betterstack.com/uptime#pricing" target="_blank" rel="noopener">Better Stack pricing ↗</a>.</p>
+          <p>The free tier handles most indie projects. Upgrade when you hit incident volumes that justify it.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://betterstack.com/docs/uptime/" target="_blank" rel="noopener">Better Stack Uptime docs ↗</a></li>
+        <li><a href="https://betterstack.com/docs/uptime/api/" target="_blank" rel="noopener">Uptime API ↗</a></li>
+        <li><a href="https://betterstack.com/docs/uptime/status-pages/" target="_blank" rel="noopener">Status pages ↗</a></li>
+        <li><a href="https://betterstack.com/docs/uptime/heartbeats/" target="_blank" rel="noopener">Heartbeats ↗</a></li>
+        <li><a href="https://betterstack.com/docs/uptime/on-call/" target="_blank" rel="noopener">On-call scheduling ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>Set up Sentry error tracking</h3>
+            <p>The other half of "know when something's broken" — error tracking inside your app</p>
+          </a>
+          <a href="/tutorials/product-analytics-with-posthog.html" class="tutorial-next-card">
+            <h3>Product analytics with PostHog</h3>
+            <p>Behavior monitoring; complements infra monitoring</p>
+          </a>
+          <a href="/tutorials/redeploy-a-website.html" class="tutorial-next-card">
+            <h3>Redeploy a website</h3>
+            <p>Make sure deploys don't false-trigger your monitors</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

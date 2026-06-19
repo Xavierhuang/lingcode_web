@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App hosting on LingCode Cloud — deploy static frontends and full-stack Worker apps | Docs</title>
+  <meta name="description" content="Host the apps you build in LingCode: deploy static frontends to lingcode.dev/apps/ and full-stack Worker/SSR apps to *.run.lingcode.dev. Limits, the V8-isolate runtime, custom domains, and where server logic belongs.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/hosting.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/hosting.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/hosting.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/hosting.html">
+  <meta property="og:title" content="App hosting on LingCode Cloud">
+  <meta property="og:description" content="Deploy static frontends and full-stack Worker/SSR apps from the LingCode IDE — runtime, limits, custom domains, and where server logic belongs.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .hosting-table { width: 100%; border-collapse: collapse; margin: 22px 0; font-size: 0.9rem; }
+    .hosting-table th, .hosting-table td { text-align: left; padding: 12px 14px; border: 1px solid var(--border); vertical-align: top; }
+    .hosting-table th { background: var(--bg-card); font-weight: 600; color: var(--text); }
+    .hosting-table td { color: var(--text-dim); line-height: 1.5; }
+    .hosting-table td strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>App hosting</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Deploy</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>App hosting</h1>
+      <p class="tldr"><strong>TL;DR:</strong> LingCode Cloud hosts the apps you build, so there's no server to run. Two kinds of deploy: <strong>static frontends</strong> (a built Vite/React bundle) served at <code>https://lingcode.dev/apps/&lt;app-id&gt;/</code>, and <strong>full-stack Worker/SSR apps</strong> served at <code>https://&lt;app-id&gt;.run.lingcode.dev/</code>. Both ship from the IDE with one click — <strong>Deploy to LingCode Cloud</strong>. The Worker runtime is a <strong>Cloudflare V8 isolate, not Node.js</strong>, which is the one constraint worth understanding before you start.</p>
+      <p class="intro">This page is about <em>where your built app lives</em> once it's done — the frontend you ship to users and, when you need it, the server that renders or routes requests for them. It is not about the managed backend (database, auth, storage, functions); that's a separate, complementary thing, and most server work belongs there. We'll cover both deploy targets, the runtime constraint that trips people up, custom domains, and — honestly — what hosting is <em>not</em> for.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>Why host it here at all</h2>
+      <p>When you build an app in LingCode, the output is files: an <code>index.html</code> with some hashed JS/CSS, maybe a server bundle. Those files have to live somewhere with a public URL and HTTPS before anyone else can use them. The usual answer — rent a box, install a runtime, configure a web server, renew certificates — is a lot of undifferentiated work for "put my app on the internet."</p>
+      <p>LingCode Cloud collapses that into a single action. You click <strong>Deploy to LingCode Cloud</strong>, the IDE builds and uploads the app, and the server publishes it behind automatic HTTPS. You get back a live URL. There's no server for you to keep patched and no certificate to renew.</p>
+
+      <h2>Two kinds of deploy</h2>
+      <p>LingCode looks at what you built and picks the right target. The difference comes down to one question: <strong>does your app need to run code on the server for each request?</strong></p>
+
+      <table class="hosting-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Static frontend</th>
+            <th>Full-stack Worker / SSR app</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>What it is</strong></td>
+            <td>A built Vite/React (or similar) bundle — <code>index.html</code> plus hashed assets. No server-side rendering.</td>
+            <td>A TanStack Start, OpenNext, or Cloudflare Workers app that renders or routes on the server.</td>
+          </tr>
+          <tr>
+            <td><strong>Served at</strong></td>
+            <td><code>https://lingcode.dev/apps/&lt;app-id&gt;/</code> — path-based, with SPA fallback.</td>
+            <td><code>https://&lt;app-id&gt;.run.lingcode.dev/</code> — its own subdomain.</td>
+          </tr>
+          <tr>
+            <td><strong>Runtime</strong></td>
+            <td>None — files served straight from the edge.</td>
+            <td>A <strong>Cloudflare Worker</strong> (V8 isolate), <em>not</em> Node.js.</td>
+          </tr>
+          <tr>
+            <td><strong>Limits</strong></td>
+            <td>≤100 MB total, ≤25 MB per file, ≤2000 files. 12 deploys/hour.</td>
+            <td>≤60 MB bundle. 12 deploys/hour. Up to 10 worker apps.</td>
+          </tr>
+          <tr>
+            <td><strong>Custom domains</strong></td>
+            <td>—</td>
+            <td>Supported, with full automatic TLS.</td>
+          </tr>
+          <tr>
+            <td><strong>Reach for it when</strong></td>
+            <td>Your app is a single-page app that talks to the backend (or third-party APIs) from the browser.</td>
+            <td>You need server-side rendering or a custom server route at request time.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>For a static frontend, the rate limit is <strong>12 deploys per hour per user</strong>, and the bundle must stay under 100 MB total, 25 MB per file, and 2000 files. For a Worker app, you also get 12 deploys per hour, the bundle must stay under 60 MB, and you can run up to <strong>10 worker apps</strong> at once — try to publish an eleventh and the deploy returns <code>cap_reached</code>.</p>
+
+      <h2>The runtime constraint that matters</h2>
+      <p>This is the single biggest gotcha, so it's worth being precise. A full-stack app on LingCode Cloud runs as a <strong>Cloudflare Worker</strong> — a <strong>V8 isolate</strong>, not a Node.js process. A V8 isolate is a sandboxed JavaScript runtime that starts in milliseconds and has no operating system underneath it. That makes it fast and cheap to run at the edge, but it also means a chunk of the Node standard library simply isn't there.</p>
+      <p>In practice, inside a Worker you do <strong>not</strong> have:</p>
+      <ul>
+        <li><code>fs</code> — no reading or writing files on a local disk (there is no disk).</li>
+        <li><code>path</code> — the filesystem-path helpers aren't available.</li>
+        <li><code>child_process</code> — you can't spawn subprocesses or shell out.</li>
+        <li><strong>Native modules</strong> — anything compiled against Node's C++ ABI won't load.</li>
+      </ul>
+      <p>The concrete consequence: <strong>a plain Express/Node server will not run as-is.</strong> If your full-stack app is "an Express app," it has to be ported to something that targets the Worker runtime — <strong>Hono</strong>, <strong>TanStack Start</strong>, or a framework wired through an <strong>OpenNext</strong> adapter. These give you the same request/response handler model without depending on Node-only APIs.</p>
+
+      <div class="info-box">
+        <h3>The mental model: requests in, responses out</h3>
+        <p>A Worker is a function that takes a <code>Request</code> and returns a <code>Response</code>. That's the whole shape. Anything that fits that shape — render a page, handle a form POST, verify a webhook — works beautifully. Anything that <em>doesn't</em> fit it (hold a connection open, run a loop in the background, touch the disk) belongs somewhere else. Hold that picture and most of the constraints below stop being surprises.</p>
+      </div>
+
+      <h2>How you deploy</h2>
+      <p>Deploying is a <strong>Mac-app action</strong>, not an agent or MCP tool — you don't ask the agent to do it, you click a button. In the LingCode IDE, open the app you've built and click <strong>Deploy to LingCode Cloud</strong>. From there the IDE:</p>
+      <ul>
+        <li><strong>Builds</strong> the app (runs your production build).</li>
+        <li><strong>Uploads</strong> the output to the LingCode Cloud server.</li>
+        <li><strong>Publishes</strong> it. For a static app that means serving the files at <code>/apps/&lt;app-id&gt;/</code>. For a Worker app, the server runs the deploy to Cloudflare's Workers-for-Platforms and attaches the <code>&lt;app-id&gt;.run.lingcode.dev</code> hostname, with HTTPS provisioned automatically.</li>
+      </ul>
+      <p>When it finishes, you get back a <strong>live URL</strong> you can open or share. For a full walkthrough with screenshots, see <a href="/tutorials/deploy-to-lingcode-cloud.html">Deploy to LingCode Cloud</a>.</p>
+
+      <h2>What the build must produce</h2>
+      <p>The deploy publishes your build <em>output</em>, so the output has to be in the shape each tier expects. You rarely hand-write this — a standard Vite/framework config produces it — but knowing the shape is how you read a failed deploy.</p>
+
+      <h3>Static apps</h3>
+      <p>A normal production build into a <code>dist/</code> folder: an <code>index.html</code> plus hashed assets under <code>dist/assets/</code>. Single-page apps work — unknown paths fall back to <code>index.html</code>. Stay under the caps (100&nbsp;MB total, 25&nbsp;MB per file, 2000 files). Nothing special is required; <code>vite build</code> or your framework's static export is enough.</p>
+      <pre><code>dist/
+  index.html
+  assets/
+    index-a1b2c3.js
+    index-d4e5f6.css</code></pre>
+
+      <h3>Full-stack Worker / SSR apps</h3>
+      <p>A Worker deploy expects the Cloudflare build layout — a <code>dist/server/</code> with a <strong><code>wrangler.json</code></strong> next to the server entry. That file is emitted by the <strong>Cloudflare Vite plugin</strong>; if it's missing, the deploy fails with <code>no_build_config</code> (see <a href="/docs/cloud/troubleshooting.html">Troubleshooting</a>). A minimal Vite config that produces it:</p>
+      <pre><code>// vite.config.ts
+import { defineConfig } from 'vite';
+import { cloudflare } from '@cloudflare/vite-plugin';
+
+export default defineConfig({
+  plugins: [cloudflare()],
+});</code></pre>
+      <p>The build then emits both halves — the client assets and the server bundle plus its <code>wrangler.json</code>:</p>
+      <pre><code>dist/
+  client/        # static assets, served from the edge
+  server/
+    index.js     # your Worker (V8 isolate — NOT Node)
+    wrangler.json</code></pre>
+      <p>For <strong>Next.js</strong>, use the OpenNext Cloudflare adapter (<code>@opennextjs/cloudflare</code>) rather than the Node output — it produces the same Worker-shaped build that the deploy understands. Either way the rule from the section above still holds: it runs as a V8 isolate, so no <code>fs</code>, <code>path</code>, or native modules.</p>
+
+      <div class="info-box">
+        <h3>Reading a failed deploy</h3>
+        <p><code>no_build_config</code> means the Worker layout wasn't produced — your build ran as a plain Node/static build, so add the Cloudflare plugin (or the OpenNext adapter) and rebuild. <code>bundle_too_large</code> means the server bundle is over 60&nbsp;MB — trim dependencies. <code>cap_reached</code> / <code>rate_limited</code> are account limits (10 apps, 12 deploys/hour). Full list in <a href="/docs/cloud/troubleshooting.html">Troubleshooting</a>.</p>
+      </div>
+
+      <h2>Custom domains</h2>
+      <p>You can put your own domain in front of a hosted app instead of the default <code>*.run.lingcode.dev</code> URL. The setup is a single DNS change pointed at the LingCode edge:</p>
+      <ul>
+        <li>A <strong>CNAME</strong> record to <code>apps.lingcode.dev</code>, or</li>
+        <li>An <strong>A</strong> record to <code>138.197.107.228</code>.</li>
+      </ul>
+      <p>Keep the record <strong>DNS-only / unproxied</strong> (if your DNS provider offers a proxy toggle, leave it off) so the edge can complete the TLS handshake. Certificates are then issued <strong>automatically, on-demand</strong> — there's nothing to upload or renew. Step-by-step instructions are in <a href="/tutorials/connect-a-custom-domain.html">Connect a custom domain</a>.</p>
+
+      <div class="warn-box">
+        <strong>What hosting is <em>not</em> for.</strong> The Worker model is request/response, and it has real edges. Hosting is the wrong home for: <strong>long-running processes</strong>, <strong>background job queues</strong>, <strong>persistent WebSocket servers</strong>, or <strong>any single request that runs longer than ~30 seconds</strong>. Those need a server you run yourself. For everything else, the request/response Worker — combined with the managed backend for data, functions, and storage — covers it.
+      </div>
+
+      <h2>Where server logic should go</h2>
+      <div class="info-box">
+        <h3>Prefer the backend; reach for a Worker only when you must</h3>
+        <p>For most server work, the managed backend is the better home: keep secrets in the <a href="/docs/cloud/secrets.html">vault</a>, put vendor calls and trusted logic in <a href="/docs/cloud/functions.html">functions</a>, and keep data in the <a href="/docs/cloud/database.html">database</a>. That covers the large majority of "I need this to run on a server, not in the browser" cases without you owning any infrastructure.</p>
+        <p>Reach for a full-stack <strong>Worker app</strong> specifically when you need <strong>request-time server rendering</strong> or a <strong>custom server route</strong>. For example: a Stripe webhook handler that must verify a <em>raw</em> request body belongs as a route <em>inside</em> your hosted Worker app — it needs the unparsed request that a builtin function doesn't hand you. That's the line. Server rendering and custom request handling → Worker app; secrets, vendor calls, and data access → backend.</p>
+      </div>
+
+      <h2>Putting it together</h2>
+      <p>A typical shipped LingCode app uses both halves of the platform. The frontend — whether a static SPA at <code>/apps/&lt;id&gt;/</code> or a server-rendered app at <code>&lt;id&gt;.run.lingcode.dev</code> — is what users load. Behind it, the <a href="/docs/cloud/database.html">database</a>, <a href="/docs/cloud/functions.html">functions</a>, and storage do the data and trusted work. Hosting puts your app on the internet; the backend gives it something to do. Build, click <strong>Deploy to LingCode Cloud</strong>, and (optionally) point a domain at it — that's the whole loop.</p>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/functions.html">
+            <span class="card-eyebrow">Compute</span>
+            <h3>Functions →</h3>
+            <p>Where most server logic belongs: builtins and custom serverless functions that read secrets and call vendors server-side.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/database.html">
+            <span class="card-eyebrow">Data</span>
+            <h3>Database →</h3>
+            <p>The managed Postgres your hosted app reads and writes — tables, the query builder, migrations, and RLS.</p>
+          </a>
+          <a class="tutorial-next-card" href="/tutorials/connect-a-custom-domain.html">
+            <span class="card-eyebrow">Tutorial</span>
+            <h3>Connect a custom domain →</h3>
+            <p>The exact DNS records and steps to put your own domain in front of a hosted app, with automatic TLS.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

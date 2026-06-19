@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>推送通知 —— LingCode Cloud | 文档</title>
+  <meta name="description" content="为构建在 LingCode Cloud 上的应用加入 Web Push：能力检测、为用户订阅（VAPID + service worker）、把订阅对象存到服务端，再从函数发送通知。SDK 与 REST 参考。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/push.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/push.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/push.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/push.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/push.html">
+  <meta property="og:title" content="推送通知 —— LingCode Cloud">
+  <meta property="og:description" content="能力检测 Web Push 支持、为用户订阅、把订阅对象存到服务端，再从函数发送通知。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/push.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>推送通知</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-intermediate">● 进阶</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>推送通知</h1>
+      <p class="tldr"><strong>一句话：</strong>Web Push 让你即使在应用标签页已经关闭时也能通知用户。它就是浏览器标准的 Web Push（VAPID）流程——需要 HTTPS、一个 service worker，以及用户授权。SDK 的 <code>client.push</code> 在浏览器里做两件事：用 <code>isSupported()</code> 做能力检测，用 <code>subscribe()</code> 注册你的 service worker、弹出权限提示，并把用户的订阅对象存到后端。<strong>发送</strong>通知是另一个独立的服务端步骤——你从<a href="/zh/docs/cloud/functions.html">函数</a>或<a href="/zh/docs/cloud/hosting.html">托管应用</a>向已存储的订阅对象推送，而不是从浏览器发送。</p>
+      <p class="intro">大多数人想要的「通知」其实是看似一体、实则两半的东西。浏览器这一半的关键是<em>赢得授权</em>并捕获送达地址——这发生在你的页面里，用户就在旁边看着。送达那一半，则是某件事真正发生时，由服务器去戳那个已保存的地址。LingCode Cloud 处理掉中间那段尴尬的衔接：它把每个用户的订阅对象绑定到其账号上存起来，这样标签页早已关闭后你依然能触达他们。本页把浏览器这一半从头讲到尾，并指引你去看服务端那一半。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>为什么是这样设计</h2>
+      <p>推送通知必须在你的代码<em>没有运行</em>时送达——用户几小时前就关掉了标签页。正因如此，标准要求一开始就具备三样东西：</p>
+      <ul>
+        <li><strong>HTTPS</strong>——推送是一种特权能力，所以只在安全来源（secure origin）上可用。</li>
+        <li><strong>一个 service worker</strong>——一个由浏览器替你保持存活的小脚本。到来的推送会被送达<em>给</em> service worker，由它决定显示什么。</li>
+        <li><strong>用户的授权</strong>——每个用户授权一次，且随时可在浏览器设置里撤销。</li>
+      </ul>
+      <p>要订阅，浏览器还需要你后端的 <strong>VAPID 公钥</strong>——这个身份让推送服务能信任那些声称来自你的推送确实来自你。LingCode Cloud 替你管理这个密钥；SDK 在底层把它取回来。订阅创建后，它会<strong>存到后端并绑定到已登录用户</strong>，这样你之后才能精准触达他们。</p>
+
+      <div class="info-box">
+        <h3>容易把人绊倒的那个分界</h3>
+        <p>浏览器负责<em>订阅</em>；服务器负责<em>发送</em>。你无法从刚刚调用了 <code>subscribe()</code> 的那个页面发出通知——页面只捕获了地址而已。真正推送一条消息，是从<a href="/zh/docs/cloud/functions.html">函数</a>或<a href="/zh/docs/cloud/hosting.html">托管应用</a>在服务端向用户已存储的订阅对象发起。先把订阅流程搭好，确认那行记录确实落库，再去接通发送。</p>
+      </div>
+
+      <h2>浏览器侧的流程</h2>
+      <p>在 <code>/try</code> 和 Mac 预览里，<code>window.lingcode</code> 已经存在。在你自己的应用里，先创建客户端（参见<a href="/zh/docs/cloud/">总览</a>），再跑下面这三步。</p>
+
+      <div class="docs-steps">
+        <div class="docs-step">
+          <h3>先做能力检测</h3>
+          <p>并非每个浏览器或上下文都能做推送。在展示任何「启用通知」UI 之前先检查一下——提供一个根本无法工作的按钮没有意义。</p>
+          <pre><code>if (!lingcode.push.isSupported()) {
+  // 隐藏你的「启用通知」按钮——这里不支持推送。
+  return;
+}</code></pre>
+          <p><code>isSupported()</code> 同步返回一个布尔值。</p>
+        </div>
+        <div class="docs-step">
+          <h3>为用户订阅</h3>
+          <p>在用户手势（例如点击按钮）的响应中调用 <code>subscribe()</code>。它会注册你的 service worker，通过浏览器的 <code>PushManager</code> 订阅，并把订阅对象按当前用户存到后端。这个调用会触发浏览器的权限提示。</p>
+          <pre><code>const { data, error } = await lingcode.push.subscribe({
+  serviceWorker: '/sw.js'
+});
+
+if (error) {
+  // 用户拒绝了授权，或这里不支持推送——优雅降级。
+  console.warn('Could not enable push:', error);
+} else {
+  // 订阅对象已存到服务端；现在可以触达该用户了。
+}</code></pre>
+          <p><code>opts</code> 参数是可选的；<code>{ serviceWorker?: string }</code> 指向你的 service worker 文件。每个调用都返回 <code>{ data, error }</code>。</p>
+        </div>
+        <div class="docs-step">
+          <h3>从服务器发送</h3>
+          <p>这一步<strong>不</strong>在浏览器里发生。一旦订阅对象被存好，就从<a href="/zh/docs/cloud/functions.html">函数</a>或<a href="/zh/docs/cloud/hosting.html">托管应用</a>——任何能在服务端触达用户已存储订阅对象的地方——向它推送一条消息。浏览器唯一的活儿就是捕获授权和送达地址；在那之后的一切，都由你的后端在某件事真正发生时触发。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>你必须发布一个 service worker。</strong>推送送达要经过它——没有 <code>/sw.js</code>（或你传给 <code>subscribe()</code> 的任意路径）就没有推送。确保该文件确实在你引用的那个路径上、同源地提供出来。
+      </div>
+
+      <h2>底层细节（REST）</h2>
+      <p>SDK 封装了两个端点。你很少直接调用它们，但了解其结构在调试时很有帮助。</p>
+
+      <h3>取回 VAPID 公钥</h3>
+      <p>浏览器在能订阅之前需要后端的 VAPID 公钥。SDK 替你取回：</p>
+      <pre><code>GET https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/push/vapid-public
+
+→ { "key": "&lt;vapid-public-key&gt;" }</code></pre>
+
+      <h3>存储一个订阅对象</h3>
+      <p>当浏览器的 <code>PushManager</code> 产出一个订阅对象后，SDK 把它 POST 到后端，按当前用户存起来：</p>
+      <pre><code>POST https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/push/subscribe
+
+{
+  "subscription": {
+    "endpoint": "https://&lt;push-service&gt;/...",
+    "keys": {
+      "p256dh": "&lt;client-public-key&gt;",
+      "auth": "&lt;auth-secret&gt;"
+    }
+  }
+}</code></pre>
+
+      <h3>错误</h3>
+      <ul>
+        <li><code>push_not_available</code>——浏览器或上下文无法做推送，或该后端未配置推送。</li>
+        <li><code>invalid_subscription</code>——订阅对象格式不正确。</li>
+      </ul>
+
+      <h2>要求与坑点</h2>
+      <div class="info-box">
+        <h3>推送在哪里能用</h3>
+        <p><strong>仅限 HTTPS。</strong>它在你托管应用的安全 URL 上可用——<code>*.run.lingcode.dev</code> 或你的<a href="/zh/docs/cloud/hosting.html">自定义域名</a>——以及用于开发的 <code>http://localhost</code>。任何其它主机上的纯 <code>http://</code> 都不支持推送。</p>
+      </div>
+
+      <div class="warn-box">
+        <strong>授权是按用户来的，且可撤销。</strong>用户为你的来源（origin）授权，并且可以随时在浏览器设置里撤销——你的代码不会被告知。始终用 <code>isSupported()</code> 做能力检测，并处理未授权的情况（来自 <code>subscribe()</code> 的 <code>error</code>），而不是假定订阅对象一定存在。
+      </div>
+
+      <ul>
+        <li><strong>发布一个 service worker 文件</strong>（例如 <code>/sw.js</code>）——推送送达要经过它。</li>
+        <li><strong>iOS Safari 需要添加到主屏幕。</strong>用户必须先把你的站点添加到主屏幕，Web Push 才能在 iOS 上工作。你的代码无法绕过这一点。</li>
+        <li><strong>订阅对象绑定到已登录用户。</strong>如果你想在之后精准触达某人，先<a href="/zh/docs/cloud/auth.html">让他登录</a>——否则就没有用户可以把订阅对象挂上去。</li>
+      </ul>
+
+      <div class="tutorial-next">
+        <h2>接下来</h2>
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/functions.html">
+            <span class="card-eyebrow">计算</span>
+            <h3>函数</h3>
+            <p>从服务端函数发送真正的推送——读取密钥、按需运行、触达已存储的订阅对象。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/hosting.html">
+            <span class="card-eyebrow">部署</span>
+            <h3>应用托管</h3>
+            <p>在 <code>*.run.lingcode.dev</code> 或自定义域名上，通过 HTTPS 提供你的应用（及其 <code>/sw.js</code>）。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">参考</span>
+            <h3>API 参考</h3>
+            <p>完整的 SDK 接口，以及每一个 <code>/api/cloud/be/&lt;id&gt;/…</code> REST 端点及其结构。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何按计划运行 LingCode 提示词？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="两种定时工具，两种使用场景。/loop 在本地按间隔运行；/schedule 以远程 cron 风格例程运行。选错工具意味着白白消耗本地上下文，或为不需要的云端计算付费。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/run-a-prompt-on-a-schedule.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/run-a-prompt-on-a-schedule.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/run-a-prompt-on-a-schedule.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/run-a-prompt-on-a-schedule.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "按计划运行提示词 — /loop 与 /schedule",
+  "description": "LingCode 提供两种看起来相似但功能截然不同的定时工具。/loop 在本地按间隔运行——"每 5 分钟检查一次部署状态"。/schedule 以远程例程方式按 cron 计划运行——"每天早上 8 点，回顾昨晚的 PR"。选错工具会导致浪费本地会话上下文，或为不必要的云端计算付费。",
+  "url": "https://lingcode.dev/zh/tutorials/run-a-prompt-on-a-schedule.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/run-a-prompt-on-a-schedule.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "按计划运行提示词 — /loop 与 /schedule"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "按计划运行提示词",
+      "item": "https://lingcode.dev/zh/tutorials/run-a-prompt-on-a-schedule.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/run-a-prompt-on-a-schedule.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">后端集成</a>
+      <span>/</span>
+      <span>按计划运行提示词</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>如何按计划运行 LingCode 提示词？</h1>
+      <p class="tldr"><strong>TL;DR：</strong> <code>/loop 5m /check-deploys</code> 每隔 5 分钟在<em>当前会话中</em>运行一次提示词。<code>/schedule</code> 则创建一个 cron 风格的远程例程，在你离线时也能在 Anthropic 的基础设施上持续运行。本地轮询用 /loop，后台任务用 /schedule。</p>
+      <p class="intro">LingCode 提供两种看起来相似但功能截然不同的定时工具。<code>/loop</code> 在本地按间隔运行——"每 5 分钟检查一次部署状态"。<code>/schedule</code> 以远程例程方式按 cron 计划运行——"每天早上 8 点，回顾昨晚的 PR"。选错工具会导致白白消耗本地会话上下文，或为不需要的云端计算付费。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>两种工具，两类问题</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>"反复运行提示词"其实是两种截然不同的需求，只是表面看起来一样：</p>
+          <ul>
+            <li><strong>"我在工作时，让它在后台持续执行。"</strong> 你坐在电脑前，希望 LingCode 每隔几分钟轮询某个状态，有变化时通知你。这个任务需要共享你的会话——相同的文件、相同的 git 状态、相同的聊天记录。这就是 <code>/loop</code>。</li>
+            <li><strong>"我睡觉或休假时，替我自动完成这件事。"</strong> 任务在你不在场的情况下按时钟计划运行，可能每天持续数月。它必须能在你合上笔记本后继续运行。这就是 <code>/schedule</code>。</li>
+          </ul>
+          <p>混淆这两者代价高昂。在笔记本上运行的定时任务一旦合盖就会中断。在云端运行的轮询任务，当你坐在电脑前盯着它时，还在不停地计费。</p>
+        </div>
+      </div>
+
+      <h2>/loop 是什么</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p><code>/loop</code> 在当前 LingCode 会话内，按固定间隔反复运行某个提示词或斜杠命令。会话保持打开状态，任务在本地执行。</p>
+          <pre><code># 每 5 分钟运行一次 /check-deploy
+/loop 5m /check-deploy
+
+# 每 30 秒运行一次自由格式提示词
+/loop 30s Check if the test suite is still green and ping me if not.
+
+# 自适应节奏——由 LingCode 根据上下文决定何时重新运行
+/loop /watch-the-CI-and-summarize</code></pre>
+          <p>你能得到什么：</p>
+          <ul>
+            <li><strong>相同的文件和 git 状态。</strong> 循环在你的项目目录中运行。如果某个文件在上次迭代后发生了变化，下一次迭代就能看到。</li>
+            <li><strong>相同的聊天记录。</strong> 每次迭代都能看到之前的对话内容。循环可以在前几轮的基础上继续推进——"这是第三次因为同一个原因构建失败了，正在提醒你。"</li>
+            <li><strong>停止即结束。</strong> 关闭标签页、退出 LingCode，或输入"停止循环"——它就会结束，无需任何额外清理。</li>
+          </ul>
+          <div class="tip-box">
+            <strong>省略时间间隔是有意为之。</strong> 不带时间参数的 <code>/loop /foo</code> 让 LingCode 自行把握节奏——它会在判断有必要时重新运行，而不是按固定时钟触发。适合"持续监视直到完成"这类任务，固定频率轮询在这里反而是浪费。
+          </div>
+        </div>
+      </div>
+
+      <h2>/schedule 是什么</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p><code>/schedule</code> 创建一个按 cron 计划运行的远程例程。它在 LingCode 的服务器上执行，而非你的本机。你的笔记本可以关机；例程照常触发。</p>
+          <pre><code># 每个工作日早上 8 点运行一次例程
+/schedule create "Morning PR triage" "0 8 * * 1-5" \
+  "Review every PR opened in the last 24h. Post a summary to
+   #engineering in Slack with: count, blockers, anything that
+   looks urgent."
+
+# 一次性定时运行
+/schedule once "2026-05-25 09:00" \
+  "Email me a summary of last week's customer support tickets."
+
+# 列出、更新、删除
+/schedule list
+/schedule run &lt;id&gt;        # 立即手动触发
+/schedule delete &lt;id&gt;</code></pre>
+          <p>你能得到什么：</p>
+          <ul>
+            <li><strong>笔记本关机也不影响运行。</strong> 例程在云端按计划运行，与你的本地状态无关。</li>
+            <li><strong>每次运行都是全新上下文。</strong> 每次触发都从零开始——没有聊天记录，没有残留的本地文件。例程必须做到自给自足。</li>
+            <li><strong>按云端计算计费。</strong> 每次运行都有成本。对于每日例程来说很便宜；但如果你把它和 <code>/loop</code> 搞混，设置成每 30 秒触发一次，费用会相当可观。</li>
+            <li><strong>跨会话持久存在。</strong> 例程以具名实体的形式存在。可以列出、编辑、删除——它们不与某个聊天窗口绑定。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>选择指南——哪种任务用哪个工具</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>三个问题决定选择：</p>
+          <ul>
+            <li><strong>我需要在场吗？</strong> 如果需要（或者无所谓），<code>/loop</code> 就够了。如果不需要（必须在我离线时运行），选 <code>/schedule</code>。</li>
+            <li><strong>任务需要访问本地文件或 git 状态吗？</strong> 如果需要，用 <code>/loop</code>。如果不需要（数据来自 API、Slack、邮件、云端），<code>/schedule</code> 更合适。</li>
+            <li><strong>运行频率如何？</strong> 如果超过每分钟一次，用 <code>/loop</code>——为亚分钟级别的计划任务付云端费用得不偿失。如果每天只运行几次或更少，用 <code>/schedule</code>——为了一天触发一次而让本地循环跑 24 小时，同样是另一种浪费。</li>
+          </ul>
+          <div class="warn-box">
+            <strong>常见陷阱：</strong>"每 5 分钟检查一次我的 PR"听起来像是 cron 任务。但如果你只在坐在电脑前时才关心这件事，<code>/loop 5m</code> 才是正确选择——合上笔记本就自动停止，这正是期望的行为。<code>/schedule</code> 会在凌晨 2 点也触发，而那时你根本不在意。
+          </div>
+        </div>
+      </div>
+
+      <h2>实例演示——用 /loop 进行本地轮询</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>你正在通过功能开关发布一个新特性，希望 LingCode 在你做其他事情的时候帮你盯着发布监控面板：</p>
+          <pre><code>/loop 2m Check the error rate on the dashboard.json file in
+this repo (re-fetched by my polling script). If the 5xx rate
+goes above 1%, immediately alert me with the failing endpoint.
+Otherwise summarize the trend in one sentence.</code></pre>
+          <p>这是正确的工具，因为：</p>
+          <ul>
+            <li>你在场——循环在你开着另一个标签页时运行完全没问题。</li>
+            <li>需要读取本地文件（仓库中的 <code>dashboard.json</code>）——需要文件系统访问权限。</li>
+            <li>2 分钟的运行频率——对云端 cron 来说太快，对本地循环来说恰到好处。</li>
+            <li>每次迭代都在上一次的基础上推进——"错误率已经连续三次检查都在上升"是循环积累的信息。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>实例演示——用 /schedule 设置隔夜例程</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>你希望在每天喝咖啡开始工作前，就在 Slack 里看到一份隔夜新增 PR 的汇总：</p>
+          <pre><code>/schedule create "Morning PR digest" "0 8 * * 1-5" \
+  "List all PRs opened in the org repo between 6pm yesterday and
+   8am today. For each, summarize: title, author, files touched,
+   reviewers requested, whether CI is green. Post the digest to
+   #engineering. If any PR is from an external contributor, flag
+   it at the top."</code></pre>
+          <p>这是正确的工具，因为：</p>
+          <ul>
+            <li>你不在场——在你睡觉时触发。</li>
+            <li>不需要访问本地文件——从 GitHub API 拉取数据，发送到 Slack API。</li>
+            <li>工作日早晨触发——每天一次，正是 cron 的最佳使用场景。</li>
+            <li>每次运行相互独立——无需知道昨天的汇总内容。</li>
+          </ul>
+          <div class="tip-box">
+            <strong>例程需要凭据才能调用 API。</strong> 在创建例程之前，请先在你的 LingCode 账户中配置 GitHub 和 Slack 的 token，否则第一次触发时会静默失败。在信任计划之前，先用 <code>/schedule run &lt;id&gt;</code> 手动测试一次例程。
+          </div>
+        </div>
+      </div>
+
+      <h2>组合使用——本地监控升级为定时报告</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>这两个工具可以配合使用。以下是一种适用于生产环境监控的模式：</p>
+          <ul>
+            <li><strong>发布期间用 <code>/loop 1m</code></strong>——本地运行，响应快，监控部署状态，发现问题立即告警。合上笔记本就自动停止。</li>
+            <li><strong>每天下午 6 点用 <code>/schedule</code></strong>——远程运行，生成一份"今日部署"报告发送到团队频道。无论你白天是否在监控，报告都会准时到达。</li>
+          </ul>
+          <p>循环负责实时捕捉问题；计划任务负责生成你明天会读到的报告。两者关注不同的时间窗口。</p>
+        </div>
+      </div>
+
+      <h2>如何停止</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>配置混淆往往在清理环节才暴露出账单上的惊喜：</p>
+          <ul>
+            <li><strong>停止循环：</strong>在聊天中输入"停止循环"，或关闭标签页。循环是会话本地的；退出 LingCode 即终止。</li>
+            <li><strong>停止例程：</strong>用 <code>/schedule list</code> 查看你的例程，再用 <code>/schedule delete &lt;id&gt;</code> 删除。例程会持续触发直到被删除。一个被遗忘的例程每 5 分钟触发一次，一个月下来账单会相当可观。</li>
+          </ul>
+          <div class="warn-box">
+            <strong>每月审查你的例程。</strong> 运行 <code>/schedule list</code>，删除任何你不认识或不再需要的例程。定时云端计算是最容易被忽视的成本泄漏来源。
+          </div>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>将选择逻辑封装为一个技能，让 LingCode 第一次就能选对工具：</p>
+          <pre><code>---
+name: schedule-or-loop
+description: Run a prompt or slash command on a recurring schedule. Two distinct tools: /loop runs locally on an interval, session-bound, fast cadence ('check the deploy every 5 minutes'). /schedule runs as a remote cron-style routine, persistent, survives laptop close ('every morning at 8am, review overnight PRs'). Triggers: 'recurring task', 'check every N minutes', 'cron job for Claude Code', 'run on a schedule', 'daily routine', 'while I'm asleep', 'set up reminder'. Actions: /loop for in-session polling, /schedule for cloud-cron tasks, list/run/delete routines. Pick by: session-bound vs survives-laptop-closed, fast-iteration vs persistent-recurring.
+---
+
+When the user asks to run a prompt repeatedly, decide between
+/loop and /schedule with three questions:
+
+1. Does the task need to keep running while the user is offline /
+   laptop closed? If yes → /schedule. If no → /loop is fine.
+
+2. Does the task need local files or git state? If yes → /loop.
+   If no (data lives in APIs, Slack, email) → /schedule is
+   cleaner.
+
+3. How often? Sub-minute or every few minutes → /loop. Once a day
+   or less → /schedule. Anything in between, pick by question 1.
+
+/loop usage:
+- /loop &lt;interval&gt; &lt;prompt-or-slash-command&gt;
+- /loop &lt;prompt&gt;  (no interval = self-paced)
+- Shares session: same files, same chat history.
+- Stops on session close or "stop the loop".
+
+/schedule usage:
+- /schedule create "&lt;name&gt;" "&lt;cron&gt;" "&lt;prompt&gt;"
+- /schedule once "&lt;datetime&gt;" "&lt;prompt&gt;"
+- /schedule list / run &lt;id&gt; / delete &lt;id&gt;
+- Each run is a fresh context. No file access, no session
+  history. Self-contained prompts only.
+- Test with /schedule run &lt;id&gt; before trusting the schedule.
+
+Audit routines periodically with /schedule list. Forgotten
+routines are the easiest cloud cost to leak.</code></pre>
+          <p>保存到 <code>~/.lingcode/skills/schedule-or-loop/SKILL.md</code>——具体路径和技能发现机制请参见<a href="/zh/tutorials/install-a-skill.html">安装技能</a>。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/dispatch-parallel-agents.html" class="tutorial-next-card">
+            <h3>并行调度多个 Agent</h3>
+            <p>当一个定时例程包含多个相互独立的子任务时，在例程内并行运行它们</p>
+          </a>
+          <a href="/zh/tutorials/build-with-the-claude-api.html" class="tutorial-next-card">
+            <h3>使用 Claude API 构建应用</h3>
+            <p>例程和循环都会调用模型——让这些调用更高效地利用缓存</p>
+          </a>
+          <a href="/zh/tutorials/finish-a-development-branch.html" class="tutorial-next-card">
+            <h3>完成一个开发分支</h3>
+            <p>每日早晨例程与下班前完成分支的工作流程天然契合</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速交付的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五研讨会</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">路演</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · 为交付而生</span>
+    <span>原生 · 快速 · 诚实</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I experiment safely with git worktrees in LingCode? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Run risky AI prompts in an isolated git worktree. LingCode's Workspaces panel lets you fork your project, let the agent experiment, then merge only what you want.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/experiment-safely-with-worktrees.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/experiment-safely-with-worktrees.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/experiment-safely-with-worktrees.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/experiment-safely-with-worktrees.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Experiment safely with worktrees",
+  "description": "When you want the agent to try something speculative — a rewrite, a tricky migration, a \"just see if this works\" change — don't let it loose on your main branch. Fork a worktree, let it experiment, merge only what you want.",
+  "url": "https://lingcode.dev/tutorials/experiment-safely-with-worktrees.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/experiment-safely-with-worktrees.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Experiment safely with worktrees"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Experiment safely with worktrees",
+      "item": "https://lingcode.dev/tutorials/experiment-safely-with-worktrees.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/experiment-safely-with-worktrees.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Experiment safely with worktrees</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I experiment safely with git worktrees in LingCode?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Run <em>Source Control → New Worktree</em> (or <code>git worktree add ../experiment-X feature-X</code>) to create an isolated working copy on a branch. Point the agent at the worktree; if the experiment fails, delete the worktree — your main branch never touched it.</p>
+      <p class="intro">When you want the agent to try something speculative — a rewrite, a tricky migration, a "just see if this works" change — don't let it loose on your main branch. Fork a worktree, let it experiment, merge only what you want.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>AI agents are at their most useful when you let them try something you wouldn't write yourself — a speculative refactor, a tricky migration, a "just see if this works" pass. The catch: trying things on your live working tree is risky. If the agent goes off the rails, it corrupts the same files you're trying to ship from. Your build breaks. Your editor's open chat is now confused about which version of the code is real.</p>
+      <p>The instinctive answer is "use a branch." That's not wrong, but it doesn't actually isolate anything. Switching branches in your main checkout drags your dirty files along, resets your IDE state, and forces context-switching in the AI chat. A branch is a name for a chain of commits; it's not a place. You can't be in two branches at once.</p>
+      <p>A <em>worktree</em> is git's real answer to "I want two places at once." It's a second physical checkout of your repository, pointed at a different branch, sharing the same <code>.git</code> store. Two trees, one history. You can have the agent rewrite something in tree B while you keep editing in tree A — separate windows, separate files, no contamination. This tutorial is about reaching for that when the stakes feel high enough to want isolation, and merging back selectively when the experiment lands.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>When to reach for a worktree instead of a regular branch</li>
+        <li>Opening the Workspaces panel</li>
+        <li>Creating a worktree from a new branch, an existing branch, or a PR</li>
+        <li>Letting the agent work in shadow mode</li>
+        <li>Reviewing the diff and merging selectively</li>
+      </ul>
+
+      <h2>Step 1: Know when worktrees beat branches</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Branches don't isolate your workspace</h3>
+          <p>Switching branches in your main checkout drags your in-progress work along — your dirty files follow you, your IDE state resets, the AI's open chat tab is now talking about different code. For a quick fix that's fine. For a high-risk experiment, it's friction.</p>
+          <p>A worktree is a second physical checkout of your repo, pointed at a different branch, sharing the same <code>.git</code> store. Two trees, one history. You can have the agent rewrite something in tree B while you keep editing in tree A.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Reach for a worktree when</strong> the prompt is "rewrite this in async/await," "migrate from CoreData to SwiftData," "convert these UIKit views to SwiftUI" — anything where you want to see the result without committing to it yet.
+      </div>
+
+      <h2>Step 2: Open the Workspaces panel</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>From the sidebar</h3>
+          <p>In the left sidebar, click the <strong>Workspaces</strong> tab. You'll see your current project listed with its active branch, plus a <strong>+ New Worktree</strong> button at the top.</p>
+          <p>Workspaces is also where shadow worktrees show up — the implicit isolated trees the agent uses when it wants to try a tool call without touching your real files (more on that below).</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Pick a worktree mode</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Four ways to fork</h3>
+          <p>Click <strong>+ New Worktree</strong> and pick a mode:</p>
+          <ul>
+            <li><strong>New branch</strong> — branch off your current HEAD with a name you supply. Most common for "try this idea."</li>
+            <li><strong>Existing branch</strong> — check out a branch that already exists. Useful for reviewing teammate work without leaving your own.</li>
+            <li><strong>Pull request</strong> — pulls a remote PR head into a worktree. Great for code review with the agent's help.</li>
+            <li><strong>Linear issue</strong> — if you have Linear linked, creates a worktree pre-named for a given issue and ready for work.</li>
+          </ul>
+          <p>Pick <strong>New branch</strong> for this tutorial. Name it something like <code>try-async-await</code>. LingCode runs <code>git worktree add</code> under the hood and opens the new tree in a fresh window.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Let the agent run wild</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Risky prompts are now contained</h3>
+          <p>In the new window, the AI panel is talking about the worktree's files. Give it the speculative prompt: "Convert all of NetworkManager to async/await, no completion handlers." Whatever it changes is local to this tree. Your main branch is untouched.</p>
+          <p>You can also flip permission mode here to <code>acceptEdits</code> without worrying — auto-accept is a lot safer when the surface is contained.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Shadow worktrees:</strong> The agent itself sometimes opens an even-more-isolated <em>shadow</em> worktree to run builds or tests without touching your editor's file buffers. It uses APFS copy-on-write when worktrees aren't available, so it's effectively free. You'll see shadow workspaces in the Workspaces panel with a dotted icon.
+      </div>
+
+      <h2>Step 5: Review the diff</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Compare against your main branch</h3>
+          <p>When the agent finishes, open the diff view from the Workspaces panel — right-click the worktree and choose <strong>Compare with main</strong>. You'll see every file the experiment touched.</p>
+          <p>Walk the diff. Some changes will be good; some will be bizarre. That's expected — this is the whole point of doing it in a worktree first.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Merge selectively</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Cherry-pick what you want</h3>
+          <p>Two patterns:</p>
+          <ul>
+            <li><strong>Like all of it:</strong> commit the changes in the worktree, switch back to your main window, merge the experimental branch in.</li>
+            <li><strong>Like some of it:</strong> in the diff view, click the checkbox next to each hunk you want, then <strong>Apply to main</strong>. The selected hunks land as a new commit on your main branch; the rest of the worktree's changes are discarded.</li>
+          </ul>
+          <p>This is the part git CLI makes painful and LingCode makes obvious — you can adopt the agent's good ideas without inheriting its bad ones.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: Clean up</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Delete the worktree when done</h3>
+          <p>Right-click the worktree in the panel and choose <strong>Remove worktree</strong>. LingCode runs <code>git worktree remove</code>, which deletes the working files but leaves the branch in git history if you committed. If you want the branch gone too, also choose <strong>Delete branch</strong>.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't delete a worktree with uncommitted changes you want to keep.</strong> LingCode warns before removing, but if you confirm, those changes are gone — they only existed inside that tree.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/undo-bad-ai-edits.html" class="tutorial-next-card">
+            <h3>Undo bad AI edits</h3>
+            <p>Snapshot-based recovery for the times you didn't fork into a worktree first</p>
+          </a>
+          <a href="/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>Upload to TestFlight from chat</h3>
+            <p>Once your branch is stable, let the agent archive and ship it</p>
+          </a>
+          <a href="/tutorials/running-across-all-providers.html" class="tutorial-next-card">
+            <h3>Running across all providers</h3>
+            <p>Run the same experiment with multiple AI providers to compare results</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

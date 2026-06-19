@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用 REST 客户端测试 API — LingCode 教程</title>
+  <meta name="description" content="REST 客户端标签是一个内置的 HTTP 客户端。选一个方法、设置请求头和请求体、发送请求,然后在不离开编辑器的情况下读取响应——状态、耗时、大小、响应体和响应头。这里逐个按钮讲解整个标签。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/test-apis-with-the-rest-client.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/test-apis-with-the-rest-client.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/test-apis-with-the-rest-client.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605171400">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-16T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-16T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/test-apis-with-the-rest-client.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "用 REST 客户端测试 API",
+  "description": "REST 客户端标签是一个内置的 HTTP 客户端。选一个方法、设置请求头和请求体、发送请求,然后在不离开编辑器的情况下读取响应。",
+  "url": "https://lingcode.dev/zh/tutorials/test-apis-with-the-rest-client.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-16",
+  "dateModified": "2026-06-16",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/test-apis-with-the-rest-client.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "用 REST 客户端测试 API"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "用 REST 客户端测试 API",
+      "item": "https://lingcode.dev/zh/tutorials/test-apis-with-the-rest-client.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a></li>
+    <li><a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/test-apis-with-the-rest-client.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>用 REST 客户端测试 API</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-06-16</span>
+      </div>
+      <h1>用 REST 客户端测试 API</h1>
+      <p class="intro">当你在对接 API 时,慢的往往不是写代码,而是切换到另一个窗口里的 Postman 或 <code>curl</code>,然后再切回来。LingCode 的 <strong>REST 客户端</strong>标签把一个完整的 HTTP 客户端放进了底部面板,就在你的代码和终端旁边。你在同一个正在编辑的窗口里构建请求、发送它、读取响应。本文带你走一遍整个标签,让你了解每个控件的作用。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>从底部面板打开它:点击 <strong>REST 客户端</strong>标签(地球状的"网络"图标)。如果你还不清楚底部面板的布局,<a href="/zh/tutorials/the-bottom-panel-explained.html">底部面板总览</a>会先讲清全部九个标签。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>请求栏、请求头/请求体编辑器和响应窗格如何协同</li>
+        <li>发送一个 GET 并读取响应的状态、耗时和大小</li>
+        <li>发送一个带自定义请求头和 JSON 请求体的 POST</li>
+        <li>从历史栏重新运行之前的请求</li>
+      </ul>
+
+      <h2>第 1 步:请求栏</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>方法、URL、发送</h3>
+          <p>顶部有三个控件。左侧的<strong>方法选择器</strong>是一个下拉菜单,包含 GET、POST、PUT、PATCH、DELETE、HEAD、OPTIONS——每个都有颜色编码(GET 绿、POST 蓝、PUT 橙、PATCH 黄、DELETE 红、HEAD 紫、OPTIONS 灰),让你一眼就能看出某个请求会做什么。旁边是 <strong>URL 输入框</strong>(占位文本 <code>https://api.example.com/endpoint</code>)。右侧是<strong>发送</strong>按钮——URL 为空时它会被禁用,而在请求进行中它会显示一个旋转图标而不是"发送"字样,让你知道它正在工作。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步:发送你的第一个 GET</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>读懂响应窗格</h3>
+          <p>把方法保持为 GET,粘贴一个真实的 URL——试试一个公开的,比如 <code>https://api.github.com/repos/anthropics/anthropic-sdk-python</code>——然后点击<strong>发送</strong>。右侧窗格会填充内容。在你发送任何东西之前,它显示一个占位提示("<em>Send a request to see the response</em>");响应到达后,你会得到一个含四项信息的状态栏:</p>
+          <ul>
+            <li>加粗的<strong>状态码</strong>——成功(2xx)为绿色、失败为红色——下方是状态文本(例如 <code>200 OK</code>)。</li>
+            <li>以毫秒为单位的<strong>响应时间</strong>,方便你发现慢的接口。</li>
+            <li><strong>响应体大小</strong>,以字节 / KB / MB 格式显示。</li>
+          </ul>
+          <p>状态栏下方有一个小切换器,在 <strong>Body</strong>(原始响应文本,等宽字体且可选中)和 <strong>Headers</strong>(所有响应头,按字母排序,键为强调色、值在旁边)之间切换。如果请求彻底失败——主机错误、无网络——你会看到一个警告图标和错误信息,而不是状态栏。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步:添加请求头</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Headers 标签</h3>
+          <p>请求主体的左侧有两个标签:<strong>Headers</strong> 和 <strong>Body</strong>。在 Headers 标签里,每个请求头是一行,含四部分:一个<strong>复选框</strong>用于启用或禁用该头而无需删除、一个<strong>键(Key)</strong>字段、一个<strong>值(Value)</strong>字段,以及一个<strong>减号</strong>按钮用于删除该行。点击底部的 <strong>Add Header</strong> 添加一个空行。</p>
+          <p>对于需要鉴权的请求,添加一行,键为 <code>Authorization</code>、值为 <code>Bearer &lt;你的-token&gt;</code>。调试时启用复选框很好用:把某个头关掉、重新发送,看看它是不是原因——无需重新输入。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步:发送带 JSON 请求体的 POST</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Body 标签</h3>
+          <p>把方法切换为 <strong>POST</strong>,然后点击 <strong>Body</strong> 标签。这里有一个请求体类型选择器;当类型设为 <strong>None</strong> 时,编辑器只显示 "<em>No body</em>"。选择一个内容类型后会出现一个等宽编辑器——在那里粘贴你的原始 JSON,例如:</p>
+          <pre><code>{
+  "name": "widget",
+  "quantity": 3
+}</code></pre>
+          <p>在 Headers 标签上加一个 <code>Content-Type: application/json</code> 请求头,让服务器解析它,然后点击<strong>发送</strong>。响应窗格的更新方式和 GET 完全一样——状态、耗时、大小、响应体、响应头。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>为什么迭代时这比终端里的 <code>curl</code> 更好用。</strong> Headers 标签的启用/禁用复选框和常驻的 Body 编辑器,意味着你改一处再重发,而不是每次都去编辑一长串 Shell 命令、重新转义引号。而且响应已经为你解析好了——状态颜色、耗时和大小就在眼前,不必埋在 <code>-v</code> 的输出里。
+      </div>
+
+      <h2>第 5 步:从历史重新运行</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>历史栏</h3>
+          <p>一旦你发送过至少一个请求,标签底部就会出现一个<strong>历史(History)</strong>栏——一排横向的胶囊,展示你最近的 10 个请求。每个胶囊显示方法(带颜色编码)和缩短后的 URL。点击一个胶囊,即可把那个请求——方法、URL,全部——加载回编辑器,方便你重发或微调。这是在你正在对比的两个接口之间来回切换的最快方式。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>你在这里粘贴的 token 存在请求里,而不是保险库里。</strong> REST 客户端是一个测试工具——你输入的 <code>Authorization</code> 头是该请求及其历史的一部分,并不会像你的提供商密钥那样存进 Keychain。测试时请使用短期或受限作用域的 token,不要粘贴你不希望出现在历史栏里的长期生产密钥。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/the-bottom-panel-explained.html" class="tutorial-next-card">
+            <h3>看懂底部面板</h3>
+            <p>REST 客户端如何与其他八个标签共处——以及该选哪一个</p>
+          </a>
+          <a href="/zh/tutorials/forward-and-monitor-ports.html" class="tutorial-next-card">
+            <h3>转发并监控本地端口</h3>
+            <p>在测试本地 API?在"端口"标签里跟踪并打开你的开发服务器</p>
+          </a>
+          <a href="/zh/tutorials/view-test-results-and-coverage.html" class="tutorial-next-card">
+            <h3>查看测试结果与覆盖率</h3>
+            <p>接口跑通后,用测试把它锁定下来并查看结果</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发工具。为想要快速发布的创始人和追求真实工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

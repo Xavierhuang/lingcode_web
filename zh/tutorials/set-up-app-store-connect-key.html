@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>配置 App Store Connect API 密钥 — LingCode 教程</title>
+  <meta name="description" content="生成 App Store Connect API 密钥，将其注册到 LingCode，并解锁由 Agent 驱动的 TestFlight 上传功能。一次性配置，只需三个值。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-app-store-connect-key.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-app-store-connect-key.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-app-store-connect-key.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/set-up-app-store-connect-key.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "配置 App Store Connect API 密钥",
+  "description": "App Store Connect API 密钥让 LingCode Agent 能够上传构建、管理 TestFlight 并查看 Provisioning 数据，无需每次重新输入 Apple ID 密码。一次生成，一次注册，之后无需再操心。",
+  "url": "https://lingcode.dev/zh/tutorials/set-up-app-store-connect-key.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/set-up-app-store-connect-key.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "配置 App Store Connect API 密钥"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "配置 App Store Connect API 密钥",
+      "item": "https://lingcode.dev/zh/tutorials/set-up-app-store-connect-key.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/set-up-app-store-connect-key.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>配置 App Store Connect API 密钥</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>配置 App Store Connect API 密钥</h1>
+      <p class="intro">App Store Connect API 密钥让 LingCode Agent 能够上传构建、管理 TestFlight 并查看 Provisioning 数据，无需每次重新输入 Apple ID 密码。一次生成，一次注册，之后无需再操心。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>与 App Store Connect 的每一次交互——上传构建、列出你的 App、邀请 TestFlight 测试人员——最终都需要身份验证。Apple 以前的方案是 Apple ID 密码加上双重验证码，而且 Session 过期速度快得让自动化几乎无从实现。2019 年推出的新方案是 App Store Connect API：每次调用都用 Apple 颁发给你的私钥签署一个短期 JWT，权限范围由你选择的角色决定，随时可以撤销。</p>
+      <p>LingCode Agent 要代你上传构建，就需要这个私钥。没有捷径——Apple 刻意不允许通过程序创建密钥，因为密钥本身就是凭据。不过一旦生成过一次，最难的部分就永远完成了。密钥保存在你的 macOS Keychain 中，后续所有涉及 App Store Connect 的 Agent 操作——TestFlight 上传、App Store 元数据，以及未来更多功能——都会透明地使用它。</p>
+      <p>本教程介绍这一次性配置过程：如何选择角色（尽量缩小影响范围很重要）、如何下载 <code>.p8</code> 文件（只有一次机会），以及如何将三个值注册到 LingCode。完成后，TestFlight 上传教程是顺理成章的下一步。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>如何选择 API 密钥的角色，以及原因</li>
+        <li>生成密钥并下载 <code>.p8</code> 文件（一次性操作，请勿丢失）</li>
+        <li>将 Issuer ID、Key ID 和 <code>.p8</code> 注册到 LingCode</li>
+        <li>确认 Agent 能够识别该密钥</li>
+        <li>在需要时轮换或撤销密钥</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前置条件：</strong>需要付费的 Apple Developer 账户、在 App Store Connect 中具有 Account Holder 或 Admin 权限，以及已在 App Store Connect 中注册好你要发布的 App。
+      </div>
+
+      <h2>第 1 步：进入 App Store Connect 的"用户和访问"</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>网站上嵌套最深的页面</h3>
+          <p>登录 <a href="https://appstoreconnect.apple.com" target="_blank" rel="noopener">appstoreconnect.apple.com</a>。点击顶部导航栏中的<strong>用户和访问</strong>，再点击侧边栏中的<strong>集成</strong>，然后依次选择 <strong>App Store Connect API</strong> 和 <strong>Team Keys</strong> 标签页。</p>
+          <p>是的，需要点击四次才能到达。Apple 把这个页面藏得很深——到达后记得收藏最终 URL。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：生成密钥</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>选择合适的角色</h3>
+          <p>点击 <strong>Generate API Key</strong>，给它起一个便于识别的名称（例如"LingCode TestFlight"），并选择角色。</p>
+          <p>如果目标是"在对话中发布到 TestFlight"，<strong>App Manager</strong> 是最合适的最低权限：足以上传和管理 TestFlight，但无法删除 App 或更改团队成员。不要为 Agent 持有的密钥使用 Admin 或 Account Holder 角色——尽量缩小潜在的影响范围。</p>
+          <p>点击 <strong>Generate</strong>，Apple 会创建该密钥。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：立即下载 .p8 文件</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>只有一次机会</h3>
+          <p>Apple 会在新密钥旁边显示 <strong>Download API Key</strong> 按钮。<strong>立刻点击下载。</strong>这是一次性下载——一旦离开当前页面，Apple 就不会再允许你下载这个 <code>.p8</code> 文件。届时只能撤销并重新生成。</p>
+          <p>文件名为 <code>AuthKey_&lt;KeyID&gt;.p8</code>。将其存放在下一步能找到的位置（放在"下载"文件夹即可——注册完成后可以删除）。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：记录 Issuer ID 和 Key ID</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>三个值，一页可见</h3>
+          <p>注册密钥需要以下三项信息：</p>
+          <ul>
+            <li><strong>Issuer ID</strong> — 显示在 Team Keys 页面顶部，形如 UUID（例如 <code>69a6de70-...</code>），每个团队唯一。</li>
+            <li><strong>Key ID</strong> — 显示在刚生成的密钥旁边，由十个字母数字字符组成（例如 <code>ABC1234DEF</code>），每个密钥唯一。</li>
+            <li><strong><code>.p8</code> 文件</strong> — 即第 3 步下载的文件。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第 5 步：将密钥注册到 LingCode</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>只需告诉 Agent 一次</h3>
+          <p>打开 LingCode 中的 AI 对话面板，输入：</p>
+          <p><code>Save my App Store Connect API key. Issuer ID: &lt;value&gt;. Key ID: &lt;value&gt;. The .p8 is at /Users/&lt;you&gt;/Downloads/AuthKey_&lt;keyid&gt;.p8.</code></p>
+          <p>Agent 会调用内部的 <code>set_asc_api_key</code> 工具。<code>.p8</code> 的内容（而非文件路径）以及两个 ID 会保存到你的 macOS Keychain 中，服务名为 <code>LingCode</code>。之后可以从"下载"文件夹删除该文件——LingCode 已保存了自己的副本。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>为什么用 Keychain？</strong>因为密钥理应和其他密钥放在一起。LingCode 不会将它们以明文写入磁盘，不会发送到远程服务器，而 Keychain 本身继承了你账户的安全边界（退出登录时锁定，FileVault 在磁盘层面加密保护）。
+      </div>
+
+      <h2>第 6 步：验证</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>让 Agent 确认一下</h3>
+          <p>在对话中输入：<code>Is my ASC API key set up?</code></p>
+          <p>Agent 会检查 Keychain 并返回结果，例如："是的，Issuer ID 末尾为 <code>...abc</code>，Key ID 为 <code>ABC1234DEF</code>"，或"未找到已配置的 ASC 密钥"。它不会打印完整的 Issuer ID 或 <code>.p8</code> 内容，只显示足以确认你注册了正确密钥的信息。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：轮换或撤销</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>团队成员变动时</h3>
+          <p>如果创建该密钥的成员离开了团队，或者你怀疑密钥已泄露，请立即撤销。在 App Store Connect → Team Keys 中，点击密钥旁边的 <strong>Revoke</strong>。Apple 会立即使其失效，后续所有 API 调用都将失败。</p>
+          <p>生成新密钥后，通过相同的对话命令重新注册到 LingCode。旧的 Keychain 条目会被干净地覆盖。</p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>通过 Agent 上传到 TestFlight</h3>
+            <p>前置条件已就绪——让 Agent 帮你发布吧</p>
+          </a>
+          <a href="/zh/tutorials/undo-bad-ai-edits.html" class="tutorial-next-card">
+            <h3>撤销 AI 的错误编辑</h3>
+            <p>在 entitlements 或 Info.plist 损坏影响公证之前及时恢复</p>
+          </a>
+          <a href="/zh/tutorials/setting-up-api-keys.html" class="tutorial-next-card">
+            <h3>配置 AI 提供商 API 密钥</h3>
+            <p>配置 Claude、DeepSeek、OpenAI 等 AI 提供商</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创业者和追求真正趁手工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Derived Postgres image: pgvector/pgvector:pg16 (semantic search) + pgBackRest.
+#
+# WHY: archive_command runs inside the Postgres process, so the `pgbackrest`
+# binary must live in THIS container, not on the host. We also run base backups
+# and the restore-test via `docker exec ... pgbackrest`, which need it here too.
+#
+# pgvector's image is Debian-based, so pgBackRest installs straight from apt.
+FROM pgvector/pgvector:pg16
+
+USER root
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends pgbackrest ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# pgBackRest needs these dirs owned by the postgres user (uid it runs as).
+RUN mkdir -p /var/lib/pgbackrest /var/log/pgbackrest /var/spool/pgbackrest /etc/pgbackrest \
+ && chown -R postgres:postgres /var/lib/pgbackrest /var/log/pgbackrest /var/spool/pgbackrest
+
+USER postgres

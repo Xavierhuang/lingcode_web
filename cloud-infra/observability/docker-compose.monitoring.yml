@@ -1,0 +1,55 @@
+# docker-compose.monitoring.yml — Prometheus + Alertmanager + Grafana, run on a
+# SEPARATE monitoring host (a small VM in the NYC3 VPC, or the API box) so a
+# data-plane resource spike can't take monitoring down with it and the TSDB
+# doesn't steal RAM from Postgres.
+#
+# Bring up:  observability/bootstrap-monitoring.sh  (renders configs from .env)
+#
+# SECURITY: everything binds the PRIVATE interface; reach Grafana via SSH tunnel
+#   ssh -L 3001:127.0.0.1:3001 root@<monitoring-host>   then http://localhost:3001
+# Do NOT publish these ports publicly.
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: lingcloud-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./metrics_token:/etc/prometheus/metrics_token:ro
+      - prom_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d"
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:9090:9090"
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: lingcloud-alertmanager
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:9093:9093"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: lingcloud-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SERVER_ROOT_URL: "http://localhost:3001"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:3001:3000"
+    restart: unless-stopped
+
+volumes:
+  prom_data:
+  grafana_data:

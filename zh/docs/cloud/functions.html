@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>函数 —— LingCode Cloud | 文档</title>
+  <meta name="description" content="在 LingCode Cloud 上按 slug 运行服务端代码：七个零部署内置函数（邮件、短信、TTS、Stripe Checkout、HTTP 抓取），外加在 Deno 沙箱运行时里编写的自定义 TypeScript 函数。从 SDK 或 REST 调用，读取保险库密钥，并遵守各档位的限制。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/functions.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/functions.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/functions.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/functions.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/functions.html">
+  <meta property="og:title" content="函数 —— LingCode Cloud">
+  <meta property="og:description" content="七个零部署内置函数，外加 Deno 沙箱里的自定义函数。从 SDK 或 REST 按 slug 调用，读取保险库密钥，发布浏览器无法安全承担的服务端逻辑。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .fn-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; }
+    .fn-table th, .fn-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .fn-table th { font-family: "Geist Mono", monospace; font-size: 0.72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim); }
+    .fn-table td code { white-space: nowrap; }
+    .tutorial-next { margin-top: 40px; }
+    .tutorial-next-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/functions.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>函数</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-intermediate">● 函数</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>函数</h1>
+      <p class="tldr"><strong>一句话：</strong>函数是你按 <strong>slug</strong> 调用的服务端代码。分两类：<strong>七个内置函数</strong>，它们已经在每个后端上线——设置好所需密钥后直接调用，无需部署；以及你用 TypeScript 编写、在 Deno 沙箱运行时里运行的<strong>自定义函数</strong>。两类都用 <code>lingcode.functions.invoke(slug, body?)</code> 调用，或者向 <code>/api/cloud/be/&lt;backend-id&gt;/functions/&lt;slug&gt;</code> 发 POST 请求。用函数去做浏览器无法安全完成的事：持有密钥、调用厂商 API、运行受信任的逻辑。</p>
+      <p class="intro">函数存在只有一个理由：有些事浏览器没法安全地做。它不能持有 Stripe secret key。它不能被信任去计算价格或授予访问权限。它不能调用一个需要凭证的厂商 API。函数就是你应用里那一小块在服务端、在你的后端背后运行的部分——在那里，密钥仍然是密钥。本页同时覆盖两种形态：开箱即用的内置函数，以及你自己编写的自定义函数，以及怎么调用它们。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>函数为什么存在</h2>
+      <p>客户端 SDK 里的一切——<code>from('table').select()</code>、认证、存储——都用公开的 <strong>anon key（匿名密钥）</strong>对一层轻量网关发起调用，由行级安全负责守门。这覆盖了一个应用的大部分。但有些逻辑必须活在用户看不到、也改不了的地方：</p>
+      <ul>
+        <li><strong>密钥不能进打包产物。</strong>你的 Stripe secret key、厂商 API key、短信认证令牌——这些放进后端的<a href="/zh/docs/cloud/secrets.html">密钥保险库</a>，只能在服务端、在函数里读取。</li>
+        <li><strong>受信任的逻辑不能跑在客户端。</strong>任何「让用户来决定答案」会出问题的事——创建 Checkout Session、校验优惠券、调用合作方 API——都应该放在服务端。</li>
+        <li><strong>浏览器够不到某些主机。</strong>CORS、凭证和签名让很多厂商调用从页面上发起变得不可能（或不安全）。函数替你去发这个请求。</li>
+      </ul>
+      <p>你通过<strong>slug</strong>——一个短名字——来访问函数。拿到 slug 有两条路：用<strong>内置函数</strong>（已经上线，只需设置好它的密钥），或者写一个<strong>自定义函数</strong>（你自己的 TypeScript）。两者的调用方式完全相同。</p>
+
+      <h2>如何调用（两类通用）</h2>
+      <p>在 SDK 里，用 slug 和一个可选的 body 调用 <code>functions.invoke</code>。和每个 SDK 调用一样，它返回一个 <code>Result</code>——<code>{ data, error }</code>——所以你永远不必把它包进 try/catch：</p>
+      <pre><code>const { data, error } = await lingcode.functions.invoke('echo', {
+  hello: 'world'
+});
+// data -> { hello: 'world', timestamp: '2026-06-11T…' }</code></pre>
+      <p>或者通过 REST 调用——从服务器、curl 烟雾测试或非 JS 客户端发起时很方便。向函数端点 POST 一个 <code>{ input }</code> body，由 anon key 或已登录用户的令牌授权：</p>
+      <pre><code>POST https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/functions/&lt;slug&gt;
+Authorization: Bearer &lt;anon-key-or-user-token&gt;
+Content-Type: application/json
+
+{ "input": { "hello": "world" } }</code></pre>
+
+      <div class="info-box">
+        <h3><code>unknown_function</code> 表示名字写错了</h3>
+        <p>如果一次调用返回 <code>unknown_function</code>，说明 <strong>slug</strong> 拼错了，或者这个后端上不存在该函数——它<em>不</em>表示函数功能不可用。对照下面的内置函数检查 slug，或对照你给自定义函数起的 slug。（关于运行时本身宕机的那唯一一种情况，见<a href="#availability">可用性</a>——它以 <code>503 functions_runtime_unavailable</code> 的形式出现，且仅针对自定义函数。）</p>
+      </div>
+
+      <h2>七个内置函数</h2>
+      <p>这些在每个后端上都已上线，<strong>没有部署步骤</strong>。对每一个，你只需在<a href="/zh/docs/cloud/secrets.html">密钥保险库</a>里设置它所需的密钥（如果有），然后按 slug 调用。先从 <code>echo</code> 开始，确认你的接线没问题。</p>
+
+      <table class="fn-table">
+        <thead>
+          <tr><th>Slug</th><th>作用</th><th>输入</th><th>所需密钥</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>echo</code></td>
+            <td>原样返回你的输入，外加一个时间戳。用它来烟雾测试 invoke 是否正常。</td>
+            <td>任意内容</td>
+            <td>无</td>
+          </tr>
+          <tr>
+            <td><code>send-email</code></td>
+            <td>通过 LingCode 的托管发件方发送邮件。</td>
+            <td><code>{ to, subject, html }</code></td>
+            <td>无</td>
+          </tr>
+          <tr>
+            <td><code>elevenlabs-tts</code></td>
+            <td>文本转语音。返回 base64 音频。</td>
+            <td><code>{ text, voice_id?, model_id? }</code> → <code>{ audio_base64, content_type }</code></td>
+            <td><code>ELEVENLABS_API_KEY</code></td>
+          </tr>
+          <tr>
+            <td><code>twilio-sms</code></td>
+            <td>通过 Twilio 发送短信。</td>
+            <td><code>{ to, body, from?, messaging_service_sid? }</code></td>
+            <td><code>TWILIO_ACCOUNT_SID</code>、<code>TWILIO_AUTH_TOKEN</code>，外加 <code>TWILIO_FROM</code> 或 <code>TWILIO_MESSAGING_SERVICE_SID</code> 二者之一</td>
+          </tr>
+          <tr>
+            <td><code>resend-byo</code></td>
+            <td>通过你自己的 Resend 账户发送邮件。</td>
+            <td><code>{ from, to, subject, html?, text? }</code></td>
+            <td><code>RESEND_API_KEY</code></td>
+          </tr>
+          <tr>
+            <td><code>stripe-checkout</code></td>
+            <td>创建一个 Stripe Checkout Session。</td>
+            <td><code>{ price_id, success_url, cancel_url, mode?, quantity?, customer_email?, metadata? }</code> → <code>{ id, url }</code></td>
+            <td><code>STRIPE_SECRET_KEY</code></td>
+          </tr>
+          <tr>
+            <td><code>http-fetch</code></td>
+            <td>向白名单内的主机发起一次出站 HTTPS 请求。</td>
+            <td><code>{ url, method?, headers?, body? }</code></td>
+            <td>自身无需密钥——但 header/body 字符串可以用 <code>{{SECRET_NAME}}</code> 引用保险库里的密钥</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>用 <code>echo</code> 做烟雾测试</h3>
+      <p>新后端上最该先跑的东西。如果它把你的输入原样返回，说明 invoke 已接通，你的 URL + key 也都正确。</p>
+      <pre><code>const { data } = await lingcode.functions.invoke('echo', { ping: 1 });
+console.log(data); // { ping: 1, timestamp: '2026-06-11T…' }</code></pre>
+
+      <h3>创建一个 Stripe Checkout Session</h3>
+      <p>先在<a href="/zh/docs/cloud/secrets.html">密钥保险库</a>里设置 <code>STRIPE_SECRET_KEY</code>——它永远不会碰到浏览器。然后调用这个内置函数，把用户重定向到返回的 URL：</p>
+      <pre><code>const { data, error } = await lingcode.functions.invoke('stripe-checkout', {
+  price_id:    'price_123',
+  success_url: 'https://yourapp.com/thanks',
+  cancel_url:  'https://yourapp.com/pricing',
+  mode:        'subscription'
+});
+if (error) throw error;
+window.location.href = data.url; // 托管的 Stripe Checkout</code></pre>
+
+      <div class="info-box">
+        <h3><code>http-fetch</code>：感知密钥、限定主机</h3>
+        <p><code>http-fetch</code> 自身没有密钥，但 header 或 body 字符串里任意 <code>{{SECRET_NAME}}</code> 标记都会在服务端从保险库里替换进来——这样你就能调用一个需要 bearer token 的 API，而 token 从不抵达客户端。目标主机必须在后端的 <strong>fetch-hosts 白名单</strong>里；对不在名单上的主机的调用会被拒绝。这是不写任何代码就能调用第三方 API 的、刻意收紧的方式。参见教程<a href="/zh/tutorials/call-external-apis-from-your-backend.html">从后端调用外部 API</a>。</p>
+      </div>
+
+      <h2>自定义函数</h2>
+      <p>当没有内置函数合适时，就写你自己的。你在 Cloud 控制台 / IDE 里编写自定义函数——给函数一个 <strong>slug</strong> 和它的 <strong>TypeScript 源码</strong>（这是控制台里的一步编写动作，不是 agent 工具替你完成的事）。它们在 Deno 沙箱运行时里运行，用和内置函数同一个 <code>functions.invoke(slug, body?)</code> 调用来触发。</p>
+
+      <h3>约定</h3>
+      <p>你的源码必须 <code>export default</code> 一个 handler。你 <code>return</code> 的东西就成为调用结果的 <code>data</code>。原生支持 TypeScript——Deno 直接运行，无需构建步骤：</p>
+      <pre><code>export default async function handler(input, ctx) {
+  // ctx.secrets.MY_KEY  — 你的保险库密钥，仅服务端可见
+  // ctx.backendId       — 这个后端的 id
+  // ctx.gateway         — 这个后端自己的 data-API 基础 URL
+  return { ok: true };   // 成为调用结果的 `data`
+}</code></pre>
+      <p>第二个参数 <code>ctx</code> 是你的服务端上下文：</p>
+      <pre><code>ctx = {
+  secrets:   { /* 保险库里设置的每一个密钥，按名字 */ },
+  backendId: string,
+  gateway:   string   // 通过它调用你自己的 data API
+}</code></pre>
+
+      <h3>一个小小的自定义函数</h3>
+      <p>从保险库读取一个密钥并返回 JSON。密钥从不离开服务端：</p>
+      <pre><code>export default async function handler(input, ctx) {
+  const key = ctx.secrets.WEATHER_API_KEY;
+  const city = input.city ?? 'NYC';
+  const res = await fetch(
+    `https://api.example.com/weather?city=${city}&key=${key}`
+  );
+  const json = await res.json();
+  return { city, tempC: json.temp_c };
+}</code></pre>
+      <p>从客户端调用它，和内置函数完全一样——按它的 slug：</p>
+      <pre><code>const { data, error } = await lingcode.functions.invoke('get-weather', {
+  city: 'Tokyo'
+});
+if (error) throw error;
+console.log(data.tempC);</code></pre>
+
+      <h3>沙箱</h3>
+      <p>自定义函数在 Deno 里运行，权限<strong>默认全部拒绝</strong>。这是一个特性，不是要去对抗的限制：</p>
+      <ul>
+        <li><strong>没有文件系统、没有环境变量、没有子进程、没有 FFI。</strong>函数读不了磁盘、起不了进程，也加载不了原生代码。</li>
+        <li><strong>它能触达的唯一网络是后端自己的网关</strong>（<code>ctx.gateway</code>）。函数可以调用你的 data API——但它没法把数据外泄到任意主机。（需要触达某个厂商？用 <code>http-fetch</code> 内置函数的白名单，或者让你的函数绕回网关来发起。）</li>
+        <li><strong>内存上限为 128 MB。</strong></li>
+      </ul>
+
+      <h3>限制</h3>
+      <table class="fn-table">
+        <thead>
+          <tr><th>限制</th><th>free</th><th>pro</th><th>max_pro</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>超时（墙钟时间，超过即 SIGKILL）</td><td>3s</td><td>10s</td><td>30s</td></tr>
+          <tr><td>自定义函数数量（<code>maxFunctions</code>）</td><td>2</td><td>10</td><td>50</td></tr>
+          <tr><td>源码体积</td><td colspan="3">最多 256 KB</td></tr>
+          <tr><td>内存</td><td colspan="3">128 MB</td></tr>
+        </tbody>
+      </table>
+      <p>函数是<strong>短命的</strong>。超过墙钟超时后，进程会被 SIGKILL——没有优雅的延长机制。不要把任何运行超过约 30 秒的东西放进函数。</p>
+
+      <h2 id="availability">可用性</h2>
+      <p>自定义函数需要 Deno 运行时，而它<strong>已经在生产环境安装并上线</strong>——自定义函数现在就能用。如果某次部署确实缺少运行时，自定义调用会返回 <code>503 functions_runtime_unavailable</code>，而<strong>内置函数照常工作</strong>（它们不依赖 Deno 沙箱）。所以自定义函数上的 503 是一个运行时可用性信号；内置函数失败则是另一回事。还要记住——<code>unknown_function</code> 永远是 slug 写错的错误，从不表示可用性问题。</p>
+
+      <div class="warn-box">
+        <strong>函数不适合做什么。</strong>没有长时间运行的进程、没有后台队列、没有常驻的 WebSocket 服务器，也没有任何超过约 30 秒的东西——那些都属于<a href="/zh/docs/cloud/hosting.html">托管的 Worker 应用</a>，不属于函数。一个诚实的具体例子：一个需要原始请求体签名校验的 <strong>Stripe webhook 处理器</strong><em>不是</em>这些内置函数之一，而且很难用一个短小的自定义函数来表达——把它放进你托管应用自己的路由（Worker/SSR 路由）里。<code>stripe-checkout</code> 内置函数只<em>创建</em> Checkout Session；它不接收 webhook。
+      </div>
+
+      <div class="tutorial-next">
+        <h2>接下来</h2>
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/secrets.html">
+            <span class="card-eyebrow">安全</span>
+            <h3>密钥保险库 →</h3>
+            <p>设置函数要读取的厂商密钥——Stripe、Twilio、ElevenLabs、Resend——加密存储，仅服务端可见。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/hosting.html">
+            <span class="card-eyebrow">部署</span>
+            <h3>应用托管 →</h3>
+            <p>长时间运行的逻辑、后台任务和 webhook 路由该去的地方——全栈 Worker/SSR 应用。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/tutorials/call-external-apis-from-your-backend.html">
+            <span class="card-eyebrow">教程</span>
+            <h3>调用外部 API →</h3>
+            <p>用 <code>http-fetch</code> 和 fetch-hosts 白名单，端到端地用一个保险库密钥触达厂商 API。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

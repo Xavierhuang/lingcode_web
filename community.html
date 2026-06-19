@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Community — LingCode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/style.css?v=20260531a" />
+<style>
+  :root {
+    --bg: #FAFAFF; --bg-elev: #F2EFFE; --bg-card: #FFFFFF; --bg-card-hi: #F5F3FF;
+    --border: rgba(168, 85, 247, 0.08); --border-hi: rgba(168, 85, 247, 0.18);
+    --ink: #1A1530; --ink-dim: #5D5475; --ink-faint: #8B829F; --ink-mute: #C8C0D8;
+    --accent: #A855F7; --accent-soft: rgba(168, 85, 247, 0.12); --accent-line: rgba(168, 85, 247, 0.35);
+    --red: #DC2626; --green: #16A34A;
+    --grad-aurora: linear-gradient(135deg, #A855F7 0%, #C026D3 50%, #F472B6 100%);
+    --ff-display: 'Instrument Serif', Georgia, serif;
+    --ff-body: 'Geist', system-ui, sans-serif;
+    --ff-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--ff-body);
+    font-weight: 400; line-height: 1.55; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(168, 85, 247, 0.08), transparent 60%);
+  }
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  /* Nav, logo, .nav-links, .nav-cta, .btn, .btn-ghost, .btn-primary all
+     live in style.css — community.html relies on those canonical rules so
+     the nav matches the landing page. */
+  .btn-outline { border-color: var(--border-hi); color: var(--ink); }
+  .btn-outline:hover { border-color: var(--ink-dim); background: var(--bg-card); }
+  .btn-large { padding: 14px 22px; font-size: 15px; border-radius: 8px; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+  section { padding: 100px 0; position: relative; }
+
+  .page-hero { padding: 180px 0 80px; text-align: center; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+    border: 1px solid var(--border-hi); border-radius: 100px; background: var(--bg-card);
+    font-family: var(--ff-mono); font-size: 12px; color: var(--ink-dim); margin-bottom: 28px; }
+  .eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 8px var(--green); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.4; } }
+  h1.page-title { font-family: var(--ff-display); font-size: clamp(56px, 8vw, 104px);
+    line-height: 0.95; letter-spacing: -0.025em; font-weight: 400; margin-bottom: 24px; }
+  .page-title em {
+    font-style: italic;
+    background: var(--grad-aurora);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .page-sub { font-size: 19px; max-width: 640px; margin: 0 auto; color: var(--ink-dim); line-height: 1.5; }
+
+  .section-eyebrow { font-family: var(--ff-mono); font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 20px; }
+  .section-title { font-family: var(--ff-display); font-size: clamp(36px, 5vw, 56px);
+    line-height: 1.0; letter-spacing: -0.02em; font-weight: 400; margin-bottom: 20px; }
+  .section-title em { font-style: italic; color: var(--accent); }
+  .section-sub { font-size: 17px; color: var(--ink-dim); max-width: 620px; line-height: 1.5; }
+  .section-header { margin-bottom: 48px; }
+  .section-header.center { text-align: center; }
+  .section-header.center .section-sub { margin: 0 auto; }
+
+  /* WORKSHOPS */
+  .workshops { border-top: 1px solid var(--border); }
+  .workshop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .workshop-card { background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px; display: flex; flex-direction: column;
+    transition: all 0.2s; cursor: pointer; }
+  .workshop-card:hover { border-color: var(--accent-line); transform: translateY(-2px); }
+  .workshop-date { font-family: var(--ff-mono); font-size: 11px; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .workshop-title { font-family: var(--ff-display); font-size: 26px; line-height: 1.15;
+    margin-bottom: 12px; font-style: italic; }
+  .workshop-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .workshop-meta span { font-family: var(--ff-mono); font-size: 11px; color: var(--ink-faint); }
+  .workshop-meta span::before { content: '·'; margin-right: 12px; color: var(--ink-mute); }
+  .workshop-meta span:first-child::before { display: none; }
+  .workshop-desc { color: var(--ink-dim); font-size: 14px; margin-bottom: 20px;
+    line-height: 1.55; flex: 1; }
+  .workshop-foot { display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--border); padding-top: 14px; }
+  .workshop-spots { font-family: var(--ff-mono); font-size: 11px; color: var(--ink-faint); }
+  .workshop-spots .live { color: var(--green); }
+  .workshop-spots .few { color: var(--accent); }
+  .workshop-rsvp { font-family: var(--ff-mono); font-size: 12px; color: var(--accent); }
+
+  /* TWO-COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .feature-list { list-style: none; display: flex; flex-direction: column; gap: 14px;
+    margin: 24px 0; }
+  .feature-list li { display: flex; gap: 14px; }
+  .feature-list .num { font-family: var(--ff-display); font-style: italic; color: var(--accent);
+    font-size: 24px; line-height: 1; min-width: 28px; }
+  .feature-list .body { color: var(--ink-dim); font-size: 15.5px; line-height: 1.55; }
+  .feature-list .body strong { color: var(--ink); font-weight: 500; }
+
+  /* UNIVERSITY VISUAL */
+  .uni-visual { background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px; font-family: var(--ff-mono); font-size: 13px; }
+  .uni-row { display: flex; align-items: center; gap: 14px; padding: 12px 0;
+    border-bottom: 1px solid var(--border); }
+  .uni-row:last-child { border-bottom: none; }
+  .uni-row .glyph { width: 36px; height: 36px; background: var(--bg);
+    border: 1px solid var(--border-hi); border-radius: 8px; display: grid;
+    place-items: center; color: var(--accent); font-family: var(--ff-display);
+    font-style: italic; font-size: 18px; flex-shrink: 0; }
+  .uni-row .meta .title { color: var(--ink); font-family: var(--ff-body);
+    font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .uni-row .meta .desc { color: var(--ink-faint); font-size: 12px; }
+
+  /* SHOWCASE */
+  .showcase { background: var(--bg-elev); border-top: 1px solid var(--border); }
+  .showcase-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .app-card { background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; transition: all 0.2s; cursor: pointer; }
+  .app-card:hover { transform: translateY(-3px); border-color: var(--accent-line); }
+  .app-screen { aspect-ratio: 9 / 16; background: var(--bg);
+    border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+  .app-screen-inner { position: absolute; inset: 12px; border-radius: 12px;
+    display: flex; flex-direction: column; padding: 14px;
+    font-family: var(--ff-body); }
+  .app-bar { font-family: var(--ff-mono); font-size: 9px; color: var(--ink-faint);
+    display: flex; justify-content: space-between; margin-bottom: 12px; }
+  .app-1 { background: linear-gradient(180deg, #1a2440, #0a1530); color: white; }
+  .app-2 { background: linear-gradient(180deg, #3a1a20, #2a0e14); color: white; }
+  .app-3 { background: linear-gradient(180deg, #1a3024, #0a1f16); color: white; }
+  .app-4 { background: linear-gradient(180deg, #2c1a3a, #190a2a); color: white; }
+  .app-heading { font-family: var(--ff-display); font-size: 22px; line-height: 1.05;
+    margin-bottom: 8px; font-style: italic; }
+  .app-body { font-size: 10px; opacity: 0.7; line-height: 1.4; }
+  .app-tile { background: rgba(255,255,255,0.08); border-radius: 6px;
+    padding: 8px; margin-top: 8px; font-size: 9px; }
+  .app-info { padding: 16px 18px; }
+  .app-name { font-family: var(--ff-display); font-size: 18px; font-style: italic;
+    margin-bottom: 4px; }
+  .app-tag { font-family: var(--ff-mono); font-size: 10px; color: var(--ink-faint);
+    text-transform: uppercase; letter-spacing: 0.1em; }
+  .app-builder { color: var(--ink-dim); font-size: 12px; margin-top: 6px; }
+
+  /* CHANNELS */
+  .channels { border-top: 1px solid var(--border); }
+  .channel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .channel-card { background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 32px; }
+  .channel-mark { width: 44px; height: 44px; background: var(--accent-soft);
+    border: 1px solid var(--accent-line); border-radius: 10px; display: grid;
+    place-items: center; color: var(--accent); font-family: var(--ff-display);
+    font-style: italic; font-size: 22px; margin-bottom: 20px; }
+  .channel-name { font-family: var(--ff-display); font-size: 28px; font-style: italic;
+    margin-bottom: 10px; }
+  .channel-desc { color: var(--ink-dim); font-size: 14.5px; line-height: 1.55;
+    margin-bottom: 20px; }
+  .channel-stat { font-family: var(--ff-mono); font-size: 11px; color: var(--ink-faint);
+    margin-bottom: 16px; }
+  .channel-stat strong { color: var(--ink); }
+
+  /* MENTOR CTA */
+  .mentor { background: var(--bg-elev); border-top: 1px solid var(--border);
+    text-align: center; padding: 120px 0;
+    background-image: radial-gradient(ellipse 60% 50% at 50% 100%, rgba(168, 85, 247, 0.08), transparent 70%); }
+  .mentor h2 { font-family: var(--ff-display); font-size: clamp(40px, 6vw, 72px);
+    line-height: 0.95; letter-spacing: -0.025em; margin-bottom: 24px; font-weight: 400; }
+  .mentor h2 em { font-style: italic; color: var(--accent); }
+  .mentor p { color: var(--ink-dim); font-size: 17px; margin-bottom: 32px;
+    max-width: 580px; margin-left: auto; margin-right: auto; }
+
+  /* FOOTER */
+  footer { border-top: 1px solid var(--border); padding: 60px 40px 40px; }
+  .footer-grid { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr);
+    gap: 48px; max-width: 1200px; margin: 0 auto 48px; }
+  .footer-brand p { color: var(--ink-dim); font-size: 13px; margin-top: 16px;
+    max-width: 280px; line-height: 1.5; }
+  .footer-col h4 { font-family: var(--ff-mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 16px; font-weight: 500; }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col a { color: var(--ink-dim); text-decoration: none; font-size: 14px; }
+  .footer-col a:hover { color: var(--ink); }
+  .footer-bottom { max-width: 1200px; margin: 0 auto; padding-top: 32px;
+    border-top: 1px solid var(--border); display: flex; justify-content: space-between;
+    align-items: center; font-size: 12px; color: var(--ink-faint); font-family: var(--ff-mono); }
+
+  @media (max-width: 980px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .container { padding: 0 20px; }
+    .workshop-grid, .showcase-grid, .channel-grid, .two-col, .footer-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+    .two-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .workshop-grid, .showcase-grid, .channel-grid { grid-template-columns: 1fr; }
+  }
+  /* Compact nav search — sits between canonical links and the auth CTAs. */
+  .nav-search-li { list-style: none; display: inline-flex; }
+  .nav-search {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg-card, #FFFFFF);
+    border: 1px solid var(--border, var(--border-hi, rgba(168, 85, 247, 0.18)));
+    border-radius: 100px;
+    padding: 4px 10px 4px 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    max-width: 220px; min-width: 0;
+    margin: 0 4px;
+  }
+  .nav-search:focus-within {
+    border-color: var(--signal, var(--accent, #A855F7));
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+  }
+  .nav-search svg {
+    width: 14px; height: 14px; flex-shrink: 0;
+    color: var(--text-muted, var(--ink-dim, #5D5475));
+  }
+  .nav-search input {
+    border: none; outline: none; background: transparent;
+    font-family: 'Geist', -apple-system, sans-serif;
+    font-size: 13px;
+    color: var(--text, var(--ink, #1A1530));
+    padding: 4px 0; width: 130px; min-width: 0;
+  }
+  .nav-search input::placeholder { color: var(--text-dim, var(--ink-faint, #8B829F)); }
+  @media (max-width: 980px) { .nav-search, .nav-search-li { display: none !important; } }
+
+  /* Center the nav-links group within the top nav (grid 1fr/auto/1fr).
+   * Logo flush-left, links centered, CTAs flush-right. */
+  nav.site-nav, body > nav {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    align-items: center;
+  }
+  nav.site-nav > .logo, body > nav > .logo { grid-column: 1; justify-self: start; }
+  nav.site-nav > .nav-links, body > nav > .nav-links { grid-column: 2; justify-self: stretch; }
+  nav.site-nav > .nav-cta, body > nav > .nav-cta { grid-column: 3; justify-self: end; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+  <li><a href="/try.html">Try</a></li>
+  <li><a href="/features.html">Features</a></li>
+  <li><a href="/cloud.html">Cloud</a></li>
+  <li><a href="/pricing.html">Pricing</a></li>
+  <li><a href="/docs.html">Docs</a></li>
+  <li><a href="/tutorials.html">Tutorials</a></li>
+  <li><a href="/community.html">Community</a></li>
+  <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+</ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+<header class="page-hero">
+  <div class="container">
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      <span>Next workshop: Friday in NYC · 14 seats open</span>
+    </div>
+    <h1 class="page-title">Build with us,<br/><em>in person.</em></h1>
+    <p class="page-sub">LingCode runs free Friday workshops, partners with schools and universities, and gathers ~100,000 founders shipping native apps together. The fastest way to learn is to build alongside someone who already has.</p>
+  </div>
+</header>
+
+<!-- WORKSHOPS -->
+<section class="workshops" id="workshops">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">— Friday workshops</div>
+      <h2 class="section-title">Every Friday. <em>One to four.</em></h2>
+      <p class="section-sub">Bring a laptop and an idea. We&rsquo;ll bring the coffee, the engineers, and the Xcode setup. Walk out four hours later with an app you can install on your phone.</p>
+    </div>
+
+    <div class="workshop-grid">
+
+      <div class="workshop-card">
+        <div class="workshop-date">— Friday, May 15 · 1:00 PM</div>
+        <h3 class="workshop-title">Ship your first iOS app, start to TestFlight.</h3>
+        <div class="workshop-meta">
+          <span>NYC · SoHo Coworking</span>
+          <span>4 hours</span>
+          <span>Beginner</span>
+        </div>
+        <p class="workshop-desc">Bring an app idea. Leave with it running on TestFlight. We&rsquo;ll cover prompting, project structure, and Apple&rsquo;s signing flow.</p>
+        <div class="workshop-foot">
+          <span class="workshop-spots"><span class="live">● Live</span> · 14 seats left</span>
+          <span class="workshop-rsvp">RSVP →</span>
+        </div>
+      </div>
+
+      <div class="workshop-card">
+        <div class="workshop-date">— Friday, May 22 · 1:00 PM</div>
+        <h3 class="workshop-title">SwiftUI patterns LingCode actually uses.</h3>
+        <div class="workshop-meta">
+          <span>NYC · SoHo Coworking</span>
+          <span>4 hours</span>
+          <span>Intermediate</span>
+        </div>
+        <p class="workshop-desc">A working tour of the Swift patterns LingCode emits — state, navigation, async — so you can read and edit generated code with confidence.</p>
+        <div class="workshop-foot">
+          <span class="workshop-spots"><span class="few">● Filling fast</span> · 4 seats left</span>
+          <span class="workshop-rsvp">RSVP →</span>
+        </div>
+      </div>
+
+      <div class="workshop-card">
+        <div class="workshop-date">— Friday, May 29 · 1:00 PM</div>
+        <h3 class="workshop-title">Native vs. WebView: what Apple sees.</h3>
+        <div class="workshop-meta">
+          <span>Virtual · Zoom</span>
+          <span>2 hours</span>
+          <span>All levels</span>
+        </div>
+        <p class="workshop-desc">A live teardown of an &ldquo;AI-built&rdquo; web app vs. a LingCode native app — through the lens of App Review. What gets rejected and why.</p>
+        <div class="workshop-foot">
+          <span class="workshop-spots"><span class="live">● Live</span> · 47 seats left</span>
+          <span class="workshop-rsvp">RSVP →</span>
+        </div>
+      </div>
+
+      <div class="workshop-card">
+        <div class="workshop-date">— Friday, June 5 · 1:00 PM</div>
+        <h3 class="workshop-title">From idea to App Store in one afternoon.</h3>
+        <div class="workshop-meta">
+          <span>San Francisco · Mission</span>
+          <span>4 hours</span>
+          <span>Beginner</span>
+        </div>
+        <p class="workshop-desc">Our flagship workshop, now in SF. Best for non-technical founders who want to ship something real.</p>
+        <div class="workshop-foot">
+          <span class="workshop-spots">● Opens May 18</span>
+          <span class="workshop-rsvp">Waitlist →</span>
+        </div>
+      </div>
+
+      <div class="workshop-card">
+        <div class="workshop-date">— Friday, June 12 · 1:00 PM</div>
+        <h3 class="workshop-title">Hooking LingCode into your existing Xcode project.</h3>
+        <div class="workshop-meta">
+          <span>NYC · SoHo Coworking</span>
+          <span>3 hours</span>
+          <span>Engineers</span>
+        </div>
+        <p class="workshop-desc">For iOS engineers who already have a codebase. Wire up the CLI and IDE to your repo, set up review flows, ship faster.</p>
+        <div class="workshop-foot">
+          <span class="workshop-spots">● Opens May 25</span>
+          <span class="workshop-rsvp">Waitlist →</span>
+        </div>
+      </div>
+
+      <div class="workshop-card">
+        <div class="workshop-date">— Saturday, June 13 · 10:00 AM</div>
+        <h3 class="workshop-title">Teen Builder Day (ages 13–17).</h3>
+        <div class="workshop-meta">
+          <span>NYC · SoHo Coworking</span>
+          <span>6 hours</span>
+          <span>Teens</span>
+        </div>
+        <p class="workshop-desc">A full-day workshop for teenagers. Parents welcome. Bring lunch money. Walk out with an app on your phone.</p>
+        <div class="workshop-foot">
+          <span class="workshop-spots">● Opens May 25</span>
+          <span class="workshop-rsvp">Waitlist →</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="text-align: center; margin-top: 48px;">
+      <a href="#" class="btn btn-outline btn-large">See the full calendar →</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOR UNIVERSITIES -->
+<section id="universities">
+  <div class="container">
+    <div class="two-col">
+      <div>
+        <div class="section-eyebrow">— For educators</div>
+        <h2 class="section-title">Free for <em>universities &amp; schools.</em></h2>
+        <p class="section-sub" style="margin-bottom: 28px;">If you teach mobile development, entrepreneurship, computer science, or design — LingCode is free for your classroom. No catch, no per-seat fee, no &ldquo;academic edition&rdquo; with features removed.</p>
+
+        <ul class="feature-list">
+          <li>
+            <span class="num">01</span>
+            <span class="body"><strong>Classroom license, free.</strong> Every student gets a Studio account for the duration of the course. Renewable each semester.</span>
+          </li>
+          <li>
+            <span class="num">02</span>
+            <span class="body"><strong>Curriculum included.</strong> A 14-week iOS-development syllabus built around LingCode — slides, exercises, rubrics. Use it as-is or adapt.</span>
+          </li>
+          <li>
+            <span class="num">03</span>
+            <span class="body"><strong>Guest instructors.</strong> Our team will guest-lecture in your class — virtually or in person — once per semester.</span>
+          </li>
+          <li>
+            <span class="num">04</span>
+            <span class="body"><strong>Student showcase.</strong> Top student apps get featured on our homepage and Discord. A real shipping credential.</span>
+          </li>
+        </ul>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px;">
+          <a href="#" class="btn btn-primary btn-large">Apply for classroom access →</a>
+          <a href="#" class="btn btn-outline btn-large">See the syllabus</a>
+        </div>
+      </div>
+
+      <div class="uni-visual">
+        <div style="font-family: var(--ff-mono); font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 20px;">— Currently partnered with</div>
+
+        <div class="uni-row">
+          <div class="glyph">N</div>
+          <div class="meta">
+            <div class="title">NJIT — Women's Entrepreneurship Lab</div>
+            <div class="desc">Semester program · 40 students · Spring 2026</div>
+          </div>
+        </div>
+        <div class="uni-row">
+          <div class="glyph">C</div>
+          <div class="meta">
+            <div class="title">Columbia University — Engineering</div>
+            <div class="desc">Workshop series · ~80 attendees / month</div>
+          </div>
+        </div>
+        <div class="uni-row">
+          <div class="glyph">B</div>
+          <div class="meta">
+            <div class="title">Brooklyn Tech HS — Intro to iOS</div>
+            <div class="desc">Year-long elective · 60 students</div>
+          </div>
+        </div>
+        <div class="uni-row">
+          <div class="glyph">P</div>
+          <div class="meta">
+            <div class="title">Pratt Institute — Product Design</div>
+            <div class="desc">Workshop series · designers building shippable prototypes</div>
+          </div>
+        </div>
+        <div class="uni-row">
+          <div class="glyph">+</div>
+          <div class="meta">
+            <div class="title">9 other partner schools across the US</div>
+            <div class="desc">From middle school to graduate programs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOWCASE -->
+<section class="showcase" id="showcase">
+  <div class="container">
+    <div class="section-header center">
+      <div class="section-eyebrow">— Showcase</div>
+      <h2 class="section-title">Apps built with <em>LingCode.</em></h2>
+      <p class="section-sub">All shipping to the real App Store. All built by founders or students. All written in Swift, no asterisks.</p>
+    </div>
+
+    <div class="showcase-grid">
+      <div class="app-card">
+        <div class="app-screen app-1">
+          <div class="app-screen-inner">
+            <div class="app-bar"><span>9:41</span><span>● ●●</span></div>
+            <div class="app-heading">5.7 mi</div>
+            <div class="app-body">8:24 pace · 47 min</div>
+            <div class="app-tile">Today's route<br/>↗ Central Park loop</div>
+          </div>
+        </div>
+        <div class="app-info">
+          <div class="app-name">PaceKeep</div>
+          <div class="app-tag">— Running tracker</div>
+          <div class="app-builder">Built by Maya R. · NYC · Solo founder</div>
+        </div>
+      </div>
+
+      <div class="app-card">
+        <div class="app-screen app-2">
+          <div class="app-screen-inner">
+            <div class="app-bar"><span>9:41</span><span>● ●●</span></div>
+            <div class="app-heading">Pantry</div>
+            <div class="app-body">12 items expiring this week</div>
+            <div class="app-tile">🥬 Spinach · 2d<br/>🥛 Milk · 3d<br/>🍞 Bread · 4d</div>
+          </div>
+        </div>
+        <div class="app-info">
+          <div class="app-name">Pantry</div>
+          <div class="app-tag">— Grocery tracker</div>
+          <div class="app-builder">Built by Sam K. · SF · Indie hacker</div>
+        </div>
+      </div>
+
+      <div class="app-card">
+        <div class="app-screen app-3">
+          <div class="app-screen-inner">
+            <div class="app-bar"><span>9:41</span><span>● ●●</span></div>
+            <div class="app-heading">Breathe</div>
+            <div class="app-body">Day 47 · 12-min streak</div>
+            <div class="app-tile">●●●●● ●●●●●<br/>●●●●● ●●○○○<br/>3 sessions today</div>
+          </div>
+        </div>
+        <div class="app-info">
+          <div class="app-name">Breathe</div>
+          <div class="app-tag">— Meditation</div>
+          <div class="app-builder">Built by Pratt student team · 2026</div>
+        </div>
+      </div>
+
+      <div class="app-card">
+        <div class="app-screen app-4">
+          <div class="app-screen-inner">
+            <div class="app-bar"><span>9:41</span><span>● ●●</span></div>
+            <div class="app-heading">Plotline</div>
+            <div class="app-body">Writers room · 4 active scenes</div>
+            <div class="app-tile">Scene 12 · Draft<br/>Scene 13 · Outline<br/>Scene 14 · Idea</div>
+          </div>
+        </div>
+        <div class="app-info">
+          <div class="app-name">Plotline</div>
+          <div class="app-tag">— Writing tool</div>
+          <div class="app-builder">Built by Liana D. · Brooklyn · Author</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 48px;">
+      <a href="#" class="btn btn-outline btn-large">Browse all 247 shipped apps →</a>
+    </div>
+  </div>
+</section>
+
+<!-- CHANNELS -->
+<section class="channels">
+  <div class="container">
+    <div class="section-header center">
+      <div class="section-eyebrow">— Stay in the loop</div>
+      <h2 class="section-title">Three ways to <em>plug in.</em></h2>
+    </div>
+
+    <div class="channel-grid">
+      <div class="channel-card">
+        <div class="channel-mark">D</div>
+        <h3 class="channel-name">Discord</h3>
+        <p class="channel-desc">~12,000 founders and engineers helping each other ship. Channels by surface, by stage, and by city. Active 24 hours a day.</p>
+        <div class="channel-stat"><strong>12,400</strong> members · <strong>~340</strong> messages per day</div>
+        <a href="#" class="btn btn-outline">Join Discord →</a>
+      </div>
+
+      <div class="channel-card">
+        <div class="channel-mark">N</div>
+        <h3 class="channel-name">Newsletter</h3>
+        <p class="channel-desc">Every other Friday: one app of the week, one technical post, and a roundup of what shipped from the community. Written by the founder.</p>
+        <div class="channel-stat"><strong>~100,000</strong> founders subscribed · <strong>46%</strong> open rate</div>
+        <a href="#" class="btn btn-outline">Subscribe →</a>
+      </div>
+
+      <div class="channel-card">
+        <div class="channel-mark">Y</div>
+        <h3 class="channel-name">YouTube</h3>
+        <p class="channel-desc">Build-along videos, app teardowns, and weekly office hours. The fastest way to see what LingCode can actually do before you sign up.</p>
+        <div class="channel-stat"><strong>~1.2M</strong> views to date · <strong>weekly</strong> uploads</div>
+        <a href="#" class="btn btn-outline">Watch →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MENTOR CTA -->
+<section class="mentor">
+  <div class="container">
+    <h2>Already shipping? <br/><em>Mentor someone who isn&rsquo;t yet.</em></h2>
+    <p>If you&rsquo;ve shipped one or more apps with LingCode, come help at a Friday workshop. We&rsquo;ll cover travel for in-person workshops outside your city, and you&rsquo;ll get free Studio for as long as you mentor.</p>
+    <a href="#" class="btn btn-primary btn-large">Apply to mentor →</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

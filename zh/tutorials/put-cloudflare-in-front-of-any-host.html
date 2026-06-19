@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>为任意主机启用 Cloudflare 代理 — LingCode 教程</title>
+  <meta name="description" content="将 DNS 指向 Cloudflare，由 Cloudflare 代理到你的真实服务器。你将获得免费的 TLS、全球 CDN、DDoS 防护，以及日后迁移源站而无需再动 DNS 的能力。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/put-cloudflare-in-front-of-any-host.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/put-cloudflare-in-front-of-any-host.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/put-cloudflare-in-front-of-any-host.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/put-cloudflare-in-front-of-any-host.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "为任意主机启用 Cloudflare 代理",
+  "description": "「通过 Cloudflare 代理流量」是互联网上最通用的基础设施技巧。你将 DNS 交给 Cloudflare，由 Cloudflare 响应请求、终止 TLS、缓存静态资源、过滤恶意流量，再将其余请求转发到你的真实服务器——全程免费。",
+  "url": "https://lingcode.dev/zh/tutorials/put-cloudflare-in-front-of-any-host.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/put-cloudflare-in-front-of-any-host.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "为任意主机启用 Cloudflare 代理"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "为任意主机启用 Cloudflare 代理",
+      "item": "https://lingcode.dev/zh/tutorials/put-cloudflare-in-front-of-any-host.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/put-cloudflare-in-front-of-any-host.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>为任意主机启用 Cloudflare 代理</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>为任意主机启用 Cloudflare 代理</h1>
+      <p class="intro">「通过 Cloudflare 代理流量」是互联网上最通用的基础设施技巧。你将 DNS 交给 Cloudflare，由 Cloudflare 响应请求、终止 TLS、缓存静态资源、过滤恶意流量，再将其余请求转发到你的真实服务器——全程免费。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>互联网上一个网站的默认运作方式是：DNS 解析到你的服务器，用户浏览器直接连接你的服务器，服务器返回响应。这种方式可以正常工作，但也意味着你的服务器要承受每一个请求——所有的机器人扫描、漏洞探测、每次用户刷新页面对缓存资源的重新请求。带宽、CPU 和精力全都直接压向你。</p>
+      <p>在前面加一层反向代理，改变了这种拓扑结构。用户连接到代理，代理决定是从自身缓存中响应、转发到源站服务器，还是直接拒绝请求。你的源站只会看到代理决定转发过来的请求。这在企业基础设施中是成熟的模式（价格昂贵、厂商众多），而对独立开发者来说，真正有意义的方案是 Cloudflare 的免费套餐——为你名下的任意域名提供同等能力，零成本。</p>
+      <p>这些收益会相互叠加。免费的 TLS 终止意味着你不需要自行维护 Let's Encrypt。全球边缘缓存意味着静态资源从距离用户最近的节点加载。基础 DDoS 防护意味着小规模攻击不会把你打垮。隐藏源站 IP 意味着扫描器无法轻易定位你的服务器。这些都不是什么魔法——不过是反向代理的标准收益，只是价格被设成了零而已。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>核心模型：DNS 托管在 Cloudflare，流量通过 Cloudflare 代理</li>
+        <li>将任意域名添加到 Cloudflare（无论在哪里注册）</li>
+        <li>橙色云朵图标的含义及其实际作用</li>
+        <li>SSL/TLS 模式——那个最关键的设置</li>
+        <li>什么情况下代理反而是错误的选择</li>
+      </ul>
+
+      <h2>第 1 步：架构概述</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Cloudflare 成为中间人</h3>
+          <p>引入 Cloudflare 后的数据流向：</p>
+          <pre><code>用户 → Cloudflare 边缘节点 → 你的源站服务器
+       （终止 TLS、
+        缓存静态资源、
+        过滤流量）</code></pre>
+          <p>你将域名添加到 Cloudflare，Cloudflare 为你分配新的名称服务器（NSx.cloudflare.com）。你在域名注册商处将名称服务器替换为 Cloudflare 提供的两个。Cloudflare 由此成为你 DNS 的权威服务器，并获得对你标记为代理的记录进行代理的能力。</p>
+          <p>这与你在哪里购买域名无关。<a href="/zh/tutorials/buy-a-domain-from-namecheap.html">Namecheap</a>、<a href="/zh/tutorials/buy-a-domain-from-porkbun.html">Porkbun</a>、<a href="/zh/tutorials/buy-a-domain-from-godaddy.html">GoDaddy</a>——它们都支持自定义名称服务器。唯一的例外是<a href="/zh/tutorials/buy-a-domain-from-cloudflare.html">Cloudflare 自家的域名注册商</a>，那里一切都已经自动配置好了。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：将域名添加到 Cloudflare</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>免费套餐，五分钟搞定</h3>
+          <p>在 cloudflare.com 注册账号（免费套餐已经足够；「Pro」及以上适用于有特定需求的企业）。点击 <strong>Add a Site</strong>，输入你的域名，选择 Free 套餐。</p>
+          <p>Cloudflare 会扫描你当前的 DNS——也就是现在权威 DNS 中的内容——并导入已有的记录。仔细核对导入的列表，如有遗漏，手动补充。不需要代理的记录（DKIM、SPF、自定义 MX）仍会正常解析 DNS；需要代理的记录（网站主要的 A 或 CNAME 记录）则会获得橙色云朵的待遇。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：在注册商处更换名称服务器</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>切换时刻</h3>
+          <p>Cloudflare 会给你两个名称服务器主机名（例如 <code>katie.ns.cloudflare.com</code> 和 <code>logan.ns.cloudflare.com</code>）。在域名注册商处找到名称服务器设置（每家注册商都有），将当前的名称服务器替换为 Cloudflare 的两个。</p>
+          <p>传播需要几分钟到几小时不等——Cloudflare 会轮询并在检测到你的域名指向它们后发送邮件通知你。在此期间，两个 DNS 提供商都在提供解析（尚未更新的解析器走旧的，已更新的走 Cloudflare）。请确保 Cloudflare 上的记录与之前一致，否则部分用户会被解析到错误的地方。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>切换前务必先验证。</strong> 在更换名称服务器之前，直接查询 Cloudflare 的 NS（<code>dig @logan.ns.cloudflare.com yourdomain.com</code>），确认 Cloudflare 返回了你预期的记录。在传播开始前发现拼写错误，能省去一个小时的焦虑排查。
+      </div>
+
+      <h2>第 4 步：橙色云朵图标</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>代理模式 vs 仅 DNS 模式</h3>
+          <p>在 Cloudflare 的 DNS 面板中，每条记录旁边都有一个图标：橙色云朵（代理中）或灰色云朵（仅 DNS）。</p>
+          <ul>
+            <li><strong>橙色云朵（代理中）：</strong>请求经过 Cloudflare 的边缘节点。TLS 由 Cloudflare 终止，源站 IP 被隐藏，缓存、安全和 CDN 功能全部激活。网站的记录请使用此模式。</li>
+            <li><strong>灰色云朵（仅 DNS）：</strong>Cloudflare 响应 DNS 查询，但不做代理。请求直接发往你的服务器。非 HTTP 记录（邮件服务器、仅 SSH 的主机、Cloudflare 代理不支持的服务）请使用此模式。</li>
+          </ul>
+          <p>Cloudflare 的代理仅支持 HTTP/HTTPS。指向 SSH 或数据库的记录请勿开启代理，改用灰色云朵。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：SSL/TLS 模式——最关键的设置</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>选「Full (Strict)」</h3>
+          <p>在 <strong>SSL/TLS → Overview</strong> 下，Cloudflare 为 Cloudflare 到源站之间的连接提供四种模式：</p>
+          <ul>
+            <li><strong>Off：</strong>全程无 HTTPS。永远不要使用。</li>
+            <li><strong>Flexible：</strong>用户到 Cloudflare 走 HTTPS，Cloudflare 到源站走 HTTP。<strong>避免使用</strong>——对用户看起来是安全的，但实际上并非如此。</li>
+            <li><strong>Full：</strong>端到端 HTTPS，Cloudflare 不验证源站证书（因此自签名证书也能用）。适合快速起步。</li>
+            <li><strong>Full (Strict)：</strong>端到端 HTTPS，且 Cloudflare 会验证源站持有有效证书。<strong>生产环境请使用此模式。</strong></li>
+          </ul>
+          <p>要使用 Full (Strict)，你的源站也需要一张真实的 TLS 证书——可以来自 <a href="/zh/tutorials/set-up-https-with-lets-encrypt.html">Let's Encrypt</a>，或使用免费的 Cloudflare 源站证书（Cloudflare → SSL/TLS → Origin Server → Create Certificate）。源站证书有效期最长 15 年，仅受 Cloudflare 信任而非公众——非常适合 Cloudflare 到源站这一段。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：免费获得的能力</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>记录开启橙色云朵后激活的功能</h3>
+          <ul>
+            <li><strong>免费 TLS。</strong> Cloudflare 自动为你的域名签发和续期证书，浏览器看到的是来自主流 CA 的有效证书。</li>
+            <li><strong>全球边缘缓存。</strong> 静态资源（图片、CSS、JS）缓存在距离用户最近的 Cloudflare 边缘节点。缓存规则可自定义配置。</li>
+            <li><strong>基础 DDoS 防护。</strong> Cloudflare 透明地吸收 L3/L4 攻击；应用层攻击则需要更多调优。</li>
+            <li><strong>隐藏源站 IP。</strong> 公开 DNS 只显示 Cloudflare 的 IP，扫描器无法轻易定位你的服务器。</li>
+            <li><strong>Always Online、IP 规则、页面规则。</strong> 多个小功能相互叠加，效果可观。</li>
+          </ul>
+          <p>这些功能无需任何配置即可激活——记录开启橙色云朵的那一刻起，它们就默认生效。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：什么时候代理反而不合适</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>四种合理使用灰色云朵的场景</h3>
+          <ul>
+            <li><strong>非 HTTP 服务。</strong> SSH、FTP、邮件、数据库——Cloudflare 标准代理不支持这些协议。使用 Cloudflare Spectrum（付费）或改用灰色云朵。</li>
+            <li><strong>实时或 WebSocket 密集型应用。</strong> Cloudflare 在免费套餐上支持 WebSocket，但代理带来的延迟对聊天、游戏、协同编辑等场景可能不可忽视。</li>
+            <li><strong>合规限制。</strong> 部分受监管行业不允许流量经过第三方代理。请仔细阅读你的合规要求。</li>
+            <li><strong>带宽成本敏感。</strong> Cloudflare 免费套餐非常慷慨，但对于极高流量场景，缓存存在软限制。特定媒体密集型用例可能会触及上限。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>不要为面向公众的站点代理未加密的源站。</strong> 如果 Cloudflare 到源站走 HTTP（Flexible SSL 模式），两者之间路径上的任何人都可以窃听。Cloudflare 边缘到用户的这一段看起来安全，但后半段并不安全。至少使用 Full 模式，理想情况下使用 Full (Strict)。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/set-up-https-with-lets-encrypt.html" class="tutorial-next-card">
+            <h3>使用 Let's Encrypt 配置 HTTPS</h3>
+            <p>源站侧的 TLS——与 Cloudflare Full (Strict) 模式配合使用</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-domain-from-cloudflare.html" class="tutorial-next-card">
+            <h3>从 Cloudflare Registrar 购买域名</h3>
+            <p>如果你还没有域名，这是最实惠的路径</p>
+          </a>
+          <a href="/zh/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>通过 DNS 将域名连接到服务器</h3>
+            <p>代理层之下的 DNS 基础</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发工具。为想要快速发布的创始人和想要专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演讲</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pick a BaaS: Firebase vs Supabase — LingCode Tutorials</title>
+  <meta name="description" content="Firebase, Supabase, and the BaaS category they belong to — what you trade for speed, where lock-in actually bites, and a working hello-world for each.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/pick-a-baas-firebase-vs-supabase.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/pick-a-baas-firebase-vs-supabase.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/pick-a-baas-firebase-vs-supabase.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/pick-a-baas-firebase-vs-supabase.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Pick a BaaS: Firebase vs Supabase",
+  "description": "Backend-as-a-Service is a bundle: auth, database, storage, functions, realtime, all behind one SDK. You're not buying a database; you're buying the right to never think about how it's hosted. Firebase and Supabase are the two defaults — different data models, different exit costs",
+  "url": "https://lingcode.dev/tutorials/pick-a-baas-firebase-vs-supabase.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/pick-a-baas-firebase-vs-supabase.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Pick a BaaS: Firebase vs Supabase"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Pick a BaaS: Firebase vs Supabase",
+      "item": "https://lingcode.dev/tutorials/pick-a-baas-firebase-vs-supabase.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/pick-a-baas-firebase-vs-supabase.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Pick a BaaS: Firebase vs Supabase</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Pick a BaaS: Firebase vs Supabase</h1>
+      <p class="intro">Backend-as-a-Service is a bundle: auth, database, storage, functions, realtime, all behind one SDK. You're not buying a database; you're buying the right to never think about how it's hosted. Firebase and Supabase are the two defaults — different data models, different exit costs, similar pricing curves. This is how you pick.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>"BaaS" — backend-as-a-service — names a category that's actually a bet about how applications get built. The bet: a typical app needs auth, a database, file uploads, and a way for those to talk to each other over the network. The traditional path was to assemble that yourself — Postgres for data, Passport / NextAuth for auth, S3 for storage, an API server for glue, and three or four config files keeping them aligned. The BaaS bet is that you can ship the same product faster by accepting one vendor's pre-assembled version of all four. You write less infrastructure code; you get auth that just works; the SDK is what you import. The trade is that the vendor owns the data model and the API shape.</p>
+      <p><strong>Firebase</strong> (Google, since 2011, acquired in 2014) is the older option. Its database is <em>Firestore</em>, a NoSQL document store with realtime sync built in — you write JSON-shaped documents into collections, the SDK pushes updates to every client viewing them. <strong>Supabase</strong> (independent, since 2020) is "Firebase but Postgres" — same auth + storage + realtime + functions wrapping, but the database is real Postgres with SQL, joins, and foreign keys. The difference looks small but it's actually the most important call you make on this stack: Firestore optimizes for "show me documents that match this filter, in realtime, on millions of clients"; Postgres optimizes for "let me ask any question I think of later." Pick the data model that matches how you'll write your queries.</p>
+      <p>This tutorial covers the decision (most of the work), the dimensions that actually matter (most lists miss them), and a working "read a row + check who's signed in" hello-world for each. After this, you'll know which to pick and you'll have proven the basics work for that choice. Going from hello-world to a real app is then just more of the same SDK.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>What BaaS actually bundles, and how that bundle differs from rolling your own</li>
+        <li>The data-model question: documents (Firestore) vs relations (Postgres)</li>
+        <li>The dimensions that matter past the first week (queries, migrations, lock-in)</li>
+        <li>Pricing curves: when free tier ends, what the bill looks like</li>
+        <li>Hello-world for Firebase Auth + Firestore</li>
+        <li>Hello-world for Supabase Auth + Postgres</li>
+        <li>When the right answer is neither, and you should <a href="/tutorials/install-postgres-and-redis-on-your-server.html">roll your own</a></li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> A frontend framework you're comfortable in (React, Vue, Svelte, vanilla — both SDKs support all of them), a Google account if trying Firebase, a GitHub or email signup if trying Supabase. The hello-worlds run locally; no deploy needed.
+      </div>
+
+      <h2>Step 1: What you're actually buying</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Five services wrapped in one SDK</h3>
+          <p>Both Firebase and Supabase bundle the same five capabilities behind one SDK and one set of credentials:</p>
+          <ul>
+            <li><strong>Authentication</strong> — email/password, Google / Apple / GitHub OAuth, magic links, phone OTP. The SDK gives you "is the user signed in" as a one-line check.</li>
+            <li><strong>Database</strong> — where your app's data lives. Firebase = Firestore (NoSQL documents); Supabase = Postgres (relational rows).</li>
+            <li><strong>Storage</strong> — file uploads. Profile photos, attachments, user-generated images. Both expose a bucket-shaped API; Firebase backs it with Google Cloud Storage, Supabase with S3.</li>
+            <li><strong>Realtime</strong> — push-based updates to clients on data change. The "live counter that updates everywhere" demo. Firestore has it everywhere by default; Supabase has it on tables you opt in.</li>
+            <li><strong>Functions</strong> — server-side code triggered on events or HTTP. Firebase Cloud Functions (Node) and Supabase Edge Functions (Deno).</li>
+          </ul>
+          <p>The thing you're paying for, beyond hosting, is that <em>all five are wired to the same user identity</em>. A signed-in user's photo upload (storage) is allowed because of a row-level rule (database) referring to their auth token (authentication). Rolling this yourself means writing that wiring; with a BaaS, the SDK hands you the wired-together version.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: The data-model question (this is the decision)</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Firestore optimizes for one shape; Postgres optimizes for change</h3>
+          <p>The single most important difference between Firebase and Supabase is the database. Pick this badly and every later feature is a fight with the schema.</p>
+          <p><strong>Firestore (Firebase) — NoSQL documents.</strong> Data lives in <em>collections</em> of <em>documents</em>; a document is JSON. There are no joins. There are no foreign keys. There are no migrations — schemas exist only in your code. Queries are simple ("documents in this collection where field X equals Y") and very fast at scale, but anything multi-table-ish (think SQL joins) has to be either denormalized into the document or done client-side by fetching multiple collections. Realtime sync is everywhere by default; this is what Firebase is famous for.</p>
+          <p><strong>Postgres (Supabase) — relational rows.</strong> Data lives in <em>tables</em> with typed columns and a schema you define up front. Joins exist. Foreign keys exist. SQL is the query language; the Supabase SDK wraps a query builder over it, but you can also write raw SQL when you need to. Schema changes are migrations — text files in your repo that move the database from one shape to another. Realtime is opt-in per table.</p>
+          <p>The rule of thumb that holds up surprisingly well: <strong>if your app feels like "a feed of posts with comments and likes," Firestore is fine. If it feels like "users, projects, tasks, assignments, with reports across all of them," you'll fight Firestore and Postgres wins.</strong> Most real consumer apps drift toward the second shape over a year of iteration, even if they started looking like the first. That bias is the main reason teams pick Supabase as a default in 2026.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: The dimensions that matter past the first week</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>What both SDK tours don't show you</h3>
+          <table>
+            <thead><tr><th>Dimension</th><th>Firebase</th><th>Supabase</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Query power</strong></td>
+                <td>Limited: filter on one field, equality + range on one indexed field. No <code>JOIN</code>, no <code>GROUP BY</code>.</td>
+                <td>Full SQL. Joins, window functions, recursive CTEs, full-text search.</td>
+              </tr>
+              <tr>
+                <td><strong>Schema changes</strong></td>
+                <td>None. Add fields whenever; data lives or dies based on app code.</td>
+                <td>Migrations (text files in repo, applied to the DB). More work, more safety.</td>
+              </tr>
+              <tr>
+                <td><strong>Auth providers</strong></td>
+                <td>Email, phone, Google, Apple, Facebook, Twitter, GitHub, anonymous, custom JWT.</td>
+                <td>Email/password, magic links, Google, Apple, GitHub, GitLab, Bitbucket, Slack, Discord, Twitter, Microsoft, Notion, Spotify, Twitch, anonymous, phone, SAML.</td>
+              </tr>
+              <tr>
+                <td><strong>Realtime</strong></td>
+                <td>Default for all reads. The product's centerpiece.</td>
+                <td>Opt-in per table; uses Postgres logical replication under the hood. Solid but not the default.</td>
+              </tr>
+              <tr>
+                <td><strong>Row-level security</strong></td>
+                <td>Firestore Security Rules — a small DSL. Powerful but proprietary.</td>
+                <td>Postgres RLS — SQL. Powerful, portable, the standard.</td>
+              </tr>
+              <tr>
+                <td><strong>Exit cost</strong></td>
+                <td>High. The data lives in Firestore's proprietary format; export tools exist but rebuilding the app on another stack means rewriting most queries.</td>
+                <td>Low-to-medium. Data is Postgres — <code>pg_dump</code> and restore anywhere. Auth and storage are vendor-specific but the database, which usually holds the leverage, is portable.</td>
+              </tr>
+              <tr>
+                <td><strong>Local dev</strong></td>
+                <td>Firebase Emulator Suite — runs Firestore, Auth, Functions locally. Mature, well-documented.</td>
+                <td>Supabase CLI — runs Postgres + Auth + Storage + Studio in Docker locally. Mature, well-documented.</td>
+              </tr>
+              <tr>
+                <td><strong>Self-hosting</strong></td>
+                <td>No. Firebase is a Google-only service.</td>
+                <td>Yes. Supabase is open source; you can run the entire stack on your own Postgres + auth server. Most don't, but you can.</td>
+              </tr>
+              <tr>
+                <td><strong>Vendor lock-in (subjective)</strong></td>
+                <td>Significant. The mental model and query shape don't transfer.</td>
+                <td>Modest. Postgres skills and SQL transfer; Supabase-specific helpers don't.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>The exit-cost row matters more than people expect. Apps that succeed grow into needs that the original BaaS choice didn't anticipate. With Supabase, "I need to move off" is "<code>pg_dump</code> then run the app against a different Postgres." With Firebase, it's a project measured in months.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Pricing — the curve, not the headline</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Both are free until they aren't; understand the cliff</h3>
+          <p>Both have generous free tiers that cover personal projects and small SaaS. Both jump to a paid plan when you exceed quotas. Both then meter usage on top of the base plan.</p>
+          <p><strong>Firebase (Spark → Blaze).</strong> The Spark plan is free and includes 1 GiB Firestore, 1 GB storage, 10 GB transfer, 50K daily Firestore reads, 20K writes. Past that, you switch to Blaze (pay-as-you-go): $0.06 per 100K Firestore reads, $0.18 per 100K writes, $0.026/GB-month storage. The infamous "Firebase bill" stories are usually a misconfigured client doing infinite reads in a loop on Blaze — the meter doesn't stop. <strong>Set a daily budget alert on the GCP project before going to production.</strong></p>
+          <p><strong>Supabase Free → Pro.</strong> Free includes a 500 MB Postgres database, 1 GB storage, 50K monthly active users, 5 GB egress. Pro is a flat $25/month plus usage — 8 GB DB, 100 GB storage, 100K MAU, 250 GB egress. Above Pro is enterprise pricing. The pricing is more "subscription-shaped" than Firebase's pure usage meter; bills don't accidentally explode but plan changes have to be deliberate.</p>
+          <p>For a real app with ~10K monthly active users and moderate data: both run $25–60/month at the entry paid plans. The curves diverge above that — Firebase scales smoothly with traffic; Supabase has step-changes at plan boundaries (Pro → Team → Enterprise).</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Firebase's runaway-bill problem is real.</strong> Because Blaze meters every operation and there's no spending cap by default, a buggy client that re-reads in an infinite loop can rack up four-digit bills overnight. Mitigations: set a budget alert at $5 / $20 / $100 in the GCP Billing console, write Firestore Security Rules that limit reads per user, and never deploy a brand-new client without rate limits. Google will sometimes refund the worst cases but you can't count on it.
+      </div>
+
+      <h2>Step 5: Hello-world — Firebase</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Sign in with Google, read one document</h3>
+          <p>One-time setup: <a href="https://console.firebase.google.com" target="_blank" rel="noopener">Firebase console</a> → <strong>Add project</strong>. Inside: <strong>Build → Authentication</strong> → enable Google. <strong>Build → Firestore Database</strong> → create in test mode. From the project settings, copy the web config object (an <code>apiKey</code> and a handful of IDs).</p>
+          <p>In your project:</p>
+          <pre><code>npm i firebase</code></pre>
+          <p>Create <code>src/firebase.js</code>:</p>
+          <pre><code>import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+
+const app = initializeApp({
+  apiKey: "AIza...",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project",
+  // ...rest of config
+});
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const signInWithGoogle = () =&gt;
+  signInWithPopup(auth, new GoogleAuthProvider());
+
+export async function getProfile(uid) {
+  const snap = await getDoc(doc(db, "profiles", uid));
+  return snap.exists() ? snap.data() : null;
+}</code></pre>
+          <p>In your component:</p>
+          <pre><code>import { useEffect, useState } from "react";
+import { auth, signInWithGoogle, getProfile } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() =&gt; onAuthStateChanged(auth, async (u) =&gt; {
+    setUser(u);
+    if (u) setProfile(await getProfile(u.uid));
+  }), []);
+
+  if (!user) return &lt;button onClick={signInWithGoogle}&gt;Sign in&lt;/button&gt;;
+  return &lt;div&gt;Hi {user.displayName} — profile: {JSON.stringify(profile)}&lt;/div&gt;;
+}</code></pre>
+          <p>Run it. Click Sign in. The button opens Google's OAuth popup; you grant consent; the page now greets you by name. Drop a document at <code>profiles/&lt;your-uid&gt;</code> from the Firestore console; refresh; it shows up. That's the bundle in 30 lines.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Hello-world — Supabase</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Same thing, Postgres-shaped</h3>
+          <p>One-time setup: <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">Supabase dashboard</a> → <strong>New project</strong>. Wait ~90 seconds for the Postgres instance. In <strong>Authentication → Providers</strong>, enable Google (paste a Google OAuth client ID + secret from GCP). In <strong>SQL Editor</strong>, create a profiles table:</p>
+          <pre><code>create table profiles (
+  id uuid primary key references auth.users on delete cascade,
+  display_name text,
+  created_at timestamptz default now()
+);
+alter table profiles enable row level security;
+create policy "own profile" on profiles for select using (auth.uid() = id);</code></pre>
+          <p>From the project settings, copy the <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code>.</p>
+          <p>In your project:</p>
+          <pre><code>npm i @supabase/supabase-js</code></pre>
+          <p>Create <code>src/supabase.js</code>:</p>
+          <pre><code>import { createClient } from "@supabase/supabase-js";
+
+export const supabase = createClient(
+  "https://&lt;PROJECT&gt;.supabase.co",
+  "eyJ...ANON_KEY"
+);
+
+export const signInWithGoogle = () =&gt;
+  supabase.auth.signInWithOAuth({ provider: "google" });
+
+export async function getProfile(userId) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+  return error ? null : data;
+}</code></pre>
+          <p>In your component:</p>
+          <pre><code>import { useEffect, useState } from "react";
+import { supabase, signInWithGoogle, getProfile } from "./supabase";
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() =&gt; {
+    supabase.auth.getSession().then(({ data }) =&gt; setUser(data.session?.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, session) =&gt; {
+      const u = session?.user ?? null;
+      setUser(u);
+      if (u) setProfile(await getProfile(u.id));
+    });
+    return () =&gt; sub.subscription.unsubscribe();
+  }, []);
+
+  if (!user) return &lt;button onClick={signInWithGoogle}&gt;Sign in&lt;/button&gt;;
+  return &lt;div&gt;Hi {user.email} — profile: {JSON.stringify(profile)}&lt;/div&gt;;
+}</code></pre>
+          <p>Run it. Same flow: click Sign in, Google OAuth popup, page greets you. Insert a row into <code>profiles</code> with your <code>auth.users.id</code> as the primary key; refresh; it appears. The shape is nearly identical to Firebase; the database underneath is Postgres.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: How to decide between them</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Three short answers covering most cases</h3>
+          <ul>
+            <li><strong>Picking right now, don't know yet what the app becomes:</strong> Supabase. The exit cost is lower, the data model handles more shapes, and the SQL skills are universal.</li>
+            <li><strong>Your app is fundamentally a realtime sync product</strong> (chat, collaborative editor, live game state, multi-device presence): Firebase. Firestore's realtime-everywhere model is genuinely better than Supabase's opt-in realtime for this case.</li>
+            <li><strong>Your app needs joins, reports, or analytics on the data:</strong> Supabase. Fighting Firestore on this is a multi-month project; Postgres handles it as a one-line SQL query.</li>
+          </ul>
+          <p>"Both" is rare but legitimate — use Firebase Auth + Firestore for the realtime side of your app and Supabase Postgres for the relational side. Most teams find this is more complexity than it's worth and pick one.</p>
+        </div>
+      </div>
+
+      <h2>When the right answer is neither</h2>
+      <p><strong>You don't need realtime, you don't need auth-as-a-service, your data is simple.</strong> A Vercel-deployed Next.js app talking to Neon Postgres + NextAuth is dramatically simpler than either BaaS. The "all five capabilities in one SDK" framing assumes you need them all; you often don't.</p>
+      <p><strong>You're already deep on AWS or Azure.</strong> AWS Cognito + RDS + S3 (or Azure AD B2C + Cosmos + Blob) does the same things with provider integration you already have. Adding Firebase or Supabase means a second vendor bill and a second outage radius.</p>
+      <p><strong>You can't accept the data-residency or compliance posture of either.</strong> Firebase is Google Cloud; Supabase Cloud is AWS (multi-region available on Team+). Neither is the right answer for a strict on-prem requirement; self-hosted Supabase or a Postgres-on-your-own-server pattern (see <a href="/tutorials/install-postgres-and-redis-on-your-server.html">Install Postgres and Redis</a>) is.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/install-postgres-and-redis-on-your-server.html" class="tutorial-next-card">
+            <h3>Install Postgres and Redis on your server</h3>
+            <p>The "roll your own" path when neither BaaS fits — same Postgres, different operator</p>
+          </a>
+          <a href="/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>Sign in with Google OAuth</h3>
+            <p>The auth piece, if you want it without committing to a BaaS</p>
+          </a>
+          <a href="/tutorials/magic-deploy-a-website.html" class="tutorial-next-card">
+            <h3>Magic Deploy a website</h3>
+            <p>Frontend deploys; pair with Supabase or Firebase for the backend</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

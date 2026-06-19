@@ -1,0 +1,18 @@
+; userlist.txt — PgBouncer auth file. COPY to userlist.txt and fill in the real
+; SCRAM verifier. The real userlist.txt is gitignored (see .gitignore) — never
+; commit credentials.
+;
+; Format:  "username" "SCRAM-SHA-256$<iter>:<salt>$<storedkey>:<serverkey>"
+;
+; Generate the verifier WITHOUT exposing the plaintext password to PgBouncer by
+; reading it straight from Postgres (cloud_admin must already have a password
+; set with password_encryption=scram-sha-256, which is the PG14+ default):
+;
+;   docker exec lingcloud-postgres \
+;     psql -U cloud_admin -d lingcloud -tAc \
+;     "SELECT '\"'||rolname||'\" \"'||rolpassword||'\"' \
+;        FROM pg_authid WHERE rolname='cloud_admin';"
+;
+; Paste the single line it prints below.
+
+"cloud_admin" "SCRAM-SHA-256$4096:REPLACE_WITH_REAL_SALT$REPLACE_WITH_REAL_STOREDKEY:REPLACE_WITH_REAL_SERVERKEY"

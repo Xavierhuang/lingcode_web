@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create an iOS or Mac app icon — LingCode Tutorials</title>
+  <meta name="description" content="Modern Xcode wants one 1024×1024 PNG and generates the rest. Learn the single-size flow, the alpha-channel pitfall that gets builds rejected, and how to ask the agent to do it for you.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/create-an-ios-or-mac-app-icon.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/create-an-ios-or-mac-app-icon.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/create-an-ios-or-mac-app-icon.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605171400">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-17T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/create-an-ios-or-mac-app-icon.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Create an iOS or Mac app icon",
+  "description": "App icons used to mean exporting fifteen PNGs at every device-pixel size. Modern Xcode wants one — a 1024×1024 PNG — and generates the rest. This tutorial covers what makes that one image App-Store-shippable, the asset-catalog flow, and the one mistake that gets builds silently r",
+  "url": "https://lingcode.dev/tutorials/create-an-ios-or-mac-app-icon.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-17",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/create-an-ios-or-mac-app-icon.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Create an iOS or Mac app icon"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Create an iOS or Mac app icon",
+      "item": "https://lingcode.dev/tutorials/create-an-ios-or-mac-app-icon.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/create-an-ios-or-mac-app-icon.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Native Mac IDE</a>
+      <span>/</span>
+      <span>Create an iOS or Mac app icon</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-17</span>
+      </div>
+      <h1>Create an iOS or Mac app icon</h1>
+      <p class="intro">App icons used to mean exporting fifteen PNGs at every device-pixel size. Modern Xcode wants one — a 1024×1024 PNG — and generates the rest. This tutorial covers what makes that one image App-Store-shippable, the asset-catalog flow, and the one mistake that gets builds silently rejected at upload.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>You can let the agent do this for you in three sentences ("<em>add an app icon, use the image at ~/Desktop/icon.png as the source</em>") and it'll generally land it on the first try. The reason this tutorial exists is for when something goes wrong — usually a rejected upload — and you need to know what the asset catalog actually expects. Once you understand the shape of the problem, the agent's edits stop being magic.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Why modern Xcode only needs one 1024×1024 source image</li>
+        <li>What an <code>AppIcon.appiconset</code> actually is on disk</li>
+        <li>The three image requirements (sRGB, no alpha, square) and why each one matters</li>
+        <li>The fast path: LingCode's <strong>App Icon Generator</strong> sheet — prompt-to-icon-set in one window</li>
+        <li>The chat path: image generation via Gemini, then asset-catalog wiring</li>
+        <li>The two failure modes and how to diagnose each</li>
+      </ul>
+
+      <h2>Step 1: The mental model</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Asset catalogs are folders pretending to be files</h3>
+          <p>When you see <code>Assets.xcassets</code> in the Xcode project navigator, that's not a single file — it's a directory on disk. Inside, every "image" you've added is its own subdirectory containing the actual PNGs and a small <code>Contents.json</code> that tells the build system which file goes with which size, scale, and idiom (iPhone, iPad, Mac, etc.).</p>
+          <p>For an app icon specifically, the directory is named <code>AppIcon.appiconset</code>. In the old flow it would contain ~15 PNGs at every required device-pixel size. The modern flow, since Xcode 14, supports a "Single Size" mode: drop in one 1024×1024 PNG, and the toolchain generates every smaller variant at build time. You don't ever ship 15 files — you ship one.</p>
+          <p>This is the entire reason a "use this image as my app icon" prompt to the agent works so reliably. There's exactly one file to write and one <code>Contents.json</code> to edit.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Prepare the source image</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Three rules, one of which gets builds rejected</h3>
+          <p>Your 1024×1024 source PNG needs to satisfy three constraints:</p>
+          <ul>
+            <li><strong>Exactly 1024×1024 pixels, square.</strong> Not 1023×1024, not 2048×2048 downscaled. Xcode will warn but ship; App Store Connect will reject if it's not exactly square at upload time.</li>
+            <li><strong>sRGB color space.</strong> If you exported from Figma or Sketch, you're almost certainly already in sRGB. If you exported from a print tool, you might be in Display P3 or Adobe RGB — convert before importing or colors shift on device.</li>
+            <li><strong>No alpha channel.</strong> This is the silent killer. App Store Connect rejects any iOS icon with transparency — and it does so at the very end of upload, after the long wait. Flatten the image against a solid color (usually white or your brand color) before saving.</li>
+          </ul>
+          <p>Also: <strong>don't pre-round the corners</strong>. iOS and macOS apply their own corner masks (different radii per platform, different per device family). If you ship a pre-rounded square, you get a double-rounded blob that looks wrong everywhere. Ship a perfect square; the OS does the rest.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>The alpha-channel rejection is the most common ship blocker.</strong> Symptoms: you upload to App Store Connect, wait 10 minutes, and get an email that reads "<em>Invalid Asset — The app icon … can't contain alpha channels or transparencies</em>." Fix it by flattening: open in Preview → Export → uncheck "Alpha" → save → reimport. Or in the terminal: <code>sips -s format png --setProperty hasAlpha no icon.png --out icon-flat.png</code>.
+      </div>
+
+      <h2>Step 3: The fast path — App Icon Generator (with built-in AI)</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Mobile menu → App Icon Generator… → prompt or paste → Generate</h3>
+          <p>LingCode ships a dedicated sheet that does the whole pipeline — generate the source image, resize it to every required dimension, write the asset catalog — in one window. From the menu bar choose <strong>Mobile → App Icon Generator…</strong>.</p>
+          <p>You have two ways to provide the source:</p>
+          <ul>
+            <li><strong>Type a prompt</strong>: there's a text field that takes natural language ("<em>minimalist purple lightning bolt, flat design, white background</em>") and calls LingCode's hosted image-generation backend to produce a 1024×1024 PNG. A quota badge above the field shows how many generations you have left this month — free/Pro/Max-Pro tiers have different ceilings.</li>
+            <li><strong>Drop a master image</strong>: if you already have a 1024×1024 PNG from Figma, Midjourney, the chat's <code>generate_image</code> tool, or anywhere else, click the master-image slot and pick the file.</li>
+          </ul>
+          <p>Then pick your target directories — the iOS slot points at your project's <code>Assets.xcassets/AppIcon.appiconset/</code>, the Android slot at <code>app/src/main/res/</code> (toggle off whichever platform you're not shipping). Click <strong>Generate</strong>. The sheet lists every file it wrote so you can verify the output landed in the right folders.</p>
+          <p>The sheet uses LingCode's bundled <code>AppIconGeneratorService</code> under the hood — pure Core Graphics, no external tools. The iOS pass produces a complete <code>AppIcon.appiconset</code> with all required sizes; the Android pass writes <code>ic_launcher</code>, <code>ic_launcher_round</code>, and the adaptive <code>ic_launcher_foreground</code> at every density bucket (covered in the <a href="/tutorials/create-an-android-adaptive-icon.html">Android adaptive icon</a> tutorial).</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Or do it via chat</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>If you'd rather stay in the agent loop</h3>
+          <p>Open a Claude chat in your project and ask:</p>
+          <pre><code>Add an app icon to this project. Use ~/Desktop/icon.png as the source image.
+Use the modern single-size asset catalog flow (one 1024×1024 image).</code></pre>
+          <p>The agent will copy the file into <code>YourApp/Assets.xcassets/AppIcon.appiconset/icon.png</code> and rewrite <code>Contents.json</code> to declare a single 1024×1024 universal entry. Both edits show up in the diff view, easy to revert.</p>
+          <p>Don't have a source image yet? The chat has its own image-generation tool wired to Gemini's image model. Ask "<em>generate a 1024×1024 app icon: a calm geometric sun in gold on a deep-navy background, flat design</em>" and the agent saves the result to <code>&lt;project&gt;/assets/&lt;slug&gt;.png</code>, then references it back inline so you can iterate. Needs your own Gemini API key (Settings → API Keys → Gemini). Once you like the result, ask the agent to wire it into the asset catalog — or open the App Icon Generator sheet and point it at the generated file.</p>
+          <p>Verify by opening <code>Assets.xcassets</code> in Xcode (or LingCode's asset browser) and clicking <strong>AppIcon</strong>. You should see your image in a single large slot, not split across a grid of device-specific slots. That confirms single-size mode is on.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>iOS and Mac in the same project?</strong> The <em>single</em> 1024×1024 image works for both — the build system synthesizes the per-platform variants. If you want platform-specific art (a different look on Mac than iPhone), the agent can switch the asset catalog back into multi-platform mode and add separate source images per idiom. Mention "<em>I want different artwork on macOS</em>" in your prompt.
+      </div>
+
+      <h2>Step 5: Add it manually (the path everything else is automating)</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>If you ever need to do this by hand</h3>
+          <p>Same flow, click by click. Useful when something has drifted and the diff isn't obvious.</p>
+          <ol>
+            <li>Open <code>Assets.xcassets</code> in Xcode. Select the <strong>AppIcon</strong> entry in the left sidebar.</li>
+            <li>In the right inspector (Attributes), set <strong>Devices</strong> to <em>iOS, iPadOS, macOS</em> as appropriate.</li>
+            <li>Toggle <strong>Single Size</strong> on (or "iOS Marketing" — same thing, depending on Xcode version).</li>
+            <li>Drag your 1024×1024 PNG into the single slot that appears.</li>
+            <li>Build and run. Confirm the icon appears in the Dock (Mac) or Home Screen (iOS Simulator).</li>
+          </ol>
+          <p>If the slot complains "<em>Image dimensions don't match expected size</em>," the source isn't exactly 1024 square. If it complains about alpha, see Step 2's warn box.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Diagnose a failure</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Two failure modes, each with one symptom</h3>
+          <p>If the icon doesn't appear or won't ship, it's almost always one of these:</p>
+          <table>
+            <thead>
+              <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Builds and installs, but the launcher shows the generic gray app icon</td>
+                <td>The asset catalog has the image but the project's build settings don't reference <code>AppIcon</code> as the icon source.</td>
+                <td>Project target → Build Settings → search "<code>ASSETCATALOG_COMPILER_APPICON_NAME</code>". It should be <code>AppIcon</code>. If empty, set it.</td>
+              </tr>
+              <tr>
+                <td>App Store Connect upload rejected with "alpha channels or transparencies"</td>
+                <td>The 1024×1024 source PNG has an alpha channel — even if it looks fully opaque, the channel itself is the problem.</td>
+                <td>See Step 2's warn box: flatten with <code>sips</code> or Preview's "uncheck Alpha" export, replace the file, archive and re-upload.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Both diagnoses take 30 seconds with the agent: paste the rejection email or the launcher symptom into chat, and it'll inspect <code>Contents.json</code> and the build settings for you.</p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/create-an-android-adaptive-icon.html" class="tutorial-next-card">
+            <h3>Create an Android adaptive icon</h3>
+            <p>The Android equivalent — two layers, a safe zone, and per-launcher masking</p>
+          </a>
+          <a href="/tutorials/create-a-custom-sf-symbol.html" class="tutorial-next-card">
+            <h3>Create a custom SF Symbol</h3>
+            <p>App icons are one image; in-app icons are SF Symbols — here's how to make your own</p>
+          </a>
+          <a href="/tutorials/first-time-ios-app-store-submission.html" class="tutorial-next-card">
+            <h3>Ship your first iOS build to App Store Connect</h3>
+            <p>The full submission flow once your icon is in place</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

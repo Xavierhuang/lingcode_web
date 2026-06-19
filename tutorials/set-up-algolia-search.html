@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set up Algolia search — LingCode Tutorials</title>
+  <meta name="description" content="Add instant search-as-you-type to your app. Index records, drop the UI components, ship. Sub-100ms queries; free up to 10K records and 10K requests/month.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-algolia-search.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-algolia-search.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-algolia-search.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/set-up-algolia-search.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Set up Algolia search",
+  "description": "Search-as-you-type with typo tolerance, faceting, and ranking — running globally on Algolia's network. Index your records via an API call; drop in the React/Vue/JS UI library. Sub-100ms queries from anywhere.",
+  "url": "https://lingcode.dev/tutorials/set-up-algolia-search.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/set-up-algolia-search.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Sign up + create an app",
+      "url": "https://lingcode.dev/tutorials/set-up-algolia-search.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Configure your index settings",
+      "url": "https://lingcode.dev/tutorials/set-up-algolia-search.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Drop in the UI library",
+      "url": "https://lingcode.dev/tutorials/set-up-algolia-search.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Set up Algolia search",
+      "item": "https://lingcode.dev/tutorials/set-up-algolia-search.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/set-up-algolia-search.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Set up Algolia search</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Set up Algolia search</h1>
+      <p class="intro">Search-as-you-type with typo tolerance, faceting, and ranking — running globally on Algolia's network. Index your records via an API call; drop in the React/Vue/JS UI library. Sub-100ms queries from anywhere.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>When to pick Algolia (and when not)</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick Algolia when</strong> — you want polished search UI fast, type-ahead matters, you have ≤ ~1M records, search is user-facing and latency-critical.</li>
+            <li><strong>Pick <a href="https://www.meilisearch.com/" target="_blank" rel="noopener">Meilisearch ↗</a></strong> if you want open-source / self-hostable / Rust-based with similar DX.</li>
+            <li><strong>Pick <a href="https://typesense.org/" target="_blank" rel="noopener">Typesense ↗</a></strong> for another open-source option; cheaper at scale.</li>
+            <li><strong>Pick Postgres full-text search</strong> (<code>tsvector</code> / <code>tsquery</code>) for simple needs already on your DB.</li>
+            <li><strong>Pick <a href="https://opensearch.org/" target="_blank" rel="noopener">OpenSearch ↗</a> / Elasticsearch</strong> for complex enterprise needs, log analytics, big data.</li>
+          </ul>
+          <p>Algolia's sweet spot: indie SaaS that wants search to feel like Linear or Stripe's docs with a few hours of work.</p>
+        </div>
+      </div>
+
+      <h2>Sign up + create an app</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Sign up at <a href="https://www.algolia.com/users/sign_up" target="_blank" rel="noopener">algolia.com ↗</a>. Build tier (free) covers 10K records + 10K requests/month — enough for a small app or doc site.</p>
+          <p>Dashboard shows your <strong>Application ID</strong> + four API keys:</p>
+          <ul>
+            <li><strong>Search-Only API Key</strong> — for browser/client. Read-only.</li>
+            <li><strong>Admin API Key</strong> — for backend. Full control. Never ship to client.</li>
+            <li><strong>Write API Key</strong> — for backend write operations.</li>
+            <li><strong>Monitoring API Key</strong> — for usage stats.</li>
+          </ul>
+          <pre><code>ALGOLIA_APP_ID=ABCD1234
+ALGOLIA_ADMIN_KEY=xxxxxxxxxxxxxxxxxxxxxxxx           # backend only
+ALGOLIA_SEARCH_KEY=xxxxxxxxxxxxxxxxxxxxxxxx          # safe in browser
+NEXT_PUBLIC_ALGOLIA_SEARCH_KEY=xxxxxxxxxxxxxx        # ditto, for Next.js</code></pre>
+        </div>
+      </div>
+
+      <h2>Decide what to index</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>An Algolia "index" is a collection of records. A record is a JSON object — anything you'd want to surface in search.</p>
+          <p>For a blog: each post is a record. For e-commerce: each product. For a SaaS: maybe one index for documents, another for users, another for tags.</p>
+          <p>Each record needs an <code>objectID</code> (your unique identifier — your DB primary key works). Algolia auto-indexes every other top-level field.</p>
+          <pre><code>{
+  "objectID": "post-123",
+  "title": "How to deploy to Vercel",
+  "body": "First, install the CLI...",
+  "author": "Jane",
+  "tags": ["deploy", "vercel"],
+  "published_at": 1714521600
+}</code></pre>
+        </div>
+      </div>
+
+      <h2>Push records from your backend</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <pre><code>npm install algoliasearch</code></pre>
+          <pre><code>import { algoliasearch } from "algoliasearch";
+
+const client = algoliasearch(
+  process.env.ALGOLIA_APP_ID,
+  process.env.ALGOLIA_ADMIN_KEY      // admin key, BACKEND ONLY
+);
+
+// Save / replace a single record
+await client.saveObject({
+  indexName: "posts",
+  body: {
+    objectID: "post-123",
+    title: "How to deploy to Vercel",
+    body: "First, install the CLI...",
+    tags: ["deploy", "vercel"],
+  },
+});
+
+// Bulk replace (faster for initial import)
+await client.saveObjects({
+  indexName: "posts",
+  objects: arrayOfPosts,
+});</code></pre>
+          <p>Run this on a schedule (every N minutes) or on every DB write that touches indexable content. <a href="https://www.algolia.com/doc/api-client/getting-started/install/javascript/" target="_blank" rel="noopener">JS API client docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Configure your index settings</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Dashboard → your index → <strong>Configuration</strong>. The two settings that matter most:</p>
+          <ul>
+            <li><strong>Searchable attributes</strong> — which fields participate in search, and in what priority order. <code>title</code> first, <code>body</code> second is typical. <a href="https://www.algolia.com/doc/guides/managing-results/must-do/searchable-attributes/" target="_blank" rel="noopener">Docs ↗</a>.</li>
+            <li><strong>Ranking</strong> — Algolia's default ranking is "typo → geo → words → filters → proximity → attribute → exact → custom." For most apps, add a custom ranking attribute (e.g., <code>popularity</code> or <code>published_at</code>) to break ties. <a href="https://www.algolia.com/doc/guides/managing-results/relevance-overview/" target="_blank" rel="noopener">Ranking docs ↗</a>.</li>
+          </ul>
+          <p>Or via API:</p>
+          <pre><code>await client.setSettings({
+  indexName: "posts",
+  indexSettings: {
+    searchableAttributes: ["title", "body", "tags"],
+    customRanking: ["desc(published_at)"],
+  },
+});</code></pre>
+        </div>
+      </div>
+
+      <h2>Search from the browser</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <pre><code>import { algoliasearch } from "algoliasearch";
+
+const client = algoliasearch(
+  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
+  process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY    // search-only key; safe in browser
+);
+
+const { hits } = await client.searchSingleIndex({
+  indexName: "posts",
+  searchParams: { query: "vercel deploy" },
+});</code></pre>
+          <p>Use the search-only key, not admin. The search key is restricted to read operations; safe to ship in your JS bundle.</p>
+        </div>
+      </div>
+
+      <h2>Drop in the UI library</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>For instant search-as-you-type, don't roll your own. Algolia's <strong>InstantSearch</strong> library handles debouncing, faceting, pagination, and renders results.</p>
+          <p><strong>React:</strong></p>
+          <pre><code>npm install algoliasearch react-instantsearch</code></pre>
+          <pre><code>import { liteClient } from "algoliasearch/lite";
+import { InstantSearch, SearchBox, Hits } from "react-instantsearch";
+
+const searchClient = liteClient(
+  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
+  process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY
+);
+
+export function Search() {
+  return (
+    &lt;InstantSearch searchClient={searchClient} indexName="posts"&gt;
+      &lt;SearchBox /&gt;
+      &lt;Hits hitComponent={({ hit }) =&gt; &lt;div&gt;{hit.title}&lt;/div&gt;} /&gt;
+    &lt;/InstantSearch&gt;
+  );
+}</code></pre>
+          <p>Equivalents: <a href="https://www.algolia.com/doc/guides/building-search-ui/getting-started/vue/" target="_blank" rel="noopener">Vue InstantSearch ↗</a>, <a href="https://www.algolia.com/doc/api-reference/widgets/js/" target="_blank" rel="noopener">vanilla JS InstantSearch ↗</a>, <a href="https://docusaurus.io/docs/search" target="_blank" rel="noopener">Docusaurus DocSearch ↗</a> (free for open-source docs).</p>
+        </div>
+      </div>
+
+      <h2>Facets / filters</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>For "filter results by category / tag / price range," declare attributes as faceting:</p>
+          <pre><code>await client.setSettings({
+  indexName: "posts",
+  indexSettings: {
+    attributesForFaceting: ["tags", "author", "filterOnly(published)"],
+  },
+});</code></pre>
+          <p>Then in InstantSearch:</p>
+          <pre><code>import { RefinementList, HierarchicalMenu } from "react-instantsearch";
+
+&lt;RefinementList attribute="tags" /&gt;
+&lt;RefinementList attribute="author" /&gt;</code></pre>
+          <p>The widgets render checkboxes and apply filters automatically. <a href="https://www.algolia.com/doc/api-reference/widgets/refinement-list/react/" target="_blank" rel="noopener">RefinementList docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Sync your DB → Algolia automatically</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>You probably don't want to manually push every record. Two common patterns:</p>
+          <ul>
+            <li><strong>On every DB write</strong> — your DB write also calls <code>saveObject</code>. Simple, but doubles your latency.</li>
+            <li><strong>Async via queue / background job</strong> — DB write fires an event; an <a href="/tutorials/background-jobs-with-inngest.html">Inngest function</a> or queue worker syncs to Algolia. Decoupled; survives Algolia downtime.</li>
+            <li><strong>Periodic full sync</strong> — every N minutes, fetch all changed records and bulk-save. Simplest; small staleness window.</li>
+          </ul>
+          <p>For Postgres, Algolia ships a <a href="https://www.algolia.com/doc/guides/sending-and-managing-data/send-and-update-your-data/connectors/postgresql/" target="_blank" rel="noopener">Postgres connector ↗</a> that handles syncing automatically (paid feature).</p>
+        </div>
+      </div>
+
+      <h2>Common pitfalls</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Records too large</strong> — Algolia has a 10 KB / 100 KB record limit (plan-dependent). Don't index full article bodies; index summaries + offset references.</li>
+            <li><strong>Index everything = relevance suffers</strong> — searchable attributes should be a focused subset. Don't add <code>author_bio</code> if users won't search by it; it dilutes title/body matching.</li>
+            <li><strong>Sync drift</strong> — DB and Algolia drift apart when sync fails. Add monitoring; reconcile counts periodically.</li>
+            <li><strong>Forgetting to update on delete</strong> — when a record is deleted in your DB, you must also <code>client.deleteObject()</code> in Algolia. Easy to miss; surfaces as "I deleted that post but search still shows it."</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Pricing climbs fast above the free tier.</strong> Algolia bills per search operation + per record. The free tier (10K records, 10K searches/month) is generous; Build plan starts at $0.40 per 1K extra records / $0.50 per 1K extra searches. A medium-traffic site can hit hundreds of dollars/month surprisingly fast. <a href="https://www.algolia.com/pricing/" target="_blank" rel="noopener">Algolia pricing ↗</a>. Estimate carefully before scaling.
+      </div>
+
+      <h2>Self-hostable alternatives if pricing is a problem</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>If costs become uncomfortable:</p>
+          <ul>
+            <li><strong><a href="https://www.meilisearch.com/" target="_blank" rel="noopener">Meilisearch ↗</a></strong> — open-source, single-binary Rust app. Self-host on a $10 VPS for any volume. Cloud option also exists.</li>
+            <li><strong><a href="https://typesense.org/" target="_blank" rel="noopener">Typesense ↗</a></strong> — similar story; open source + cloud.</li>
+            <li><strong>Postgres FTS</strong> — for ≤ ~100K records and simple needs, <code>tsvector</code> + GIN index is free and good enough.</li>
+          </ul>
+          <p>Both Meilisearch and Typesense ship Algolia-compatible APIs, so InstantSearch UI components plug right in with a different client.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://www.algolia.com/doc/" target="_blank" rel="noopener">Algolia docs ↗</a></li>
+        <li><a href="https://www.algolia.com/doc/api-client/getting-started/install/javascript/" target="_blank" rel="noopener">JS API client ↗</a></li>
+        <li><a href="https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/react/" target="_blank" rel="noopener">React InstantSearch ↗</a></li>
+        <li><a href="https://www.algolia.com/doc/guides/managing-results/relevance-overview/" target="_blank" rel="noopener">Ranking &amp; relevance ↗</a></li>
+        <li><a href="https://www.algolia.com/doc/guides/security/api-keys/" target="_blank" rel="noopener">API keys ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>Set up Supabase (database + auth)</h3>
+            <p>Source of truth; sync to Algolia on write</p>
+          </a>
+          <a href="/tutorials/background-jobs-with-inngest.html" class="tutorial-next-card">
+            <h3>Background jobs with Inngest</h3>
+            <p>The clean pattern for syncing DB → Algolia asynchronously</p>
+          </a>
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>Set up Sentry error tracking</h3>
+            <p>Catch sync failures before they cause search staleness</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何发现 LingCode Cloud 后端的安全与性能问题？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="使用 LingCode Cloud 控制台的 Advisors 扫描功能，发现后端 schema 中的安全隐患（RLS 未启用、不安全策略）和性能问题（缺少主键、重复或未索引的外键），并了解如何逐一修复。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/scan-your-backend-with-advisors.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/scan-your-backend-with-advisors.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/scan-your-backend-with-advisors.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-02T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-02T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/scan-your-backend-with-advisors.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Advisors 扫描你的后端",
+  "description": "LingCode Cloud 控制台的 Advisors 扫描功能可标记后端 schema 中的安全问题（RLS 未启用、策略存在但 RLS 关闭、函数 search_path 可变）和性能问题（无主键、重复索引、未索引外键），并提供修复建议。",
+  "url": "https://lingcode.dev/zh/tutorials/scan-your-backend-with-advisors.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-02",
+  "dateModified": "2026-06-02",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/zh/tutorials/scan-your-backend-with-advisors.html" },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 Advisors 扫描你的后端"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "教程", "item": "https://lingcode.dev/zh/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "搜索", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "后端集成", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "使用 Advisors 扫描你的后端", "item": "https://lingcode.dev/zh/tutorials/scan-your-backend-with-advisors.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/scan-your-backend-with-advisors.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">后端集成</a>
+      <span>/</span>
+      <span>使用 Advisors 扫描你的后端</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-06-02</span>
+      </div>
+      <h1>如何发现后端中的安全与性能问题？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>在控制台（<a href="/backends.html">lingcode.dev/backends</a> → <strong>Database</strong>）中点击 <strong>Advisors</strong>，它会扫描你的后端 schema 并标记<strong>安全</strong>问题（表的行级安全未启用、RLS 关闭时策略仍存在、函数的 search_path 可变）以及<strong>性能</strong>问题（无主键、重复索引、多个宽容策略、未索引的外键）——每条问题都附有修复建议。修改后重新运行；绿色的"无问题"状态表示危险项已全部处理。</p>
+      <p class="intro">后端最危险的 bug 往往不会大声报错——比如你忘记开启行级安全的那张表，任何持有公共密钥的人都能静默读取所有数据。Advisors 是一个一键扫描工具，能在用户发现问题之前，精准揪出这类隐患（以及慢查询类问题）。把它想象成你数据库的 linter。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>本文适用于<a href="/zh/tutorials/connect-a-managed-backend.html">托管后端</a>。Advisors 只读取你的 schema（不会做任何修改），并将发现的问题按<strong>安全</strong>和<strong>性能</strong>两类分组展示，按严重程度从高到低排列。它与 <a href="/zh/tutorials/connect-a-managed-backend.html">RLS 策略模板</a>配合使用：模板帮你<em>应用</em>安全的访问规则，Advisors 告诉你<em>哪里</em>忘记应用了。</p>
+
+      <h2>检查项说明</h2>
+      <p><strong>安全</strong></p>
+      <ul>
+        <li><strong>RLS 未启用</strong>（错误）——某张表的行级安全未开启，任何持有匿名密钥的人都可以读写其中的每一行。修复方式：启用 RLS 并添加策略（使用模板）。</li>
+        <li><strong>策略存在但 RLS 未开启</strong>（错误）——你已经写了策略，但因为 RLS 没有启用，这些策略毫无效果。修复方式：<code>ALTER TABLE … ENABLE ROW LEVEL SECURITY;</code></li>
+        <li><strong>函数 search_path 可变</strong>（警告）——没有固定 <code>search_path</code> 的函数可能被劫持。修复方式：在函数中设置 <code>SET search_path = ''</code>。</li>
+      </ul>
+      <p><strong>性能</strong></p>
+      <ul>
+        <li><strong>无主键</strong>——行的更新/删除以及实时追踪在有主键的情况下效果更好。</li>
+        <li><strong>重复索引</strong>——相同的索引会浪费存储空间并拖慢写入速度；只保留一个，删除其余。</li>
+        <li><strong>多个宽容策略</strong>——同一角色和操作的多个宽容策略会在每次查询时全部执行；建议合并它们。</li>
+        <li><strong>未索引的外键</strong>——关联查询和级联删除会扫描整张表；请在外键列上添加索引。</li>
+      </ul>
+
+      <h2>扫描、修复、再扫描</h2>
+      <ol>
+        <li>打开 <a href="/backends.html">lingcode.dev/backends</a> → <strong>Database</strong> → <strong>Advisors</strong>，按严重程度从高到低阅读发现的问题。</li>
+        <li>优先修复错误——通常是"启用 RLS + 添加策略"。你可以从模板中应用策略，或者直接让 AI 助手来处理（例如："为 <code>notes</code> 开启 RLS，让每个用户只能看到自己的数据"）。</li>
+        <li>再次点击 <strong>Advisors</strong>——已解决的问题会从列表中消失。目标是清空所有<em>错误</em>；警告和信息项则视情况判断处理。</li>
+      </ol>
+
+      <div class="info-box">
+        <h3>最重要的一条</h3>
+        <p>如果你只看一条：一张<strong>未启用 RLS</strong> 的表，一旦后端通过公共匿名密钥对外可访问，就是随时可能触发的数据泄露。Advisors 将其标记为错误是有原因的——上线前务必修复。<a href="/zh/tutorials/connect-a-managed-backend.html">托管后端</a>为每个项目提供支持 RLS 的 Postgres；Advisors 则确保你真的用上了它。</p>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>连接托管后端</h3>
+            <p>RLS、策略以及 Advisors 所检查的模板</p>
+          </a>
+          <a href="/zh/tutorials/require-mfa-on-your-backend.html" class="tutorial-next-card">
+            <h3>启用 MFA</h3>
+            <p>数据层锁定后，进一步加固认证层</p>
+          </a>
+          <a href="/zh/tutorials/semantic-and-hybrid-search.html" class="tutorial-next-card">
+            <h3>语义搜索与混合搜索</h3>
+            <p>"未索引"建议最常出现的场景</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+      <p>原生 AI 应用开发工具。专为想要快速上线的创始人和需要真正称手工具的工程师而打造。</p>
+    </div>
+    <div class="footer-col"><h4>产品</h4><ul><li><a href="/try.html">Web (/try)</a></li><li><a href="/cli.html">CLI</a></li><li><a href="/features.html">Mac IDE</a></li><li><a href="/pricing.html">定价</a></li><li><a href="/changelog.html">更新日志</a></li></ul></div>
+    <div class="footer-col"><h4>开发者</h4><ul><li><a href="/docs.html">文档</a></li><li><a href="/tutorials.html">教程</a></li><li><a href="/getting-started.html">入门指南</a></li><li><a href="/cli.html">CLI 参考</a></li><li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li></ul></div>
+    <div class="footer-col"><h4>社区</h4><ul><li><a href="/community.html">周五工作坊</a></li><li><a href="/community.html">高校合作</a></li><li><a href="/examples.html">作品展示</a></li><li><a href="/blog.html">博客</a></li><li><a href="/support.html">支持</a></li></ul></div>
+    <div class="footer-col"><h4>公司</h4><ul><li><a href="/manifesto.html">宣言</a></li><li><a href="/pitch.html">融资材料</a></li><li><a href="/privacy.html">隐私政策</a></li><li><a href="/signin.html">登录</a></li><li><a href="/signup.html">注册</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

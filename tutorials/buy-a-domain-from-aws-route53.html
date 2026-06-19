@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy a domain from AWS Route 53 — LingCode Tutorials</title>
+  <meta name="description" content="Route 53 is AWS's registrar and DNS service. Higher prices than the budget tier, but the right pick when the rest of your infra lives in AWS.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/buy-a-domain-from-aws-route53.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/buy-a-domain-from-aws-route53.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/buy-a-domain-from-aws-route53.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/buy-a-domain-from-aws-route53.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Buy a domain from AWS Route 53",
+  "description": "Route 53 is AWS's registrar and managed DNS. Prices are unremarkable — you can buy domains cheaper elsewhere — but if the rest of your infrastructure lives in AWS, the integration with everything else (load balancers, CloudFront, ACM certificates, IAM) makes \"register the domain",
+  "url": "https://lingcode.dev/tutorials/buy-a-domain-from-aws-route53.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/buy-a-domain-from-aws-route53.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Buy a domain from AWS Route 53"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Buy a domain from AWS Route 53",
+      "item": "https://lingcode.dev/tutorials/buy-a-domain-from-aws-route53.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/buy-a-domain-from-aws-route53.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Buy a domain from AWS Route 53</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Buy a domain from AWS Route 53</h1>
+      <p class="intro">Route 53 is AWS's registrar and managed DNS. Prices are unremarkable — you can buy domains cheaper elsewhere — but if the rest of your infrastructure lives in AWS, the integration with everything else (load balancers, CloudFront, ACM certificates, IAM) makes "register the domain here too" the path of least friction.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The case for registering a domain at Route 53 is almost never about the registrar itself. Cloudflare is cheaper. Porkbun is cheaper. The Route 53 console is what AWS consoles look like — functional, dense, designed for cloud engineers, not first-time domain buyers. If you're picking a registrar in isolation, this isn't the answer.</p>
+      <p>The case <em>for</em> Route 53 is integration. If your application runs on EC2 with an Application Load Balancer, the ALB has an Alias-record type that only Route 53 understands — pointing your apex at the ALB is one record at Route 53; from any other DNS provider it requires workarounds. If you use ACM for TLS certificates, ACM's DNS-validation flow drops the validation record straight into your Route 53 zone with one click. If you use CloudFront, Lambda@Edge, or any AWS-native CDN routing, Route 53 is the DNS provider that knows about them. None of this is unavailable elsewhere — it just takes more steps.</p>
+      <p>This tutorial walks the Route 53 purchase, points out the unique parts of the AWS registrar experience (which is structurally different from every other registrar in this guide), and explains when picking Route 53 is the right call versus when it's just expensive habit.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Why Route 53's pricing is what it is</li>
+        <li>The two-part Route 53 architecture: registrar + hosted zones</li>
+        <li>How registering a domain creates a hosted zone (and a small monthly bill)</li>
+        <li>Alias records — the AWS-specific feature that justifies being here</li>
+        <li>When the answer is "register elsewhere, point DNS at Route 53"</li>
+      </ul>
+
+      <h2>Step 1: The Route 53 architecture</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Two products in one</h3>
+          <p>"Route 53" is actually two distinct services that share a name:</p>
+          <ul>
+            <li><strong>Route 53 Registrar.</strong> Where you buy and renew domains. Charges per year per domain. Like any other registrar — except UI.</li>
+            <li><strong>Route 53 Hosted Zones.</strong> Where you manage DNS records for a domain. Charges $0.50/month per hosted zone (the first 25 zones; cheaper above 25), plus per-million-queries fees on top.</li>
+          </ul>
+          <p>You don't have to use both together. Plenty of people register elsewhere and only use the Hosted Zone for DNS (because of Alias records). The registrar half is the one we'll focus on; the hosted zone is implicit when you register.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Search and price-check</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>From the AWS console</h3>
+          <p>In the AWS console, search for "Route 53" and click into the service. The left sidebar has <strong>Registered domains</strong>. Click <strong>Register Domain</strong>. Search for the name.</p>
+          <p><code>.com</code> prices at Route 53 sit around $13/year (renewal price; no first-year discount). Other TLDs vary. The price is fixed by AWS; there are no promotional rates, no upsell-driven discounts, no first-year tricks. It's also not the cheapest.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Checkout</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Contact info, payment via your AWS bill</h3>
+          <p>AWS asks for the standard registrant contact info. Privacy protection is included free and on by default. Payment goes through your existing AWS billing relationship — your monthly AWS bill now has a line item for the domain.</p>
+          <p>Confirm. The registration takes a few minutes (slower than Cloudflare or Porkbun, faster than some). When it completes, two things happen: the domain shows up in <strong>Registered domains</strong>, and a corresponding <strong>Hosted Zone</strong> is created automatically with the AWS nameservers set as authoritative.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>The $0.50/month hosted zone charge starts immediately.</strong> It's small but real, and gets billed alongside your other AWS charges. If you're only at AWS for a single small project, this is a tiny ongoing cost; if you have many domains, do the math against the registrar-bundled DNS that comes free elsewhere.
+      </div>
+
+      <h2>Step 4: Alias records — the unique value</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The reason Route 53 exists for AWS users</h3>
+          <p>A DNS A record points a name at an IP. A CNAME points one name at another. AWS load balancers (ALB / NLB), CloudFront distributions, and S3 website endpoints all have hostnames, not stable IPs — and classic DNS doesn't allow a CNAME at the apex (<code>yourdomain.com</code> directly). Workarounds exist (CNAME flattening, ALIAS-like records at Cloudflare etc.), but in pure AWS land the answer is the Route 53 <strong>Alias record</strong>.</p>
+          <p>An Alias record is "CNAME-like at the apex, free, AWS-integrated." Point <code>yourdomain.com</code> directly at an ALB by name. Route 53 resolves it to the current set of ALB IPs without you doing anything. Nothing else does this exactly the same way.</p>
+          <p>If your stack is "ALB or CloudFront in front of everything," Route 53 saves real complexity. If it's "VPS with a fixed IP" or "PaaS like Vercel," a regular A or CNAME at any DNS provider works.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Cross-account considerations</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>The account-owns-the-domain trap</h3>
+          <p>The AWS account that registers the domain owns it. If you register in your personal account and later need to move ownership to a company account (because you'll bill differently, or someone's leaving the company, or you got acquired), the transfer is non-trivial — within-AWS account-to-account transfers are possible but slow.</p>
+          <p>For anything that might become a business asset, register in the account that should own it long-term. For pure personal projects, your personal account is fine — but think about future-you one more time before clicking.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: When to skip Route 53 Registrar</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Two clear cases</h3>
+          <ul>
+            <li><strong>Your stack isn't on AWS.</strong> If your app is on Vercel / Cloudflare Workers / a non-AWS host, the Alias-record advantage disappears. Register at a cheaper, friendlier registrar.</li>
+            <li><strong>You want the cheapest possible domain.</strong> Cloudflare Registrar is cheaper. Porkbun is cheaper. NameSilo is cheaper. Route 53 doesn't compete on price.</li>
+          </ul>
+          <p>A useful hybrid: register at Cloudflare/Porkbun, and (if you need Alias records) <em>delegate DNS</em> to a Route 53 hosted zone. You pay registrar prices to the cheap registrar and use Route 53 only for the AWS-specific features. Lots of AWS-savvy users do exactly this.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: After purchase</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Standard plus AWS-specific</h3>
+          <ul>
+            <li>Add DNS records in the auto-created hosted zone (Route 53 → Hosted zones → click your domain).</li>
+            <li>For an apex pointed at an ALB or CloudFront: Alias record, type A, alias target = your AWS resource. One click.</li>
+            <li>For ACM certificates: ACM's DNS validation can drop the validation record directly into Route 53 — accept it and the cert validates in minutes.</li>
+            <li>Standard advice for non-AWS destinations: see <a href="/tutorials/connect-domain-to-server-with-dns.html">Connect your domain to a server</a> for the record types.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>The domain billing is tied to the AWS account.</strong> If you suspend or close the AWS account, the domain is at risk. This is more delicate than at a standalone registrar where the domain is its own thing. Use a stable billing account; consider AWS Organizations if your business has many AWS accounts.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/buy-a-domain-from-cloudflare.html" class="tutorial-next-card">
+            <h3>Buy a domain from Cloudflare Registrar</h3>
+            <p>Cheaper alternative if you're not AWS-locked</p>
+          </a>
+          <a href="/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>Connect your domain to a server</h3>
+            <p>Generic DNS setup, including notes on apex/CNAME workarounds elsewhere</p>
+          </a>
+          <a href="/tutorials/magic-deploy-a-website.html" class="tutorial-next-card">
+            <h3>Magic Deploy a website</h3>
+            <p>If you're outside AWS, the agent can do most of the DNS dance for you</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

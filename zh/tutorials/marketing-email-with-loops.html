@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用 Loops 发送营销邮件 — LingCode 教程</title>
+  <meta name="description" content="邮件通讯、用户引导序列、产品公告。Loops 专为 SaaS 生命周期邮件而生——与 Postmark/Resend 解决的是不同问题。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/marketing-email-with-loops.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/marketing-email-with-loops.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/marketing-email-with-loops.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/marketing-email-with-loops.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "用 Loops 发送营销邮件",
+  "description": "邮件通讯、用户引导序列、产品公告、"我们想念你"的挽回邮件。Loops 专为 SaaS 生命周期邮件而生——与 Resend 或 Postmark 等事务邮件服务解决的是不同问题。",
+  "url": "https://lingcode.dev/zh/tutorials/marketing-email-with-loops.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/marketing-email-with-loops.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "何时选择 Loops",
+      "url": "https://lingcode.dev/zh/tutorials/marketing-email-with-loops.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "添加并验证发件域名",
+      "url": "https://lingcode.dev/zh/tutorials/marketing-email-with-loops.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "发送一次性营销活动（通讯）",
+      "url": "https://lingcode.dev/zh/tutorials/marketing-email-with-loops.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "构建生命周期序列（loop）",
+      "url": "https://lingcode.dev/zh/tutorials/marketing-email-with-loops.html#step-4"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "用 Loops 发送营销邮件",
+      "item": "https://lingcode.dev/zh/tutorials/marketing-email-with-loops.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/marketing-email-with-loops.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>用 Loops 发送营销邮件</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>用 Loops 发送营销邮件</h1>
+      <p class="intro">邮件通讯、用户引导序列、产品公告、"我们想念你"的挽回邮件。<a href="https://loops.so/" target="_blank" rel="noopener">Loops</a> 专为 SaaS 生命周期邮件而生——与 <a href="/zh/tutorials/send-transactional-email-with-resend.html">Resend</a> 或 <a href="/zh/tutorials/send-transactional-email-with-postmark.html">Postmark</a> 等事务邮件服务解决的是不同问题。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>何时选择 Loops</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>选择 Loops 的场景</strong> — 你需要一款不像 2008 年 Mailchimp 那样老旧的营销邮件工具。拖拽式序列编辑、真正易懂的受众过滤器、能生成干净 HTML 的可视化编辑器。</li>
+            <li><strong>替代方案</strong> — <a href="https://customer.io/" target="_blank" rel="noopener">Customer.io</a>（功能更强大，但也更复杂）、<a href="https://www.intercom.com/" target="_blank" rel="noopener">Intercom</a>（CRM + 聊天 + 邮件一体化）、<a href="https://www.userlist.com/" target="_blank" rel="noopener">Userlist</a>（定位与 Loops 相似，价格更低）、<a href="https://buttondown.com/" target="_blank" rel="noopener">Buttondown</a>（纯通讯订阅，以 Markdown 为核心）。</li>
+            <li><strong>不适合用 Loops 的场景</strong> — 密码重置、魔法链接、收据、OTP 验证码。这些应该走事务邮件服务（Postmark / Resend / SES）。混用会同时拉低两个服务的送达率。</li>
+            <li><strong>注册</strong> — <a href="https://app.loops.so/register" target="_blank" rel="noopener">app.loops.so/register</a>。免费套餐：1,000 个联系人，无限量发送，无需信用卡。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>添加并验证发件域名</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>在 Loops 控制台中进入 <strong>Settings → Sending domain</strong>，输入你希望邮件来自的域名（例如 <code>mail.yourapp.com</code>——建议用子域名，避免营销邮件影响根域名的信誉）。</p>
+          <p>Loops 会给出 3 条需要添加的 DNS 记录：一条 MX、一条 TXT（SPF）和一条 CNAME（DKIM）。将它们粘贴到你的 DNS 服务商——<a href="/zh/tutorials/buy-a-domain-from-cloudflare.html">Cloudflare</a>、<a href="/zh/tutorials/buy-a-domain-from-namecheap.html">Namecheap</a>，或参考<a href="/zh/tutorials/connect-domain-to-server-with-dns.html">通用 DNS 配置指南</a>。</p>
+          <p>点击 <strong>Verify</strong>。Loops 每分钟自动检查一次——通常 5 到 30 分钟内会变为绿色。如果一小时后仍未通过，说明你的 DNS 服务商生效较慢，可用 <code>dig CNAME loops._domainkey.mail.yourapp.com</code> 手动确认。</p>
+          <div class="tip-box">
+            <strong>提示：</strong>做好域名预热。在向全量列表发送之前，先向<em>真实的活跃订阅者</em>发送几次活动邮件。全新域名容易被过滤进垃圾邮件。
+          </div>
+        </div>
+      </div>
+
+      <h2>获取 API 密钥</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p><strong>Settings → API</strong> → 点击 <strong>Generate API key</strong>。请立即复制——Loops 不会再次显示。将其存入 <code>.env</code>，变量名为 <code>LOOPS_API_KEY</code>。</p>
+          <p>API 文档：<a href="https://loops.so/docs/api-reference/intro" target="_blank" rel="noopener">loops.so/docs/api-reference</a>。</p>
+        </div>
+      </div>
+
+      <h2>从应用同步联系人</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>每次注册、每次套餐变更、每次取消——都要将事件推送到 Loops。这是保持受众分组准确的唯一途径。</p>
+          <p>安装 SDK：</p>
+          <pre><code>npm install loops</code></pre>
+          <p>用户注册时：</p>
+          <pre><code>import { LoopsClient } from "loops";
+const loops = new LoopsClient(process.env.LOOPS_API_KEY);
+
+await loops.contacts.create({
+  email: user.email,
+  firstName: user.firstName,
+  userGroup: "trial",            // for segmentation
+  source: "website",
+  signupDate: new Date().toISOString(),
+});</code></pre>
+          <p>套餐升级时：</p>
+          <pre><code>await loops.contacts.update({
+  email: user.email,
+  userGroup: "pro",
+  plan: "pro_monthly",
+});</code></pre>
+          <p>取消订阅时：</p>
+          <pre><code>await loops.contacts.update({
+  email: user.email,
+  userGroup: "churned",
+  churnedAt: new Date().toISOString(),
+});</code></pre>
+          <p>完整字段说明：<a href="https://loops.so/docs/api-reference/create-contact" target="_blank" rel="noopener">创建联系人</a>、<a href="https://loops.so/docs/api-reference/update-contact" target="_blank" rel="noopener">更新联系人</a>。</p>
+        </div>
+      </div>
+
+      <h2>发送一次性营销活动（通讯）</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>控制台 → <strong>Campaigns → New campaign</strong>。拖拽内容块：文本、图片、按钮、分隔线。Loops 会生成兼容各邮件客户端的 HTML——不需要 iframe 那些旁门左道。</p>
+          <p>受众：按你已同步的任意属性筛选，例如 <code>userGroup = "pro"</code>、<code>signupDate &gt; 30 days ago</code>、<code>plan = "free" AND lastLogin &lt; 14 days ago</code>。</p>
+          <p>发送前可在 6 个邮件客户端（Gmail、Outlook、iOS Mail、深色模式等）预览效果。Loops 在编辑器中内置了类似 <a href="https://www.litmus.com/" target="_blank" rel="noopener">Litmus</a> 的预览功能。</p>
+          <p>点击 <strong>Send</strong> 立即发送，或选择定时发送。开/点击追踪默认开启。</p>
+        </div>
+      </div>
+
+      <h2>构建生命周期序列（loop）</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>"Loops"是 Loops 对滴灌营销活动的叫法。<strong>Loops → New loop</strong> → 选择触发器：</p>
+          <ul>
+            <li><strong>Contact added</strong> — 用户引导序列</li>
+            <li><strong>Property changed</strong> — 例如 <code>plan</code> 变为 "churned" 时触发挽回序列</li>
+            <li><strong>Event sent</strong> — 应用通过 SDK 发送自定义事件</li>
+          </ul>
+          <p>在画布上拖拽邮件块，添加等待步骤（"等待 2 天"），添加条件分支（"如果 <code>hasShipped = true</code>，则跳过"）。保存后激活。</p>
+          <p>在应用代码中触发：</p>
+          <pre><code>// Loops loops can also be triggered via event
+await loops.events.send({
+  email: user.email,
+  eventName: "completedOnboarding",
+});</code></pre>
+        </div>
+      </div>
+
+      <h2>常见问题</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>邮件落入 Gmail 的"促销"标签</strong> — 对于营销邮件来说这其实是正常的。促销 ≠ 垃圾邮件。不要用奇技淫巧试图逃脱；只要用户持续互动，Gmail 最终会重新分类。</li>
+            <li><strong>进了垃圾邮件</strong> — 用 <a href="https://www.mail-tester.com/" target="_blank" rel="noopener">mail-tester.com</a> 检测。低于 8/10 就要修复 SPF/DKIM/DMARC 和邮件内容。如果你没有配置 DMARC，Loops 甚至不会使用该域名。</li>
+            <li><strong>数据同步偏差</strong> — 你的数据库里有用户，但 Loops 里没有。原因：调用 Loops API 失败后没有重试。用 try/catch 包裹并记录日志；添加每日对账任务，从数据库拉取新用户并 upsert 到 Loops。</li>
+            <li><strong>"退订"未被执行</strong> — Loops 会自动在邮件底部添加退订链接。如果用户反映仍在收到邮件，检查他们退订的是否只是<em>营销</em>邮件——你的事务邮件服务（Postmark/Resend）是独立的。有些用户只想退订其中一种。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>定价说明</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>免费</strong> — 1,000 个联系人，无限量发送，邮件底部带 Loops 品牌标识。</li>
+            <li><strong>Pro</strong> — 每月 $49，支持 2,500 个联系人，去除品牌标识，提供 A/B 测试和高级分析。更高套餐增加联系人上限。</li>
+            <li><strong>API 速率限制</strong> — 免费版每秒 10 次请求，付费版更高。如需批量回填大量用户，请分批同步。</li>
+            <li><strong>为何付费而不用 Mailchimp</strong> — 界面体验差距显著（Mailchimp 上次大改版还是 2017 年）。受众过滤器使用通俗易懂的语言。序列（Loops）是核心卖点；Mailchimp 的"客户旅程"感觉停留在 2014 年。</li>
+          </ul>
+          <p>定价页面：<a href="https://loops.so/pricing" target="_blank" rel="noopener">loops.so/pricing</a>。</p>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <ul>
+            <li><a href="https://loops.so/docs/intro" target="_blank" rel="noopener">Loops 文档首页</a></li>
+            <li><a href="https://loops.so/docs/api-reference/intro" target="_blank" rel="noopener">API 参考</a></li>
+            <li><a href="https://github.com/loops-so/loops-node" target="_blank" rel="noopener">GitHub 上的 Node SDK</a></li>
+            <li><a href="https://loops.so/docs/integrations/segment" target="_blank" rel="noopener">Segment 集成</a> — 如果你已经通过 <a href="https://segment.com/" target="_blank" rel="noopener">Segment</a> 传输事件，可以跳过手动同步。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>不要混用营销邮件和事务邮件。</strong>通过 Postmark 账号发送"我们想念你"的挽回邮件会影响 Postmark 的 IP 信誉。通过 Loops 发送密码重置邮件则会被过滤掉。两套服务，两个域名（或子域名），严格不交叉。
+      </div>
+
+      <div class="tutorial-next">
+        <h3>下一步</h3>
+        <div class="tutorial-next-cards">
+          <a href="/zh/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h4>用 Resend 发送事务邮件</h4>
+            <p>邮件栈的另一半——收据、魔法链接、OTP。</p>
+          </a>
+          <a href="/zh/tutorials/product-analytics-with-posthog.html" class="tutorial-next-card">
+            <h4>用 PostHog 做产品分析</h4>
+            <p>将用户事件接入 PostHog，并基于真实行为触发 Loops 序列。</p>
+          </a>
+          <a href="/zh/tutorials/log-management-with-axiom.html" class="tutorial-next-card">
+            <h4>用 Axiom 管理日志</h4>
+            <p>当同步静默失败时，你需要可以检索的日志。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">融资介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

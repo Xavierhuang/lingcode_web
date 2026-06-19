@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Try lingcode in your browser — multi-provider AI coding</title>
+<meta content="Run the same prompt against Claude, DeepSeek-V4, OpenAI, Gemini side-by-side. Your API keys never leave your browser. Pick a folder, agent edits real files via the File System Access API." name="description"/>
+<meta content="index, follow" name="robots"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://lingcode.dev/try.html"/>
+<meta property="og:title" content="Try lingcode in your browser — multi-provider AI coding"/>
+<meta property="og:description" content="Run the same prompt against Claude, DeepSeek-V4, OpenAI, Gemini side-by-side. Your API keys never leave your browser."/>
+<meta property="og:image" content="https://lingcode.dev/logo.png"/>
+<meta property="og:site_name" content="LingCode"/>
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Try lingcode in your browser — multi-provider AI coding"/>
+<meta name="twitter:description" content="Run the same prompt against Claude, DeepSeek-V4, OpenAI, Gemini side-by-side."/>
+<meta name="twitter:image" content="https://lingcode.dev/logo.png"/>
+<link href="https://lingcode.dev/try.html" rel="canonical"/>
+<link href="https://lingcode.dev/try.html" hreflang="en" rel="alternate"/>
+<link href="https://lingcode.dev/zh/try.html" hreflang="zh" rel="alternate"/>
+<link href="https://lingcode.dev/try.html" hreflang="x-default" rel="alternate"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<meta name="theme-color" content="#FAFAFF"/>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+<link rel="icon" href="/favicon.ico" sizes="any"/>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+<link href="style.css?v=20260531a" rel="stylesheet"/>
+<link href="/try/try.css?v=20260607q" rel="stylesheet"/>
+<script async="" src="/analytics.js?v=20260602d"></script>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <button class="try-theme-btn" id="try-theme-btn" title="Toggle dark / light mode" aria-label="Toggle dark mode">🌙</button>
+    <a class="btn btn-ghost" href="/signin.html?next=/try.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+<script>
+(function () {
+  const THEME_KEY = 'lingcode.try.theme';
+  const btn = document.getElementById('try-theme-btn');
+  function applyTheme(dark) {
+    document.documentElement.dataset.theme = dark ? 'dark' : '';
+    if (btn) btn.textContent = dark ? '☀️' : '🌙';
+    if (btn) btn.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
+  }
+  const saved = localStorage.getItem(THEME_KEY);
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved !== null ? saved === 'dark' : prefersDark);
+  if (btn) btn.addEventListener('click', () => {
+    const isDark = document.documentElement.dataset.theme === 'dark';
+    applyTheme(!isDark);
+    localStorage.setItem(THEME_KEY, !isDark ? 'dark' : 'light');
+  });
+})();
+</script>
+<div id="dashboard-view" hidden>
+  <header class="dash-hero">
+    <h1 class="dash-title" data-i18n="tryp.dash_title">Build apps with AI</h1>
+    <p class="dash-lede" data-i18n="tryp.dash_lede">Describe what you want to build. We'll generate the code, preview, and ship it.</p>
+    <form class="dash-prompt-row" id="dash-prompt-form" autocomplete="off">
+      <textarea id="dash-prompt" class="dash-prompt" rows="2" placeholder="A pricing page with 3 tiers and Stripe checkout" spellcheck="false"></textarea>
+      <button type="submit" class="dash-launch-btn" id="dash-launch-btn" data-i18n="tryp.dash_launch">Launch</button>
+    </form>
+    <p class="dash-prompt-hint"><span class="cmd-hint">⌘+Enter to launch</span></p>
+  </header>
+  <section class="dash-section">
+    <h2 class="dash-section-label" data-i18n="tryp.dash_templates">Or start from a template</h2>
+    <div id="dash-templates-grid" class="dash-grid"></div>
+  </section>
+  <section class="dash-section" id="dash-your-apps-section" hidden>
+    <h2 class="dash-section-label" data-i18n="tryp.dash_your_apps">Your apps</h2>
+    <div id="dash-your-apps-grid" class="dash-grid"></div>
+  </section>
+</div>
+<div id="app-view" hidden>
+<header class="app-topbar" id="app-topbar">
+  <div class="topbar-left">
+    <button id="topbar-back" class="topbar-icon-btn" type="button" aria-label="Back to dashboard" title="Back to dashboard">←</button>
+    <button id="topbar-chat-toggle" class="topbar-icon-btn" type="button" aria-pressed="false" aria-label="Toggle chat panel" title="Hide chat for a preview-only view">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <rect x="2" y="3" width="12" height="10" rx="1.5"/>
+        <line x1="6" y1="3" x2="6" y2="13"/>
+      </svg>
+    </button>
+    <span id="topbar-app-name" class="topbar-app-name">Untitled app</span>
+  </div>
+  <div class="topbar-chips" id="topbar-chips">
+    <div id="topbar-provider" class="topbar-provider" hidden></div>
+    <button id="chip-supabase" class="chip" type="button" hidden>
+      <span class="chip-dot"></span><span class="chip-label">Supabase</span>
+    </button>
+    <button id="chip-github" class="chip" type="button" title="Save current prototype to GitHub as a private gist" hidden>
+      <span class="chip-dot"></span><span class="chip-label">GitHub</span>
+    </button>
+    <button id="chip-collab" class="chip" type="button" hidden>
+      <span class="chip-dot"></span><span class="chip-label">Collab</span>
+    </button>
+  </div>
+  <div class="topbar-right">
+    <button id="topbar-edit-btn" class="topbar-btn" type="button" aria-pressed="false" title="Toggle visual editing — click elements to edit text & styles" aria-label="Toggle visual editing">✏ Edit</button>
+    <button id="topbar-viewport-btn" class="topbar-btn" type="button" aria-pressed="false" title="Toggle mobile preview (375px)" aria-label="Toggle mobile preview">📱</button>
+    <button id="topbar-expand-btn" class="topbar-btn" type="button" title="Open the preview fullscreen">↗ Expand</button>
+    <button id="topbar-compare-btn" class="topbar-btn" type="button" aria-pressed="false" hidden data-i18n="tryp.topbar_compare">Compare</button>
+    <div class="topbar-more-wrap">
+      <button id="topbar-more-btn" class="topbar-btn" type="button" aria-haspopup="menu" aria-expanded="false" data-i18n="tryp.topbar_more">More ⋯</button>
+      <div id="topbar-more-menu" class="topbar-menu" hidden role="menu"></div>
+    </div>
+    <button id="topbar-deploy-btn" class="topbar-btn topbar-btn-primary" type="button" data-i18n="tryp.topbar_deploy">Deploy</button>
+    <!-- Hidden delegate for the "Open on phone" More-menu item — main.js
+         wires the click handler, More menu .click()s this button. -->
+    <button id="topbar-phone-btn" type="button" style="display:none" aria-hidden="true"></button>
+  </div>
+</header>
+<section class="try-hero-wrap">
+<div class="swarm-chip" role="img" aria-label="Swarm mode — multiple AI agents in parallel">
+  <svg class="swarm-glyph" viewBox="0 0 32 18" width="22" height="14" aria-hidden="true" focusable="false">
+    <!-- Four dots in flight formation: the alpha agent in front,
+         two mid-pack, one trailing — the LingCode swarm sigil. -->
+    <circle cx="6"  cy="9" r="3"   class="swarm-d0"/>
+    <circle cx="15" cy="5" r="2.4" class="swarm-d1"/>
+    <circle cx="15" cy="13" r="2.4" class="swarm-d1"/>
+    <circle cx="24" cy="9" r="1.9" class="swarm-d2"/>
+    <!-- Subtle motion trail to suggest the agents are racing. -->
+    <line x1="0"  y1="9" x2="3"  y2="9" class="swarm-trail" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>
+  <span class="swarm-label">SWARM MODE</span>
+  <span class="swarm-sep" aria-hidden="true">·</span>
+  <span class="swarm-sub">every provider, in parallel</span>
+</div>
+<h1 data-i18n="tryp.hero_h1">Same prompt, every provider,<br/>side by side.</h1>
+<p class="try-hero-lede" id="hero-lede"></p>
+</section>
+<main class="try-shell">
+<div class="try-prompt-row">
+<div class="try-prompt-inner">
+<textarea id="prompt" placeholder="Make me a pitch deck for an AI startup" spellcheck="false"></textarea>
+</div>
+<button disabled="" id="send" aria-label="Launch swarm">Launch swarm</button>
+</div>
+<p class="try-prompt-hint"><span hidden="" id="anon-trial-hint"></span> <span class="cmd-hint" style="opacity:0.7;">⌘+Enter to run</span></p>
+<!-- Lovable-style starter cards. main.js renders into this anchor. -->
+<div class="try-examples-grid" id="try-examples-grid"></div>
+<!-- Templates gallery — real starter prototypes. main-templates.js
+         renders into this anchor; click loads the HTML into the shared-
+         prototype preview modal. The header is added once at first render
+         and hidden when the manifest is empty. -->
+<section class="try-templates-section" hidden="" id="try-templates-section">
+<h2 class="try-templates-title" data-i18n="tryp.templates_h2">Or start from a template</h2>
+<p class="try-templates-blurb" data-i18n="tryp.templates_subtitle">Polished starter prototypes you can iterate on. Open one, then prompt the AI to remix it.</p>
+<div class="try-examples-grid" id="try-templates-grid"></div>
+</section>
+<!-- "More options" disclosure — wraps Providers + Workspace so the
+         empty state has a single clear focal point (the prompt). Inner
+         toggles still work independently inside this outer disclosure. -->
+<div aria-expanded="false" class="try-advanced" id="advanced-disclosure">
+<button aria-controls="advanced-body" aria-expanded="false" class="try-advanced-summary" type="button">
+<span class="caret">▸</span>
+<span class="label" id="advanced-label">More options</span>
+<span class="state" id="advanced-state-summary"></span>
+</button>
+<div class="try-advanced-body" id="advanced-body">
+<button aria-expanded="false" class="try-section-label try-section-toggle" id="providers-toggle" type="button">
+<span class="caret">▸</span> <span data-i18n="tryp.providers">Providers</span> <span class="hint" data-i18n="tryp.providers_summary_default" id="providers-summary">LingModel ready · click to configure other providers</span>
+</button>
+<div class="try-keys" hidden="" id="key-grid"></div>
+<button aria-expanded="false" class="try-section-label try-section-toggle" id="workspace-toggle" type="button">
+<span class="caret">▸</span> <span data-i18n="tryp.workspace">Workspace</span> <span class="hint" data-i18n="tryp.workspace_subtitle">optional — give the agent access to your files</span>
+</button>
+<div class="try-folder" hidden="" id="folder-row">
+<div class="try-folder-tabs" id="folder-tabs" role="tablist">
+<button class="active" data-i18n="tryp.tab_folder" data-mode="folder" type="button">📁 Folder</button>
+<button data-i18n="tryp.tab_files" data-mode="files" type="button">📄 Files</button>
+<button data-i18n="tryp.tab_paste" data-mode="paste" type="button">📝 Paste</button>
+<button data-i18n="tryp.tab_github" data-mode="github" type="button">🔗 GitHub</button>
+</div>
+<div class="try-folder-pane active" data-pane="folder">
+<button class="primary" data-i18n="tryp.pick_folder" id="pick-folder" type="button">📁 Pick folder…</button>
+<span class="pane-hint" id="folder-pane-hint">…or drag a folder anywhere onto this row.</span>
+</div>
+<div class="try-folder-pane" data-pane="files">
+<button class="primary" data-i18n="tryp.pick_files" id="pick-files" type="button">📄 Pick files…</button>
+<input id="files-input" multiple="" style="display:none" type="file"/>
+<span class="pane-hint" data-i18n="tryp.files_hint">Drop or pick — kept in memory; edits download as a zip.</span>
+</div>
+<div class="try-folder-pane" data-pane="paste">
+<textarea id="paste-input" placeholder="--- src/app.ts
+export function hello() { return 'world'; }
+--- README.md
+# Hello
+…"></textarea>
+<div class="try-folder-row" style="width:100%">
+<button class="primary" data-i18n="tryp.load_pasted" id="paste-load" type="button">Load pasted files</button>
+<span class="pane-hint">Use a line <code>--- path/to/file.ext</code> before each file's content.</span>
+</div>
+</div>
+<div class="try-folder-pane" data-pane="github">
+<input id="github-input" placeholder="github.com/owner/repo  or  owner/repo  (optional /tree/branch)" type="text"/>
+<button class="primary" data-i18n="tryp.load_repo" id="github-load" type="button">Load repo</button>
+<span class="pane-hint" data-i18n="tryp.public_repos_hint">Public repos only. Read via API, edits stay in memory.</span>
+</div>
+<div class="try-folder-row">
+<span class="folder-state" id="folder-state">No folder → chat-only mode. Pick one to grant Read/Write/List on those files.</span>
+</div>
+<div class="try-folder-foot" id="folder-actions" style="display:none">
+<span class="actions-label" data-i18n="tryp.auto_generate">Auto-generate from this project:</span>
+<button class="auto-btn" data-i18n="tryp.gen_pitch" id="auto-deck" type="button">📊 Pitch deck</button>
+<button class="auto-btn" data-i18n="tryp.gen_arch" id="auto-arch" type="button">📄 Architecture doc</button>
+<button class="auto-btn" data-i18n="tryp.gen_readme" id="auto-readme" type="button">📋 README</button>
+</div>
+<div class="try-folder-foot" id="folder-foot" style="display:none">
+<button class="save-btn" data-i18n="tryp.save_zip" id="save-zip" style="display:none" type="button">💾 Save changes as zip</button>
+<button class="clear-btn" data-i18n="tryp.clear_workspace" id="clear-workspace" type="button">Clear workspace</button>
+<span id="folder-foot-note"></span>
+</div>
+</div>
+</div><!-- /.try-advanced-body -->
+</div><!-- /#advanced-disclosure -->
+<!-- Progress bar: spans full width, shown when session is active -->
+<div id="try-progress-bar" class="try-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Build progress" hidden>
+  <div class="try-progress-fill" id="try-progress-fill"></div>
+  <span class="try-progress-label" id="try-progress-label" aria-live="polite">0% · estimating…</span>
+</div>
+<!-- 3-column canvas body (hidden until session) -->
+<div id="try-canvas-body" class="try-canvas-body" hidden>
+  <!-- Column 1: Build checklist sidebar -->
+  <aside id="try-checklist-col" class="try-checklist-col" aria-label="Build checklist">
+    <div class="try-checklist-toggle">
+      <span class="try-checklist-title">Build steps</span>
+      <button class="try-checklist-collapse-btn" id="try-checklist-collapse-btn"
+              type="button" title="Collapse checklist" aria-label="Collapse checklist" aria-expanded="true">‹</button>
+    </div>
+    <div id="try-checklist"></div><!-- populated by main-build-checklist.js -->
+  </aside>
+<!-- Column 2: Workspace (chat left | preview right) -->
+<div class="try-workspace tabbed" hidden="" id="workspace">
+<div class="try-workspace-tabbar">
+<div class="try-workspace-tabs" id="workspace-tabs" role="tablist"></div>
+<div class="try-workspace-toolbar" id="workspace-toolbar" hidden>
+<button aria-pressed="false" class="try-workspace-mode" id="workspace-focus-toggle" type="button">Focus</button>
+<button class="try-workspace-mode" id="workspace-mode-toggle" title="Compare all providers side-by-side" type="button">▦ Compare</button>
+<button class="try-workspace-mode" id="checkpoint-btn" title="Save a named checkpoint (⌘S)" type="button">☑ Checkpoint</button>
+<button class="try-workspace-mode" id="checkpoint-history-btn" title="View checkpoint history" type="button">⏱ History</button>
+<!-- Tools dropdown: collapses 9 advanced/integration buttons behind a
+     single trigger so the toolbar stays scannable. Each menu item keeps
+     its original id (#supabase-btn etc.) so the existing click handlers
+     wired in main-supabase.js / main-knowledge.js / etc. still bind. -->
+<div class="try-workspace-tools-wrap">
+<button class="try-workspace-mode" id="workspace-tools-btn" type="button" aria-haspopup="menu" aria-expanded="false" title="Integrations and advanced tools">🛠 Tools ▾</button>
+<div class="try-workspace-tools-menu" id="workspace-tools-menu" role="menu" hidden>
+<button class="try-workspace-mode" id="github-push-btn" title="Commit and push changes to GitHub" type="button">↑ Push to GitHub</button>
+<button class="try-workspace-mode" id="cloud-btn" title="Your database, auth, and storage — provisioned and managed by LingCode automatically. This is the default; nothing to set up." type="button">☁ Backend (managed)</button>
+<button class="try-workspace-mode" id="supabase-btn" title="Optional: connect your own Supabase project instead of the managed backend." type="button">⚡ Supabase (optional)</button>
+<button class="try-workspace-mode" id="knowledge-btn" title="Pin .md / .txt files or notes that apply to every turn (brand guidelines, API docs, design system)" type="button">📚 Knowledge</button>
+<button class="try-workspace-mode" id="secrets-btn" title="Pin encrypted secrets (STRIPE_SECRET_KEY, OPENAI_API_KEY, …) for the AI's Edge Function deploys" type="button">🔐 Secrets</button>
+<button class="try-workspace-mode" id="site-config-btn" title="Brand, domain, analytics, forms — auto-injected into every generated page" type="button">🌐 Site</button>
+<button class="try-workspace-mode" id="domains-btn" title="Claim a custom subdomain for your published prototype (Cloudflare CNAME)" type="button">🌍 Domain</button>
+<button class="try-workspace-mode" id="mcp-btn" title="Connect HTTP-transport MCP servers to expose their tools to the agent (Linear, Notion, Sentry, custom, …)" type="button">🧩 MCP</button>
+<button class="try-workspace-mode" id="projects-btn" title="Save and load named projects" type="button">📂 Projects</button>
+<button class="try-workspace-mode" id="collab-btn" title="Invite collaborators to edit this prototype with you in real time (publish first to enable)" type="button">👥 Collaborate</button>
+</div>
+</div>
+<!-- Close button at the right edge — discards the current workspace
+     (turns, panes, loaded prototype) by reloading /try.html. Same
+     semantics as the sidebar's "+ New project" button. -->
+<button class="try-workspace-mode visual-edits-btn" id="visual-edits-toggle" type="button" title="Toggle visual element picker" aria-pressed="false">✏ Visual edits</button>
+<button class="try-workspace-close" id="workspace-close-btn" type="button" title="Close workspace (discard current session)" aria-label="Close workspace">✕</button>
+</div>
+</div>
+<p class="try-workspace-builder-hint" hidden="" id="workspace-builder-hint" role="note"></p>
+<div class="try-workspace-body">
+  <!-- Chat panel — left side of the workspace -->
+  <aside id="try-chat-col" class="try-chat-col">
+    <div id="try-chat-history" class="try-chat-history"></div>
+    <form id="try-chat-form" class="try-chat-form">
+      <textarea id="try-chat-input" placeholder="Ask or reply…" rows="1"></textarea>
+      <button type="submit" id="try-chat-send">↑</button>
+    </form>
+  </aside>
+  <!-- Preview — right side of the workspace -->
+  <div class="try-panes" id="panes"></div>
+  <!-- Empty state shown before any pane is built -->
+  <div class="try-preview-empty" id="try-preview-empty" aria-hidden="true">
+    <div class="try-preview-empty-inner">
+      <p class="try-preview-empty-icon">🖥</p>
+      <p class="try-preview-empty-title">Your app appears here</p>
+      <p class="try-preview-empty-sub">Answer the questions in the chat, then watch your app build in real time.</p>
+    </div>
+  </div>
+</div><!-- /.try-workspace-body -->
+</div><!-- /#workspace -->
+</div><!-- /#try-canvas-body -->
+<!-- Visual edits side-panel (Lovable-style) — slides in over the chat
+     when an element in the preview is picked. -->
+<aside aria-hidden="true" class="try-visual-edits" hidden id="visual-edits">
+  <div class="ve-head">
+    <span class="ve-title">Visual edits</span>
+    <button class="ve-close" id="ve-close" type="button" aria-label="Close visual edits" title="Close (Esc)">×</button>
+  </div>
+  <div class="ve-body">
+    <div class="ve-section">
+      <span class="ve-section-label">Element</span>
+      <span class="ve-tag" id="ve-tag">—</span>
+    </div>
+    <div class="ve-section">
+      <label class="ve-section-label" for="ve-text">Text content</label>
+      <textarea class="ve-text" id="ve-text" rows="3" spellcheck="false"></textarea>
+    </div>
+    <div class="ve-section">
+      <span class="ve-section-label">Typography</span>
+      <div class="ve-row">
+        <label class="ve-field">
+          <span>Font size</span>
+          <input id="ve-font-size" placeholder="16px" type="text" />
+        </label>
+        <label class="ve-field">
+          <span>Weight</span>
+          <select id="ve-font-weight">
+            <option value="">—</option>
+            <option value="300">Light (300)</option>
+            <option value="400">Regular (400)</option>
+            <option value="500">Medium (500)</option>
+            <option value="600">Semibold (600)</option>
+            <option value="700">Bold (700)</option>
+          </select>
+        </label>
+      </div>
+      <div class="ve-row">
+        <label class="ve-field">
+          <span>Style</span>
+          <select id="ve-font-style">
+            <option value="">—</option>
+            <option value="normal">Normal</option>
+            <option value="italic">Italic</option>
+          </select>
+        </label>
+        <label class="ve-field">
+          <span>Align</span>
+          <select id="ve-text-align">
+            <option value="">—</option>
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+            <option value="justify">Justify</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="ve-section">
+      <span class="ve-section-label">Colors</span>
+      <div class="ve-row">
+        <label class="ve-field">
+          <span>Text</span>
+          <input id="ve-color" placeholder="#000" type="text" />
+        </label>
+        <label class="ve-field">
+          <span>Background</span>
+          <input id="ve-bg" placeholder="transparent" type="text" />
+        </label>
+      </div>
+    </div>
+    <div class="ve-section">
+      <label class="ve-section-label" for="ve-chat">Ask AI to modify this element</label>
+      <textarea class="ve-chat" id="ve-chat" rows="2" placeholder="e.g. make this bolder, switch to a serif font…" spellcheck="false"></textarea>
+      <button class="ve-chat-send" id="ve-chat-send" type="button">Apply with AI</button>
+    </div>
+  </div>
+</aside>
+<!-- Conversion CTA — revealed by JS after the first successful run.
+         /try is the top-of-funnel demo; this is the "now use it for real" handoff. -->
+<div class="try-mac-cta" hidden="" id="mac-cta">
+<div class="cta-body" data-i18n="tryp.cta_body">
+<strong>LingCode for Mac</strong> is the same agent, native, on your actual files. The browser tab is the demo; the IDE is the product.
+      </div>
+<ul class="cta-features">
+<li data-i18n="tryp.cta_b1"><strong>⌘-click any element</strong> to edit it with AI in place</li>
+<li data-i18n="tryp.cta_b2"><strong>Bash · Edit · MCP · hooks · sessions</strong> — the full agent toolkit, not just chat</li>
+<li data-i18n="tryp.cta_b3"><strong>Work-protection</strong> + offline mode — your code never leaves the machine without your say-so</li>
+</ul>
+<a class="cta-button" data-i18n="tryp.cta_button" href="/">Download LingCode for Mac · free →</a>
+</div>
+<div class="try-foot">
+<span data-i18n="tryp.foot_span">Want <code>Bash</code>, <code>Edit</code>, MCP, hooks, sessions? Install the CLI: <code>curl -fsSL https://lingcode.dev/install-cli.sh | sh</code></span>
+<a data-i18n="tryp.see_docs" href="/cli.html">See full docs →</a>
+</div>
+</main>
+</div><!-- /#app-view -->
+
+<!-- Cloud backend console — a dedicated full-screen view (hash route #cloud=<id>).
+     mountCloudConsole() (main-cloud.js) builds its chrome (← back, title, tab
+     rail, content) into this div; the router shows/hides it via setTryView. -->
+<div id="cloud-view" hidden></div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+<!-- Open-on-phone modal — auto-publishes via the existing /p/<id> flow and
+     shows a QR code so the user can scan with their phone camera. Built in
+     HTML (not dynamically) so its layout doesn't depend on JS module load. -->
+<div class="phone-modal" id="phone-modal" hidden role="dialog" aria-modal="true" aria-labelledby="phone-modal-title">
+  <div class="phone-modal-backdrop" data-phone-close="1"></div>
+  <div class="phone-modal-sheet">
+    <button class="phone-modal-close" type="button" data-phone-close="1" aria-label="Close">×</button>
+    <h3 class="phone-modal-title" id="phone-modal-title">Open on phone</h3>
+    <p class="phone-modal-hint">Scan with your phone's camera — opens the live prototype.</p>
+    <div class="phone-modal-qr-wrap">
+      <img class="phone-modal-qr" id="phone-modal-qr" alt="QR code linking to the prototype" />
+      <div class="phone-modal-status" id="phone-modal-status">Publishing…</div>
+    </div>
+    <div class="phone-modal-url-row">
+      <input class="phone-modal-url" id="phone-modal-url" readonly type="text" aria-label="Prototype URL" />
+      <button class="phone-modal-copy" id="phone-modal-copy" type="button">Copy</button>
+    </div>
+  </div>
+</div>
+<button class="try-mobile-chat-backdrop" hidden="" id="try-mobile-chat-backdrop" tabindex="-1" type="button"></button>
+<div class="try-tabbed-mobile-dock" hidden="" id="try-tabbed-mobile-dock">
+<p aria-live="polite" class="try-mobile-stream-pill" hidden="" id="try-mobile-stream-pill"></p>
+<div class="try-tabbed-mobile-dock-bar">
+<button class="try-mobile-chat-toggle" hidden="" id="try-mobile-chat-toggle" type="button"></button>
+</div>
+</div>
+<button class="try-focus-close" id="workspace-focus-close" type="button">
+<svg aria-hidden="true" fill="none" height="18" viewbox="0 0 24 24" width="18">
+<path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+</svg>
+</button>
+<script src="/try/main.js?v=20260612b" type="module"></script>
+<script src="/nav-auth.js" defer></script>
+<script>
+(function () {
+  const PROMPTS = [
+    'Make me a pitch deck for an AI startup',
+    'A pricing page with 3 tiers and Stripe checkout',
+    'Build a Kanban board with drag-and-drop',
+    'A landing page for a coffee shop with online ordering',
+    'Create a real-time chat UI with dark mode',
+    'Portfolio site with animated project cards',
+    'A habit tracker with streaks and charts',
+    'Dashboard with revenue metrics and line graphs',
+    'Sign-up flow with email + Google OAuth',
+    'A music player with waveform visualizer',
+  ];
+
+  const TYPE_SPEED   = 38;   // ms per character while typing
+  const ERASE_SPEED  = 18;   // ms per character while erasing
+  const PAUSE_FULL   = 2200; // ms to hold the complete phrase
+  const PAUSE_EMPTY  = 400;  // ms to wait before typing next phrase
+
+  function animatePlaceholder(el) {
+    if (!el) return;
+    let idx   = 0;
+    let timer = null;
+    let phase = 'type'; // 'type' | 'hold' | 'erase' | 'gap'
+    let pos   = 0;
+    const original = el.getAttribute('placeholder') || PROMPTS[0];
+
+    function isBusy() {
+      return document.activeElement === el || el.value.length > 0;
+    }
+
+    function step() {
+      if (isBusy()) { timer = setTimeout(step, 500); return; }
+      const target = PROMPTS[idx];
+
+      if (phase === 'type') {
+        pos++;
+        el.setAttribute('placeholder', target.slice(0, pos));
+        if (pos >= target.length) { phase = 'hold'; timer = setTimeout(step, PAUSE_FULL); }
+        else                       { timer = setTimeout(step, TYPE_SPEED); }
+
+      } else if (phase === 'hold') {
+        phase = 'erase';
+        timer = setTimeout(step, 0);
+
+      } else if (phase === 'erase') {
+        pos--;
+        el.setAttribute('placeholder', target.slice(0, pos));
+        if (pos <= 0) { phase = 'gap'; idx = (idx + 1) % PROMPTS.length; timer = setTimeout(step, PAUSE_EMPTY); }
+        else          { timer = setTimeout(step, ERASE_SPEED); }
+
+      } else { // gap
+        phase = 'type';
+        timer = setTimeout(step, 0);
+      }
+    }
+
+    // Start after a short random delay so two fields don't sync perfectly
+    timer = setTimeout(step, 800 + Math.random() * 600);
+
+    el.addEventListener('focus',  () => { clearTimeout(timer); el.setAttribute('placeholder', ''); });
+    el.addEventListener('blur',   () => { if (!el.value) { pos = 0; phase = 'type'; timer = setTimeout(step, 600); } });
+  }
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  animatePlaceholder(document.getElementById('prompt'));
+  animatePlaceholder(document.getElementById('dash-prompt'));
+})();
+</script>
+<script type="module">
+// main-chat.js wiring: connect the chat input to the main prompt handler.
+// This runs after all other modules load so the workspace is ready.
+import { mountChatInput } from './try/main-chat.js?v=20260602d';
+// The freeform chat input in the persistent chat column forwards to the
+// existing #send click handler path, which handles routing to providers.
+const sendBtn = document.getElementById('send');
+if (sendBtn) {
+  mountChatInput(text => {
+    // Populate the main hidden prompt textarea and trigger the send button
+    const promptEl = document.getElementById('prompt');
+    if (promptEl) promptEl.value = text;
+    sendBtn.click();
+  });
+}
+</script>
+<script type="module">
+import { toggleVisualEdits } from './try/main-visual-edits.js?v=20260602d';
+const veToggleBtn = document.getElementById('visual-edits-toggle');
+if (veToggleBtn) {
+  veToggleBtn.addEventListener('click', function () {
+    const on = toggleVisualEdits();
+    this.classList.toggle('visual-edits-btn--active', on);
+    this.textContent = on ? '✏ Exit edits' : '✏ Visual edits';
+    this.setAttribute('aria-pressed', String(on));
+  });
+}
+</script>
+<script>
+(function () {
+  const btn     = document.getElementById('try-checklist-collapse-btn');
+  const canvas  = document.getElementById('try-canvas-body');
+  if (!btn || !canvas) return;
+  const STORAGE_KEY = 'lingcode.try.checklistCollapsed';
+  // Restore saved state
+  if (sessionStorage.getItem(STORAGE_KEY) === '1') {
+    canvas.classList.add('checklist-collapsed');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.title = 'Expand checklist';
+  }
+  btn.addEventListener('click', function () {
+    const collapsed = canvas.classList.toggle('checklist-collapsed');
+    btn.setAttribute('aria-expanded', String(!collapsed));
+    btn.title = collapsed ? 'Expand checklist' : 'Collapse checklist';
+    sessionStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0');
+  });
+})();
+</script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>完成前先验证——用证据代替断言 — LingCode</title>
+  <meta name="description" content="LingCode 可能会以自信的语气宣告代码完成，但代码未必能编译、测试未必能运行。验证是一种纪律——先跑构建、看输出，再说"完成"。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/verify-before-claiming-done.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/verify-before-claiming-done.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/verify-before-claiming-done.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/verify-before-claiming-done.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "完成前先验证——用证据代替断言",
+  "description": ""应该可以"和"已验证可以"是两种不同的状态。LingCode 可能会以自信的语气宣告代码完成，但代码未必能编译、测试未必能运行、功能未必真的符合预期。解决方案不是更聪明的模型，而是一种明确的纪律：用证据代替断言。",
+  "url": "https://lingcode.dev/zh/tutorials/verify-before-claiming-done.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/verify-before-claiming-done.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "完成前先验证——用证据代替断言"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "技巧与窍门",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "完成前先验证",
+      "item": "https://lingcode.dev/zh/tutorials/verify-before-claiming-done.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/verify-before-claiming-done.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">技巧与窍门</a>
+      <span>/</span>
+      <span>完成前先验证</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>完成前先验证——用证据代替断言</h1>
+      <p class="intro">"应该可以"和"已验证可以"是两种不同的状态。LingCode 可能会以自信的语气宣告代码完成，但代码未必能编译、测试未必能运行、功能未必真的符合预期。解决方案不是更聪明的模型，而是一种需要明确践行的纪律：先有证据，再做断言。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么"看起来没问题"是个陷阱</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>编程 Agent——包括默认设置下的 LingCode——普遍遵循同一个模式：写代码、扫一眼、觉得没问题、宣告完成。这个模式有三种常见的出错方式：</p>
+          <ul>
+            <li><strong>代码无法编译。</strong>一个拼错的符号、一个缺失的 import、一个在文件之间漂移的类型。LingCode 从未真正运行编译器——只是觉得代码看起来合理。</li>
+            <li><strong>测试什么都没跑。</strong>新建了测试文件，却没有接入测试运行器。LingCode 宣称"所有测试通过"，是因为运行器发现了零个测试，然后以退出码 0 结束。</li>
+            <li><strong>功能悄无声息。</strong>按钮加上了，点击处理器也存在，但处理器在某个 LingCode 没想清楚的条件下提前返回。"我实现了 X"——是的，而 X 在用户走的那条路上什么都不做。</li>
+          </ul>
+          <p>这些都不是模型的失败，而是<em>流程</em>上的失败——在没有运行验证步骤的情况下就声称完成。解决办法是把验证作为说出"完成"、"修好了"、"通过了"这些词的硬性前提条件。</p>
+        </div>
+      </div>
+
+      <h2>规则，只说一次</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>在 LingCode（或你）说出以下任何一句话之前：</p>
+          <ul>
+            <li>"这个完成了。"</li>
+            <li>"我修好了。"</li>
+            <li>"测试通过了。"</li>
+            <li>"构建干净通过。"</li>
+            <li>"可以提交了。"</li>
+          </ul>
+          <p>同一对话中必须有工具调用的输出，显示相关命令已运行并产生了预期结果。不是"我认为它能编译"——要的是构建输出；不是"测试应该能通过"——要的是测试运行器的通过数量。</p>
+          <p>这就是本教程的全部内容。接下来讲的是如何真正落实它。</p>
+        </div>
+      </div>
+
+      <h2>四个验证关卡</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>将每一项完成声明对应到能够证明它的命令。如果对话记录中没有这条命令，这个声明就缺乏依据。</p>
+          <table style="width:100%; margin-top:0.75rem;">
+            <thead>
+              <tr style="text-align:left;">
+                <th style="padding:0.5rem 0.75rem; border-bottom:1px solid #ddd;">声明</th>
+                <th style="padding:0.5rem 0.75rem; border-bottom:1px solid #ddd;">必需的证据</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;">"构建通过了。"</td>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;"><code>swift build</code>、<code>xcodebuild build</code>、<code>cargo build</code>、<code>npm run build</code>、<code>tsc --noEmit</code>——输出以成功结束，且其上没有任何错误。</td>
+              </tr>
+              <tr>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;">"测试通过了。"</td>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;">测试运行器的输出，显示<strong>非零数量的测试已运行</strong>且失败数为零。"0 个测试，0 次失败"不算通过——那是空跑。</td>
+              </tr>
+              <tr>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;">"代码检查干净。"</td>
+                <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #eee;">Linter 输出，无警告也无错误。添加抑制注释算作未完成工作的证据，而非完成的证明。</td>
+              </tr>
+              <tr>
+                <td style="padding:0.5rem 0.75rem;">"功能正常工作了。"</td>
+                <td style="padding:0.5rem 0.75rem;">手动复现用户路径——实际点击、实际请求、实际输出——并捕获结果（截图、命令输出，或"我运行了 X，观察到了 Y"）。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2>向 LingCode 要证据，而不是断言</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>当 LingCode 完成一项任务并说"这应该可以"或"测试应该能通过"时，正确的跟进只需一句话：</p>
+          <pre><code>Run the build and tests and paste the output before declaring
+done.</code></pre>
+          <p>这一个提示就能把对话结尾的 AI 回复从叙述性语言（"我添加了这个函数，更新了调用处，应该能编译"）变为可验证的实证（实际的构建输出）。如果输出显示有错误，你就回到循环中，手里有了真正的线索。如果输出显示成功，你就拿到了证据。</p>
+          <div class="tip-box">
+            <strong>将这句话设为默认的收尾指令</strong>，在你开始任何非简单任务时都加上：<em>"说完成之前，先跑构建和测试，把输出粘贴出来。"</em>把它保存为代码片段，或者让它成为你的肌肉记忆。
+          </div>
+        </div>
+      </div>
+
+      <h2>"零测试"陷阱</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>最尴尬的失败模式：LingCode 写了一个测试，跑了运行器，运行器以退出码 0 结束——因为没有发现任何测试——然后 LingCode 宣称"测试通过了"。</p>
+          <p>防御这种情况的方法是检查数量，而不是退出码：</p>
+          <pre><code>Run the tests. Tell me how many tests executed and how many
+passed. If zero tests executed, the test file isn't wired in — fix
+that first.</code></pre>
+          <p>测试运行器发现零个测试的常见原因：</p>
+          <ul>
+            <li>文件不在预期的测试目录中。</li>
+            <li>文件名不匹配运行器的命名规则（<code>*Test.swift</code>、<code>*.test.ts</code>、<code>test_*.py</code>）。</li>
+            <li>类名或函数名不以运行器要求的前缀开头（<code>test</code>、<code>it</code>、<code>describe</code>）。</li>
+            <li>测试 target 未添加到 Xcode/SwiftPM 项目中——文件在磁盘上存在，但并未被编译。</li>
+          </ul>
+          <p>以上每一种情况都会产生一条绿色的"所有测试通过"提示，但它什么都不能说明。</p>
+        </div>
+      </div>
+
+      <h2>"能编译但什么都不做"陷阱</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>构建绿了、测试也绿了，仍然无法证明行为正确。对"功能正常工作"真正诚实的检验，是手动复现用户路径。在 LingCode 中强制执行这一点的三种轻量方式：</p>
+          <ul>
+            <li><strong>对于 CLI 功能：</strong>让 LingCode 用真实输入调用新命令，并展示输出。<em>"运行 <code>lingcode ask --provider claude 'hello'</code>，把响应粘贴出来。"</em></li>
+            <li><strong>对于 UI 功能：</strong>要求截图或运行时日志。如果 LingCode 无法截图，就让它<em>"在新处理器的入口处添加一条 print 语句，运行应用，点击按钮，把日志输出粘贴出来。"</em></li>
+            <li><strong>对于 API 功能：</strong>要求实际的 HTTP 调用。<em>"用真实的 payload 去 <code>curl</code> 新端点，给我看状态码和响应体。"</em></li>
+          </ul>
+          <div class="warn-box">
+            <strong>"我检查了代码，应该可以"不是证据。</strong>要继续追问。多执行一条命令不过几秒钟；相信一个虚假的"完成"，则可能要花几个小时在错误的层面排查 bug。
+          </div>
+        </div>
+      </div>
+
+      <h2>验证发现问题时，不要遮掩</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>验证步骤的职责就是<em>发现</em>问题。当它发现问题时，正确的应对是：</p>
+          <ol>
+            <li>完整地阅读实际的错误信息。</li>
+            <li>诊断根本原因——是哪里出了问题，而不是哪里看起来可疑。</li>
+            <li>修复根本原因。</li>
+            <li>重新运行验证。循环。</li>
+          </ol>
+          <p>错误的应对方式，按危害程度递增排列：</p>
+          <ul>
+            <li>下次跳过验证。（"一般都能通过。"）</li>
+            <li>抑制警告。（添加 <code>// swiftlint:disable</code>、<code>// @ts-ignore</code>、<code># noqa</code>，让 linter 对症状闭嘴。）</li>
+            <li>跳过或削弱失败的测试。（加 <code>.skip</code>、删除断言、降低阈值。）</li>
+            <li>不管三七二十一宣告完成，继续往前走。</li>
+          </ul>
+          <p>每一种做法都把真实信号变成永久的技术债务。如果 LingCode 提议这样做，要明确反对：<em>"不要抑制——解释为什么失败，然后修好它。"</em></p>
+        </div>
+      </div>
+
+      <h2>让验证变得轻松，你才会真的去做</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>只有验证足够省力，它才会成为习惯。三件事能让它变得轻松：</p>
+          <ul>
+            <li><strong>把构建和测试命令加入白名单</strong>——参见<a href="/zh/tutorials/reduce-permission-prompts.html">减少权限提示</a>。如果每次运行 <code>npm test</code> 或 <code>swift build</code> 都需要审批，LingCode（和你）都会跳过它。</li>
+            <li><strong>使用 hook 自动运行构建</strong>——参见<a href="/zh/tutorials/add-custom-hooks.html">添加自定义 hook</a>。一个在每次写入后运行 <code>tsc --noEmit</code> 或 <code>swift build</code> 的 post-edit hook，意味着验证会自动发生，不依赖任何人记得去问。</li>
+            <li><strong>把标准验证提示写一次存好。</strong>将它添加到项目级的 CLAUDE.md 或一个保存好的代码片段中，这样每个会话从一开始就内置了这个纪律。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>收尾检查清单</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>在 LingCode 提交代码、发起 PR 或打出"完成"这个词之前，在对话中逐项确认：</p>
+          <ul>
+            <li><strong>构建：</strong>运行了构建，输出以干净结束。</li>
+            <li><strong>测试：</strong>运行了测试，N 个测试已执行，全部通过（N &gt; 0）。</li>
+            <li><strong>行为：</strong>手动演练了面向用户的路径，观察到了预期结果。</li>
+            <li><strong>无抑制：</strong>没有添加 ignore、disable 或 skip 来让验证强行通过。</li>
+          </ul>
+          <p>如果有任何一项缺失，工作就还没完成——它处于"待验证"状态。诚实地说清楚当前状态，是软件开发中最省成本的一种修复。</p>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>这个纪律已被封装为一个 skill——把它放入你的 skills 目录，然后让 LingCode 使用"verify before completion"，或者直接依赖 LingCode 在检测到"done"/"fixed"/"passing"等声明时自动触发它：</p>
+          <pre><code>---
+name: verification-before-completion
+description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs. Triggers: 'this is done', 'I fixed it', 'tests pass', 'it builds clean', 'ready to commit', 'all green', 'ship it'. Actions: require evidence per claim — build output for 'builds', test count + zero failures for 'tests pass', linter output for 'lints clean', manual reproduction for 'feature works'. Anti-patterns: 'should work' without running, 'tests pass' with zero tests run, suppressing/skipping/lowering test thresholds. Discipline: evidence before assertion, always.
+---
+
+Verify before claiming done. Required output in the conversation
+before saying "done", "fixed", "passing", "ready", or
+"works":
+
+1. Build evidence
+   Run the project's build command (swift build / xcodebuild build /
+   cargo build / npm run build / tsc --noEmit). Output must end
+   clean with no errors. Paste the relevant tail.
+
+2. Test evidence
+   Run the test runner. Confirm the output shows a NON-ZERO number
+   of tests executed and zero failures. "0 tests, 0 failures" is
+   empty — diagnose why the runner found nothing.
+
+3. Behavior evidence
+   For user-facing features, exercise the actual path (CLI command +
+   output, HTTP call + response, button click + log line). Capture
+   the observation.
+
+4. No suppression
+   If a check failed, do not silence it (no // @ts-ignore, no
+   .skip, no disable comments, no lowered thresholds). Fix the root
+   cause and re-run.
+
+When the user asks "is it done?" or you'd say "it should work":
+stop and run the verifications first. Report what you ran, what
+you saw, and only then claim status. If any check is missing, name
+the work as "pending verification" — not done.
+
+Cheap when commands are allowlisted in settings.json (see
+fewer-permission-prompts skill) and / or wrapped in a post-edit
+hook that auto-runs the typecheck.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/verification-before-completion/SKILL.md</code>——关于具体位置以及 skill 如何被发现，请参见<a href="/zh/tutorials/install-a-skill.html">安装 skill</a>。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/debug-systematically-with-lingcode.html" class="tutorial-next-card">
+            <h3>系统化调试</h3>
+            <p>验证发现问题后，系统化调试方法帮你真正修复它，而不是掩盖它</p>
+          </a>
+          <a href="/zh/tutorials/test-driven-development-with-lingcode.html" class="tutorial-next-card">
+            <h3>测试驱动开发</h3>
+            <p>先写测试，看它失败，然后让它通过——把验证内建到每次改动的节奏中</p>
+          </a>
+          <a href="/zh/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html" class="tutorial-next-card">
+            <h3>将 Flutter 应用迁移到原生</h3>
+            <p>一个长流程工作流，第 5 阶段是"验证构建"——验证作为显式的最后一步</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要发布产品的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资展示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

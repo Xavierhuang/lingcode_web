@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode Cloud 认证 —— 邮箱/密码、OAuth、魔法链接、OTP、MFA | 文档</title>
+  <meta name="description" content="LingCode Cloud 的认证指南：用邮箱/密码、Google/GitHub/Apple OAuth、魔法链接和邮箱 OTP 登录用户；加上 TOTP 多因素认证；并理解 anon key（匿名密钥）与用户令牌的模型——配套 SDK 与 REST 参考。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/auth.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/auth.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/auth.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/auth.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/auth.html">
+  <meta property="og:title" content="LingCode Cloud 认证">
+  <meta property="og:description" content="邮箱/密码、魔法链接、OTP、Google/GitHub/Apple OAuth、TOTP MFA，以及访问令牌模型——配套 SDK 与 REST 参考。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .auth-method-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin: 20px 0; }
+    .auth-method-card { padding: 16px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); }
+    .auth-method-card h3 { margin: 0 0 6px; font-size: 0.95rem; color: var(--text); }
+    .auth-method-card p { margin: 0; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+    .rest-table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.875rem; }
+    .rest-table th, .rest-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .rest-table th { font-family: "Geist Mono", monospace; font-size: 0.72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim); }
+    .rest-table td code { font-size: 0.82rem; white-space: nowrap; }
+    .rest-table td.desc code { white-space: normal; }
+    .method-tag { font-family: "Geist Mono", monospace; font-size: 0.72rem; font-weight: 500; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border); color: var(--signal); }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/auth.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>认证</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● 身份</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>认证</h1>
+      <p class="tldr"><strong>一句话：</strong>认证内置在每个 LingCode Cloud 后端里——无需另起一套服务。用户可以用邮箱/密码、魔法链接、邮箱 OTP 验证码，或 Google/GitHub/Apple OAuth 登录；你还可以强制要求 TOTP 多因素认证。登录之后，<a href="/zh/docs/cloud/api-reference.html">客户端 SDK</a> 会保存会话，并把它附加到此后每一次 <code>.from()</code> 调用上，于是行级安全（RLS）就能以当前登录用户的 id 作为依据。<strong>anon key 是公开的</strong>；真正用来认证某个人身份的是<strong>用户会话令牌</strong>。</p>
+      <p class="intro">如果你用过 Firebase Auth 或 Supabase Auth，这套形态会很熟悉：几种登录方式、一个由 SDK 替你携带的会话令牌，以及服务端规则来决定每个用户能看到什么。本页先讲清楚模型——为什么 anon key 可以安全地随包发布、会话令牌到底是什么、多因素如何抬高门槛——然后用可运行的代码逐一走过每种方式。示例里的 <code>lingcode</code> 客户端就是 SDK 客户端；在 <a href="/try.html">/try</a> 和 Mac 预览里它已被预先注入为 <code>window.lingcode</code>。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>模型：两个密钥，一个会话</h2>
+      <p>每个后端都暴露两类凭证，把它们分清楚，就理解了这里认证的大半。</p>
+      <ul>
+        <li><strong>anon key（匿名密钥）</strong>是公开的。它标识你的后端，并授予匿名的、RLS-public 的访问——它本就该随你的浏览器打包产物发布。它<em>不</em>标识某个人。保护数据的是行级安全（RLS），而不是密钥的保密性，所以单凭一个 anon key，只能触及你的策略向所有人开放的那些行。</li>
+        <li><strong>用户会话令牌</strong>才是用来认证某个人身份的东西。登录成功后，SDK 会保存会话，并自动把它的令牌附加到后续请求上。从那一刻起，你的 RLS 策略就能以登录用户的 id 作为依据——<code>auth.uid()</code> 这类规则开始匹配，每个用户只看到属于自己的行。</li>
+      </ul>
+
+      <div class="info-box">
+        <h3>为什么 anon key 可以安全地随包发布</h3>
+        <p>把一个密钥放进谁都能读的客户端 JavaScript 里，感觉很别扭。它没问题的原因是：anon key 是一个<em>地址</em>，不是一个<em>权限</em>。它告诉网关你指的是哪个后端，并让未认证的读取通往你策略标记为 public 的内容——仅此而已。真正为私有数据把关的，是用户会话令牌加上你在服务端的行级安全策略。把 anon key 当作一个公开 URL，把你真正的密钥（Stripe 密钥、厂商 API key）当作密码——后者放进<a href="/zh/docs/cloud/secrets.html">密钥保险库</a>，绝不放进客户端。</p>
+      </div>
+
+      <h3>会话的结构</h3>
+      <p>一次成功的登录会解析为一个 <code>Session</code>。SDK 替你持久化它，所以你很少需要手动读取令牌：</p>
+      <pre><code>Session = {
+  user: { id, email } | null,
+  token: string            // 一个代表该用户的已签名 JWT
+}</code></pre>
+      <p>每个认证调用都返回一个 <code>Result</code>——<code>{ data, error }</code>——除了下面注明的少数几个。在信任 <code>data</code> 之前先检查 <code>error</code>。</p>
+
+      <div class="warn-box">
+        <strong>加载时 <code>await client.ready</code> 一次。</strong>如果用户是从 OAuth 跳转或魔法链接返回的，会话会随 URL 一起到达，SDK 必须先消费掉它，<code>getUser()</code> 才能告诉你谁登录了。<code>await lingcode.ready</code> 在这件事做完之后才会 resolve——读取用户之前先调用它一次，否则刚跳转回来的用户会有一帧看起来像是未登录。
+      </div>
+
+      <h2>登录方式一览</h2>
+      <p>邮箱/密码、魔法链接和邮箱 OTP 在每个后端上<strong>始终可用</strong>。三个托管 OAuth 提供方——Google、GitHub、Apple——由运营方配置并共享，或者你也可以为每个后端自带 OAuth 凭证。在控制台里开启并管理 OAuth 提供方，以及「强制要求 MFA」这个设置。</p>
+
+      <div class="auth-method-grid">
+        <div class="auth-method-card">
+          <h3>邮箱与密码</h3>
+          <p>经典凭证。<code>signUp</code> 创建账号，<code>signIn</code> 返回一个会话。始终可用。</p>
+        </div>
+        <div class="auth-method-card">
+          <h3>魔法链接</h3>
+          <p>邮件发送一个一键登录链接。无需记住密码；用户返回时 SDK 会完成这个链接。</p>
+        </div>
+        <div class="auth-method-card">
+          <h3>邮箱 OTP</h3>
+          <p>邮件发送一段短数字验证码，让用户输入回来。适合移动端和免密流程。</p>
+        </div>
+        <div class="auth-method-card">
+          <h3>OAuth</h3>
+          <p>Google、GitHub、Apple（托管或自带），或一个自定义提供方字符串。顶层跳转。</p>
+        </div>
+        <div class="auth-method-card">
+          <h3>TOTP MFA</h3>
+          <p>在以上任意方式之上叠加身份验证器 app 的验证码。把会话提升到 AAL2。</p>
+        </div>
+      </div>
+
+      <h2>邮箱与密码</h2>
+      <p>最简单的路径。<code>signUp</code> 注册账号，<code>signIn</code>（别名 <code>signInWithPassword</code>）返回一个会话。两者都接收 <code>{ email, password }</code> 并返回 <code>Result&lt;Session&gt;</code>。</p>
+      <pre><code>// 注册
+const { data, error } = await lingcode.auth.signUp({
+  email: 'ada@example.com',
+  password: 'a-strong-passphrase'
+});
+
+// 登录（signInWithPassword 是别名）
+const { data: session, error: err } = await lingcode.auth.signIn({
+  email: 'ada@example.com',
+  password: 'a-strong-passphrase'
+});
+
+if (!err) {
+  console.log('signed in as', session.user.email);
+}</code></pre>
+      <p>调用成功后，SDK 已经保存好了会话——你下一次 <code>lingcode.from(...)</code> 调用就会带着认证发出去。你不需要自己把令牌传到任何地方。</p>
+
+      <h2>魔法链接</h2>
+      <p>魔法链接用一个发给用户的一次性链接替换掉密码。你发送链接；用户点击后会带着 URL 里的会话回到你的应用，SDK 会自动完成它——这就是为什么你很少直接调用 <code>verifyMagicLink</code>。</p>
+      <pre><code>// 1. 发送链接
+const { data, error } = await lingcode.auth.sendMagicLink({
+  email: 'ada@example.com',
+  redirectTo: 'https://your-app.example.com/welcome' // 可选
+});
+// data =&gt; { sent: true }
+
+// 2. 在链接返回到的那个页面上，只需 await ready ——
+//    SDK 会替你从 URL 里消费掉令牌。
+await lingcode.ready;
+const user = lingcode.auth.getUser(); // 现在已填充
+
+// （很少需要）手动完成一个令牌：
+// await lingcode.auth.verifyMagicLink(tokenFromUrl);</code></pre>
+
+      <h2>邮箱 OTP</h2>
+      <p>OTP 和魔法链接是同一个思路，只不过用户输入一段短验证码，而不是点击一个链接——在移动端、或深链不方便时很顺手。先发送一个验证码，然后校验用户输入的验证码。</p>
+      <pre><code>// 1. 发送一个验证码
+await lingcode.auth.sendOtp({ email: 'ada@example.com' });
+// =&gt; { sent: true }
+
+// 2. 校验用户输入的内容
+const { data: session, error } = await lingcode.auth.verifyOtp({
+  email: 'ada@example.com',
+  code: '482913'
+});
+if (!error) {
+  // 会话已保存；用户已登录
+}</code></pre>
+
+      <h2>OAuth（Google、GitHub、Apple）</h2>
+      <p>OAuth 把登录交给一个用户已经信任的提供方。<code>signInWithOAuth</code> 接收一个提供方——<code>'google'</code>、<code>'github'</code>、<code>'apple'</code>，或一个自定义字符串——并执行一次到该提供方授权页的<strong>顶层导航</strong>。它返回 <code>void</code>，而不是 Result，因为页面正在离开；返回时，SDK 会自动保存会话。</p>
+      <pre><code>// 触发一次到 Google 的整页跳转。
+lingcode.auth.signInWithOAuth('google', {
+  redirectTo: 'https://your-app.example.com/dashboard' // 可选
+});</code></pre>
+      <p>因为这是一次顶层导航，不要指望这一行之后的代码能拿到结果运行——浏览器已经在前往提供方的路上了。在用户<em>返回</em>到的那个页面上处理登录状态（await <code>ready</code>，然后读取用户）。</p>
+
+      <h3>哪些提供方启用了？</h3>
+      <p>不是每个后端都开启每个提供方。在渲染按钮之前先问一下——<code>getProviders()</code> 返回一个 提供方 → 可用性 的映射，于是你可以只展示能用的那些：</p>
+      <pre><code>const providers = await lingcode.auth.getProviders();
+// {
+//   google: { available: true,  source: 'managed' },
+//   github: { available: true,  source: 'byo' },
+//   apple:  { available: false, source: null }
+// }
+
+if (providers.google?.available) {
+  renderGoogleButton();
+}</code></pre>
+
+      <h3>从跳转里读取认证错误</h3>
+      <p>如果提供方往返失败了（用户取消、客户端配置有误等），错误码会随 URL 一起带回来。<code>lastError()</code> 把它暴露出来，让你能在跳转之后展示一条消息：</p>
+      <pre><code>await lingcode.ready;
+const err = lingcode.auth.lastError(); // 例如 'access_denied' 或 null
+if (err) showBanner(`Sign-in failed: ${err}`);</code></pre>
+
+      <div class="info-box">
+        <h3>托管 vs. 自带 OAuth</h3>
+        <p>接入 Google、GitHub 或 Apple，你有两种方式。<strong>托管</strong>提供方由运营方配置并在各后端间共享——最快的路径，你无需注册任何东西。<strong>自带</strong>让你在控制台里为每个后端提供自己的 client id 和 secret，于是授权页显示的是你应用的名字，而且你拥有这个 OAuth 应用。在 <a href="https://lingcode.dev/backends.html">lingcode.dev/backends</a> → 你的后端 → 认证提供方 里切换两者，并翻转「强制要求 MFA」设置。分步操作：<a href="/zh/tutorials/sign-in-with-google-oauth.html">用 Google 登录</a> 和 <a href="/zh/tutorials/sign-in-with-github-oauth.html">用 GitHub 登录</a>。</p>
+      </div>
+
+      <h2>多因素认证（MFA）</h2>
+      <p>密码或 OAuth 登录证明了用户知道某个秘密、或掌控着某个账号——保证级别 <strong>AAL1</strong>。MFA 加上第二重证明：来自身份验证器 app 的基于时间的一次性验证码（TOTP——RFC 6238，6 位数字，每 30 秒刷新一次，带 ±1 步的漂移容忍，所以时钟稍有偏差也能验证通过）。完成 MFA 会把会话提升到 <strong>AAL2</strong>——你的敏感操作可以要求的那个更高保证级别。</p>
+      <p>这个流程有两部分。<strong>注册（Enroll）</strong>一次：后端返回一个 secret 加一个二维码，用户把它扫进身份验证器 app，你再校验一个验证码以确认配对。此后是<strong>校验（Verify）</strong>：当某个会话需要 AAL2 时，用户输入一个当前验证码，会话即被提升。如果后端开启了<strong>「强制要求 MFA」</strong>，用户必须先完成 MFA 才被视为完全登录。</p>
+
+      <div class="info-box">
+        <h3>为什么 AAL2 重要</h3>
+        <p>把保证拆成 AAL1 和 AAL2，让你可以划一条线：日常读取发生在 AAL1，但一条策略可以为危险操作要求 AAL2——删除账号、转移资金、修改安全设置。一个被盗的密码只能让攻击者到达 AAL1；没有用户的身份验证器设备，他们无法到达 AAL2，于是那些高价值路径保持关闭。在后端强制要求 MFA，不过是把 AAL2 设为「登录」本身的门槛。</p>
+      </div>
+
+      <p>MFA 通过下面的 REST 端点驱动——先 enroll 拿到 secret 和二维码，再 verify 一个验证码以到达 AAL2：</p>
+      <pre><code>// Enroll：返回 { secret, qr_code } —— 渲染二维码让用户扫描
+POST /api/cloud/be/&lt;backend-id&gt;/auth/mfa/enroll
+
+// Verify 一个验证码以确认注册 / 把会话提升到 AAL2
+POST /api/cloud/be/&lt;backend-id&gt;/auth/mfa/verify   { "code": "482913" }</code></pre>
+      <p>完整演练，包括打开「强制要求 MFA」开关：<a href="/zh/tutorials/require-mfa-on-your-backend.html">在你的后端强制要求 MFA</a>。</p>
+
+      <h2>令牌模型</h2>
+      <p>会话令牌是一个代表用户的<strong>已签名 JWT</strong>。SDK 替你携带它，但了解它在传递什么会有帮助：</p>
+      <ul>
+        <li><strong>访问令牌 vs. 刷新令牌。</strong>访问令牌（access token）用来认证请求，生存期短；当访问令牌过期时，刷新令牌（refresh token）会在刷新端点换取一个新的访问令牌。SDK 会管理这件事——你通常不直接碰 <code>/auth/token/refresh</code>。</li>
+        <li><strong>保证级别。</strong>令牌携带它的保证级别：密码或 OAuth 之后是 <strong>AAL1</strong>，MFA 校验之后是 <strong>AAL2</strong>。策略可以为敏感操作要求 AAL2。</li>
+        <li><strong>应用认证的两种方式。</strong>请求要么携带 <strong>anon key</strong>（作为 Bearer 令牌或 <code>?apikey=</code>）用于匿名 / RLS-public 访问，要么携带<strong>用户令牌</strong>（由 SDK 自动附加）用于已登录访问。同样的端点，不同的凭证。</li>
+      </ul>
+      <p>需要时手动读取当前用户或令牌：</p>
+      <pre><code>const user  = lingcode.auth.getUser();  // { id, email } | null
+const token = lingcode.auth.getToken(); // string | null（即 JWT）
+
+await lingcode.auth.signOut(); // 清除已保存的会话；resolve 为 { error: null }</code></pre>
+
+      <h2>底层细节（REST）</h2>
+      <p>SDK 是这些端点之上的一层薄封装——如果你在 JavaScript 之外工作，或想确切看到正在发生什么，可以直接使用它们。一个后端的基址是 <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code>。登录和提供方端点用 <strong>anon key</strong> 认证（Bearer 或 <code>?apikey=</code>）；MFA、刷新和登出端点需要<strong>用户令牌</strong>。</p>
+
+      <table class="rest-table">
+        <thead>
+          <tr><th>Method</th><th>Path</th><th class="desc">Body / 说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/signup</code></td><td class="desc"><code>{ email, password }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/signin</code></td><td class="desc"><code>{ email, password }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/magiclink/request</code></td><td class="desc"><code>{ email, redirect_url }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/magiclink/verify</code></td><td class="desc"><code>{ token }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/otp/request</code></td><td class="desc"><code>{ email }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/otp/verify</code></td><td class="desc"><code>{ email, code }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/apple/native</code></td><td class="desc"><code>{ identity_token }</code> —— 原生 Apple 登录</td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/token/refresh</code></td><td class="desc"><code>{ refresh_token }</code> —— 需要用户令牌</td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/signout</code></td><td class="desc"><code>{ refresh_token }</code> 或 <code>{ all: true }</code> —— 需要用户令牌</td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/mfa/enroll</code></td><td class="desc">→ <code>{ secret, qr_code }</code> —— 需要用户令牌</td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/mfa/verify</code></td><td class="desc"><code>{ code }</code> → AAL2 级别的会话 —— 需要用户令牌</td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/mfa/challenge</code></td><td class="desc">需要用户令牌</td></tr>
+          <tr><td><span class="method-tag">GET</span></td><td><code>/auth/mfa/factors</code></td><td class="desc">需要用户令牌</td></tr>
+          <tr><td><span class="method-tag">DELETE</span></td><td><code>/auth/mfa/factors/:factorId</code></td><td class="desc">需要用户令牌</td></tr>
+          <tr><td><span class="method-tag">GET</span></td><td><code>/auth/providers</code></td><td class="desc">→ <code>{ google:{available,source}, github:{…}, apple:{…} }</code></td></tr>
+          <tr><td><span class="method-tag">GET</span></td><td><code>/auth/oauth/:provider/start?redirect_url=…</code></td><td class="desc">→ 302 到该提供方的授权页</td></tr>
+        </tbody>
+      </table>
+
+      <p>OAuth 往返在一个由平台拥有的回调处收尾：</p>
+      <pre><code>GET/POST /api/cloud/auth/oauth/:provider/callback
+
+// 成功时，带着以下参数跳转回你的 redirect_url：
+//   ?lc_session=&lt;jwt&gt;
+// 失败时：
+//   ?lc_error=&lt;code&gt;</code></pre>
+
+      <div class="warn-box">
+        <strong>让凭证与端点匹配。</strong>登录、提供方列表和 OAuth-start 接受 <em>anon key</em>（Bearer 或 <code>?apikey=</code>）。MFA 端点、令牌刷新和登出需要<em>用户令牌</em>——你无法仅凭 anon key 注册一个因子或刷新一个会话。SDK 会替你挑对的那个；如果你在手动调用 REST，请发送匹配的凭证。
+      </div>
+
+      <div class="tutorial-next">
+        <h2>下一步</h2>
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/database.html">
+            <span class="card-eyebrow">数据</span>
+            <h3>数据库与 RLS →</h3>
+            <p>现在用户能登录了，写一些以用户 id 作为依据的行级安全策略，让每个人只看到属于自己的行。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">参考</span>
+            <h3>API 参考 →</h3>
+            <p>完整的 SDK 接口和每一个 REST 端点及其确切结构，包括完整的 <code>client.auth.*</code> 签名。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/tutorials/sign-in-with-google-oauth.html">
+            <span class="card-eyebrow">教程</span>
+            <h3>用 Google 登录 →</h3>
+            <p>一个具体的、端到端的演练，把 Google OAuth 接进你的应用——托管或自带。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

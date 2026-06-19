@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>重新上传 iOS 构建包到 TestFlight — LingCode 教程</title>
+  <meta name="description" content="适合初学者的 iOS 构建上传指南：安装 Xcode、递增构建号、归档并上传到 TestFlight，所有下载链接一次呈现。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/reupload-an-ios-build-to-testflight.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/reupload-an-ios-build-to-testflight.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "重新上传 iOS 构建包到 TestFlight",
+  "description": "将新版本的 iOS 应用上传到 TestFlight，让测试人员即可试用。递增构建号、归档、上传，等待 Apple 处理。大约需要您 10 分钟，加上 Apple 的 5–30 分钟处理时间。涵盖所有需要安装的工具。",
+  "url": "https://lingcode.dev/zh/tutorials/reupload-an-ios-build-to-testflight.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/reupload-an-ios-build-to-testflight.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "选择正确的目标设备",
+      "url": "https://lingcode.dev/zh/tutorials/reupload-an-ios-build-to-testflight.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "上传——三种方式任选其一",
+      "url": "https://lingcode.dev/zh/tutorials/reupload-an-ios-build-to-testflight.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "撰写发布说明",
+      "url": "https://lingcode.dev/zh/tutorials/reupload-an-ios-build-to-testflight.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "重新上传 iOS 构建包到 TestFlight",
+      "item": "https://lingcode.dev/zh/tutorials/reupload-an-ios-build-to-testflight.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/reupload-an-ios-build-to-testflight.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">原生 Mac IDE</a>
+      <span>/</span>
+      <span>重新上传 iOS 构建包到 TestFlight</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>重新上传 iOS 构建包到 TestFlight</h1>
+      <p class="intro">将新版本的 iOS 应用上传到 TestFlight，让测试人员即可试用。递增构建号、归档、上传，等待 Apple 处理。大约需要您 10 分钟，加上 Apple 的 5–30 分钟处理时间。涵盖所有需要安装的工具。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>所需工具（一次性准备）</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>首次配置。已有的部分可跳过。</p>
+          <ul>
+            <li><strong>Mac</strong> — 必须。iOS 应用只能在 macOS 上构建，Windows/Linux 用户暂不支持。</li>
+            <li><strong>Xcode</strong> — Apple 的 IDE，归档和上传都需要它，免费。
+              <ul>
+                <li><a href="https://apps.apple.com/us/app/xcode/id497799835?mt=12" target="_blank" rel="noopener">在 Mac App Store 下载 Xcode ↗</a>（推荐，支持自动更新）</li>
+                <li><a href="https://developer.apple.com/download/all/?q=xcode" target="_blank" rel="noopener">在 developer.apple.com 直接下载 ↗</a>（可选择特定版本，需要登录）</li>
+              </ul>
+            </li>
+            <li><strong>Apple Developer Program</strong> — 每年 99 美元。上传到 TestFlight 或 App Store 需要此资格（免费签名仅支持在自己的设备上运行）。
+              <ul>
+                <li><a href="https://developer.apple.com/programs/enroll/" target="_blank" rel="noopener">注册开发者计划 ↗</a></li>
+              </ul>
+            </li>
+            <li><strong>App Store Connect 记录</strong> — 您应用的上架条目。在 <a href="https://appstoreconnect.apple.com/apps" target="_blank" rel="noopener">App Store Connect → My Apps → + ↗</a> 创建。需要 Bundle ID（例如 <code>com.yourname.appname</code>）和应用名称。</li>
+            <li><strong>可选但实用：Transporter 应用</strong> — Apple 的独立上传工具。<a href="https://apps.apple.com/us/app/transporter/id1450874784" target="_blank" rel="noopener">在 Mac App Store 下载 Transporter ↗</a>。当 Xcode 内置上传界面出问题时非常好用。</li>
+            <li><strong>可选：App Store Connect API 密钥</strong> — 用于命令行/CI 上传。参见<a href="/zh/tutorials/set-up-app-store-connect-key.html">配置 App Store Connect API 密钥</a>。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>递增构建号</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Apple 会拒绝 <code>CFBundleVersion</code> 相同的重复上传。归档前务必先递增构建号。</p>
+          <p><strong>在 Xcode 中：</strong>点击文件导航栏顶部的项目 → 选择 Target → <strong>General → Identity</strong>。有两个字段：</p>
+          <ul>
+            <li><strong>Version</strong>（<code>CFBundleShortVersionString</code>）— 用户可见的版本号。修复补丁可保持不变；发布正式更新时递增（如 1.2.0 → 1.2.1）。</li>
+            <li><strong>Build</strong>（<code>CFBundleVersion</code>）— 加 1。即使 Version 不变，也必须始终递增。</li>
+          </ul>
+          <p>或在项目根目录通过终端执行：</p>
+          <pre><code>agvtool next-version -all</code></pre>
+          <p><a href="https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleversion" target="_blank" rel="noopener">CFBundleVersion 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>选择正确的目标设备</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>在 Xcode 工具栏（顶部）的设备选择器中，必须选择 <strong>Any iOS Device (arm64)</strong>，而非模拟器。归档只能针对通用设备目标进行。</p>
+          <p>菜单路径：<strong>Product → Destination → Any iOS Device (arm64)</strong>。</p>
+        </div>
+      </div>
+
+      <h2>归档</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p><strong>在 Xcode 中：</strong>菜单选择 <strong>Product → Archive</strong>。Xcode 将以 Release 模式构建（典型项目需要一两分钟），完成后自动打开 <strong>Organizer</strong> 窗口并列出您的归档包。</p>
+          <p><strong>或通过终端：</strong></p>
+          <pre><code>xcodebuild -scheme YourAppScheme -configuration Release archive \
+  -archivePath ~/Desktop/YourApp.xcarchive</code></pre>
+          <p><a href="https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases" target="_blank" rel="noopener">分发文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>上传前先验证</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>在 Organizer 中（归档完成后自动打开），在左侧选择您的归档包 → 点击右侧的 <strong>Validate App</strong>。</p>
+          <p>这一步会在浪费上传时间之前，提前发现签名问题、权限不匹配和 Bundle 配置错误。验证约需 1 分钟。继续操作前请修复所有报错。</p>
+        </div>
+      </div>
+
+      <h2>上传——三种方式任选其一</h2>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p><strong>方式 A — Xcode Organizer（最简单）。</strong></p>
+          <p>在 Organizer 中：<strong>Distribute App → App Store Connect → Upload</strong>。向导会自动完成签名和上传，通常需要 2–5 分钟。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p><strong>方式 B — Transporter 应用（最稳定）。</strong></p>
+          <p>先导出 IPA：在 Organizer 中，选择 <strong>Distribute App → App Store Connect → Export</strong>，保存 IPA 文件。然后打开 <a href="https://apps.apple.com/us/app/transporter/id1450874784" target="_blank" rel="noopener">Transporter ↗</a>，将 IPA 拖入，点击 <strong>Deliver</strong>。</p>
+          <p>当 Xcode 内置上传界面卡住时（这种情况比预期更常见），此方式很有用。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p><strong>方式 C — 命令行（适合脚本/CI）。</strong></p>
+          <p>需要先<a href="/zh/tutorials/set-up-app-store-connect-key.html">配置 App Store Connect API 密钥</a>，然后执行：</p>
+          <pre><code>xcrun altool --upload-app \
+  -f ~/Desktop/YourApp.ipa \
+  -t ios \
+  --apiKey "$ASC_KEY_ID" \
+  --apiIssuer "$ASC_ISSUER_ID"</code></pre>
+          <p><a href="https://developer.apple.com/documentation/security/app-store-connect-api" target="_blank" rel="noopener">App Store Connect API 文档 ↗</a> · <a href="https://help.apple.com/asc/appsaltool/" target="_blank" rel="noopener">altool 参考 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>等待处理</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>上传本身很快（几分钟），Apple 的服务器端处理则需要更长时间：</p>
+          <ul>
+            <li><strong>5–15 分钟</strong>——正常情况</li>
+            <li><strong>30 分钟–2 小时</strong>——繁忙时段（WWDC 周、节假日）</li>
+            <li>处理完成后会收到一封<strong>邮件</strong>（有时在垃圾邮件文件夹，记得检查）</li>
+          </ul>
+          <p>可在 <a href="https://appstoreconnect.apple.com" target="_blank" rel="noopener">App Store Connect ↗</a> → <strong>My Apps</strong> → 您的应用 → <strong>TestFlight</strong> 标签页中查看进度。状态流转为：<em>Uploading → Processing → Ready to Submit</em>。</p>
+        </div>
+      </div>
+
+      <h2>分发给测试人员</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>状态变为 <strong>Ready to Submit</strong> 后，有两种测试人员选项：</p>
+          <ul>
+            <li><strong>内部测试</strong> — 自动向您 App Store Connect 团队中最多 100 名用户开放，无需审核，即时可用，适合自有团队和紧密协作者。</li>
+            <li><strong>外部测试</strong> — 通过链接邀请，最多支持 10,000 名测试人员。<strong>每个群组的第一个构建需经过 Beta 应用审核</strong>（24–48 小时）。后续构建通常可跳过审核，除非有重大变更。</li>
+          </ul>
+          <p>在 App Store Connect 中：TestFlight 标签页 → 点击您的构建 → 切换哪些群组可以访问。测试人员会在 TestFlight 应用中收到推送通知。</p>
+          <p><strong>测试人员还需要安装 TestFlight 应用</strong> — <a href="https://apps.apple.com/us/app/testflight/id899247664" target="_blank" rel="noopener">在 App Store 下载 TestFlight ↗</a>。如果他们还没有安装，请发给他们链接。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>出口合规</strong> — 首次上传时，您可能需要回答"使用加密"的问题。大多数应用符合标准豁免条件（仅使用 HTTPS）。在构建设置或 App Store Connect 中回答一次后，后续上传将继承该回答。<a href="https://developer.apple.com/documentation/security/complying-with-encryption-export-regulations" target="_blank" rel="noopener">加密出口文档 ↗</a>。
+      </div>
+
+      <h2>撰写发布说明</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>默认情况下，测试人员看到的构建没有任何说明。您可以在 App Store Connect → TestFlight → 您的构建 → <strong>Test Details</strong> → <strong>What to Test</strong> 中添加发布说明。测试人员更新时会在 TestFlight 应用中看到这些内容。</p>
+          <p>说明要简短具体，例如："修复了设置页面的崩溃问题，请尝试切换深色模式。"含糊的说明只会换来含糊的反馈。</p>
+        </div>
+      </div>
+
+      <h2>使用 LingCode 智能代理</h2>
+      <div class="tip-box">
+        一旦<a href="/zh/tutorials/set-up-app-store-connect-key.html">配置好 ASC API 密钥</a>，代理便可通过对话完成整个流程：只需说 <em>"Bump the build number and upload to TestFlight"</em>。参见<a href="/zh/tutorials/upload-to-testflight-with-the-agent.html">使用代理上传到 TestFlight</a>。
+      </div>
+
+      <h2>常见错误与修复方法</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>"No signing certificate found"</strong> — Xcode → Settings → Accounts → 您的 Apple ID → <strong>Download Manual Profiles</strong>。或在 Target 的 Signing &amp; Capabilities 标签页中启用 <strong>Automatically manage signing</strong>。</li>
+            <li><strong>"This bundle version is already in use"</strong> — 您忘记递增构建号了，返回第 1 步操作。</li>
+            <li><strong>"Missing required icon"</strong> — 应用图标未填满所有必需尺寸。参考 <a href="https://developer.apple.com/design/human-interface-guidelines/app-icons" target="_blank" rel="noopener">Apple 图标规范 ↗</a>；<a href="https://www.appicon.co/" target="_blank" rel="noopener">appicon.co ↗</a> 等工具可以从一张图片生成所有尺寸。</li>
+            <li><strong>"Invalid entitlements"</strong> — 您的 <code>.entitlements</code> 文件中的某项功能未在配置文件中启用。在 <a href="https://developer.apple.com/account/resources/identifiers/list" target="_blank" rel="noopener">developer.apple.com → Identifiers ↗</a> 中为 App ID 启用该功能，然后重新生成配置文件。</li>
+            <li><strong>"ITMS-9000: Bad URL"</strong> — Apple 服务器偶发问题，10 分钟后重试。若持续出现，请切换到 Transporter（方式 B）。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <ul>
+        <li><a href="https://developer.apple.com/testflight/" target="_blank" rel="noopener">Apple TestFlight 概览 ↗</a></li>
+        <li><a href="https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases" target="_blank" rel="noopener">Beta 测试与发布分发文档 ↗</a></li>
+        <li><a href="https://help.apple.com/app-store-connect/" target="_blank" rel="noopener">App Store Connect 帮助 ↗</a></li>
+        <li><a href="https://developer.apple.com/support/code-signing/" target="_blank" rel="noopener">代码签名支持 ↗</a></li>
+        <li><a href="https://developer.apple.com/documentation/appstoreconnectapi" target="_blank" rel="noopener">App Store Connect API ↗</a></li>
+        <li><a href="https://docs.fastlane.tools/getting-started/ios/beta-deployment/" target="_blank" rel="noopener">fastlane：Beta 部署 ↗</a></li>
+      </ul>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/reupload-an-android-app.html" class="tutorial-next-card">
+            <h3>重新上传 Android 应用到 Play Console</h3>
+            <p>Android 版等效流程——结构相同，工具不同</p>
+          </a>
+          <a href="/zh/tutorials/set-up-app-store-connect-key.html" class="tutorial-next-card">
+            <h3>配置 App Store Connect API 密钥</h3>
+            <p>命令行/代理驱动上传的必要前提</p>
+          </a>
+          <a href="/zh/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>使用代理上传到 TestFlight</h3>
+            <p>本流程的对话驱动版本</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和需要专业工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">产品说明</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

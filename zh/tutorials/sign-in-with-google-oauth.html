@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 Google 登录（OAuth）— LingCode 教程</title>
+  <meta name="description" content="Google OAuth 让用户用现有 Google 账号直接登录，无需设置密码，也无需担心忘记密码。只需从 Google Cloud Console 获取三个值，其余的交给代码搞定。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/sign-in-with-google-oauth.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/sign-in-with-google-oauth.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/sign-in-with-google-oauth.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/sign-in-with-google-oauth.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Google 登录（OAuth）",
+  "description": "Google OAuth 是让用户登录你的应用最省力的方式。用户点击按钮，Google 负责处理凭证，你的应用拿回一个经过验证的邮箱和稳定的用户 ID。Google Cloud Console 里做一次性配置，运行时只需几行代码。",
+  "url": "https://lingcode.dev/zh/tutorials/sign-in-with-google-oauth.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/sign-in-with-google-oauth.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 Google 登录（OAuth）"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "使用 Google 登录（OAuth）",
+      "item": "https://lingcode.dev/zh/tutorials/sign-in-with-google-oauth.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/sign-in-with-google-oauth.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>使用 Google 登录（OAuth）</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 Google 登录（OAuth）</h1>
+      <p class="intro">Google OAuth 是让用户登录你应用最省力的方式。用户点击一个按钮，Google 负责处理凭证，你的应用拿回一个经过验证的邮箱和稳定的用户 ID。Google Cloud Console 里只需一次性配置，运行时只需几行代码。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>每个有用户的应用都必须回答一个问题：用户如何证明自己是自己？传统答案——邮箱加密码——也是代价最高的方案。你得负责密码存储（哈希、加盐，最好别自己造轮子）、密码重置流程（基于邮件、有令牌过期时间、有速率限制）、"忘记密码"界面，以及永无止境的"我登不进去"支持请求。大多数消费类应用有一半的支持工单都源于密码问题，但这些工作对你的产品没有任何附加价值。</p>
+      <p>OAuth 通过将身份验证委托给现有的身份提供商（这里是 Google）来绕开上述所有问题。你的用户已经登录了 Google，他们点击"使用 Google 登录"，Google 只询问一次"是否允许该应用查看你的邮箱"，用户点击同意，你的应用便拿到一个包含其邮箱和稳定用户 ID 的 JWT。你永远看不到他们的密码，也永远不需要存储密码，"忘记密码"从此与你无关。</p>
+      <p>整个实现分为两个部分：枯燥的部分——在 Google 注册应用、获取 client ID 和 client secret、配置授权重定向 URL；有趣的部分——在代码中处理重定向流程、用临时授权码换取真实令牌、查找或创建用户记录。本教程两部分都会覆盖，并重点说明首次接入 OAuth 最容易踩坑的地方。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>用白话理解 OAuth 2.0 + OpenID Connect 流程</li>
+        <li>创建 Google Cloud 项目并生成 OAuth 凭证</li>
+        <li>配置授权的 JavaScript 来源和重定向 URI</li>
+        <li>代码流程：重定向、回调、令牌交换、用户查找</li>
+        <li>正式上线所需的"同意屏幕"验证路径</li>
+      </ul>
+
+      <h2>第 1 步：用白话理解整个流程</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>四个角色：用户、浏览器、你的服务器、Google</h3>
+          <p>当用户点击"使用 Google 登录"时，发生了什么：</p>
+          <ol>
+            <li>你的服务器将浏览器重定向到一个带有你的 client ID 和回调 URL 的 Google 链接。</li>
+            <li>Google 询问用户"是否允许该应用查看你的邮箱？"用户点击允许。</li>
+            <li>Google 将浏览器重定向回你的回调 URL，并附带一个临时的<strong>授权码</strong>。</li>
+            <li>你的服务器拿到这个授权码，携带 client secret 向 Google 发送 POST 请求，换回一个<strong>ID token</strong>——一个包含用户邮箱、姓名、Google 用户 ID 等信息的 JWT。</li>
+            <li>你的服务器验证 JWT 签名（证明它确实来自 Google），创建会话，设置 cookie，重定向到你的应用。</li>
+          </ol>
+          <p>client secret 永远不会离开你的服务器。授权码是一次性的。会话 cookie 是你的应用后续使用的凭证。每个环节都有其特定的安全属性。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：创建 Google Cloud 项目</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>console.cloud.google.com</h3>
+          <p>登录 Google Cloud Console，创建一个新项目（左上角"选择项目" → "新建项目"），用你的应用名称命名。该项目是你在 Google Cloud 上所有相关资源的容器。</p>
+          <p>使用 OAuth 无需开启计费——只有付费的 Google API 才需要绑定账单。登录功能是免费的。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：配置 OAuth 同意屏幕</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>用户授权时看到的界面</h3>
+          <p>在项目中，进入 <strong>APIs &amp; Services → OAuth consent screen</strong>，选择 <strong>External</strong> 用户类型（Internal 仅适用于 Google Workspace 域名）。需要配置：</p>
+          <ul>
+            <li><strong>App name：</strong>用户看到的名称（如"登录到 AppName"）。</li>
+            <li><strong>User support email：</strong>一个你会实际查看的真实邮箱地址。</li>
+            <li><strong>Authorized domains：</strong>你的生产域名（例如 <code>yourapp.com</code>）。</li>
+            <li><strong>Developer contact email：</strong>通常填你自己的邮箱。</li>
+            <li><strong>Scopes：</strong>基础登录只需申请 <code>email</code>、<code>profile</code> 和 <code>openid</code>，不要申请超出实际需要的权限。</li>
+          </ul>
+          <p>初始状态下应用处于<strong>测试</strong>模式——只有在同意屏幕设置中列为测试用户的邮箱才能登录，最多可添加 100 个测试用户。上线时需切换到"正式发布"状态（见第 8 步）。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：创建 OAuth 客户端凭证</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>获取 client ID 和 client secret</h3>
+          <p><strong>APIs &amp; Services → Credentials → Create Credentials → OAuth client ID</strong>。</p>
+          <ul>
+            <li><strong>Application type：</strong>选 Web application。</li>
+            <li><strong>Name：</strong>仅供内部识别，用户不可见。</li>
+            <li><strong>Authorized JavaScript origins：</strong>你的应用 URL。开发环境填 <code>http://localhost:3000</code>，生产环境填 <code>https://yourapp.com</code>，所有环境都要添加。</li>
+            <li><strong>Authorized redirect URIs：</strong>Google 回传授权码的地址。开发环境通常是 <code>http://localhost:3000/api/auth/callback/google</code>，生产环境是 <code>https://yourapp.com/api/auth/callback/google</code>。必须完全匹配——末尾斜杠、http 与 https、端口号，一个都不能差。</li>
+          </ul>
+          <p>点击创建。Google 会显示你的 <strong>Client ID</strong>（以 <code>.apps.googleusercontent.com</code> 结尾的长字符串）和 <strong>Client Secret</strong>（较短，以 <code>GOCSPX-</code> 开头）。将两者复制到你的后端 env 文件中：</p>
+          <pre><code>GOOGLE_CLIENT_ID=...apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-...</code></pre>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>重定向 URI 不匹配是最常见的错误。</strong>如果你的代码发送的重定向 URI 与授权列表中的任何一条不完全匹配，Google 会返回"redirect_uri_mismatch"——没有模糊匹配，也没有任何有用的提示。提前把所有会用到的变体（开发、预发布、生产环境，以及带不带 <code>www</code> 的版本）都加上。
+      </div>
+
+      <h2>第 5 步：实现流程（或使用现成库）</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>NextAuth / Auth.js / Passport / Clerk——选一个</h3>
+          <p>你可以手写 HTTP 调用来实现 OAuth，但几乎没有必要这样做。标准库已经处理了 state 参数（防 CSRF）、JWT 验证、会话管理以及大量边界情况。针对常见技术栈：</p>
+          <ul>
+            <li><strong>Next.js：</strong><code>next-auth</code>（即 Auth.js），在一个文件里配置好 provider 就行。</li>
+            <li><strong>Express / Node：</strong>Passport.js 配合 <code>passport-google-oauth20</code> 策略。</li>
+            <li><strong>Django：</strong>django-allauth。</li>
+            <li><strong>Rails：</strong>omniauth + omniauth-google-oauth2。</li>
+            <li><strong>任何现代框架：</strong>Clerk、Auth0、Supabase Auth——Auth 即服务，支持 Google 及其他十多个 provider。</li>
+          </ul>
+          <p>以 Next.js 中的 Auth.js 为例，配置大致如下：</p>
+          <pre><code>import GoogleProvider from "next-auth/providers/google";
+
+export const authOptions = {
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
+};</code></pre>
+          <p>加上标准的 Auth.js 路由处理器就够了——二十行代码，一个可用的登录按钮。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：处理用户记录</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>首次登录创建记录，后续登录查找记录</h3>
+          <p>OAuth 回调成功后，你拿到了一个经过验证的邮箱和 Google 用户 ID。处理逻辑如下：</p>
+          <ol>
+            <li>按 Google ID 在数据库中查找用户。如果找到，该用户即为当前会话用户。</li>
+            <li>如果没找到，按邮箱查找。如果找到，将 Google 账号关联到该用户（这处理了"先用邮箱密码注册、后来改用 Google 登录"的情况）。</li>
+            <li>如果两者都没有匹配，则用该邮箱、姓名和 Google ID 创建新用户记录。</li>
+          </ol>
+          <p>将 Google 用户 ID 与邮箱分开存储。邮箱地址在 Google 端理论上可能变更，但 Google ID 永远不变。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：在本地测试</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>开发阶段使用测试用户列表</h3>
+          <p>同意屏幕处于测试状态时，只有添加到测试用户列表中的邮箱才能登录。将你自己的 Google 账号添加进去，就可以在本地开发服务器上点击"使用 Google 登录"并完成整个流程。</p>
+          <p>Google 首次呈现的同意屏幕会显示你的应用名称、申请的权限范围，以及"此应用未经验证"的警告（测试模式下）。点击"高级 → 转到 AppName（不安全）"即可继续。正式发布后真实用户不会看到这条警告；在此之前，每个测试用户都会看到。</p>
+        </div>
+      </div>
+
+      <h2>第 8 步：正式上线验证</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>"不安全"警告仅在测试阶段出现</h3>
+          <p>要为真实用户去掉"未经验证"的警告，需要提交应用进行验证。在 OAuth 同意屏幕页面，点击<strong>发布应用 → 提交验证</strong>。Google 会审查你的主页、隐私政策以及申请的权限范围。</p>
+          <p>对于基础权限范围（<code>email</code>、<code>profile</code>、<code>openid</code>），验证通常是自动完成的，往往立即生效。对于敏感权限范围（Gmail 访问、Drive 访问等），验证可能需要数周时间，并需通过安全评估。除非有真实的产品需求，否则坚持使用基础权限范围即可。</p>
+          <p>验证通过后，"不安全"警告消失，100 个测试用户的上限解除，全球任何 Google 用户都可以登录。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>一个项目管理所有环境。</strong>使用单个 Google Cloud 项目，一次性把所有重定向 URI（开发、预发布、生产）都加进去，而不是为每个环境单独创建项目。这样更易管理，所有环境共用同一个 client ID，验证开销也更小。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/sign-in-with-github-oauth.html" class="tutorial-next-card">
+            <h3>使用 GitHub 登录（OAuth）</h3>
+            <p>结构相同，面向开发者用户——两者搭配可最大化登录覆盖率</p>
+          </a>
+          <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>配置 Sentry 错误追踪</h3>
+            <p>用户能登录之后，你需要第一时间知道他们的流程在哪里断掉</p>
+          </a>
+          <a href="/zh/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h3>使用 Resend 发送事务邮件</h3>
+            <p>用户首次通过 Google 登录后发送欢迎邮件</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发工具。为想快速上线的创始人和想要真正趁手工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/zh/features.html">Mac IDE</a></li>
+        <li><a href="/zh/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/zh/docs.html">文档</a></li>
+        <li><a href="/zh/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

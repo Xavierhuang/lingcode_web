@@ -1,0 +1,2411 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>教程 — LingCode</title>
+  <meta name="description" content="按自己的节奏学习 LingCode。面向各级别的文字指南、视频和动手示例。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials.html">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials.html">
+  <meta property="og:url" content="https://lingcode.dev/zh/tutorials.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    /* Full-width nav matching docs / features / try: logo flush left,
+       primary nav links centered, search + Sign up flush right. Without
+       this, .nav-inner falls back to style.css's `max-width: 1100px;
+       margin: 0 auto` and the logo sits inset from the viewport edge. */
+    .nav-inner {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0;
+      max-width: none;
+      margin: 0;
+      padding: 18px 40px;
+      height: auto;
+    }
+    .nav-inner > .nav-logo   { grid-column: 1; justify-self: start; }
+    .nav-inner > .nav-links  {
+      grid-column: 2;
+      justify-self: stretch;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+    .nav-inner > .nav-burger { grid-column: 3; justify-self: end; }
+    .nav-inner > .nav-links > a:first-of-type { margin-left: auto; }
+    .nav-inner > .nav-links > .nav-search { margin-left: auto; }
+
+    /* .nav-search pill — matches docs.html / features.html / etc. Without
+       these rules the form rendered as a bare <input> with default browser
+       borders + the native WebKit magnifying-glass icon, instead of the
+       rounded pill the rest of the site uses. */
+    .nav-search {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--bg-card, #FFFFFF);
+      border: 1px solid var(--border, var(--border-hi, rgba(168, 85, 247, 0.18)));
+      border-radius: 100px;
+      padding: 4px 10px 4px 12px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      max-width: 220px; min-width: 0;
+      margin: 0 4px;
+    }
+    .nav-search:focus-within {
+      border-color: var(--signal, var(--accent, #A855F7));
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+    }
+    .nav-search svg {
+      width: 14px; height: 14px; flex-shrink: 0;
+      color: var(--text-muted, var(--ink-dim, #5D5475));
+    }
+    .nav-search input {
+      border: none; outline: none; background: transparent;
+      font-family: 'Geist', -apple-system, sans-serif;
+      font-size: 13px;
+      color: var(--text, var(--ink, #1A1530));
+      padding: 4px 0; width: 130px; min-width: 0;
+    }
+    .nav-search input::placeholder { color: var(--text-dim, var(--ink-faint, #8B829F)); }
+    @media (max-width: 980px) { .nav-search { display: none !important; } }
+
+    /* Reset WebKit's native <input type="search"> chrome: the magnifying
+       glass + clear-button pseudo-elements doubled up with the form's own
+       inline SVG before this. */
+    .nav-search input[type="search"] {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .nav-search input[type="search"]::-webkit-search-decoration,
+    .nav-search input[type="search"]::-webkit-search-cancel-button,
+    .nav-search input[type="search"]::-webkit-search-results-button,
+    .nav-search input[type="search"]::-webkit-search-results-decoration {
+      -webkit-appearance: none;
+      display: none;
+    }
+    @media (max-width: 720px) {
+      .nav-inner { padding: 14px 20px; }
+    }
+
+    /* Tutorials page styles */
+    .tutorials-hero {
+      position: relative;
+      padding: 110px 24px 64px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: radial-gradient(circle at 30% 50%, rgba(139,92,246,0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 50%, rgba(0,208,132,0.08) 0%, transparent 50%);
+    }
+    .tutorials-hero > * { position: relative; z-index: 1; }
+    .tutorials-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; margin-bottom: 24px;
+      border: 1px solid var(--border-strong);
+      border-radius: 100px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem; color: var(--text-muted); font-weight: 500;
+      letter-spacing: 0.02em;
+      background: rgba(28,28,28,0.02);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .tutorials-hero h1 {
+      font-size: clamp(2.25rem, 5vw, 3.35rem);
+      margin: 0 0 12px;
+      letter-spacing: -0.025em;
+      font-weight: 600;
+      line-height: 1.10;
+    }
+    .tutorials-hero p {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-muted);
+      margin: 0 0 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
+
+    /* Main content */
+    .tutorials-content {
+      padding: 80px 24px;
+    }
+    .section-container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Pill filter nav */
+    .pill-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+      justify-content: center;
+    }
+    .pill-btn {
+      padding: 8px 20px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .pill-btn:hover {
+      border-color: rgba(28,28,28,0.3);
+    }
+    .pill-btn.is-active {
+      background: #6366f1;
+      color: white;
+      border-color: #6366f1;
+    }
+
+    /* Tutorial section */
+    .tutorial-section {
+      margin-bottom: 64px;
+    }
+    .tutorial-section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0 0 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.3;
+    }
+
+    /* Tutorial grid and cards */
+    .tutorial-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .tutorial-card {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .tutorial-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+      border-color: rgba(28,28,28,0.12);
+    }
+    .tutorial-card.hidden {
+      display: none;
+    }
+
+    /* Badges */
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+    }
+    .badge-format {
+      background: rgba(28,28,28,0.05);
+      color: var(--text-muted);
+    }
+    .badge-beginner {
+      background: rgba(16,185,129,0.1);
+      color: #059669;
+    }
+    .badge-intermediate {
+      background: rgba(245,158,11,0.1);
+      color: #b45309;
+    }
+    .badge-advanced {
+      background: rgba(99,102,241,0.1);
+      color: #4f46e5;
+    }
+
+    /* Card content */
+    .tutorial-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 8px;
+      line-height: 1.3;
+    }
+    .tutorial-card p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin: 0 0 16px;
+      flex: 1;
+      line-height: 1.4;
+    }
+    .tutorial-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+    .tutorial-time {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .tutorial-cta {
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .tutorial-cta:hover {
+      color: #4f46e5;
+      transform: translateX(2px);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .pill-nav {
+        gap: 6px;
+      }
+      .pill-btn {
+        padding: 6px 16px;
+        font-size: 0.8125rem;
+      }
+      .tutorial-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索站点" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">登录</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <!-- Hero Section -->
+  <section class="tutorials-hero">
+    <div class="section-container">
+      <div class="tutorials-eyebrow">
+        <span class="dot"></span>
+        <span>教程</span>
+      </div>
+      <h1>按自己的节奏学习</h1>
+      <p>面向各级别的文字指南、视频和动手示例。寻找灵感？<a href="/examples.html" style="color: var(--signal); text-decoration: none;">浏览示例库 →</a></p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="tutorials-content">
+    <div class="section-container">
+      <!-- Filter Pills -->
+      <div class="pill-nav">
+        <button class="pill-btn is-active" data-level="all">全部</button>
+        <button class="pill-btn" data-level="beginner">初级</button>
+        <button class="pill-btn" data-level="intermediate">中级</button>
+        <button class="pill-btn" data-level="advanced">高级</button>
+      </div>
+
+      <!-- Getting Started Section -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">入门</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>你的第一次构建</h3>
+            <p>打开 playground，选择一个模板，运行你的第一个 prompt，看它在预览中渲染。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/your-first-build.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>设置 API 密钥</h3>
+            <p>将 Claude、DeepSeek、OpenAI、Gemini，或任何 OpenAI 兼容的提供商连接到 playground。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">3 分钟</span>
+              <a href="/zh/tutorials/setting-up-api-keys.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">🎥 视频</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>了解提供商</h3>
+            <p>如何在 AI 提供商之间做选择，并并排运行同一个 prompt 来对比输出。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/understanding-providers.html" class="tutorial-cta">观看 →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Community skills (recommended external skills, not LingCode-authored) -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">社区技能（推荐）</h2>
+        <p style="margin: -0.5rem 0 1rem; color: var(--text-secondary, #888); font-size: 0.95rem;">我们推荐与 LingCode 技能包一同安装的第三方技能。非 LingCode 编写 — 致谢与链接归属于原始维护者。</p>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">🌐 外部</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>UI UX Pro Max</h3>
+            <p>可搜索的设计智能技能：67 种 UI 风格、161 种配色方案、57 种字体搭配、99 条 UX 准则，以及 161 条针对特定行业的推理规则。支持 SwiftUI、Compose、React Native、Flutter 等共 15 种技术栈。作者 <a href="https://nextlevelbuilder.io" target="_blank" rel="noopener noreferrer">nextlevelbuilder</a> — MIT 许可，8 万+ stars。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">GitHub →</span>
+              <a href="https://github.com/nextlevelbuilder/ui-ux-pro-max-skill" target="_blank" rel="noopener noreferrer" class="tutorial-cta">安装 →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Native Mac IDE -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">原生 Mac IDE</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>看懂底部面板</h3>
+            <p>九个标签,其中四个看起来都像"日志"。教你区分输出、运行控制台、控制台、调试控制台的心智模型——以及其他每个标签的用途。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/the-bottom-panel-explained.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 REST 客户端测试 API</h3>
+            <p>选方法、设请求头和请求体、发送请求,再读取状态、耗时和响应——底部面板里的一个完整 HTTP 客户端,无需 Postman。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/test-apis-with-the-rest-client.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>查看测试结果与覆盖率</h3>
+            <p>按通过/失败筛选一次运行,点击失败的堆栈帧跳到源代码行,并叠加显示你的测试实际跑到了哪些行。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/view-test-results-and-coverage.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>转发并监控本地端口</h3>
+            <p>你的开发服务器端口的实时列表——哪些在监听、由谁占用,以及一个一键在浏览器中打开 localhost 的按钮。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 分钟</span>
+              <a href="/zh/tutorials/forward-and-monitor-ports.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>Hermes 风格的自我改进 agent</h3>
+            <p>持久记忆、agent 自主提出的技能，以及全文会话搜索 — Hermes Agent 的学习循环，原生且跨提供商。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/hermes-style-self-improving-agent.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>将 Flutter 应用迁移到原生 iOS、Android 和 macOS</h3>
+            <p>LingCode 把你的 Flutter 仓库当作设计规格来读取，从零编写地道的 SwiftUI、Compose 和 macOS SwiftUI — 输出中没有任何 Dart。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">18 分钟</span>
+              <a href="/zh/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>构建前先头脑风暴</h3>
+            <p>在代码出现之前用 5 分钟厘清范围 — 这是你能获得的最廉价的纠错窗口。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/brainstorm-before-you-build.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 LingCode 编写实现方案</h3>
+            <p>产出一份可评审的 IMPLEMENTATION_PLAN.md，包含目标、非目标、有序步骤、明确的最高风险步骤和回滚方案。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/write-an-implementation-plan-with-lingcode.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>带检查点地执行方案</h3>
+            <p>逐步执行，结合真实输出验证、按步提交、有意识的修订，以及坏步恢复。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/execute-a-plan-with-checkpoints.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 LingCode 进行代码评审（给与受）</h3>
+            <p>在判定同意/反对/不明之前，先对照代码核实每一条评审意见。错了就反驳，对了就实施。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/give-and-receive-code-review-with-lingcode.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>收尾一个开发分支</h3>
+            <p>从测试全绿到干净集成的收尾清单 — 合并、提 PR 或废弃。差异审计、与 main 同步、合并后清理。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 分钟</span>
+              <a href="/zh/tutorials/finish-a-development-branch.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>在 settings.json 中自定义权限和环境变量</h3>
+            <p>设置文件在哪里、它是什么结构，以及如何按 glob 放行安全命令 — 用户级或按项目级。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/customize-permissions-and-env-vars-in-settings.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>自定义快捷键</h3>
+            <p>重新绑定 ~/.claude/keybindings.json — 组合键、提交键，导入 Cursor / VS Code / Vim 约定。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/customize-keybindings.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>通过放行安全命令减少权限提示</h3>
+            <p>扫描会话记录，构建优先级放行清单，省下每次 <code>ls</code>、<code>cat</code> 和 <code>git status</code> 上的 3 秒税。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/reduce-permission-prompts.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>撤销糟糕的 AI 编辑</h3>
+            <p>在一次糟糕的 agent 编辑之后回滚项目文件、entitlements 或 Info.plist — 无需动用 git。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/undo-bad-ai-edits.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 worktree 安全地做实验</h3>
+            <p>把项目 fork 进一个 git worktree，让 agent 尝试某些有风险的想法，只合并你想要的部分。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/experiment-safely-with-worktrees.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-advanced">● 高级</span>
+            </div>
+            <h3>用 agent 上传到 TestFlight</h3>
+            <p>一次性配置 App Store Connect API 密钥，然后让 agent 归档、签名并上传你的 iOS 构建。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>对话中途切换提供商</h3>
+            <p>当 Claude 卡住时，把同一段对话交给 DeepSeek 或 GPT-4。新模型会继承整段对话。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 分钟</span>
+              <a href="/zh/tutorials/switch-providers-mid-conversation.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>设置一个 App Store Connect API 密钥</h3>
+            <p>一次性生成、下载并注册一个 ASC API 密钥 — 为今后每一次 agent 驱动的发布扫清障碍。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/set-up-app-store-connect-key.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>创建并运行你的第一个 Android 模拟器</h3>
+            <p>Device Manager → + → New Android Emulator。iOS 模拟器和 Android AVD 在同一个窗口，无需 Android Studio。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/create-and-run-your-first-avd.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>创建一个 iOS 或 Mac 应用图标</h3>
+            <p>现代 Xcode 只需要一张 1024×1024 的 PNG，其余自动生成。单尺寸流程、alpha 通道陷阱，以及一句把它发布出去的 prompt。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/create-an-ios-or-mac-app-icon.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>创建一个 Android 自适应图标</h3>
+            <p>两层结构、66dp 安全区、按启动器裁切。所需的 XML、文件夹布局，以及如何在 AVD 中预览。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 分钟</span>
+              <a href="/zh/tutorials/create-an-android-adaptive-icon.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>创建一个自定义 SF Symbol</h3>
+            <p>让你的 logo 表现得像系统图标：随 Dynamic Type 缩放、响应 <code>.foregroundStyle</code>、切换字重。模板 SVG 以及那一行 API 差异。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/create-a-custom-sf-symbol.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>给 /try 项目添加 favicon</h3>
+            <p>/try 不托管二进制资源，所以标准的 favicon.ico 流程不适用。内联 SVG、base64 PNG 和内联 manifest 的变通方案 — 以及一行的 PWA 升级。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/add-a-favicon-to-a-try-project.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>安装并使用 lingcode CLI</h3>
+            <p>与 Mac 应用相同的 agent 循环 — 以终端二进制的形式暴露，可用于脚本、服务器和一次性 prompt。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/install-and-use-the-lingcode-cli.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>权限模式：default、acceptEdits、plan</h3>
+            <p>agent 应该多频繁地停下来询问。Shift+Tab 在三种模式间循环；选择与你当前风险等级相匹配的那个。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/permission-modes.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>什么是技能 — 以及如何安装一个</h3>
+            <p>技能是教会 agent 一个习惯的最小方式。了解它长什么样、在磁盘上住在哪里，以及安装别人写的技能的两种方式。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/install-a-skill.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>安装并配置插件</h3>
+            <p>把技能、hooks 和 MCP 服务器打包成可复用的插件。按用户或按项目安装；带命名空间以避免冲突。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/install-and-configure-plugins.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>连接一个 MCP 服务器</h3>
+            <p>为 Linear、GitHub、你的数据库给 agent 提供有类型的工具。配置一次；工具会带命名空间出现并按调用逐次审批。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/connect-an-mcp-server.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>编写一个自定义技能</h3>
+            <p>用一个 markdown 文件教会 agent 一个可复用的小习惯。项目本地或用户级，手动或自动触发。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/write-a-custom-skill.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>添加自定义 hooks</h3>
+            <p>在工具调用前或 prompt 后运行的 shell 命令。真正的策略强制 — 而非你希望模型读到的建议。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/add-custom-hooks.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>查看你的用量和速率限制</h3>
+            <p>已花费的 tokens、剩余余量、重置时间。一个面板，覆盖每个提供商，从最权威的可用来源呈现。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/read-your-usage-and-rate-limits.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>一键魔法部署网站</h3>
+            <p>粘贴一个 token，得到一个在线 URL。agent 检测正确的托管方、选好构建设置，并直接从对话中部署。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/magic-deploy-a-website.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>一键魔法安装缺失的依赖包</h3>
+            <p>一键安装缺失的内容。检测 npm、pip、Cargo、CocoaPods，以及 20 多种其他包管理器。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 分钟</span>
+              <a href="/zh/tutorials/magic-install-missing-packages.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>一键魔法推送：AI 提交信息</h3>
+            <p>暂存、从真实 diff 生成一条干净的提交信息、推送 — 比 "wip" 更好，比手写更快。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 分钟</span>
+              <a href="/zh/tutorials/magic-push-ai-commit-messages.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Agent View 导航后台 agent</h3>
+            <p>Agents 侧边栏是你派发后离开的那些任务的驾驶舱。行结构、状态分组、预览面板，以及派发输入框背后的那一个信任决策。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/navigate-agents-with-agent-view.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>编写一个 subagent</h3>
+            <p>一个拥有自己的系统 prompt、工具和上下文窗口的专家。当任务边界清晰、不应污染主对话时，用它。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/write-a-subagent.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-advanced">● 高级</span>
+            </div>
+            <h3>多 agent 群集：何时用，何时跳过</h3>
+            <p>派生子 agent 会成倍增加 tokens 和复杂度。群集胜出的四种模式，单 agent 更优的三种模式。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/multi-agent-swarms-when-to-use.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-advanced">● 高级</span>
+            </div>
+            <h3>把 lingcode serve 作为后端运行</h3>
+            <p>与 Mac 应用相同的 agent 循环，作为带 SSE 流式的本地 HTTP API。在其之上构建你自己的机器人、UI 和 CI 集成。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/run-lingcode-serve-as-backend.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 AI 解释终端错误</h3>
+            <p>右键点击一个晦涩的错误，在浮动弹窗中得到简短解释。不打扰你的主对话。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">3 分钟</span>
+              <a href="/zh/tutorials/explain-terminal-errors-with-ai.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-advanced">● 高级</span>
+            </div>
+            <h3>编写你自己的 MCP 服务器</h3>
+            <p>写一个暴露有类型工具的小型 TypeScript 或 Python 服务器。agent 每次都能第一次就正确调用它们。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/author-your-own-mcp-server.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>把插件发布到 marketplace</h3>
+            <p>把团队的插件打包进一个 marketplace。一个 JSON manifest；每位队友一键安装。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/publish-a-plugin-to-a-marketplace.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>通过 MCP 连接 Linear 和 GitHub</h3>
+            <p>两个真实 MCP 服务器的端到端设置。读取一个工单、编辑代码、开一个 PR — 一句 prompt。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 分钟</span>
+              <a href="/zh/tutorials/connect-linear-and-github-via-mcp.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 /init 生成一个 CLAUDE.md</h3>
+            <p>agent 读取你的代码库并写出项目上下文文件。该项目今后每一段对话都会自动加载它。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 分钟</span>
+              <a href="/zh/tutorials/generate-a-claude-md-with-init.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 /review 评审 pull request</h3>
+            <p>在本地分支或远程 PR 上运行 /review。指出人类会漏掉之处的首轮评审。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/review-pull-requests-with-review.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>在你的分支上运行 /security-review</h3>
+            <p>针对待提交改动的聚焦式威胁面扫描。鉴权、输入校验、密钥、注入 — 按严重程度评级。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/run-security-review.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>重新上传一个 iOS 构建到 TestFlight</h3>
+            <p>对你的 iOS 更新做 Beta 测试。安装 Xcode、提升 CFBundleVersion、归档、上传、等待。每个工具都有直达链接。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 分钟</span>
+              <a href="/zh/tutorials/reupload-an-ios-build-to-testflight.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>重新上传一个 iOS 应用到 App Store</h3>
+            <p>把你的更新发布到公开的 App Store。提升版本号、归档、附加构建、撰写发布说明、提交审核。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/reupload-an-ios-app-to-the-app-store.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>重新上传一个 Android 应用到 Play Console</h3>
+            <p>Beta 或生产环境。安装 Android Studio、提升 versionCode、构建签名 AAB、上传、选择轨道。每个工具都有直达链接。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/reupload-an-android-app.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>首次提交 iOS App Store</h3>
+            <p>发布你的第一个 iOS 应用。Bundle ID 注册、应用记录、截图、App Privacy、年龄分级，然后归档并提交。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">15 分钟</span>
+              <a href="/zh/tutorials/first-time-ios-app-store-submission.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>首次提交 Android Play Console</h3>
+            <p>发布你的第一个 Android 应用。开发者账号、签名、商店信息、Data Safety、内容分级，然后提交。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">15 分钟</span>
+              <a href="/zh/tutorials/first-time-android-play-console-submission.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-advanced">● 高级</span>
+            </div>
+            <h3>首次把 Android 应用上传到 Google Play</h3>
+            <p>签名密钥、Play App Signing、内测轨道，以及 Google 要求的元数据。从签名 AAB 到上线的商店信息。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">18 分钟</span>
+              <a href="/zh/tutorials/upload-an-android-app-to-google-play.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shipping & infrastructure -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">发布与基础设施</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>把你的应用部署到 LingCode Cloud</h3>
+            <p>从 Mac IDE 一键发布一个 web 应用。Cloud 按钮会构建你的项目，并将静态产物托管在一个在线的 HTTPS URL 上 — 无需托管账号、无需部署 token、起步无需 DNS。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/deploy-to-lingcode-cloud.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>为你的 Cloud 应用连接自定义域名</h3>
+            <p>把你自己的域名放在部署于 LingCode Cloud 的应用前面。一条 DNS 记录，HTTPS 自动签发 — 主域 + www、注册商步骤，以及 Cloudflare 的坑。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/connect-a-custom-domain.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>起草一份发布公告</h3>
+            <p>一键读取你最近的提交，并一起起草 Slack 帖子、推文、LinkedIn 动态、博客段落和 CHANGELOG 条目。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/draft-a-release-announcement.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>为分发签名并公证一个 Mac 应用</h3>
+            <p>App Store 之外的完整流水线 — 归档、codesign、公证、staple。会咬你一口的三个 macOS 26.2+ 陷阱。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">14 分钟</span>
+              <a href="/zh/tutorials/codesign-and-notarize-a-mac-app.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 App 专用密码上传到 TestFlight</h3>
+            <p>无需 API 密钥，直接从 Archive &amp; Distribute 面板发布 — 归档一次、导出、仅用 Apple ID 上传。为什么需要密码以及如何生成它。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/upload-to-the-app-store-with-an-app-specific-password.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>修复常见的 iOS 签名错误</h3>
+            <p>"No account for team"、capability 同步、自动 vs 手动，以及 "No matching provisioning profile" 的六种成因 — 有界的诊断阶梯。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 分钟</span>
+              <a href="/zh/tutorials/fix-ios-signing-errors.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 Namecheap 购买域名</h3>
+            <p>友好的默认注册商。它的价格、该跳过什么，以及购买后要做什么才能让域名可用。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/buy-a-domain-from-namecheap.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 Cloudflare Registrar 购买域名</h3>
+            <p>成本价定价、无追加销售、无首年诱饵。代价：你必须使用 Cloudflare 的 DNS。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/buy-a-domain-from-cloudflare.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 DNS 把你的域名连接到服务器</h3>
+            <p>A 和 CNAME 记录、TTL、传播。三条告诉你 DNS 是否真正生效的命令。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 Porkbun 购买域名</h3>
+            <p>开发者偏爱的替代选择。界面干净、无追加销售、免费 WHOIS 隐私 + 邮件转发 + SSL 全部捆绑。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/buy-a-domain-from-porkbun.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 GoDaddy 购买域名</h3>
+            <p>最大的注册商，也是追加销售最多的一个。如何在结账时只带走一个域名、以公道价格脱身。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/buy-a-domain-from-godaddy.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 Gandi 购买域名</h3>
+            <p>透明扁平定价的欧洲注册商，含免费邮箱。最适合 EU 顶级域（.fr、.eu、.de）。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/buy-a-domain-from-gandi.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 Hover 购买域名</h3>
+            <p>"无追加销售，只卖域名"的高端注册商。价格略高，业内最平静的结账流程，提供真人支持。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/buy-a-domain-from-hover.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 NameSilo 购买域名</h3>
+            <p>预算型注册商，接近成本的扁平定价，API 可用。界面陈旧；其余一切都好用。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/buy-a-domain-from-namesilo.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 Squarespace Domains 购买域名</h3>
+            <p>Google Domains 的接棒者。业内最干净的控制台；收购后价格上涨。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/buy-a-domain-from-squarespace.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>从 AWS Route 53 购买域名</h3>
+            <p>当你其余基础设施都在 AWS 上时的正确选择。Alias 记录、ACM 集成、你已有的 AWS 账单。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/buy-a-domain-from-aws-route53.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 DigitalOcean 购买服务器</h3>
+            <p>友好的默认 VPS。每月五美元就有一台真正的 Linux 机器，拥有独立云市场中最平静的 UI 和最好的文档。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 Hetzner 购买服务器</h3>
+            <p>VPS 市场中每 GB 内存性价比最佳。形态与 DigitalOcean 相同，约一半价格；UI 更朴素。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/buy-a-server-from-hetzner.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 Vultr 购买服务器</h3>
+            <p>全球 30+ 个数据中心位置。当你的用户在首尔、孟买、圣保罗、悉尼这些别人覆盖不到的地方时，选它。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/buy-a-server-from-vultr.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>从 AWS EC2 购买服务器</h3>
+            <p>最大、最灵活、最复杂的 VPS。当你其余技术栈都在 AWS 上时选它；否则跳过。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/buy-a-server-from-aws-ec2.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>为别处购买的域名使用 Route 53</h3>
+            <p>在不迁移注册商的情况下把 DNS 委托给 AWS — 当你的服务器和证书都在 AWS 时的正确选择。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 分钟</span>
+              <a href="/zh/tutorials/use-route-53-for-your-domain.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>把静态站点部署到 S3 + CloudFront</h3>
+            <p>经典的 AWS 静态托管模式。一旦接好，部署永远只是三条命令。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">14 分钟</span>
+              <a href="/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 AWS Amplify Hosting 部署</h3>
+            <p>AWS 的 git-push-to-deploy 服务。AWS 上的 Vercel 等价物，伴随诚实的取舍。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/deploy-with-aws-amplify-hosting.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>在 AWS Lightsail 上运行一个 Node API</h3>
+            <p>AWS 中简单的那一角。固定每月 $5、一台 Linux 机器，ssh 进去运行你的代码。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-advanced">● 高级</span>
+            </div>
+            <h3>把容器部署到 ECS Fargate</h3>
+            <p>AWS 上生产级的容器部署。ECR + ECS + Fargate + ALB + Route 53，去神秘化。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">18 分钟</span>
+              <a href="/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>为生产环境准备一台全新的 Linux 服务器</h3>
+            <p>介于"我有了一台 Linux 服务器"和"我准备好部署了"之间的 20 分钟加固清单。跨提供商通用。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">15 分钟</span>
+              <a href="/zh/tutorials/prepare-a-fresh-linux-server-for-production.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>在你的服务器上安装 Postgres 和 Redis</h3>
+            <p>带有默认未开启的鉴权和绑定设置的后端服务。自托管 vs 托管，诚实对比。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">14 分钟</span>
+              <a href="/zh/tutorials/install-postgres-and-redis-on-your-server.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>选一个 BaaS：Firebase vs Supabase</h3>
+            <p>任何教程之前的决策。数据模型、锁定、定价曲线，以及各自可运行的 hello-world。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/pick-a-baas-firebase-vs-supabase.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>从 Linode 购买服务器</h3>
+            <p>Akamai 旗下的 VPS，教会了一代开发者租用 Linux 机器。稳定、文档完善，比 DO/Hetzner 略贵。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/buy-a-server-from-linode.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Let's Encrypt 设置 HTTPS</h3>
+            <p>带自动续签的免费 TLS 证书。两条命令拿到一张真实证书；一个 cron 任务让它永远有效。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/set-up-https-with-lets-encrypt.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>把 Cloudflare 放在任意托管方前面</h3>
+            <p>免费 TLS、全球 CDN、DDoS 防护、隐藏源站。无论域名在哪里注册，都能把它加到 Cloudflare。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 分钟</span>
+              <a href="/zh/tutorials/put-cloudflare-in-front-of-any-host.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>在 Fly.io 上部署</h3>
+            <p>在靠近用户的地方运行 Docker 容器 — 30+ 个区域、机器级粒度。介于 PaaS 与 VPS 之间的折中。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/deploy-on-fly-io.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>在 Railway 上部署</h3>
+            <p>现代 PaaS 中最简单的部署。连接一个 GitHub 仓库，几秒钟拿到 URL。捆绑真正的 Postgres/Redis 配套服务。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/deploy-on-railway.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>在 Render 上部署</h3>
+            <p>后 Heroku 时代最像 Heroku 的 PaaS。扁平的每月 $7 套餐；账单就是账单。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/deploy-on-render.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>重新部署一个网站</h3>
+            <p>把代码更新推送到 Vercel / Netlify / Render / Cloudflare Pages / Railway / Fly.io。各自的重新部署命令与上线耗时。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/redeploy-a-website.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>重新部署一个自托管 VPS</h3>
+            <p>SSH、pull、重启。手动流程、部署脚本、一行的笔记本版本，以及零停机模式。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/redeploy-a-vps.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 GitHub Actions 自动化部署</h3>
+            <p>一个 YAML 文件。每个 PR 跑测试，推送到 main 自动部署。Vercel、SSH、AWS、移动端 — 每个常见目标。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 分钟</span>
+              <a href="/zh/tutorials/automate-deploys-with-github-actions.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>管理数据库迁移</h3>
+            <p>把每个环境带到特定形态的版本化 schema 变更。Prisma、Drizzle 或裸 SQL — 选一个，永远不要编辑已部署的迁移。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">13 分钟</span>
+              <a href="/zh/tutorials/manage-database-migrations.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>设置在线状态监控</h3>
+            <p>在用户察觉之前用外部探测唤醒你 — 当你的站点宕机时。UptimeRobot、/health 端点、告警通道、状态页。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/set-up-uptime-monitoring.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backend integrations -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">后端集成</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>为你的项目连接一个托管后端</h3>
+            <p>一次菜单点击就给项目配上专属的 Postgres + 鉴权 + 存储 + 实时 + 向量搜索 — 无需外部服务、无需密钥。agent 从一句 prompt 就能创建表并基于它构建。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/connect-a-managed-backend.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>从后端调用 ElevenLabs 等 API</h3>
+            <p>把一个第三方密钥加密存放在后端，并在不泄露的情况下从你的应用调用它 — elevenlabs-tts 和 http-fetch 函数模板，以及出站白名单。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/call-external-apis-from-your-backend.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>添加语义与混合搜索</h3>
+            <p>用内置的 pgvector 和托管 embeddings 实现基于含义的搜索和混合搜索（全文 + 向量）— 无需接入外部向量数据库或 embedding 密钥。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/semantic-and-hybrid-search.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>在你的后端上要求 MFA</h3>
+            <p>为后端用户加上 TOTP 多因素鉴权和轮换的 refresh token — 一个控制台开关加两次 SDK 调用；数据 API 会强制执行。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 分钟</span>
+              <a href="/zh/tutorials/require-mfa-on-your-backend.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 Advisors 扫描你的后端</h3>
+            <p>一键式安全 + 性能 lint：在用户发现之前抓出 RLS 未启用的表、不安全的策略、缺失的主键和未建索引的外键。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/scan-your-backend-with-advisors.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Claude API 构建</h3>
+            <p>带 prompt caching、完整工具使用循环、流式和带日期快照的模型迁移的 Anthropic SDK。第一天就把开销砍半。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/build-with-the-claude-api.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>为独立任务派发并行 agent</h3>
+            <p>判断是否可并行的两问测试。三种能缩短墙钟时间的模式，四种会产生冲突写入的陷阱。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/dispatch-parallel-agents.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>按计划运行一个 prompt — /loop vs /schedule</h3>
+            <p>用于不同问题的两个时间平移工具。三问选择器、两个实例演练，以及清理纪律。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/run-a-prompt-on-a-schedule.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>设置 Stripe API 密钥</h3>
+            <p>四个密钥 — publishable 和 secret，test 和 live。搞清楚哪个用在哪里，能避免两起痛苦的 Stripe 事故。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/set-up-stripe-api-keys.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>设置 Stripe webhooks</h3>
+            <p>Stripe 如何告诉你的服务器发生了某件事。签名验证、幂等性，以及本地开发的隧道。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/set-up-stripe-webhooks.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Google 登录（OAuth）</h3>
+            <p>让用户用他们的 Google 账号登录。来自 Google Cloud Console 的三个值；其余都是你的代码。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 分钟</span>
+              <a href="/zh/tutorials/sign-in-with-google-oauth.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 GitHub 登录（OAuth）</h3>
+            <p>面向开发者受众的登录。一个 GitHub OAuth App，十二次点击。Google OAuth 的孪生体。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/sign-in-with-github-oauth.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 Clerk 做鉴权</h3>
+            <p>开箱即用的托管鉴权。注册、登录、社交提供商、组织、MFA — 全都现成。四个组件就搞定。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/auth-with-clerk.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Auth0 做鉴权</h3>
+            <p>企业级鉴权。SAML/SSO、SCIM、Organizations、自定义 Actions。当 IT 部门要求接入身份提供商时的正确选择。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/auth-with-auth0.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Resend 发送事务性邮件</h3>
+            <p>开发者优先的邮件 API。慢的部分是 SPF/DKIM/DMARC 的 DNS；一旦验证通过，你的邮件落入收件箱而非垃圾箱。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/send-transactional-email-with-resend.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 Postmark 发送邮件</h3>
+            <p>送达率优先的邮件 API。严格的可接受使用政策、仅限事务性、在独立测试中收件箱投递率最佳。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 分钟</span>
+              <a href="/zh/tutorials/send-transactional-email-with-postmark.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 SendGrid 发送邮件</h3>
+            <p>按发送量计算最大的邮件 API；企业级功能（子账户、专用 IP、IP 预热）。营销 + 事务性集于一个工具。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/send-transactional-email-with-sendgrid.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 AWS SES 发送邮件</h3>
+            <p>每 1000 封邮件 $0.10。更具 AWS 风味的设置（IAM、退出沙箱、SNS 驱动的退信处理）。在规模化时或已在 AWS 上时选它。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/send-transactional-email-with-aws-ses.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>设置 Sentry 错误追踪</h3>
+            <p>在用户不得不告诉你之前，先在生产环境抓住错误。SDK 安装、DSN、releases、source maps、告警。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 分钟</span>
+              <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 Better Stack 做在线状态监控</h3>
+            <p>在你的站点宕机时被传呼通知 — 而不是被你的客户告知。监控器、值班、状态页、心跳。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/uptime-monitoring-with-better-stack.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>把文件上传到 S3 或 Cloudflare R2</h3>
+            <p>给你的应用加上文件上传。用预签名 URL 实现浏览器直传；S3 或 R2 用同一份代码；CORS、校验、回传服务。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 分钟</span>
+              <a href="/zh/tutorials/upload-files-to-s3-or-r2.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>设置 Supabase（数据库 + 鉴权）</h3>
+            <p>一次注册就有 Postgres + Auth + Storage。Anon key、RLS、你的第一张表、OAuth 提供商、实时订阅。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 分钟</span>
+              <a href="/zh/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Inngest 做后台任务</h3>
+            <p>在响应之后运行代码。定义一个函数、发送一个事件，得到可靠的重试 + cron + 延迟 — 无需管理 Redis。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/background-jobs-with-inngest.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 PostHog 做产品分析</h3>
+            <p>追踪事件、构建漏斗、观看会话回放、运行 feature flags。一个工具，一次注册。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/product-analytics-with-posthog.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>设置 Neon（托管 Postgres）</h3>
+            <p>带分支的 serverless Postgres。每个 pull request 一个分支；scale-to-zero 定价；慷慨的免费额度。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/set-up-neon-postgres.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>设置 PlanetScale（MySQL）</h3>
+            <p>基于 Vitess 的 serverless MySQL。通过 deploy request 实现非阻塞 schema 变更；数据库分支。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/set-up-planetscale-mysql.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>设置 Algolia 搜索</h3>
+            <p>带容错、分面、排序的即输即搜。接入 React/Vue UI 库；亚 100ms 的查询。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 分钟</span>
+              <a href="/zh/tutorials/set-up-algolia-search.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Meilisearch 自托管搜索</h3>
+            <p>单个 Rust 二进制中的开源搜索引擎。跑在一台 $5 VPS 上；与 Algolia 相同的 UI 库，成本只是零头。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 分钟</span>
+              <a href="/zh/tutorials/self-hosted-search-with-meilisearch.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>设置 Typesense 搜索</h3>
+            <p>带原生语义 + 向量 + 地理搜索的开源搜索。单个二进制或 Typesense Cloud。类 Algolia 的开发体验，无按记录收费。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/set-up-typesense-search.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>用 Loops 做营销邮件</h3>
+            <p>简报、引导序列、挽回。拖放式编辑器和读起来像英文的受众筛选。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/marketing-email-with-loops.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Axiom 做日志管理</h3>
+            <p>从任意后端发送结构化日志。APL 查询、免费 30 天保留，以及在 Sentry 看不到的模式上传呼你的监控器。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 分钟</span>
+              <a href="/zh/tutorials/log-management-with-axiom.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Polar（merchant of record）收款</h3>
+            <p>Polar 为你处理销售税、VAT、GST 和拒付。面向全球发布的独立 SaaS 的 Stripe 替代品。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">13 分钟</span>
+              <a href="/zh/tutorials/take-payments-with-polar.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Upstash 做缓存与限流</h3>
+            <p>基于 HTTP 的 serverless Redis。缓存热查询、节流滥用调用方、排队后台任务 — 无需运行一台 Redis 机器。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 分钟</span>
+              <a href="/zh/tutorials/cache-and-rate-limit-with-upstash.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Pinecone 做向量搜索</h3>
+            <p>存储 embeddings、做语义搜索、构建 RAG。任何需要"记住"你数据的 AI 功能的基础。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">13 分钟</span>
+              <a href="/zh/tutorials/vector-search-with-pinecone.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Building Specific Things -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">构建具体的东西</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>构建一份路演 PPT</h3>
+            <p>逐步进行：从空白 prompt 到一份可下载为 PowerPoint 的 6 页投资人演示文稿。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/build-a-pitch-deck.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>构建一个分析仪表盘</h3>
+            <p>带 Chart.js 图表的 KPI 卡片。一句 prompt 生成一个完整的 SaaS 风格仪表盘。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/build-an-analytics-dashboard.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">💻 互动</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>构建一个 Shopify section</h3>
+            <p>带实时预览的 Liquid 模板。生成可直接上传到 Shopify 主题的生产级代码。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 分钟</span>
+              <a href="/zh/tutorials/build-a-shopify-section.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>构建一个多页网站</h3>
+            <p>具名代码块、内部页面链接，以及自包含的 CSS。从单文件扩展开来。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">15 分钟</span>
+              <a href="/zh/tutorials/build-a-multi-page-website.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 Claude Code Native + LingModel 结对审计 Solidity</h3>
+            <p>面向加密开发者的双模型工作流：用 Claude Code Native 起草，用 LingModel 审计，对照 Foundry 测试核对，发布可经审计的代码。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">15 分钟</span>
+              <a href="/zh/tutorials/pair-audit-solidity.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tips & Tricks -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">技巧与窍门</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 /grill-me 压测你的方案</h3>
+            <p>LingCode 扮演敌意面试官 — 走遍每个决策分支、失败路径和步骤接口，直到把假设逼出来。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 分钟</span>
+              <a href="/zh/tutorials/stress-test-your-plan-with-grill-me.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 LingCode 系统化调试</h3>
+            <p>五步协议：复现 → 隔离 → 假设 → 检验假设（而非检验修复）→ 收敛到带回归测试的最小修复。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/debug-systematically-with-lingcode.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 LingCode 做测试驱动开发</h3>
+            <p>把 TDD 当作反幻觉工具 — 验证红真的是红，对每个新绿做变异测试，只在绿的时候重构。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 分钟</span>
+              <a href="/zh/tutorials/test-driven-development-with-lingcode.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>在宣称完成前先验证</h3>
+            <p>证据胜过断言。三种失败模式 — 能编译但什么都不做、测试什么都没测、代码从未运行过 — 以及抓住它们的纪律。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/verify-before-claiming-done.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>用 /simplify 简化改动的代码</h3>
+            <p>五类评审过程：错失的复用、过度抽象、防御不可能情况的代码、死分支、叙述性注释。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/simplify-changed-code.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>写出更好的 prompt</h3>
+            <p>持续在第一次尝试就产出精致、生产级结果的 prompt 模式。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 分钟</span>
+              <a href="/zh/tutorials/writing-better-prompts.html" class="tutorial-cta">阅读 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-advanced">● 高级</span>
+            </div>
+            <h3>测试并观测你的 LLM 应用</h3>
+            <p>把 evals 当作 prompt 的单元测试，把 traces 当作生产可观测性。发布前的最小可行配置。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">14 分钟</span>
+              <a href="/zh/tutorials/test-and-observe-your-llm-app.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-intermediate">● 中级</span>
+            </div>
+            <h3>迭代你的原型</h3>
+            <p>如何在不从头开始的情况下，对现有输出进行精修、微调和分支。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 分钟</span>
+              <a href="/zh/tutorials/iterating-on-your-prototype.html" class="tutorial-cta">阅读 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>导出为 PDF 和 PowerPoint</h3>
+            <p>直接从预览面板一键导出。适用于演示文稿、报告和任何 HTML。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">3 分钟</span>
+              <a href="/zh/tutorials/exporting-to-pdf-powerpoint.html" class="tutorial-cta">阅读 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">🎥 视频</span>
+              <span class="badge badge-advanced">● 高级</span>
+            </div>
+            <h3>在所有提供商上运行</h3>
+            <p>并排对比工作流。在 Claude、DeepSeek、GPT-4 等上运行同一个 prompt。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 分钟</span>
+              <a href="/zh/tutorials/running-across-all-providers.html" class="tutorial-cta">观看 →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Provider Setup -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">提供商设置</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>Claude（Anthropic）</h3>
+            <p>获取你的 Anthropic API 密钥，并将其连接到 LingCode 以实现完整的工具使用。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 分钟</span>
+              <a href="/zh/tutorials/claude-anthropic.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>DeepSeek</h3>
+            <p>快、便宜、能干。几分钟内用你的 API 密钥配置好 DeepSeek V4。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">3 分钟</span>
+              <a href="/zh/tutorials/deepseek.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>OpenAI / GPT-4</h3>
+            <p>将 GPT-4o 和其他 OpenAI 模型连接到 playground。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">3 分钟</span>
+              <a href="/zh/tutorials/openai-gpt4.html" class="tutorial-cta">开始 →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 文字</span>
+              <span class="badge badge-beginner">● 初级</span>
+            </div>
+            <h3>LingModel（内置）</h3>
+            <p>内置的托管模型。提供免费额度 — 无需 API 密钥即可上手。</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">2 分钟</span>
+              <a href="/zh/tutorials/lingmodel.html" class="tutorial-cta">了解 →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要发布的创始人和想要一把真正趁手工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/zh/features.html">Mac IDE</a></li>
+        <li><a href="/zh/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/zh/docs.html">文档</a></li>
+        <li><a href="/zh/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">路演</a></li>
+        <li><a href="/privacy.html">隐私</a></li>
+        <li><a href="/account.html">账户</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    // Pill filter functionality
+    const pillBtns = document.querySelectorAll('.pill-btn');
+    const tutorialCards = document.querySelectorAll('.tutorial-card');
+
+    pillBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active pill
+        pillBtns.forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+
+        const level = btn.dataset.level;
+
+        // Filter cards
+        tutorialCards.forEach(card => {
+          if (level === 'all' || card.dataset.level === level) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // Close nav when clicking a link (mobile)
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

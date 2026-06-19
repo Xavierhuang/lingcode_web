@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>将文件上传至 S3 或 Cloudflare R2 — LingCode 教程</title>
+  <meta name="description" content="为你的应用添加文件上传功能。创建存储桶、配置凭据、签署 URL 以支持浏览器直传。同时适用于 AWS S3 和 Cloudflare R2 — 兼容同一套 S3 API。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/upload-files-to-s3-or-r2.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/upload-files-to-s3-or-r2.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/upload-files-to-s3-or-r2.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/upload-files-to-s3-or-r2.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "将文件上传至 S3 或 Cloudflare R2",
+  "description": "为你的应用添加文件上传功能——头像、附件、导出文件，随你所需。同一份代码同时兼容 AWS S3 和 Cloudflare R2，按需选择最适合钱包的方案。浏览器直传加预签名 URL 是默认推荐模式。",
+  "url": "https://lingcode.dev/zh/tutorials/upload-files-to-s3-or-r2.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/upload-files-to-s3-or-r2.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "将文件上传至 S3 或 Cloudflare R2"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "将文件上传至 S3 或 Cloudflare R2",
+      "item": "https://lingcode.dev/zh/tutorials/upload-files-to-s3-or-r2.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/upload-files-to-s3-or-r2.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>将文件上传至 S3 或 Cloudflare R2</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>将文件上传至 S3 或 Cloudflare R2</h1>
+      <p class="intro">为你的应用添加文件上传功能——头像、附件、导出文件，随你所需。同一份代码同时兼容 AWS S3 和 Cloudflare R2，按需选择最适合钱包的方案。浏览器直传加预签名 URL 是默认推荐模式。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>S3 还是 R2——怎么选</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>两者使用同一套 API。下面的代码对两者都适用；唯一的区别在于你指向哪个端点。</p>
+          <ul>
+            <li><strong>AWS S3</strong> — 久经考验，与所有 AWS 服务深度集成。定价：存储约 $0.023/GB/月，<strong>加上 $0.09/GB 出口流量费</strong>。流量费才是大头；带宽密集型应用的成本会迅速飙升。<a href="https://aws.amazon.com/s3/pricing/" target="_blank" rel="noopener">S3 定价 ↗</a>。</li>
+            <li><strong>Cloudflare R2</strong> — 兼容 S3 API，无出口流量费。存储约 $0.015/GB/月，<strong>零出口费</strong>。非常适合公开提供图片/文件服务。<a href="https://developers.cloudflare.com/r2/pricing/" target="_blank" rel="noopener">R2 定价 ↗</a>。</li>
+          </ul>
+          <p>新项目建议：<strong>优先选 R2，除非你已经深度绑定在 AWS 体系中。</strong>省下的出口流量费会随规模持续累积。</p>
+        </div>
+      </div>
+
+      <h2>创建存储桶</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p><strong>S3：</strong>控制台 → <a href="https://s3.console.aws.amazon.com/s3/" target="_blank" rel="noopener">S3 ↗</a> → <strong>Create bucket</strong>。名称须全球唯一（小写，不含下划线），区域选离用户最近的。</p>
+          <p><strong>R2：</strong>Cloudflare 控制台 → <a href="https://dash.cloudflare.com/?to=/:account/r2" target="_blank" rel="noopener">R2 ↗</a> → <strong>Create bucket</strong>。名称在你的 Cloudflare 账户内唯一即可。</p>
+          <p>默认关闭公开访问权限。我们将通过服务端或签名 URL 来提供文件访问。</p>
+        </div>
+      </div>
+
+      <h2>获取凭据</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p><strong>S3：</strong>创建一个拥有 <code>AmazonS3FullAccess</code> 权限（或限定到该存储桶）的 IAM 用户。<a href="https://console.aws.amazon.com/iam/" target="_blank" rel="noopener">IAM 控制台 ↗</a> → Users → Create，然后生成访问密钥。</p>
+          <p><strong>R2：</strong>R2 控制台 → <strong>Manage R2 API Tokens</strong> → Create token。选择"Object Read &amp; Write"并限定到你的存储桶。</p>
+          <p>两种方式都会给你两个值：<strong>Access Key ID</strong> 和 <strong>Secret Access Key</strong>。将它们存入后端环境变量：</p>
+          <pre><code>S3_ACCESS_KEY_ID=AKIAxxxxxxxxxxxxxxxx
+S3_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+S3_BUCKET=my-app-uploads
+S3_REGION=auto                                  # R2 使用 "auto"；S3 使用如 "us-east-1"
+S3_ENDPOINT=https://&lt;account&gt;.r2.cloudflarestorage.com  # 仅 R2 需要；S3 可省略</code></pre>
+        </div>
+      </div>
+
+      <h2>安装 SDK</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>S3 和 R2 使用同一个包：</p>
+          <pre><code>npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner</code></pre>
+          <p>Python 请用：<code>pip install boto3</code>。Go 请参考：<a href="https://aws.github.io/aws-sdk-go-v2/" target="_blank" rel="noopener">aws-sdk-go-v2 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>初始化客户端</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <pre><code>const { S3Client } = require("@aws-sdk/client-s3");
+
+const s3 = new S3Client({
+  region: process.env.S3_REGION,
+  endpoint: process.env.S3_ENDPOINT,   // omit for AWS S3
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  },
+});</code></pre>
+          <p>这个客户端同时适用于 S3 和 R2。唯一的区别是是否设置 <code>endpoint</code>。</p>
+        </div>
+      </div>
+
+      <h2>方案 A：服务端上传（简单，但较慢）</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>浏览器将文件发送到你的服务器，服务器再转发给 S3/R2。逻辑最简单，但每个字节都要经过你的服务器（大文件速度慢，Serverless 环境成本高）。</p>
+          <pre><code>const { PutObjectCommand } = require("@aws-sdk/client-s3");
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
+
+app.post("/api/upload", upload.single("file"), async (req, res) =&gt; {
+  const key = `uploads/${Date.now()}-${req.file.originalname}`;
+  await s3.send(new PutObjectCommand({
+    Bucket: process.env.S3_BUCKET,
+    Key: key,
+    Body: req.file.buffer,
+    ContentType: req.file.mimetype,
+  }));
+  res.json({ key });
+});</code></pre>
+          <p>可以用，但文件超过约 10 MB 或上传流量较大时就不建议了——会占满服务器内存和带宽。</p>
+        </div>
+      </div>
+
+      <h2>方案 B：预签名 URL（推荐）</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>服务端签发一次性 URL，让浏览器<em>直接</em>上传到 S3/R2。服务器完全不接触文件内容。</p>
+          <pre><code>const { PutObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
+// 1) 浏览器向服务器请求上传 URL
+app.post("/api/upload-url", async (req, res) =&gt; {
+  const { filename, contentType } = req.body;
+  const key = `uploads/${Date.now()}-${filename}`;
+
+  const url = await getSignedUrl(
+    s3,
+    new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET,
+      Key: key,
+      ContentType: contentType,
+    }),
+    { expiresIn: 60 * 5 }   // 5 minutes
+  );
+  res.json({ url, key });
+});</code></pre>
+          <p>然后在浏览器端：</p>
+          <pre><code>// In the browser
+async function uploadFile(file) {
+  const r = await fetch("/api/upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename: file.name, contentType: file.type }),
+  });
+  const { url, key } = await r.json();
+
+  await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+
+  return key;   // your app stores this in the DB
+}</code></pre>
+          <p>只需一次服务端往返来签发 URL，上传直接进行。文件大小不限；服务器保持轻量且无状态。</p>
+        </div>
+      </div>
+
+      <h2>CORS — 最先踩坑的地方</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>浏览器直传需要在存储桶上配置 CORS。否则浏览器会拦截 PUT 请求。</p>
+          <p><strong>S3：</strong>存储桶 → <strong>Permissions → CORS</strong>：</p>
+          <pre><code>[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["PUT", "POST", "GET"],
+    "AllowedOrigins": ["https://yourdomain.com", "http://localhost:3000"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]</code></pre>
+          <p><strong>R2：</strong>存储桶 → <strong>Settings → CORS Policy</strong>，配置内容相同。<a href="https://developers.cloudflare.com/r2/buckets/cors/" target="_blank" rel="noopener">R2 CORS 文档 ↗</a>。</p>
+          <p>如果浏览器控制台报"blocked by CORS policy"，就来改这里。</p>
+        </div>
+      </div>
+
+      <h2>下发文件</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>你已将 <code>key</code> 存入数据库。有两种方式将文件提供给用户：</p>
+          <p><strong>公开读取（免费、简单）：</strong></p>
+          <ul>
+            <li><strong>R2：</strong>绑定自定义域名（<a href="https://developers.cloudflare.com/r2/buckets/public-buckets/" target="_blank" rel="noopener">R2 公开存储桶文档 ↗</a>）。URL 变为 <code>https://cdn.yourdomain.com/uploads/xxx.jpg</code>——全球免费分发。</li>
+            <li><strong>S3：</strong>在存储桶前面挂 CloudFront。<a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RestrictingAccessToS3.html" target="_blank" rel="noopener">S3 + CloudFront ↗</a>。</li>
+          </ul>
+          <p><strong>签名读取 URL</strong>（用于私有文件）：</p>
+          <pre><code>const { GetObjectCommand } = require("@aws-sdk/client-s3");
+
+const url = await getSignedUrl(
+  s3,
+  new GetObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key }),
+  { expiresIn: 60 * 60 }   // 1 hour
+);</code></pre>
+          <p>适用于用户专属内容（私密文档、付费下载）。URL 在有效期内一次性可用。</p>
+        </div>
+      </div>
+
+      <h2>服务端校验上传内容</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>预签名 URL 信任客户端。如果不加约束，用户可能把一个 5 GB 的可执行文件伪装成"profile.jpg"上传。两个实用的安全措施：</p>
+          <ul>
+            <li><strong>约束预签名参数</strong>——在 <code>PutObjectCommand</code> 中设置 <code>ContentType</code> 和 <code>ContentLength</code>。S3/R2 会拒绝不匹配的上传。</li>
+            <li><strong>上传后校验</strong>——客户端告知完成后，服务端对该 key 发起 <code>HEAD</code> 请求，确认大小、MIME 类型，必要时检查文件内容。</li>
+          </ul>
+          <p>对于图片，可以在上传后通过 Lambda/Worker 调用 <a href="https://sharp.pixelplumbing.com/" target="_blank" rel="noopener">sharp ↗</a> 进行压缩和安全处理。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>不要将访问密钥暴露给浏览器。</strong>预签名 URL 是浏览器上传的唯一安全模式。如果你发现自己在客户端代码中实例化了 <code>new S3Client({ credentials })</code>，请立即停下——这些密钥会被打包进前端 bundle，被人爬取后用来刷爆你的 AWS 账单。
+      </div>
+
+      <h2>实用技巧</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>大文件用分片上传</strong>——超过约 100 MB 的文件建议使用分片上传。使用 <a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/Package/-aws-sdk-lib-storage/" target="_blank" rel="noopener">@aws-sdk/lib-storage ↗</a>。</li>
+            <li><strong>进度条</strong>——用 <code>XMLHttpRequest</code> 代替 <code>fetch</code> 以获取上传进度事件。或者用 <a href="https://uppy.io/" target="_blank" rel="noopener">Uppy ↗</a>，功能完整的上传组件。</li>
+            <li><strong>图片变换</strong>——Cloudflare R2 + <a href="https://developers.cloudflare.com/images/transform-images/" target="_blank" rel="noopener">Cloudflare Image Transformations ↗</a> 可通过 URL 参数实现实时裁剪缩放。S3 + <a href="https://aws.amazon.com/serverless/serverlessrepo/" target="_blank" rel="noopener">Lambda@Edge ↗</a> 也能做到同样效果。</li>
+            <li><strong>病毒扫描</strong>——在受监管场景中处理用户上传文件时，可使用 <a href="https://aws.amazon.com/marketplace/pp/prodview-bvcdylzkcyzm6" target="_blank" rel="noopener">AWS GuardDuty Malware Protection ↗</a>，或通过上传后 Lambda 调用 ClamAV。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>官方参考文档</h2>
+      <ul>
+        <li><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html" target="_blank" rel="noopener">S3 用户指南 ↗</a></li>
+        <li><a href="https://developers.cloudflare.com/r2/" target="_blank" rel="noopener">R2 文档 ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/" target="_blank" rel="noopener">AWS SDK for JS v3 ↗</a></li>
+        <li><a href="https://developers.cloudflare.com/r2/api/s3/api/" target="_blank" rel="noopener">R2 S3 兼容 API 参考 ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html" target="_blank" rel="noopener">预签名 URL 文档 ↗</a></li>
+      </ul>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>配置 Sentry 错误追踪</h3>
+            <p>在生产环境中捕获上传失败</p>
+          </a>
+          <a href="/zh/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>使用 Google 登录（OAuth）</h3>
+            <p>在用户上传前先完成身份验证</p>
+          </a>
+          <a href="/zh/tutorials/automate-deploys-with-github-actions.html" class="tutorial-next-card">
+            <h3>用 GitHub Actions 自动化部署</h3>
+            <p>每次推送时自动部署你的上传后端</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

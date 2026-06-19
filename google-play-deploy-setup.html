@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magic Deploy Setup: Google Play Service Account Guide | LingCode</title>
+  <meta name="description" content="Step-by-step guide to filling in the service account JSON, package name, track, and keystore for LingCode Magic Deploy. Upload your Android app to Google Play in minutes.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/google-play-deploy-setup.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/google-play-deploy-setup.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/google-play-deploy-setup.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/google-play-deploy-setup.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/google-play-deploy-setup.html">
+  <meta property="og:title" content="Magic Deploy Setup: Google Play Service Account Guide">
+  <meta property="og:description" content="Where to find the service account JSON, package name, keystore, and track so LingCode can upload your Android app to Google Play.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Magic Deploy Setup — Google Play Service Account Guide">
+  <meta name="twitter:description" content="Fill in the service account JSON, package name, and keystore. Upload your Android app from LingCode in minutes.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Set up a Google Play service account for LingCode Magic Deploy",
+    "description": "How to create a Google Play service account, download its JSON key, configure release signing, and upload an Android App Bundle from LingCode Magic Deploy.",
+    "step": [
+      { "@type": "HowToStep", "name": "Register the app in Google Play Console", "text": "Create a Google Play developer account, then register the app in Play Console using the same applicationId that appears in your app's build.gradle." },
+      { "@type": "HowToStep", "name": "Upload a first AAB manually", "text": "Play Console refuses service-account uploads until a human has uploaded at least one build. Upload any signed AAB by hand once to unlock the API path." },
+      { "@type": "HowToStep", "name": "Create a service account and JSON key", "text": "In Play Console go to Setup > API access, create a service account, download its JSON key, and grant it release permission on the app." },
+      { "@type": "HowToStep", "name": "Configure release signing", "text": "Either add signingConfigs.release to app/build.gradle, or hand LingCode a keystore file and let it inject the credentials as gradle properties at build time." },
+      { "@type": "HowToStep", "name": "Paste into LingCode and deploy", "text": "Open Magic Deploy in LingCode, choose Google Play, fill in the service account JSON, package name, track and (if needed) keystore fields, then click Deploy to Google Play." }
+    ],
+    "publisher": { "@type": "Organization", "name": "LingCode" }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .blog-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.875rem; }
+    .blog-content pre code { background: none; padding: 0; }
+    .field-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .field-table th, .field-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .field-table th { color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field-table td { color: var(--text); }
+    .field-table td:first-child { font-family: ui-monospace, monospace; color: var(--signal); white-space: nowrap; }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .callout p { margin: 0; color: var(--text); }
+    .callout strong { color: var(--signal); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+    .sibling-nav { max-width: 800px; margin: 0 auto; padding: 20px 32px 0; }
+    .sibling-nav-inner { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .sibling-nav-label { font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px; }
+    .sibling-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 0.8125rem; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+    .sibling-pill:hover { color: var(--text); border-color: var(--signal); text-decoration: none; }
+    .sibling-pill.current { background: var(--signal); color: #fff; border-color: var(--signal); cursor: default; }
+    .sibling-pill.current:hover { color: #fff; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <nav class="sibling-nav" aria-label="Deploy guide siblings">
+      <div class="sibling-nav-inner">
+        <span class="sibling-nav-label">Deploy guides:</span>
+        <a href="/magic-deploy-setup.html" class="sibling-pill">App Store</a>
+        <a href="/app-store-connect-fields.html" class="sibling-pill">ASC fields</a>
+        <a href="/google-play-deploy-setup.html" class="sibling-pill current" aria-current="page">Google Play</a>
+        <a href="/magic-deploy-web-platforms.html" class="sibling-pill">Web</a>
+        <a href="/host-your-own-server.html" class="sibling-pill">Provision</a>
+        <a href="/magic-deploy-scripts.html" class="sibling-pill">Scripts</a>
+      </div>
+    </nav>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Guide</p>
+        <h1>Magic Deploy Setup — Google Play</h1>
+        <p>Where to find the service account JSON, package name, keystore, and track LingCode needs to upload your Android app to Google Play.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2>What you're filling in</h2>
+      <p>When you click <strong>Magic Deploy</strong> in LingCode and choose <strong>Google Play</strong>, you'll see up to seven fields. The first three are required; the four signing fields are only needed if your <code>build.gradle</code> doesn't already configure a release signing config.</p>
+
+      <div style="overflow-x: auto;">
+        <table class="field-table">
+          <thead>
+            <tr><th>Field</th><th>What it is</th><th>Where to get it</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Service account JSON</td><td>Private key file Google generates when you create a service account.</td><td>Play Console → Setup → API access → Create service account → Download JSON</td></tr>
+            <tr><td>Package name</td><td>Your app's <code>applicationId</code>, e.g. <code>com.example.app</code>.</td><td>Must match the <code>applicationId</code> in <code>app/build.gradle</code>.</td></tr>
+            <tr><td>Track</td><td>Where the build lands: <code>internal</code>, <code>alpha</code>, <code>beta</code>, or <code>production</code>.</td><td>Pick inside LingCode. Defaults to <code>internal</code>.</td></tr>
+            <tr><td>Keystore file</td><td>A <code>.jks</code> or <code>.keystore</code> file that signs the release AAB.</td><td>Generated once with <code>keytool</code> (or already exists in your project).</td></tr>
+            <tr><td>Store password</td><td>Password for the keystore file itself.</td><td>Set when you ran <code>keytool -genkeypair</code>.</td></tr>
+            <tr><td>Key alias</td><td>Name of the key inside the keystore, e.g. <code>release</code>.</td><td>Set when you ran <code>keytool -genkeypair</code>.</td></tr>
+            <tr><td>Key password</td><td>Password for that specific key.</td><td>Set when you ran <code>keytool -genkeypair</code> (often the same as the store password).</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <p><strong>Two in-app shortcuts save you time.</strong> Magic Deploy parses the service-account JSON as a <em>preflight</em> check — if the file is malformed or missing <code>client_email</code> / <code>private_key</code>, you'll know in a second instead of waiting for the OAuth phase to fail opaquely. And the <strong>Auto-bump versionCode</strong> checkbox next to the fields rewrites <code>versionCode</code> in <code>app/build.gradle</code> before each build, which eliminates the most common second-deploy failure (<em>"Version code X has already been used"</em>). The toggle is off by default — tick it the first time you deploy.</p>
+      </div>
+
+      <div class="callout">
+        <p><strong>Why does Google use service accounts instead of API keys?</strong> A plain API key is a single secret that lets the bearer do anything the account can do — if it leaks, you rotate it and pray. Google's <a href="/glossary.html#service-account">service accounts</a> are real identities in Google Cloud's IAM system: you grant them narrow permissions (e.g. "upload builds to this one app, on internal testing only") and revoke or regenerate their keys independently. The <a href="/glossary.html#jwt">JWT</a> → <a href="/glossary.html#oauth">OAuth 2.0</a> flow LingCode runs with them trades that JWT for a one-hour access token — so even if the token leaks, it expires fast. Unfamiliar term? See the <a href="/glossary.html">glossary</a>.</p>
+      </div>
+
+      <h2>Before you start — one-time Play Console setup</h2>
+      <p>Three things have to exist in Google Play Console <em>before</em> a service account can upload anything. Skipping any of them will result in confusing errors later.</p>
+      <ol>
+        <li><strong>A Google Play developer account.</strong> Register at <a href="https://play.google.com/console/signup" rel="noopener noreferrer">play.google.com/console/signup</a>. There is a one-time $25 fee. Use the Google account you want to own the app long-term — transferring ownership later is possible but painful.</li>
+        <li><strong>An app record in Play Console.</strong> In Play Console, click <strong>Create app</strong>, fill in the name, default language, app vs. game, and free vs. paid. The <em>package name</em> you enter here must match the <code>applicationId</code> in <code>app/build.gradle</code> exactly and can never be changed afterward.</li>
+        <li><strong>At least one AAB uploaded by hand.</strong> Play refuses service-account uploads until a human has uploaded at least one signed build. Build a signed AAB locally (<code>./gradlew bundleRelease</code>) and drag-drop it into Play Console → Testing → Internal testing → Create new release, once. You don't have to release it — just uploading unlocks the API path.</li>
+      </ol>
+
+      <div class="callout">
+        <p><strong>Skipping the first manual upload is the #1 cause of "everything works but nothing shows up" bugs.</strong> The API will happily accept the upload and commit the edit, and you'll still see no build in Play Console. Upload once by hand first.</p>
+      </div>
+
+      <h2>Your Android project must have these settings</h2>
+      <p>A correct Play Console side is useless if <code>./gradlew bundleRelease</code> doesn't produce the AAB LingCode expects. Verify each of these before the first deploy.</p>
+
+      <h3><code>applicationId</code> in <code>app/build.gradle</code></h3>
+      <p>This is Android's equivalent of a bundle identifier, and it must match the package name you typed in Play Console exactly. Once the app is live, <strong>this value can never change</strong> — Google treats a different <code>applicationId</code> as a completely different app.</p>
+      <pre><code>android {
+    defaultConfig {
+        applicationId "com.example.app"
+        // …
+    }
+}</code></pre>
+
+      <h3><code>versionCode</code> and <code>versionName</code></h3>
+      <p>Both live in <code>defaultConfig</code>. <code>versionCode</code> is an integer that Play uses to order uploads; <code>versionName</code> is the human-facing string.</p>
+      <pre><code>defaultConfig {
+    versionCode 42        // must be greater than every previous upload
+    versionName "1.2.3"   // shown to users in the Play Store
+}</code></pre>
+      <p><strong>Every upload must bump <code>versionCode</code>.</strong> Re-uploading the same <code>versionCode</code> is the single most common reason a second deploy fails silently — Play rejects it server-side with "Version code X has already been used."</p>
+
+      <h3><code>minSdkVersion</code> and <code>compileSdkVersion</code></h3>
+      <p>Play Console enforces a <code>targetSdkVersion</code> floor that rises yearly (typically API 33+ today). If your project's <code>targetSdkVersion</code> is below the current floor, the upload is accepted but the release is blocked from rollout. Check <a href="https://developer.android.com/google/play/requirements/target-sdk" rel="noopener noreferrer">developer.android.com/google/play/requirements/target-sdk</a> for the current minimum.</p>
+
+      <h3>A <code>bundleRelease</code> gradle task</h3>
+      <p>LingCode runs <code>./gradlew bundleRelease</code> and expects the output at <code>app/build/outputs/bundle/release/app-release.aab</code>. This works out of the box for standard Android Studio projects. If you renamed the <code>app</code> module, if you use product flavors, or if you have a multi-module project where the uploadable AAB is produced elsewhere, you'll need to adjust:</p>
+      <ul>
+        <li><strong>Renamed module:</strong> LingCode checks both <code>app/build/outputs/bundle/release/app-release.aab</code> and <code>build/outputs/bundle/release/app-release.aab</code>. Move your module back to the standard layout, or temporarily symlink the AAB into the expected path.</li>
+        <li><strong>Product flavors:</strong> <code>bundleRelease</code> builds every flavor. You want one specific AAB — either switch Magic Deploy off and run <code>./gradlew bundle&lt;Flavor&gt;Release</code> yourself, or set a default flavor in gradle.</li>
+      </ul>
+
+      <h3>A Gradle wrapper (<code>gradlew</code>)</h3>
+      <p>LingCode prefers <code>./gradlew</code> over the system <code>gradle</code>. If your project doesn't have one, add one:</p>
+      <pre><code>gradle wrapper --gradle-version 8.5</code></pre>
+      <p>(Pick whatever version your project is known to build with.) Using the wrapper insulates you from whatever <code>gradle</code> happens to be on your PATH and matches what CI / teammates use.</p>
+
+      <h2>Step 1 — Create a service account and JSON key</h2>
+      <p>The service account is what LingCode authenticates as when it talks to Google Play. You create it inside Play Console — <em>not</em> inside the Google Cloud Console, even though service accounts are a Cloud concept.</p>
+      <ol>
+        <li>Sign in at <a href="https://play.google.com/console" rel="noopener noreferrer">play.google.com/console</a>.</li>
+        <li>In the left sidebar, click <strong>Setup → API access</strong>.</li>
+        <li>Under <strong>Service accounts</strong>, click <strong>Create new service account</strong>. Play Console opens a dialog linking to Google Cloud; follow it, create the service account (any name — <em>"LingCode Magic Deploy"</em> is fine), then come back to the Play Console tab and click <strong>Done</strong>.</li>
+        <li>Back on the <strong>API access</strong> page, find your new service account in the list and click <strong>Manage Play Console permissions</strong> (or <strong>Grant access</strong>).</li>
+        <li>On the <strong>App permissions</strong> tab, click <strong>Add app</strong> and pick the app you registered earlier.</li>
+        <li>On the <strong>Account permissions</strong> tab, enable at least <strong>Release apps to testing tracks</strong> and <strong>Release apps to production</strong>. Save.</li>
+        <li>Back in Google Cloud Console, open the service account's <strong>Keys</strong> tab, click <strong>Add key → Create new key → JSON</strong>, and download the file. Save it somewhere you back up.</li>
+      </ol>
+      <p>In LingCode, click <strong>Browse…</strong> next to <strong>Service account JSON</strong> and pick the downloaded file.</p>
+
+      <div class="callout">
+        <p><strong>The JSON key file is the equivalent of a password.</strong> Don't commit it to git, don't paste it in Slack. If it leaks, delete the key from the Cloud Console — the service account keeps working, it just gets a new key.</p>
+      </div>
+
+      <h2>Step 2 — Pick a release track</h2>
+      <p>The <strong>Track</strong> dropdown decides where Play puts the upload. LingCode defaults to <code>internal</code>, which is the fastest and safest choice while you're testing Magic Deploy itself.</p>
+      <ul>
+        <li><code>internal</code> — up to 100 testers on an allowlist. No review, instant. Use this for your first few uploads.</li>
+        <li><code>alpha</code> — a closed testing track, typically larger. Still allowlisted.</li>
+        <li><code>beta</code> — open testing that anyone with the link can join.</li>
+        <li><code>production</code> — visible on the Play Store. Goes through Google's review (usually hours to a few days).</li>
+      </ul>
+      <p>You can always promote a build from <code>internal</code> to a higher track later from inside Play Console without re-uploading.</p>
+
+      <h2>Step 3 — Configure release signing</h2>
+      <p>Google Play only accepts signed AABs. You have two ways to get there — pick whichever fits your existing workflow.</p>
+
+      <h3>Option A — Sign inside <code>build.gradle</code> (recommended if you already have a keystore)</h3>
+      <p>Add a <code>signingConfigs.release</code> block to your <code>app/build.gradle</code>:</p>
+      <pre><code>android {
+    signingConfigs {
+        release {
+            storeFile file("/absolute/path/to/release.keystore")
+            storePassword "…"
+            keyAlias "release"
+            keyPassword "…"
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            // …
+        }
+    }
+}</code></pre>
+      <p>If you go this route, leave the four keystore fields in LingCode <strong>blank</strong>. LingCode just runs <code>./gradlew bundleRelease</code> and lets gradle read the signing config from the build file.</p>
+
+      <h3>Option B — Let LingCode inject the keystore at build time</h3>
+      <p>If you don't want to hard-code passwords into <code>build.gradle</code>, have your build file read them from gradle properties:</p>
+      <pre><code>android {
+    signingConfigs {
+        release {
+            storeFile file(project.findProperty("RELEASE_STORE_FILE") ?: "release.keystore")
+            storePassword project.findProperty("RELEASE_STORE_PASSWORD") ?: ""
+            keyAlias project.findProperty("RELEASE_KEY_ALIAS") ?: ""
+            keyPassword project.findProperty("RELEASE_KEY_PASSWORD") ?: ""
+        }
+    }
+    buildTypes {
+        release { signingConfig signingConfigs.release }
+    }
+}</code></pre>
+      <p>Then fill in all four keystore fields in LingCode. At build time LingCode passes them to gradle as <code>-PRELEASE_STORE_FILE=…</code>, <code>-PRELEASE_STORE_PASSWORD=…</code>, <code>-PRELEASE_KEY_ALIAS=…</code>, <code>-PRELEASE_KEY_PASSWORD=…</code>. The values never leave your Mac except as arguments to the local <code>gradle</code> process.</p>
+
+      <h3>Don't have a keystore yet?</h3>
+      <p>Generate one with the JDK's <code>keytool</code>:</p>
+      <pre><code>keytool -genkeypair -v \
+  -keystore release.keystore \
+  -alias release \
+  -keyalg RSA -keysize 2048 \
+  -validity 10000</code></pre>
+      <p>Save the file somewhere you back up. <strong>If you lose this keystore you can never update the app on Play again</strong> — Google uses its signature to prove new versions are really "from you." Back it up in at least two places.</p>
+
+      <h2>Step 4 — Click Deploy</h2>
+      <p>With the service account JSON, package name, and signing all in place, the <strong>Deploy to Google Play</strong> button activates. LingCode then:</p>
+      <ul>
+        <li>Finds your Android project (looks for <code>build.gradle</code> or <code>build.gradle.kts</code> at the project root).</li>
+        <li>Runs <code>./gradlew bundleRelease</code> (or <code>gradle bundleRelease</code> if there's no wrapper), with your signing credentials passed as <code>-P</code> properties if you chose Option B.</li>
+        <li>Reads the AAB at <code>app/build/outputs/bundle/release/app-release.aab</code>.</li>
+        <li>Signs a JWT with the service account's private key and exchanges it at Google's OAuth endpoint for an access token scoped to <code>androidpublisher</code>.</li>
+        <li>Creates a new edit, uploads the AAB, and commits the edit on the track you picked.</li>
+      </ul>
+      <p>On success the build shows up in Play Console → Testing → <em>your track</em> → Releases within a minute or two (Google's processing time, not LingCode's). From there you can roll it out, promote it to another track, or submit it for review.</p>
+
+      <h2>Reading the progress log</h2>
+      <p>While Magic Deploy runs, the right-hand panel streams the live output of <code>gradlew</code> and every HTTP call LingCode makes to Google's servers. Lines prefixed with <code>[Google Play]</code> are LingCode's own markers; everything else is verbatim tool output.</p>
+      <p>A successful run looks like this end-to-end:</p>
+      <pre><code>[Google Play] Building signed AAB...
+&gt; Task :app:bundleRelease
+BUILD SUCCESSFUL in 45s
+[Google Play] Getting access token...
+[Google Play] Creating edit...
+[Google Play] Uploading AAB...
+[Google Play] Committing edit...
+[Google Play] Upload complete. Check Google Play Console for the new build.</code></pre>
+      <p><strong>When it fails, scroll to the bottom of the log.</strong> LingCode's short error messages ("Build failed. Check errors above.") are pointers; the real reason is in the last 20 lines of raw output — usually the line that starts with <code>FAILURE:</code> (gradle) or an HTTP status code (Google API).</p>
+
+      <h2>Per-phase troubleshooting</h2>
+      <p>Failures group cleanly by phase. Fixing each one looks different.</p>
+
+      <h3>Build phase (<code>gradlew bundleRelease</code>)</h3>
+      <div style="overflow-x: auto;">
+      <table class="field-table">
+        <thead><tr><th>Log contains</th><th>Why</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>No Android project found</td>
+            <td>LingCode didn't find a <code>build.gradle</code> or <code>build.gradle.kts</code> at the open folder's root.</td>
+            <td>Open the folder that contains <code>gradlew</code>, not its parent. If you're inside a monorepo, temporarily open the Android subdir directly.</td>
+          </tr>
+          <tr>
+            <td>Permission denied: ./gradlew</td>
+            <td>The wrapper script isn't executable.</td>
+            <td><code>chmod +x gradlew</code> in the project root.</td>
+          </tr>
+          <tr>
+            <td>Could not find method signingConfig()</td>
+            <td>Gradle syntax mismatch — you mixed Groovy and Kotlin DSL snippets.</td>
+            <td>Use the syntax that matches your file extension: <code>build.gradle</code> is Groovy, <code>build.gradle.kts</code> is Kotlin.</td>
+          </tr>
+          <tr>
+            <td>Keystore file '…' not found</td>
+            <td>The keystore path in Magic Deploy, or the one referenced by <code>RELEASE_STORE_FILE</code>, doesn't resolve on disk.</td>
+            <td>Use the <strong>absolute</strong> path to the <code>.jks</code> or <code>.keystore</code>. Relative paths are resolved from the gradle module dir, which can surprise you.</td>
+          </tr>
+          <tr>
+            <td>Failed to read key &lt;alias&gt; from store: Keystore was tampered with, or password was incorrect</td>
+            <td>Either the store password or the key password is wrong.</td>
+            <td>In Terminal, run <code>keytool -list -keystore release.keystore</code> — it'll prompt for the store password and confirm whether it's right.</td>
+          </tr>
+          <tr>
+            <td>No key with alias "…" found</td>
+            <td>The key alias doesn't exist in the keystore.</td>
+            <td><code>keytool -list -keystore release.keystore</code> shows all aliases. Copy the exact one into the Key alias field.</td>
+          </tr>
+          <tr>
+            <td>AAB not found at app/build/outputs/bundle/release/app-release.aab</td>
+            <td>The gradle build succeeded but didn't produce an AAB at the expected path — usually because your app module is named something other than <code>app</code>, or a product flavor changed the output filename.</td>
+            <td>Rename the module to <code>app</code>, or move the AAB into that path via a gradle <code>Copy</code> task. For flavor-based builds, run <code>./gradlew bundle&lt;Flavor&gt;Release</code> manually for now.</td>
+          </tr>
+          <tr>
+            <td>Execution failed for task ':app:lintVitalRelease'</td>
+            <td>A lint issue flagged as an error by your gradle config blocks release builds.</td>
+            <td>Either fix the lint issue, or temporarily add <code>android.lintOptions.checkReleaseBuilds false</code> to unblock (and open a ticket to fix properly).</td>
+          </tr>
+          <tr>
+            <td>Java heap space / OutOfMemoryError</td>
+            <td>Gradle daemon is too small for your project.</td>
+            <td>In <code>gradle.properties</code>, add <code>org.gradle.jvmargs=-Xmx4g</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3>OAuth phase (JWT → access token)</h3>
+      <div style="overflow-x: auto;">
+        <table class="field-table">
+        <thead><tr><th>Log contains</th><th>Why</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>OAuth failed: invalid_grant</td>
+            <td>The JWT LingCode signed with the service account private key was rejected. Usually the JSON file is malformed or from the wrong project.</td>
+            <td>Re-download the JSON key from the service account's Keys tab. Don't edit the file — opening it in some editors adds invisible characters.</td>
+          </tr>
+          <tr>
+            <td>OAuth failed: invalid_scope</td>
+            <td>The service account doesn't have the <code>androidpublisher</code> API enabled in Cloud Console.</td>
+            <td>In Cloud Console → APIs &amp; Services → Library, search for <strong>Google Play Android Developer API</strong> and enable it for the service account's project.</td>
+          </tr>
+          <tr>
+            <td>OAuth failed: 401 Unauthorized</td>
+            <td>The service account's private key was revoked or deleted.</td>
+            <td>Generate a new JSON key from the service account's Keys tab. Attach it in Magic Deploy.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>Create Edit phase</h3>
+      <div style="overflow-x: auto;">
+        <table class="field-table">
+        <thead><tr><th>Log contains</th><th>Why</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Create edit failed: 404 applicationNotFound</td>
+            <td>The <code>packageName</code> doesn't exist in Play Console — either a typo or the app was never created.</td>
+            <td>Create the app record in Play Console first (<strong>Create app</strong>), using the <em>exact</em> <code>applicationId</code> from <code>build.gradle</code>.</td>
+          </tr>
+          <tr>
+            <td>Create edit failed: 403 developerDoesNotOwnApplication</td>
+            <td>The service account isn't linked to this app in Play Console.</td>
+            <td>In Play Console → Setup → API access → your service account → <strong>Manage Play Console permissions → App permissions → Add app</strong>, and pick this app.</td>
+          </tr>
+          <tr>
+            <td>Create edit failed: 403 insufficientScopes</td>
+            <td>The service account's <em>Account permissions</em> are too limited.</td>
+            <td>Same page, <strong>Account permissions</strong> tab — enable at least "Release apps to testing tracks." Admin role works too.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>Upload AAB phase</h3>
+      <div style="overflow-x: auto;">
+        <table class="field-table">
+        <thead><tr><th>Log contains</th><th>Why</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Upload failed: 403 apkNotificationMessageKeyUpgradeVersionConflict / versionCodeTooLow</td>
+            <td>The <code>versionCode</code> in your AAB is not greater than one already on Play.</td>
+            <td>Bump <code>versionCode</code> in <code>app/build.gradle</code> and re-run — or tick <strong>Auto-bump versionCode</strong> in the pane so LingCode does it for you on every deploy.</td>
+          </tr>
+          <tr>
+            <td>Upload failed: 400 apkUploadApkNotSigned</td>
+            <td>The AAB isn't signed (or is signed with a debug key).</td>
+            <td>Either fill in all four keystore fields in Magic Deploy, or configure <code>signingConfigs.release</code> in <code>build.gradle</code>. Don't do both — they can conflict.</td>
+          </tr>
+          <tr>
+            <td>Upload failed: 400 apkSignedWithDifferentCertificate</td>
+            <td>The AAB was signed with a key different from the one Google has recorded for this app.</td>
+            <td>Either sign with the original keystore, or if you've lost it, request a key reset via <strong>Play Console → Setup → App signing → Request upload key reset</strong> (Google reviews these manually).</td>
+          </tr>
+          <tr>
+            <td>Upload failed: 413 Request Entity Too Large</td>
+            <td>Your AAB is bigger than the 150 MB AAB limit.</td>
+            <td>Enable R8/ProGuard minification, prune large drawables or fonts, or ship assets via Play Asset Delivery.</td>
+          </tr>
+          <tr>
+            <td>Upload failed: network error / timed out</td>
+            <td>Slow or flaky connection; LingCode has a 600s timeout on the upload call.</td>
+            <td>Retry. If you've uploaded the same AAB a few times, Play's deduplication usually short-circuits.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>Commit Edit phase</h3>
+      <div style="overflow-x: auto;">
+        <table class="field-table">
+        <thead><tr><th>Log contains</th><th>Why</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Commit failed: 400 validationError</td>
+            <td>Play rejected the edit during validation — often missing required fields on the app record (content rating, privacy policy URL, target audience).</td>
+            <td>Open the app in Play Console and complete the red-dotted sections in <strong>Policy and programs</strong> and <strong>App content</strong>. The upload already succeeded; you can commit the edit manually from Play Console after fixing.</td>
+          </tr>
+          <tr>
+            <td>Commit failed: 409 editAlreadyCommitted</td>
+            <td>A previous attempt already committed this edit; your retry has nothing to do.</td>
+            <td>Safe to ignore. Check Play Console — the build is probably there.</td>
+          </tr>
+        </tbody>
+      </table>
+
+        </tbody>
+        </table>
+      </div>
+
+      <h2>What happens after a successful upload</h2>
+      <p>When Magic Deploy finishes, the build lands in <strong>Play Console → your app → Testing → &lt;your track&gt; → Releases</strong>. Unlike App Store Connect, there's usually no separate "processing" state for AABs — the build is available within a minute or two. From there:</p>
+      <ul>
+        <li><strong>Internal testing</strong> — testers from your allowlist can download immediately via the opt-in URL. No review.</li>
+        <li><strong>Closed testing (alpha)</strong> — allowlist-based, but requires a first review (usually &lt; 24h).</li>
+        <li><strong>Open testing (beta)</strong> — anyone with the link can join. Requires review for first release to this track.</li>
+        <li><strong>Production</strong> — visible on the Play Store. Reviewed by Google (hours to a few days). A rollout can be staged (e.g., 10% → 50% → 100%) from the same page.</li>
+      </ul>
+      <p>You can promote any build from a lower track to a higher one from inside Play Console without re-uploading — go to the release page for the target track and click <strong>Create new release → Add from library</strong>.</p>
+
+      <h2>Quick reference: where to go when something's wrong</h2>
+      <div style="overflow-x: auto;">
+        <table class="field-table">
+        <thead><tr><th>Symptom</th><th>Where to fix</th></tr></thead>
+        <tbody>
+          <tr><td>Deploy button stays disabled</td><td>Package name or service account JSON is missing. LingCode requires both before enabling the button.</td></tr>
+          <tr><td>"No Android project found"</td><td>Open the folder that contains <code>gradlew</code> / <code>build.gradle</code>, not its parent.</td></tr>
+          <tr><td>Build phase fails</td><td>Run the same <code>./gradlew bundleRelease</code> in Terminal with your <code>-P</code> props (Magic Deploy prints the exact command). Gradle's error will be identical and easier to debug outside LingCode.</td></tr>
+          <tr><td>AAB built but not found</td><td>Your module isn't named <code>app</code>, or flavor builds are producing a different filename. Rename or symlink into <code>app/build/outputs/bundle/release/app-release.aab</code>.</td></tr>
+          <tr><td>OAuth / 401 errors</td><td>Re-download the service account JSON key and re-attach in Magic Deploy.</td></tr>
+          <tr><td>403 developerDoesNotOwnApplication</td><td>Play Console → Setup → API access → your service account → App permissions → Add this app.</td></tr>
+          <tr><td>versionCodeTooLow</td><td>Bump <code>versionCode</code> in <code>app/build.gradle</code>. Any larger integer works.</td></tr>
+          <tr><td>Upload succeeds, nothing in Play Console</td><td>You haven't done the first manual upload yet. Build an AAB locally and drag it into Play Console → Internal testing → Create new release, once.</td></tr>
+          <tr><td>Commit fails with validationError</td><td>Open Play Console, resolve the red dots in <strong>Policy and programs</strong> / <strong>App content</strong>, then commit the edit manually (it's already uploaded).</td></tr>
+          <tr><td>Still stuck</td><td>Copy the exact gradle command from the log and run it in Terminal; for API errors, hit the same endpoint with <code>curl</code> and the access token to see the full response body.</td></tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h2>Common mistakes (quick checklist)</h2>
+      <ul>
+        <li><strong>"No Android project found."</strong> The open project doesn't have a <code>build.gradle</code> or <code>build.gradle.kts</code> at its root. Open the Android project directly (the one that contains <code>gradlew</code>), not its parent.</li>
+        <li><strong>"AAB not found at <code>app/build/outputs/bundle/release/app-release.aab</code>."</strong> Your app module doesn't produce an AAB — usually because the project has multiple modules and <code>bundleRelease</code> built something else, or your module is named something other than <code>app</code>. Rename the module to <code>app</code> or add an <code>app</code> subproject that aggregates the release bundle.</li>
+        <li><strong>"Create edit failed … Check package name and API access."</strong> Either the package name you typed doesn't match the app's <code>applicationId</code>, or the service account isn't linked to that app yet in <strong>Play Console → Setup → API access → App permissions</strong>.</li>
+        <li><strong>Upload succeeds, build never appears.</strong> You skipped the first-manual-upload step. Upload any signed AAB by hand once, then retry.</li>
+        <li><strong>"Build failed" with a signing hint.</strong> Either Option A's <code>build.gradle</code> references a keystore path that doesn't exist on this machine, or Option B's <code>-P</code> properties don't match what your <code>build.gradle</code> expects. Run <code>./gradlew bundleRelease</code> in a terminal with the same arguments LingCode used — the error from gradle is more specific.</li>
+        <li><strong>Wrong service account permissions.</strong> The default grant in the dialog is often read-only. Make sure you ticked at least <em>Release apps to testing tracks</em> on the Account permissions tab.</li>
+      </ul>
+
+      <h2>Security notes</h2>
+      <p>Both the service account JSON and the keystore are credential material. LingCode never uploads either anywhere except to <code>oauth2.googleapis.com</code> and <code>androidpublisher.googleapis.com</code> — i.e. Google itself — and only as part of the deploy you trigger. Both files stay on your Mac otherwise.</p>
+      <p>If you lose a laptop or a teammate leaves, rotate the service account key (delete the old one in Cloud Console → IAM → Service accounts → Keys and generate a new one) and, if the keystore itself was in a compromised backup, stop using that app for new releases — Google does not allow rotating an app's signing key without their explicit involvement via Play App Signing.</p>
+
+      <h2>Further reading</h2>
+      <p>Primary sources for the concepts on this page, from Google and the IETF:</p>
+      <ul>
+        <li><a href="/glossary.html">LingCode deploy glossary</a> — every term on this page, defined.</li>
+        <li><a href="https://developers.google.com/android-publisher" rel="noopener noreferrer">Google Play Developer API</a> — the REST API LingCode calls to create edits, upload AABs, and commit releases.</li>
+        <li><a href="https://developers.google.com/identity/protocols/oauth2/service-account" rel="noopener noreferrer">OAuth 2.0 for Server-to-Server Applications</a> — the JWT bearer flow the service account uses.</li>
+        <li><a href="https://developer.android.com/studio/publish/app-signing" rel="noopener noreferrer">Sign your app</a> (Android Developers) — keystore generation, signing configs, and Play App Signing.</li>
+        <li><a href="https://developer.android.com/guide/app-bundle" rel="noopener noreferrer">About Android App Bundles</a> — why AABs exist and how Play serves tailored APKs to each device.</li>
+        <li><a href="https://support.google.com/googleplay/android-developer/answer/9859752" rel="noopener noreferrer">Manage your Play testing tracks</a> — how internal / alpha / beta / production work in practice.</li>
+      </ul>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">Ready to ship?</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">Shipping an iOS or Mac app too? See the <a href="/magic-deploy-setup.html">App Store Connect API key guide</a>. Or browse the full <a href="/features.html">Magic Deploy feature set</a>.</p>
+        <a href="/">Download LingCode for Mac</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+# pgbackrest.conf — PITR config for the LingCode Cloud Postgres.
+#
+# COPY to pgbackrest.conf and fill in the real S3 keys + cipher pass. The real
+# file is gitignored (see ../.gitignore). It is mounted read-only into the
+# Postgres container at /etc/pgbackrest/pgbackrest.conf.
+#
+# Repository = an ENCRYPTED, OFF-HOST repo on DigitalOcean Spaces (S3-compatible).
+# This is what closes the audit gaps: off-host (survives a VM/disk loss),
+# encrypted at rest, retained, and PITR-restorable to any second.
+
+[global]
+repo1-type = s3
+repo1-s3-endpoint = nyc3.digitaloceanspaces.com
+repo1-s3-region = nyc3
+repo1-s3-bucket = lingcloud-backups
+repo1-s3-uri-style = path
+# Reuse the same Spaces credentials the app already documents (SPACES_KEY /
+# SPACES_SECRET). Create a dedicated Spaces key scoped to this bucket if you can.
+repo1-s3-key = REPLACE_WITH_SPACES_KEY
+repo1-s3-key-secret = REPLACE_WITH_SPACES_SECRET
+
+# Encryption at rest. Generate once: `openssl rand -hex 32`. Store it in the VM
+# .env / a secret manager — LOSING THIS PASS MEANS LOSING THE BACKUPS.
+repo1-cipher-type = aes-256-cbc
+repo1-cipher-pass = REPLACE_WITH_OPENSSL_RAND_HEX_32
+
+# Retention: keep 4 full backups; expiring a full also expires its diffs/WAL.
+repo1-retention-full = 4
+
+# Compress and parallelize.
+compress-type = zst
+compress-level = 6
+process-max = 2
+
+# Faster checkpoints when a base backup starts (don't wait for the next natural
+# checkpoint). Fine for an OLTP-style workload.
+start-fast = y
+
+# Keep a paper trail.
+log-level-console = info
+log-level-file = detail
+log-path = /var/log/pgbackrest
+
+[lingcloud]
+# The stanza = this one Postgres cluster. pg1-path must match PGDATA inside the
+# container (the pgvector image uses /var/lib/postgresql/data).
+pg1-path = /var/lib/postgresql/data
+pg1-port = 5432
+pg1-user = cloud_admin

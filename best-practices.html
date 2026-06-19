@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Development Best Practices for Swift &amp; iOS | LingCode</title>
+  <meta name="description" content="Ten detailed habits for Swift and iOS developers using LingCode with Claude: prompting, code review, project structure, testing, Git workflow, context management, security, leveraging work protection, and asking IDE-aware questions only LingCode's agent can answer.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/best-practices.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="AI Development Best Practices for Swift &amp; iOS">
+  <meta property="og:description" content="Ten habits that separate developers who get real leverage from AI from those who fight it — including LingCode-specific workflows for work protection and IDE-aware prompting.">
+  <meta property="og:url" content="https://lingcode.dev/best-practices.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 760px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--text); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; color: var(--text); }
+    .callout p { margin: 0; }
+    .callout strong { color: var(--signal); }
+    .callout--warn { border-left-color: var(--red); }
+    .callout--warn strong { color: var(--red); }
+    .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 24px 0 32px; }
+    .toc p { margin: 0 0 8px; font-weight: 600; color: var(--text); }
+    .toc ol { margin: 0; padding-left: 20px; }
+    .toc li { margin-bottom: 4px; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Guide · AI workflow</p>
+        <h1>AI development best practices</h1>
+        <p>Ten habits that separate developers who get real leverage from AI from those who fight it — written for Swift and iOS developers using LingCode with Claude.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+
+      <div class="toc">
+        <p>On this page</p>
+        <ol>
+          <li><a href="#prompting">Structuring prompts for Swift/iOS</a></li>
+          <li><a href="#when-ai">When to use AI vs. write it yourself</a></li>
+          <li><a href="#code-review">Code review habits with AI-generated code</a></li>
+          <li><a href="#project-org">Project organization for AI-assisted work</a></li>
+          <li><a href="#testing">Testing AI-generated code</a></li>
+          <li><a href="#git">Git workflow with AI coding</a></li>
+          <li><a href="#context">Managing context in prompts</a></li>
+          <li><a href="#security">Security — what not to share</a></li>
+          <li><a href="#work-protection">Leveraging work protection, not fighting it</a></li>
+          <li><a href="#ide-aware">Asking IDE-aware questions</a></li>
+        </ol>
+      </div>
+
+      <h2 id="prompting">1. Structuring prompts for Swift/iOS</h2>
+      <p>Claude performs significantly better when you front-load three things: the Swift version, the target framework, and the constraint that matters most. Vague prompts produce generic code that won't compile on the first try.</p>
+
+      <h3>The baseline template</h3>
+      <p>Start every non-trivial request with this shape:</p>
+      <pre><code>Swift 5.10, iOS 17+, SwiftUI.
+[State the goal in one sentence.]
+[Constraints: no third-party dependencies / must use Swift concurrency / etc.]
+[Existing code to work from — paste the relevant type or function.]</code></pre>
+
+      <h3>Framework context matters</h3>
+      <p>Claude knows UIKit and SwiftUI well, but it defaults to UIKit patterns for older-sounding prompts. Say <code>SwiftUI</code> explicitly if that's what you're building. Same applies for Combine vs. async/await — Claude will pick one; tell it which.</p>
+
+      <h3>Use @file references liberally</h3>
+      <p>In LingCode's chat, type <code>@YourModel.swift</code> to attach the file to the prompt. Attaching the concrete types Claude will work with cuts hallucinated API calls by roughly half compared to describing the types in prose.</p>
+
+      <div class="callout">
+        <p><strong>Tip:</strong> For SwiftUI layout bugs, paste the full <code>View</code> body and describe what you're seeing vs. what you expect. "This VStack isn't centering" gives Claude almost nothing. "This VStack has <code>alignment: .center</code> but the Text is left-aligned on iPad — here's the code" gets a fix on the first response.</p>
+      </div>
+
+      <h2 id="when-ai">2. When to use AI vs. write it yourself</h2>
+      <p>AI coding assistance is not uniformly faster. There are task types where it reliably saves 60–80% of the work, and task types where it adds net overhead.</p>
+
+      <h3>High leverage — let Claude lead</h3>
+      <ul>
+        <li>Boilerplate: <code>Codable</code> conformances, <code>Hashable</code>, <code>Equatable</code>, <code>Comparable</code></li>
+        <li>Repetitive CRUD: Core Data stack setup, URL session wrappers, UserDefaults keys</li>
+        <li>Tests: <code>XCTestCase</code> subclasses for a type you've already written</li>
+        <li>Localization: generating <code>Localizable.strings</code> entries from existing UI text</li>
+        <li>Documentation: <code>///</code> doc comments on existing functions</li>
+        <li>Migrations: converting Objective-C patterns to modern Swift</li>
+      </ul>
+
+      <h3>Low leverage — write it yourself</h3>
+      <ul>
+        <li>Custom gesture recognizers with non-standard state machines</li>
+        <li>Performance-sensitive render loops (Metal, Core Animation)</li>
+        <li>App architecture decisions — Claude doesn't know your product's growth trajectory</li>
+        <li>Any code that touches your authentication session or keychain directly</li>
+        <li>Anything where you cannot read and explain every line Claude produces</li>
+      </ul>
+
+      <div class="callout">
+        <p><strong>Rule of thumb:</strong> If the task takes 10 minutes to do manually and you've done it before, do it manually — the review overhead of AI output may exceed 10 minutes. If the task is 2+ hours of work you've never done in Swift before, AI should lead and you should review.</p>
+      </div>
+
+      <h2 id="code-review">3. Code review habits with AI-generated code</h2>
+      <p>AI-generated code must be reviewed at least as carefully as code from a junior developer — more carefully in domains you're unfamiliar with, because you're less likely to catch a plausible-sounding but wrong API call.</p>
+
+      <h3>Review the imports first</h3>
+      <p>Claude sometimes introduces frameworks you didn't ask for. Check every <code>import</code> statement. If you see an unfamiliar framework, look it up before trusting the usage.</p>
+
+      <h3>Run the compiler, not just your eyes</h3>
+      <p>AI code can look correct and fail to compile due to deprecated APIs or wrong generic constraints. Build before reviewing logic. Fix compilation errors first — they often reveal a misunderstanding in the generation that invalidates the rest of the code.</p>
+
+      <h3>Spot-check against Apple docs</h3>
+      <p>For any API call that feels slightly unfamiliar, open the Apple Developer documentation directly. Claude's training data has a cutoff; it may confidently use APIs that were deprecated or renamed in the last major SDK release.</p>
+
+      <h3>Use /review in LingCode</h3>
+      <p>Select the generated code, then type <code>/review</code> in chat. This asks Claude to review its own output with fresh context — it catches different errors than your first-pass read, because it's pattern-matching against best practices rather than following the logic flow.</p>
+
+      <div class="callout">
+        <p><strong>Non-negotiable:</strong> Never ship AI-generated code that you cannot explain line-by-line to a teammate. If a section is opaque to you, ask Claude to explain it in comments before you merge.</p>
+      </div>
+
+      <h2 id="project-org">4. Project organization for AI-assisted work</h2>
+      <p>AI assistance improves significantly when your project is structured so that context is local — Claude can understand a file without needing to read 12 others to know what it does.</p>
+
+      <h3>Prefer small, focused files</h3>
+      <p>A <code>UserProfileViewModel.swift</code> that is 80 lines is more AI-friendly than a 600-line monolith. When you attach the file to a prompt, Claude gets full context. When you describe a 600-line file in prose, you lose precision.</p>
+
+      <h3>Co-locate tests with their targets</h3>
+      <p>Put <code>UserProfileViewModelTests.swift</code> immediately adjacent to the implementation in your Xcode group. When you ask Claude to write a test, attach both files — it will produce tests that accurately match the actual interface.</p>
+
+      <h3>Keep a CLAUDE.md at the project root</h3>
+      <p>This file is the single most effective way to improve every prompt session. Include:</p>
+      <ul>
+        <li>Swift and iOS version targets</li>
+        <li>Third-party dependencies and why they're there</li>
+        <li>Architecture pattern (MVVM, TCA, MV, etc.) and the one-line reasoning behind it</li>
+        <li>File naming conventions</li>
+        <li>Things Claude should never do (e.g., "never use <code>UserDefaults</code> for auth tokens")</li>
+      </ul>
+      <p>Attach <code>@CLAUDE.md</code> to the start of any session that touches core architecture. It functions as a persistent system prompt without you having to re-explain the project each time.</p>
+
+      <h2 id="testing">5. Testing AI-generated code</h2>
+      <p>AI-generated tests have a specific failure mode: they test the implementation rather than the contract. If Claude generates a test by reading your code, it will often write a test that passes even if the behavior were wrong.</p>
+
+      <h3>Write the test contract first</h3>
+      <p>Before asking Claude to generate tests, write one or two <code>func test_</code> method signatures with comments describing what invariant should hold — don't implement them. Then attach this stub and ask Claude to fill in the implementations. This forces Claude to match a behavior spec rather than mirror the code.</p>
+
+      <h3>Ask for tests of the failure path</h3>
+      <p>Claude defaults to happy-path tests. Explicitly request:</p>
+      <pre><code>Write XCTestCase tests for UserProfileViewModel.fetch().
+Include: one happy-path test, one test for network error,
+one test for 401 (unauthorized), one test for malformed JSON.</code></pre>
+
+      <h3>Verify async test patterns</h3>
+      <p>AI-generated async tests frequently use <code>XCTestExpectation</code> when they should use <code>async/await</code>, or vice versa. Check that the concurrency pattern matches what your codebase uses, and that <code>await fulfillment(of:)</code> timeouts are reasonable.</p>
+
+      <div class="callout">
+        <p><strong>Don't skip the test run.</strong> AI-generated test code is more likely to be syntactically valid but semantically vacuous — passing trivially because the assertion is always true. Run the suite and temporarily break the implementation to confirm the test actually catches the failure.</p>
+      </div>
+
+      <h2 id="git">6. Git workflow with AI coding</h2>
+      <p>AI-assisted sessions produce changes rapidly. Without deliberate Git discipline, you end up with a large diff that's impossible to review, bisect, or revert cleanly.</p>
+
+      <h3>Commit before every AI session</h3>
+      <p>Before opening LingCode's chat for a significant task, make sure your working tree is clean. If the session goes sideways, you can revert to a known-good state without reconstructing what you had manually.</p>
+
+      <h3>Commit after every logical unit</h3>
+      <p>AI can generate a lot of code fast. Resist the urge to batch it all into one commit. A commit that says "add Codable conformance to UserProfile" is reviewable. A commit that says "AI session: profile, networking, tests, and refactor" is not.</p>
+
+      <h3>Use LingCode's AI commit messages as a starting point</h3>
+      <p>LingCode can generate a commit message from the diff. Treat this as a first draft — read it, correct the verb, and add the "why" that the diff alone doesn't explain. A message that says "extract authentication logic into AuthService to isolate keychain access from ViewModels" is more useful than "refactor auth."</p>
+
+      <h3>Tag sessions that produced large changes</h3>
+      <p>If an AI session touched 10+ files, create a lightweight tag before merging: <code>git tag pre-ai-refactor-auth</code>. This gives you a stable restore point without cluttering your branch history.</p>
+
+      <h2 id="context">7. Managing context in prompts</h2>
+      <p>Claude's context window is large but not infinite, and more context is not always better. Irrelevant context crowds out relevant context, and the model's attention distributes across everything you send.</p>
+
+      <h3>Attach the right files, not all the files</h3>
+      <p>For a bug in <code>FeedViewController</code>, attach <code>FeedViewController.swift</code>, the <code>FeedViewModel</code> it uses, and the <code>FeedItem</code> model. Do not attach the entire project. File attachment via <code>@filename</code> in LingCode is precise; use it precisely.</p>
+
+      <h3>State the constraint before the context</h3>
+      <p>Lead with what you need, then provide the code. "Here is 200 lines of code, what's wrong?" forces Claude to scan everything. "There is a race condition in the async image loading — here is the code" focuses its attention on the right problem class.</p>
+
+      <h3>Reset context when switching tasks</h3>
+      <p>Open a new session (Cmd+N in LingCode) when you switch from one area of the codebase to another. Long sessions accumulate context that can quietly bias Claude's responses — it may avoid patterns it "remembers" you rejected earlier in the session, even when those patterns are appropriate for the new task.</p>
+
+      <h3>Use Claude Sessions for parallel workstreams</h3>
+      <p>LingCode supports multiple Claude sessions running simultaneously. Use this to keep feature work and refactoring work in separate contexts, so each session stays coherent. See the <a href="/claude-sessions.html">Claude Sessions guide</a> for setup.</p>
+
+      <h2 id="security">8. Security — what not to share with AI</h2>
+      <p>The content of your prompts and attached files is transmitted to Anthropic's API. Treat it with the same care as any outbound network request containing business-sensitive data.</p>
+
+      <div class="callout callout--warn">
+        <p><strong>Never include in any prompt:</strong> API keys, private keys (.p8, PEM), service account JSON, database connection strings with credentials, JWT secrets, hardcoded passwords, or any value that would grant access to a system if extracted from a log.</p>
+      </div>
+
+      <h3>Use placeholder values in code examples</h3>
+      <p>If you're showing Claude code that references secrets, replace real values before attaching the file:</p>
+      <pre><code>// Before attaching to a prompt:
+let apiKey = "sk-ant-REDACTED"      // replace real value
+let dbURL  = "postgres://REDACTED"  // replace real value</code></pre>
+      <p>Claude does not need the real values to reason about the code structure. It only needs the shape of how they're used.</p>
+
+      <h3>Keep secret files in .lingcodeignore</h3>
+      <p>Add a <code>.lingcodeignore</code> file (same syntax as <code>.gitignore</code>) to your project root and include:</p>
+      <pre><code>.env
+.env.local
+*.p8
+*service-account*.json
+Secrets.swift
+APIKeys.swift</code></pre>
+      <p>This prevents LingCode from indexing these files, which also prevents them from appearing in autocomplete suggestions when you type <code>@</code> in chat.</p>
+
+      <h3>Treat AI-generated crypto and auth code with extra scrutiny</h3>
+      <p>Claude can produce plausible-looking cryptography code that has subtle implementation errors — incorrect IV handling, wrong padding mode, or a timing side-channel. Never use AI-generated cryptographic implementations in production without independent expert review. Use Apple's <code>CryptoKit</code> APIs instead, which Claude understands well and which are harder to misuse than raw <code>CommonCrypto</code>.</p>
+
+      <div class="callout">
+        <p><strong>The simple rule:</strong> If you wouldn't paste it into a public Slack channel, don't paste it into a prompt. Anthropic has a privacy policy and uses data to improve models — handle your company's secrets accordingly.</p>
+      </div>
+
+      <h2 id="work-protection">9. Leveraging work protection, not fighting it</h2>
+      <p>LingCode snapshots project-critical files before the agent touches them, renders every edit as a reversible diff card, and keeps a separate multi-file undo stack for AI operations. These aren't emergency features — they're part of the workflow. The developers who move fastest with AI are the ones who trust the safety net and let the agent take bigger swings.</p>
+
+      <h3>Check the recovery panel after any multi-file edit</h3>
+      <p>Before you commit, open the recovery panel and scan the snapshots LingCode saved. If the agent touched <code>project.pbxproj</code>, <code>Info.plist</code>, <code>build.gradle</code>, or an entitlements file, review the pre-edit copy alongside the current state — those files corrupt silently and surface as "build works on my machine" bugs days later.</p>
+      <p>Fastest way to open it: <kbd>⌃⌘R</kbd>. Also available as <strong>View → Work Protection Recovery…</strong> in the menu bar, or as a toolbar shield icon (drag it in via <strong>Customize Toolbar…</strong> if you want it one click away).</p>
+
+      <h3>Use worktree isolation for risky experiments</h3>
+      <p>When you're asking the agent to do something you're not sure about — a framework migration, a dependency upgrade, a dozen-file refactor — send it into a worktree first. From chat: <em>"Create a worktree for this and try the migration there."</em> LingCode spins up an isolated branch, the agent works against that tree, and your main checkout stays untouched. When it's done: keep the branch, merge it, or discard it with one click.</p>
+
+      <h3>Review per-hunk, not per-file</h3>
+      <p>The diff card on each file lets you accept or revert every hunk independently. Don't default to "Accept all" — the value of the per-hunk view is that the agent might make four good changes and one wrong one, and you can keep the four. Scanning per-hunk is faster than it sounds; most hunks are obvious.</p>
+
+      <h3>Trust semantic undo over git</h3>
+      <p>If you realize mid-session that the last cross-file refactor went wrong, don't reach for <code>git reset</code> — the semantic undo stack rewinds just the AI operation, leaving your own edits since then intact. Cmd-Z in the chat panel walks back one agent step at a time, not one editor keystroke.</p>
+
+      <div class="callout">
+        <p><strong>Why it matters:</strong> The developers who produce the most with AI are the ones who let it try risky things. Work protection is what makes that safe — treat it as permission to be bold, not as paranoia infrastructure.</p>
+      </div>
+
+      <h2 id="ide-aware">10. Asking IDE-aware questions</h2>
+      <p>LingCode's agent reads your build log, simulator logs, debugger session, active file, git state, and run console as live, structured data — not as scraped stdout. The biggest workflow shift from Cursor or Copilot is learning to ask questions that use this. If your prompts could have been typed into a cloud chatbot with a copy-paste of your code, you're leaving most of the value on the table.</p>
+
+      <h3>Ask about the current IDE state directly</h3>
+      <p>Instead of pasting error text, just ask. The agent already sees it.</p>
+      <ul>
+        <li><em>"Why did the last build fail?"</em> — reads the live <code>BuildLogService</code> output, not your paste.</li>
+        <li><em>"The app froze in the simulator just now. What's in the console?"</em> — pulls the last few minutes of <code>RunConsoleService</code> logs and correlates.</li>
+        <li><em>"Which test just failed and why?"</em> — reads the test result structure, not a diff of terminal output.</li>
+        <li><em>"What's on my clipboard that I need to paste into <code>Info.plist</code>?"</em> — sees the clipboard and the file.</li>
+      </ul>
+
+      <h3>Let the agent drive the debugger</h3>
+      <p>LLDB is a tool the agent can call, not just a UI you use. Useful patterns:</p>
+      <ul>
+        <li><em>"Set a breakpoint where this crashes and run to it."</em></li>
+        <li><em>"Step into the next call and tell me what <code>self.user</code> is."</em></li>
+        <li><em>"Print the view hierarchy when this renders wrong."</em></li>
+      </ul>
+      <p>The agent sets the breakpoint, runs the app, pauses at the frame, reads the variables, and reports back — in one message. This doesn't work on any IDE that treats the debugger as a side panel the AI can't reach.</p>
+
+      <h3>Use build + ship as a single agent action</h3>
+      <p>The canonical demo is real: <em>"Ship this to TestFlight."</em> The agent picks the scheme, runs the archive, signs with your team from the Keychain, uploads to App Store Connect, and tails the processing status — in one chat turn. Variants:</p>
+      <ul>
+        <li><em>"Archive for App Store and export the IPA to ~/Desktop."</em></li>
+        <li><em>"Build a debug APK and install it on the connected Pixel."</em></li>
+        <li><em>"Run this on the iPad Air simulator and open Safari to localhost when it's up."</em></li>
+      </ul>
+
+      <h3>When you're stuck, ask about the whole picture</h3>
+      <p>Cloud-side agents can answer questions about code. IDE-aware agents can answer questions about the <em>state of your development session</em>. If you've been debugging for an hour and don't know what to try next, a useful prompt is literally: <em>"Here's what I've tried — look at the build log, the last five commits, the current diff, and the last simulator log, and tell me what I'm missing."</em> The agent reads all of that directly.</p>
+
+      <div class="callout">
+        <p><strong>The mental shift:</strong> With Cursor or Copilot, your job is to give the agent enough context to be useful. With LingCode, your job is to <em>ask</em> — the agent already has the context; it needs the question.</p>
+      </div>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">More guides:</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">
+          <a href="/getting-started.html">Getting Started</a> ·
+          <a href="/claude-sessions.html">Claude Sessions</a> ·
+          <a href="/blog.html">Skills &amp; slash commands</a> ·
+          <a href="/why-not-cursor.html">Why not Cursor?</a>
+        </p>
+        <a href="/docs.html">Back to Docs →</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

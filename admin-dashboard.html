@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin dashboard — LingCode</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <style>
+    .admin-page { padding: 100px 24px 80px; max-width: 1100px; margin: 0 auto; }
+    .admin-page h1 { font-size: 1.5rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .admin-page .lead { color: var(--text-muted); margin: 0 0 28px; font-size: 0.9375rem; }
+    .admin-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 24px; }
+    .admin-toolbar button.btn-ghost { padding: 8px 14px; font-size: 0.875rem; }
+    .admin-add {
+      display: grid;
+      grid-template-columns: 1fr 140px auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 28px;
+      padding: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    @media (max-width: 640px) {
+      .admin-add { grid-template-columns: 1fr; }
+    }
+    .admin-add label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .admin-add input, .admin-add select {
+      width: 100%; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--border-strong);
+      background: var(--bg); color: var(--text); font-family: var(--font); font-size: 0.9375rem;
+    }
+    .admin-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    table.admin-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+    .admin-table th, .admin-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    .admin-table th { color: var(--text-muted); font-weight: 600; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table td { color: var(--text-muted); }
+    .admin-table td strong { color: var(--text); font-weight: 500; }
+    .tier-pill {
+      display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.8125rem; font-weight: 600;
+      background: rgba(0, 208, 132, 0.15); color: var(--signal); border: 1px solid rgba(0, 208, 132, 0.35);
+    }
+    .tier-pro { background: rgba(61, 214, 140, 0.12); color: var(--green); border-color: rgba(61, 214, 140, 0.35); }
+    .tier-max_pro { background: rgba(167, 139, 250, 0.12); color: #c4b5fd; border-color: rgba(167, 139, 250, 0.35); }
+    .tier-select { background: var(--bg); color: var(--text); border: 1px solid var(--border-strong); border-radius: 6px; padding: 3px 8px; font-size: 0.8125rem; font-family: var(--font); cursor: pointer; }
+    .btn-del { background: transparent; border: none; color: var(--red); cursor: pointer; font-size: 0.8125rem; padding: 4px 8px; border-radius: 6px; }
+    .btn-del:hover { background: rgba(248, 113, 113, 0.12); }
+    .admin-msg { font-size: 0.875rem; margin-top: 12px; min-height: 1.25em; color: var(--red); }
+    .admin-msg.ok { color: var(--green); }
+    .admin-empty { padding: 32px; text-align: center; color: var(--text-dim); }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      padding: 18px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .stat-card .stat-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .stat-card .stat-value { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+    .stat-card .stat-sub { font-size: 0.8125rem; color: var(--text-muted); margin-top: 4px; }
+    .stat-note { font-size: 0.8125rem; color: var(--text-dim); margin: 0 0 24px; line-height: 1.5; }
+    .manual-card {
+      padding: 18px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 28px;
+    }
+    .manual-card h2 { font-size: 0.9375rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+    .manual-card .manual-sub { font-size: 0.8125rem; color: var(--text-muted); margin: 0 0 14px; }
+    .manual-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 14px; margin-bottom: 12px; }
+    .manual-grid label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
+    .manual-grid input {
+      width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-strong);
+      background: var(--bg); color: var(--text); font-family: var(--font); font-size: 0.9375rem;
+    }
+    .manual-updated { font-size: 0.75rem; color: var(--text-dim); margin-left: 12px; }
+    .history-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+    .history-table th, .history-table td { padding: 6px 12px; text-align: right; border-bottom: 1px solid var(--border); }
+    .history-table th:first-child, .history-table td:first-child { text-align: left; }
+    .history-table th { color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .history-wrap { margin-bottom: 28px; max-height: 320px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a id="admin-auth-link" class="btn btn-ghost" href="/admin-signin.html">Admin sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main class="admin-page">
+    <h1>Install &amp; traction</h1>
+    <p class="lead">First-party signals from nginx logs + the users table. No in-app telemetry.</p>
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-label">Active installs (7d)</div><div class="stat-value" id="s-ai7">—</div><div class="stat-sub">unique Sparkle clients</div></div>
+      <div class="stat-card"><div class="stat-label">Active installs (30d)</div><div class="stat-value" id="s-ai30">—</div><div class="stat-sub">unique Sparkle clients</div></div>
+      <div class="stat-card"><div class="stat-label">DMG downloads (7d)</div><div class="stat-value" id="s-dmg7">—</div><div class="stat-sub">HTTP 200 only</div></div>
+      <div class="stat-card"><div class="stat-label">DMG downloads (30d)</div><div class="stat-value" id="s-dmg30">—</div><div class="stat-sub" id="s-dmg30-ver"></div></div>
+      <div class="stat-card"><div class="stat-label">CLI install runs (7d)</div><div class="stat-value" id="s-cli-inst7">—</div><div class="stat-sub">curl install-cli.sh</div></div>
+      <div class="stat-card"><div class="stat-label">CLI install runs (30d)</div><div class="stat-value" id="s-cli-inst30">—</div><div class="stat-sub">unique IP-day</div></div>
+      <div class="stat-card"><div class="stat-label">CLI tarball downloads (7d)</div><div class="stat-value" id="s-cli-tar7">—</div><div class="stat-sub">incl. updates</div></div>
+      <div class="stat-card"><div class="stat-label">CLI tarball downloads (30d)</div><div class="stat-value" id="s-cli-tar30">—</div><div class="stat-sub" id="s-cli-tar30-pa"></div></div>
+      <div class="stat-card"><div class="stat-label">Signups (7d)</div><div class="stat-value" id="s-su7">—</div><div class="stat-sub">new accounts</div></div>
+      <div class="stat-card"><div class="stat-label">Signups (30d)</div><div class="stat-value" id="s-su30">—</div><div class="stat-sub" id="s-su-total"></div></div>
+    </div>
+    <p class="stat-note">Install/download counts come from rolling nginx logs. A daily snapshot persists numbers past the log-retention window.</p>
+
+    <h2 style="font-size:0.9375rem;margin:24px 0 8px;letter-spacing:-0.01em;">CLI active installs (heartbeats)</h2>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Active CLI (7d)</div><div class="stat-value" id="s-cli-active7">—</div><div class="stat-sub">unique installs sending heartbeat</div></div>
+      <div class="stat-card"><div class="stat-label">Active CLI (30d)</div><div class="stat-value" id="s-cli-active30">—</div><div class="stat-sub" id="s-cli-active30-sub"></div></div>
+      <div class="stat-card"><div class="stat-label">Total CLI installs</div><div class="stat-value" id="s-cli-total">—</div><div class="stat-sub">all-time unique IDs</div></div>
+      <div class="stat-card" style="grid-column: span 3;"><div class="stat-label">Version distribution (30d)</div><div class="stat-value" id="s-cli-versions" style="font-size: 0.95rem; line-height: 1.5;">—</div><div class="stat-sub" id="s-cli-platforms"></div></div>
+    </div>
+
+    <div class="manual-card">
+      <h2>Numbers from App Store Connect + Stripe</h2>
+      <p class="manual-sub">Paste these weekly — they don't come from nginx logs and there's no API pull yet. <span id="manual-updated" class="manual-updated"></span></p>
+      <form id="manual-form">
+        <div class="manual-grid">
+          <div><label for="m-asi">App Store installs (total)</label><input id="m-asi" name="app_store_installs_total" inputmode="numeric" placeholder="e.g. 1420"></div>
+          <div><label for="m-asd">App Store active devices (30d)</label><input id="m-asd" name="app_store_active_devices" inputmode="numeric" placeholder="e.g. 830"></div>
+          <div><label for="m-mrr">Stripe MRR (USD)</label><input id="m-mrr" name="stripe_mrr_usd" inputmode="decimal" placeholder="e.g. 2450"></div>
+          <div><label for="m-psu">Stripe paying subscribers</label><input id="m-psu" name="stripe_paying_subscribers" inputmode="numeric" placeholder="e.g. 98"></div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding:8px 16px;">Save</button>
+      </form>
+    </div>
+
+    <div class="manual-card">
+      <h2>LingModel upstream + tier mapping</h2>
+      <p class="manual-sub">Which provider URL receives proxied traffic, and which upstream model id each tier resolves to. Empty visible field = fall back to env (deploy-time default). No restart required. <span id="lm-cfg-updated" class="manual-updated"></span></p>
+      <form id="lm-cfg-form">
+        <div class="manual-grid">
+          <div style="grid-column: 1 / -1;">
+            <label for="lm-url">Upstream `/anthropic/v1/messages` URL</label>
+            <input id="lm-url" name="LINGMODEL_ANTHROPIC_MESSAGES_URL" placeholder="env: —" autocomplete="off">
+            <div class="manual-sub" id="lm-url-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label for="lm-key">Upstream API key <span style="color:var(--text-dim);font-weight:400;">(masked)</span></label>
+            <div style="display:flex;gap:8px;align-items:flex-start;">
+              <input id="lm-key" name="LINGMODEL_UPSTREAM_API_KEY" placeholder="Type a new key to replace; leave blank to keep current" autocomplete="off" style="flex:1;" type="password">
+              <button type="button" id="lm-key-test" class="btn btn-ghost" style="padding:6px 12px;font-size:0.8125rem;white-space:nowrap;">Test</button>
+              <button type="button" id="lm-key-clear" class="btn btn-ghost" style="padding:6px 12px;font-size:0.8125rem;white-space:nowrap;">Clear DB key</button>
+            </div>
+            <div class="manual-sub" id="lm-key-src" style="margin-top:4px;font-size:0.75rem;"></div>
+            <div id="lm-key-test-result" style="margin-top:4px;font-size:0.8125rem;">Save first, then Test to confirm the live upstream (URL + key + default model) actually responds.</div>
+          </div>
+          <div>
+            <label for="lm-default">Standard tier (`auto` →)</label>
+            <input id="lm-default" name="LINGMODEL_DEFAULT_MODEL" placeholder="env: —" autocomplete="off">
+            <div class="manual-sub" id="lm-default-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lm-advanced">Advanced tier (`auto-advanced` →)</label>
+            <input id="lm-advanced" name="LINGMODEL_ADVANCED_MODEL" placeholder="env: —" autocomplete="off">
+            <div class="manual-sub" id="lm-advanced-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lm-free">Free-tier downgrade (forces all free traffic)</label>
+            <input id="lm-free" name="LINGMODEL_FREE_TIER_MODEL" placeholder="env: —" autocomplete="off">
+            <div class="manual-sub" id="lm-free-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lm-force">Force model (pins ALL tiers — emergency only)</label>
+            <input id="lm-force" name="LINGMODEL_FORCE_MODEL" placeholder="env: —" autocomplete="off">
+            <div class="manual-sub" id="lm-force-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label for="lm-allowed">Allow-list (comma-separated; rejects + rewrites unknown ids)</label>
+            <input id="lm-allowed" name="LINGMODEL_ALLOWED_MODELS" placeholder="env: —" autocomplete="off">
+            <div class="manual-sub" id="lm-allowed-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+
+          <div style="grid-column: 1 / -1;margin-top:8px;border-top:1px solid var(--border, #2a2a2a);padding-top:12px;">
+            <h3 style="font-size:0.875rem;margin:0 0 8px;color:var(--text-dim);font-weight:600;">Image generation upstream</h3>
+            <p class="manual-sub" style="margin:0 0 8px;">Used by <code>/api/images/generate</code>. Defaults to OpenAI's <code>images/generations</code>; key falls back to the <code>OPENAI_API_KEY</code> env var if no DB key is set.</p>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label for="lm-image-url">Image upstream URL</label>
+            <input id="lm-image-url" name="LINGMODEL_IMAGE_UPSTREAM_URL" placeholder="default: https://api.openai.com/v1/images/generations" autocomplete="off">
+            <div class="manual-sub" id="lm-image-url-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label for="lm-image-key">Image upstream API key <span style="color:var(--text-dim);font-weight:400;">(masked)</span></label>
+            <div style="display:flex;gap:8px;align-items:flex-start;">
+              <input id="lm-image-key" name="LINGMODEL_IMAGE_UPSTREAM_KEY" placeholder="Type a new key to replace; leave blank to keep current" autocomplete="off" style="flex:1;" type="password">
+              <button type="button" id="lm-image-key-test" class="btn btn-ghost" style="padding:6px 12px;font-size:0.8125rem;white-space:nowrap;">Test key</button>
+              <button type="button" id="lm-image-key-clear" class="btn btn-ghost" style="padding:6px 12px;font-size:0.8125rem;white-space:nowrap;">Clear DB key</button>
+            </div>
+            <div class="manual-sub" id="lm-image-key-src" style="margin-top:4px;font-size:0.75rem;"></div>
+            <div id="lm-image-key-test-result" class="manual-sub" style="margin-top:6px;font-size:0.75rem;"></div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding:8px 16px;">Save</button>
+      </form>
+    </div>
+
+    <div class="manual-card">
+      <h2>LingModel rate limits</h2>
+      <p class="manual-sub">Per-tier daily prompt cap, 5h-window prompt cap (Pro only), daily/monthly output token caps, and free-tier burst limit (req/min). Each field is a non-negative integer; <code>0</code> means "no cap" (operator escape hatch). Empty = clear DB override → fall back to env, then to the hard-coded default. Effective immediately, no restart required. <span id="lm-lim-updated" class="manual-updated"></span></p>
+      <form id="lm-lim-form">
+        <h3 style="font-size:0.875rem;margin:8px 0 8px;color:var(--text-dim);font-weight:600;">Free tier</h3>
+        <div class="manual-grid">
+          <div>
+            <label for="lim-free-daily-prompt">Daily prompts</label>
+            <input id="lim-free-daily-prompt" name="LINGMODEL_FREE_DAILY_PROMPT_LIMIT" type="number" min="0" placeholder="default: 25" autocomplete="off">
+            <div class="manual-sub" id="lim-free-daily-prompt-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-free-burst">Burst (req/min)</label>
+            <input id="lim-free-burst" name="LINGMODEL_FREE_BURST_PER_MIN" type="number" min="0" placeholder="default: 10" autocomplete="off">
+            <div class="manual-sub" id="lim-free-burst-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-free-daily-tokens">Daily output tokens</label>
+            <input id="lim-free-daily-tokens" name="LINGMODEL_FREE_DAILY_OUTPUT_TOKENS" type="number" min="0" placeholder="default: 0 (no cap)" autocomplete="off">
+            <div class="manual-sub" id="lim-free-daily-tokens-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-free-monthly-tokens">Monthly output tokens</label>
+            <input id="lim-free-monthly-tokens" name="LINGMODEL_FREE_MONTHLY_OUTPUT_TOKENS" type="number" min="0" placeholder="default: 0 (no cap)" autocomplete="off">
+            <div class="manual-sub" id="lim-free-monthly-tokens-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+        </div>
+
+        <h3 style="font-size:0.875rem;margin:16px 0 8px;color:var(--text-dim);font-weight:600;">Pro tier</h3>
+        <div class="manual-grid">
+          <div>
+            <label for="lim-pro-daily-prompt">Daily prompts</label>
+            <input id="lim-pro-daily-prompt" name="LINGMODEL_PRO_DAILY_PROMPT_LIMIT" type="number" min="0" placeholder="default: 500" autocomplete="off">
+            <div class="manual-sub" id="lim-pro-daily-prompt-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-pro-5h">5-hour window prompts</label>
+            <input id="lim-pro-5h" name="LINGMODEL_PRO_5H_PROMPT_LIMIT" type="number" min="0" placeholder="default: 30" autocomplete="off">
+            <div class="manual-sub" id="lim-pro-5h-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-pro-daily-tokens">Daily output tokens</label>
+            <input id="lim-pro-daily-tokens" name="LINGMODEL_PRO_DAILY_OUTPUT_TOKENS" type="number" min="0" placeholder="default: 600,000" autocomplete="off">
+            <div class="manual-sub" id="lim-pro-daily-tokens-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-pro-monthly-tokens">Monthly output tokens</label>
+            <input id="lim-pro-monthly-tokens" name="LINGMODEL_PRO_MONTHLY_OUTPUT_TOKENS" type="number" min="0" placeholder="default: 8,000,000" autocomplete="off">
+            <div class="manual-sub" id="lim-pro-monthly-tokens-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+        </div>
+
+        <h3 style="font-size:0.875rem;margin:16px 0 8px;color:var(--text-dim);font-weight:600;">Max Pro tier</h3>
+        <div class="manual-grid">
+          <div>
+            <label for="lim-mpro-daily-prompt">Daily prompts</label>
+            <input id="lim-mpro-daily-prompt" name="LINGMODEL_MAX_PRO_DAILY_PROMPT_LIMIT" type="number" min="0" placeholder="default: 0 (no cap)" autocomplete="off">
+            <div class="manual-sub" id="lim-mpro-daily-prompt-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-mpro-5h">5-hour window prompts</label>
+            <input id="lim-mpro-5h" name="LINGMODEL_MAX_PRO_5H_PROMPT_LIMIT" type="number" min="0" placeholder="default: 0 (no cap)" autocomplete="off">
+            <div class="manual-sub" id="lim-mpro-5h-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-mpro-daily-tokens">Daily output tokens</label>
+            <input id="lim-mpro-daily-tokens" name="LINGMODEL_MAX_PRO_DAILY_OUTPUT_TOKENS" type="number" min="0" placeholder="default: 0 (no cap)" autocomplete="off">
+            <div class="manual-sub" id="lim-mpro-daily-tokens-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-mpro-monthly-tokens">Monthly output tokens</label>
+            <input id="lim-mpro-monthly-tokens" name="LINGMODEL_MAX_PRO_MONTHLY_OUTPUT_TOKENS" type="number" min="0" placeholder="default: 0 (no cap)" autocomplete="off">
+            <div class="manual-sub" id="lim-mpro-monthly-tokens-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+        </div>
+
+        <h3 style="font-size:0.875rem;margin:16px 0 8px;color:var(--text-dim);font-weight:600;">Image generation (monthly caps)</h3>
+        <p class="manual-sub" style="margin:0 0 8px;">Per-tier monthly image count. <code>0</code> = no cap. Resets on the 1st (UTC). Defaults are intentionally low on free since gpt-image-1 runs $0.04–0.17 per image.</p>
+        <div class="manual-grid">
+          <div>
+            <label for="lim-image-free">Free tier monthly</label>
+            <input id="lim-image-free" name="IMAGE_QUOTA_FREE" type="number" min="0" placeholder="default: 20" autocomplete="off">
+            <div class="manual-sub" id="lim-image-free-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-image-pro">Pro tier monthly</label>
+            <input id="lim-image-pro" name="IMAGE_QUOTA_PRO" type="number" min="0" placeholder="default: 1,000" autocomplete="off">
+            <div class="manual-sub" id="lim-image-pro-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="lim-image-mpro">Max Pro tier monthly</label>
+            <input id="lim-image-mpro" name="IMAGE_QUOTA_MAX_PRO" type="number" min="0" placeholder="default: 10,000" autocomplete="off">
+            <div class="manual-sub" id="lim-image-mpro-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="padding:8px 16px;margin-top:12px;">Save limits</button>
+      </form>
+    </div>
+
+    <div class="manual-card">
+      <h2>Cloud backend limits (per tier)</h2>
+      <p class="manual-sub">Per-tier caps for LingCode Cloud backends: database tables, storage objects + max object size, auth users, cloud functions + per-invocation timeout, and managed emails/day. Each field is a non-negative integer. Empty = clear the DB override → fall back to the built-in default. Effective immediately, no restart required. <span id="cloud-lim-updated" class="manual-updated"></span></p>
+      <form id="cloud-lim-form">
+        <div id="cloud-lim-body"></div>
+        <button type="submit" class="btn btn-primary" style="padding:8px 16px;margin-top:12px;">Save cloud limits</button>
+        <button type="button" id="cloud-lim-reset" class="btn" style="padding:8px 16px;margin-top:12px;margin-left:8px;">Reset all to defaults</button>
+      </form>
+    </div>
+
+    <div class="manual-card">
+      <h2>Deep Agent (server-side Claude SDK)</h2>
+      <p class="manual-sub">Pro/Max-only agent surface in <code>/try</code>. Token caps are monthly per user; usage resets on the 1st. Kill switch overrides everything. <span id="da-cfg-updated" class="manual-updated"></span></p>
+      <form id="da-cfg-form">
+        <div class="manual-grid">
+          <div style="grid-column: 1 / -1;">
+            <label for="da-enabled">Kill switch</label>
+            <select id="da-enabled" name="deep_agent_enabled" style="width:auto;">
+              <option value="false">Disabled (provider hidden in /try)</option>
+              <option value="true">Enabled</option>
+              <option value="">— inherit env default —</option>
+            </select>
+            <div class="manual-sub" id="da-enabled-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="da-cap-pro">Monthly token cap — Pro</label>
+            <input id="da-cap-pro" name="deep_agent_monthly_token_cap_pro" placeholder="env: 2,000,000" inputmode="numeric" autocomplete="off">
+            <div class="manual-sub" id="da-cap-pro-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+          <div>
+            <label for="da-cap-max">Monthly token cap — Max Pro</label>
+            <input id="da-cap-max" name="deep_agent_monthly_token_cap_max_pro" placeholder="env: 8,000,000" inputmode="numeric" autocomplete="off">
+            <div class="manual-sub" id="da-cap-max-src" style="margin-top:4px;font-size:0.75rem;"></div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding:8px 16px;">Save</button>
+      </form>
+
+      <h3 style="font-size:0.875rem;margin:18px 0 8px;color:var(--text);">Current month usage &amp; grants</h3>
+      <div class="manual-sub" id="da-usage-meta" style="margin-bottom:8px;">—</div>
+      <div style="overflow:auto;max-height:360px;border:1px solid var(--border);border-radius:6px;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8125rem;">
+          <thead style="background:rgba(0,0,0,0.18);position:sticky;top:0;">
+            <tr>
+              <th style="text-align:left;padding:6px 10px;">Email</th>
+              <th style="text-align:left;padding:6px 10px;">Tier</th>
+              <th style="text-align:right;padding:6px 10px;">Tokens</th>
+              <th style="text-align:right;padding:6px 10px;">% of cap</th>
+              <th style="text-align:right;padding:6px 10px;">Bonus</th>
+              <th style="text-align:right;padding:6px 10px;">Turns</th>
+              <th style="text-align:center;padding:6px 10px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="da-usage-body"><tr><td colspan="7" style="padding:10px;color:var(--text-dim);">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="manual-card">
+      <h2>User feedback</h2>
+      <p class="manual-sub">Submitted from the in-app "Send Feedback" sheet. Latest 100. <span id="fb-counts" class="manual-updated"></span></p>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <button type="button" class="btn" data-fb-cat="" style="padding:4px 10px;font-size:0.75rem;">All</button>
+        <button type="button" class="btn" data-fb-cat="BUG" style="padding:4px 10px;font-size:0.75rem;">Bug</button>
+        <button type="button" class="btn" data-fb-cat="FEATURE" style="padding:4px 10px;font-size:0.75rem;">Feature</button>
+        <button type="button" class="btn" data-fb-cat="UX" style="padding:4px 10px;font-size:0.75rem;">UX</button>
+        <button type="button" class="btn" data-fb-cat="OTHER" style="padding:4px 10px;font-size:0.75rem;">Other</button>
+      </div>
+      <div style="overflow:auto;max-height:420px;border:1px solid var(--border);border-radius:6px;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8125rem;">
+          <thead style="background:rgba(0,0,0,0.18);position:sticky;top:0;">
+            <tr>
+              <th style="text-align:left;padding:6px 10px;">When</th>
+              <th style="text-align:left;padding:6px 10px;">Cat</th>
+              <th style="text-align:left;padding:6px 10px;">Summary</th>
+              <th style="text-align:left;padding:6px 10px;">Details</th>
+              <th style="text-align:left;padding:6px 10px;">Email</th>
+              <th style="text-align:left;padding:6px 10px;">App</th>
+              <th style="text-align:left;padding:6px 10px;">OS</th>
+              <th style="text-align:left;padding:6px 10px;">Shot</th>
+            </tr>
+          </thead>
+          <tbody id="fb-body"><tr><td colspan="8" style="padding:10px;color:var(--text-dim);">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2 style="font-size:0.9375rem;margin:0 0 8px;letter-spacing:-0.01em;">Last 30 days (per day)</h2>
+    <div class="history-wrap">
+      <table class="history-table" id="history-table">
+        <thead><tr><th>Date</th><th>Active installs</th><th>DMG downloads</th><th>Signups</th></tr></thead>
+        <tbody id="history-body"><tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:20px;">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <h1 style="margin-top:12px;">Model telemetry</h1>
+    <p class="lead">Which models developers pick per conversation, when they switch mid-task, and whether diffs land after the switch. Anonymous metadata only — no prompts, no code. Window:
+      <select id="mt-window" style="padding:4px 8px; border-radius:6px; border:1px solid var(--border-strong); background: var(--bg); color: var(--text); font-family: var(--font); font-size: 0.875rem;">
+        <option value="7">7 days</option>
+        <option value="30" selected>30 days</option>
+        <option value="90">90 days</option>
+      </select>
+    </p>
+
+    <div class="stats-grid" id="mt-overview-grid">
+      <div class="stat-card"><div class="stat-label">Reporting installs</div><div class="stat-value" id="mt-installs">—</div><div class="stat-sub">opted-in Macs</div></div>
+      <div class="stat-card"><div class="stat-label">Conversations</div><div class="stat-value" id="mt-convs">—</div><div class="stat-sub">distinct task IDs</div></div>
+      <div class="stat-card"><div class="stat-label">Responses</div><div class="stat-value" id="mt-responses">—</div><div class="stat-sub">model calls completed</div></div>
+      <div class="stat-card"><div class="stat-label">Diff accept rate</div><div class="stat-value" id="mt-accept">—</div><div class="stat-sub" id="mt-accept-sub">accepted / reverted</div></div>
+    </div>
+
+    <h2 style="font-size:0.9375rem;margin:0 0 8px;letter-spacing:-0.01em;">Per model</h2>
+    <div class="admin-table-wrap" style="margin-bottom:28px;">
+      <table class="admin-table" id="mt-per-model">
+        <thead><tr><th>Provider</th><th>Model</th><th>Responses</th><th>Diffs seen</th><th>Accept rate</th><th>Avg latency</th></tr></thead>
+        <tbody id="mt-per-model-body"><tr><td colspan="6" class="admin-empty">No telemetry yet.</td></tr></tbody>
+      </table>
+    </div>
+
+    <h2 style="font-size:0.9375rem;margin:0 0 8px;letter-spacing:-0.01em;">Mid-conversation switches</h2>
+    <p class="stat-note">For each <code>from → to</code> pair, the accept rate of diffs <em>before</em> the switch (on the old model within the same conversation) vs. <em>after</em> the switch. A positive delta means switching helped.</p>
+    <div class="admin-table-wrap">
+      <table class="admin-table" id="mt-switches">
+        <thead><tr><th>From</th><th>To</th><th>Switches</th><th>Pre accept</th><th>Post accept</th><th>Δ</th></tr></thead>
+        <tbody id="mt-switches-body"><tr><td colspan="6" class="admin-empty">No switches yet.</td></tr></tbody>
+      </table>
+    </div>
+
+    <h1 style="margin-top:12px;">Signups &amp; tiers</h1>
+    <p class="lead">Users appear here when registered via the API (Mac app / backend) or when you add them manually. Tiers: free, pro, team, enterprise.</p>
+
+    <div class="admin-toolbar">
+      <button type="button" class="btn btn-ghost" id="refresh">Refresh</button>
+      <button type="button" class="btn btn-ghost" id="logout">Sign out</button>
+    </div>
+
+    <form class="admin-add" id="addform">
+      <div>
+        <label for="newemail">Email</label>
+        <input type="email" id="newemail" required placeholder="user@example.com" autocomplete="off">
+      </div>
+      <div>
+        <label for="newtier">Tier</label>
+        <select id="newtier">
+          <option value="free">free</option>
+          <option value="pro">pro</option>
+          <option value="max_pro">max_pro</option>
+        </select>
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary" style="height: 40px;">Add user</button>
+      </div>
+    </form>
+    <p class="admin-msg" id="msg"></p>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table" id="tbl" aria-label="Users">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Tier</th>
+            <th>Source</th>
+            <th>Signed up</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="admin-empty" id="empty" hidden>No users yet. Add one above or connect the registration API.</div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var tbody = document.getElementById('tbody');
+      var empty = document.getElementById('empty');
+      var msg = document.getElementById('msg');
+
+      function api(path, opts) {
+        opts = opts || {};
+        opts.credentials = 'include';
+        opts.headers = opts.headers || {};
+        if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
+          opts.headers['Content-Type'] = 'application/json';
+          opts.body = JSON.stringify(opts.body);
+        }
+        return fetch(path, opts).then(function (r) {
+          if (r.status === 401) throw new Error('UNAUTH');
+          // Read as text first, then attempt JSON. A non-JSON body (e.g. an HTML
+          // 500 error page when the API throws) must not surface as the raw
+          // "The string did not match the expected pattern." SyntaxError.
+          return r.text().then(function (text) {
+            var j;
+            try {
+              j = text ? JSON.parse(text) : {};
+            } catch (e) {
+              throw new Error('Server error (HTTP ' + r.status + ')');
+            }
+            if (!r.ok) throw new Error(j.error || r.statusText || 'HTTP ' + r.status);
+            return j;
+          });
+        });
+      }
+
+      var TIER_OPTIONS = ['free', 'pro', 'max_pro'];
+
+      function tierSelectHTML(userId, current) {
+        var c = (current || 'free').toLowerCase();
+        var opts = TIER_OPTIONS.map(function (t) {
+          return '<option value="' + t + '"' + (t === c ? ' selected' : '') + '>' + t + '</option>';
+        }).join('');
+        // If a legacy row still has team/enterprise/etc., show it as a disabled option so the admin sees it before changing.
+        if (TIER_OPTIONS.indexOf(c) === -1) {
+          opts = '<option value="' + escapeAttr(c) + '" selected disabled>' + escapeHtml(c) + ' (legacy)</option>' + opts;
+        }
+        return '<select class="tier-select" data-tier-for="' + escapeAttr(userId) + '">' + opts + '</select>';
+      }
+
+      function load() {
+        msg.textContent = '';
+        msg.classList.remove('ok');
+        api('/api/admin/users')
+          .then(function (data) {
+            var users = data.users || [];
+            tbody.innerHTML = '';
+            if (users.length === 0) {
+              empty.hidden = false;
+              return;
+            }
+            empty.hidden = true;
+            users.forEach(function (u) {
+              var tr = document.createElement('tr');
+              var dt = u.created_at ? new Date(u.created_at).toLocaleString() : '';
+              tr.innerHTML =
+                '<td><strong>' + escapeHtml(u.email) + '</strong></td>' +
+                '<td>' + tierSelectHTML(u.id, u.tier) + '</td>' +
+                '<td>' + escapeHtml(u.source || '') + '</td>' +
+                '<td style="font-size:0.875rem;">' + escapeHtml(dt) + '</td>' +
+                '<td><button type="button" class="btn-del" data-id="' + escapeAttr(u.id) + '">Remove</button></td>';
+              tbody.appendChild(tr);
+            });
+            tbody.querySelectorAll('.tier-select').forEach(function (sel) {
+              var prev = sel.value;
+              sel.addEventListener('change', function () {
+                var id = sel.getAttribute('data-tier-for');
+                var next = sel.value;
+                api('/api/admin/users/' + encodeURIComponent(id), {
+                  method: 'PATCH', body: { tier: next }
+                })
+                  .then(function () {
+                    msg.textContent = 'Tier updated to ' + next + '.';
+                    msg.classList.add('ok');
+                    prev = next;
+                  })
+                  .catch(function (e) {
+                    sel.value = prev;
+                    msg.textContent = e.message || 'Could not update tier';
+                    msg.classList.remove('ok');
+                  });
+              });
+            });
+            tbody.querySelectorAll('.btn-del').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var id = btn.getAttribute('data-id');
+                if (!id || !confirm('Remove this user from the list?')) return;
+                api('/api/admin/users/' + encodeURIComponent(id), { method: 'DELETE' })
+                  .then(function () { load(); msg.textContent = 'Removed.'; msg.classList.add('ok'); })
+                  .catch(function (e) { msg.textContent = e.message; });
+              });
+            });
+          })
+          .catch(function (e) {
+            if (e.message === 'UNAUTH') {
+              window.location.href = '/admin-signin.html';
+              return;
+            }
+            msg.textContent = e.message || 'Failed to load';
+          });
+      }
+
+      function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+      function escapeAttr(s) {
+        return String(s).replace(/"/g, '&quot;');
+      }
+
+      function loadHistory() {
+        api('/api/admin/stats-history')
+          .then(function (d) {
+            var tb = document.getElementById('history-body');
+            var days = (d.days || []).slice().reverse(); // newest first
+            if (!days.length) {
+              tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:20px;">No data yet — first back-fill runs on server start.</td></tr>';
+              return;
+            }
+            tb.innerHTML = days.map(function (r) {
+              return '<tr><td>' + escapeHtml(r.date) + '</td><td>' +
+                (r.active_installs || 0) + '</td><td>' +
+                (r.dmg_downloads || 0) + '</td><td>' +
+                (r.signups || 0) + '</td></tr>';
+            }).join('');
+          })
+          .catch(function () { /* silent */ });
+      }
+
+      function loadManual() {
+        api('/api/admin/manual-stats')
+          .then(function (d) {
+            var latest = null;
+            ['app_store_installs_total','app_store_active_devices','stripe_mrr_usd','stripe_paying_subscribers'].forEach(function (k) {
+              if (d[k]) {
+                var input = document.querySelector('[name="' + k + '"]');
+                if (input) input.value = d[k].value;
+                if (!latest || d[k].updated_at > latest) latest = d[k].updated_at;
+              }
+            });
+            if (latest) {
+              document.getElementById('manual-updated').textContent = 'Last updated ' + new Date(latest).toLocaleDateString();
+            }
+          })
+          .catch(function () {});
+      }
+
+      document.getElementById('manual-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var payload = {};
+        Array.from(e.target.querySelectorAll('input')).forEach(function (i) {
+          if (i.value !== '') payload[i.name] = i.value.replace(/[,\s$]/g, '');
+        });
+        api('/api/admin/manual-stats', { method: 'POST', body: payload })
+          .then(function () {
+            msg.textContent = 'Saved.';
+            msg.classList.add('ok');
+            loadManual();
+          })
+          .catch(function (x) { msg.textContent = x.message || 'Could not save'; });
+      });
+
+      var LM_CFG_INPUTS = {
+        LINGMODEL_ANTHROPIC_MESSAGES_URL: { input: 'lm-url',      src: 'lm-url-src' },
+        LINGMODEL_UPSTREAM_API_KEY:       { input: 'lm-key',      src: 'lm-key-src',  secret: true },
+        LINGMODEL_DEFAULT_MODEL:          { input: 'lm-default',  src: 'lm-default-src' },
+        LINGMODEL_ADVANCED_MODEL:         { input: 'lm-advanced', src: 'lm-advanced-src' },
+        LINGMODEL_FREE_TIER_MODEL:        { input: 'lm-free',     src: 'lm-free-src' },
+        LINGMODEL_FORCE_MODEL:            { input: 'lm-force',    src: 'lm-force-src' },
+        LINGMODEL_ALLOWED_MODELS:         { input: 'lm-allowed',  src: 'lm-allowed-src' },
+        LINGMODEL_IMAGE_UPSTREAM_URL:     { input: 'lm-image-url',  src: 'lm-image-url-src' },
+        LINGMODEL_IMAGE_UPSTREAM_KEY:     { input: 'lm-image-key',  src: 'lm-image-key-src', secret: true },
+      };
+
+      function loadLingModelConfig() {
+        api('/api/admin/lingmodel-config')
+          .then(function (d) {
+            var latest = null;
+            Object.keys(LM_CFG_INPUTS).forEach(function (k) {
+              var row = d[k] || {};
+              var meta = LM_CFG_INPUTS[k];
+              var input = document.getElementById(meta.input);
+              var srcEl = document.getElementById(meta.src);
+              if (input) {
+                if (meta.secret) {
+                  // Never echo plaintext into the input — keep it empty so an empty
+                  // submit means "no change". The provenance line below shows the
+                  // masked current value.
+                  input.value = '';
+                  input.placeholder = row.env_value
+                    ? 'env: ' + row.env_value + ' (type to replace, blank to keep)'
+                    : 'Type a new key to replace, blank to keep';
+                } else {
+                  input.value = row.db_value || '';
+                  input.placeholder = row.env_value ? 'env: ' + row.env_value : 'env: —';
+                }
+              }
+              if (srcEl) {
+                if (row.source === 'db') {
+                  srcEl.textContent = 'DB override active → ' + (row.effective || '(empty)');
+                } else if (row.source === 'env') {
+                  srcEl.textContent = 'using env default → ' + (row.effective || '(empty)');
+                } else {
+                  srcEl.textContent = 'unset';
+                }
+              }
+              if (row.db_updated_at && (!latest || row.db_updated_at > latest)) latest = row.db_updated_at;
+            });
+            var u = document.getElementById('lm-cfg-updated');
+            if (u) u.textContent = latest ? 'DB last updated ' + new Date(latest).toLocaleString() : '';
+          })
+          .catch(function () {});
+      }
+
+      document.getElementById('lm-cfg-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var payload = {};
+        Object.keys(LM_CFG_INPUTS).forEach(function (k) {
+          var meta = LM_CFG_INPUTS[k];
+          var input = document.getElementById(meta.input);
+          if (!input) return;
+          var v = input.value;
+          // Secret fields: empty input = "no change" (skip). Visible fields:
+          // empty = clear DB row → fall back to env.
+          if (meta.secret && v === '') return;
+          payload[k] = v;
+        });
+        api('/api/admin/lingmodel-config', { method: 'PUT', body: payload })
+          .then(function () {
+            msg.textContent = 'LingModel config saved (effective immediately, no restart).';
+            msg.classList.add('ok');
+            loadLingModelConfig();
+          })
+          .catch(function (x) { msg.textContent = x.message || 'Could not save LingModel config'; });
+      });
+
+      document.getElementById('lm-key-clear').addEventListener('click', function () {
+        if (!confirm('Clear the DB-stored upstream API key? Will fall back to the env value (or unset).')) return;
+        api('/api/admin/lingmodel-config', {
+          method: 'PUT', body: { LINGMODEL_UPSTREAM_API_KEY: '' }
+        })
+          .then(function () {
+            msg.textContent = 'DB API key cleared.';
+            msg.classList.add('ok');
+            loadLingModelConfig();
+          })
+          .catch(function (x) { msg.textContent = x.message || 'Could not clear key'; });
+      });
+
+      document.getElementById('lm-image-key-clear').addEventListener('click', function () {
+        if (!confirm('Clear the DB-stored image upstream API key? Will fall back to OPENAI_API_KEY env (or unset).')) return;
+        api('/api/admin/lingmodel-config', {
+          method: 'PUT', body: { LINGMODEL_IMAGE_UPSTREAM_KEY: '' }
+        })
+          .then(function () {
+            msg.textContent = 'Image upstream key cleared.';
+            msg.classList.add('ok');
+            loadLingModelConfig();
+          })
+          .catch(function (x) { msg.textContent = x.message || 'Could not clear key'; });
+      });
+
+      // "Test key" — sends a single throwaway generation request to the
+      // upstream using the currently-stored key. Costs ~$0.04 per click at
+      // gpt-image-1 rates. Doesn't charge any user quota.
+      document.getElementById('lm-image-key-test').addEventListener('click', function () {
+        var resultEl = document.getElementById('lm-image-key-test-result');
+        var btn = document.getElementById('lm-image-key-test');
+        resultEl.textContent = 'Testing… (this calls the upstream, ~$0.04)';
+        resultEl.style.color = 'var(--text-dim)';
+        btn.disabled = true;
+        api('/api/admin/lingmodel-image-test', { method: 'POST', body: {} })
+          .then(function (r) {
+            if (r && r.ok) {
+              resultEl.textContent = '✓ Key works. Upstream returned a valid image.';
+              resultEl.style.color = 'var(--accent-green, #4ade80)';
+            } else {
+              resultEl.textContent = '✗ ' + (r && (r.message || ('status ' + r.status)) || 'Test failed.');
+              resultEl.style.color = 'var(--accent-red, #f87171)';
+            }
+          })
+          .catch(function (err) {
+            // api() rejects with { message, ... } on non-2xx — still surface the upstream detail.
+            var msgText = err && (err.message || err.error) || 'Test failed.';
+            resultEl.textContent = '✗ ' + msgText;
+            resultEl.style.color = 'var(--accent-red, #f87171)';
+          })
+          .finally(function () { btn.disabled = false; });
+      });
+
+      // "Test" the live inference upstream (effective URL + key + default model).
+      document.getElementById('lm-key-test').addEventListener('click', function () {
+        var resultEl = document.getElementById('lm-key-test-result');
+        var btn = document.getElementById('lm-key-test');
+        resultEl.textContent = 'Testing the live upstream… (sends a tiny request)';
+        resultEl.style.color = 'var(--text-dim)';
+        btn.disabled = true;
+        api('/api/admin/lingmodel-test', { method: 'POST', body: {} })
+          .then(function (r) {
+            if (r && r.ok) {
+              resultEl.textContent = '✓ Upstream OK — ' + r.model + ' responded in ' + r.latencyMs + 'ms (' + r.upstream + ')';
+              resultEl.style.color = 'var(--accent-green, #4ade80)';
+            } else {
+              resultEl.textContent = '✗ ' + (r && (r.message || ('status ' + r.status)) || 'Test failed.');
+              resultEl.style.color = 'var(--accent-red, #f87171)';
+            }
+          })
+          .catch(function (err) {
+            var msgText = err && (err.message || err.error) || 'Test failed.';
+            resultEl.textContent = '✗ ' + msgText;
+            resultEl.style.color = 'var(--accent-red, #f87171)';
+          })
+          .finally(function () { btn.disabled = false; });
+      });
+
+      // ----- LingModel rate-limits admin tile -----
+      // Numeric per-tier quotas. Each row shows the live effective value
+      // (DB override or env default) and the operator can clear it to fall
+      // back. Mirrors the model-routing tile above but for numbers.
+
+      var LM_LIMIT_INPUTS = {
+        LINGMODEL_FREE_DAILY_PROMPT_LIMIT:      { input: 'lim-free-daily-prompt',   src: 'lim-free-daily-prompt-src' },
+        LINGMODEL_FREE_BURST_PER_MIN:           { input: 'lim-free-burst',          src: 'lim-free-burst-src' },
+        LINGMODEL_FREE_DAILY_OUTPUT_TOKENS:     { input: 'lim-free-daily-tokens',   src: 'lim-free-daily-tokens-src' },
+        LINGMODEL_FREE_MONTHLY_OUTPUT_TOKENS:   { input: 'lim-free-monthly-tokens', src: 'lim-free-monthly-tokens-src' },
+        LINGMODEL_PRO_DAILY_PROMPT_LIMIT:       { input: 'lim-pro-daily-prompt',    src: 'lim-pro-daily-prompt-src' },
+        LINGMODEL_PRO_5H_PROMPT_LIMIT:          { input: 'lim-pro-5h',              src: 'lim-pro-5h-src' },
+        LINGMODEL_PRO_DAILY_OUTPUT_TOKENS:      { input: 'lim-pro-daily-tokens',    src: 'lim-pro-daily-tokens-src' },
+        LINGMODEL_PRO_MONTHLY_OUTPUT_TOKENS:    { input: 'lim-pro-monthly-tokens',  src: 'lim-pro-monthly-tokens-src' },
+        LINGMODEL_MAX_PRO_DAILY_PROMPT_LIMIT:   { input: 'lim-mpro-daily-prompt',   src: 'lim-mpro-daily-prompt-src' },
+        LINGMODEL_MAX_PRO_5H_PROMPT_LIMIT:      { input: 'lim-mpro-5h',             src: 'lim-mpro-5h-src' },
+        LINGMODEL_MAX_PRO_DAILY_OUTPUT_TOKENS:  { input: 'lim-mpro-daily-tokens',   src: 'lim-mpro-daily-tokens-src' },
+        LINGMODEL_MAX_PRO_MONTHLY_OUTPUT_TOKENS:{ input: 'lim-mpro-monthly-tokens', src: 'lim-mpro-monthly-tokens-src' },
+        IMAGE_QUOTA_FREE:                       { input: 'lim-image-free',          src: 'lim-image-free-src' },
+        IMAGE_QUOTA_PRO:                        { input: 'lim-image-pro',           src: 'lim-image-pro-src' },
+        IMAGE_QUOTA_MAX_PRO:                    { input: 'lim-image-mpro',          src: 'lim-image-mpro-src' },
+      };
+
+      // Map server response keys (camelCase from loadLingModelLimits) to env-style keys above.
+      var LIMIT_EFFECTIVE_FIELDS = {
+        LINGMODEL_FREE_DAILY_PROMPT_LIMIT:       'freeDailyPromptLimit',
+        LINGMODEL_FREE_BURST_PER_MIN:            'freeBurstPerMin',
+        LINGMODEL_FREE_DAILY_OUTPUT_TOKENS:      'freeDailyOutputTokens',
+        LINGMODEL_FREE_MONTHLY_OUTPUT_TOKENS:    'freeMonthlyOutputTokens',
+        LINGMODEL_PRO_DAILY_PROMPT_LIMIT:        'proDailyPromptLimit',
+        LINGMODEL_PRO_5H_PROMPT_LIMIT:           'pro5hPromptLimit',
+        LINGMODEL_PRO_DAILY_OUTPUT_TOKENS:       'proDailyOutputTokens',
+        LINGMODEL_PRO_MONTHLY_OUTPUT_TOKENS:     'proMonthlyOutputTokens',
+        LINGMODEL_MAX_PRO_DAILY_PROMPT_LIMIT:    'maxProDailyPromptLimit',
+        LINGMODEL_MAX_PRO_5H_PROMPT_LIMIT:       'maxPro5hPromptLimit',
+        LINGMODEL_MAX_PRO_DAILY_OUTPUT_TOKENS:   'maxProDailyOutputTokens',
+        LINGMODEL_MAX_PRO_MONTHLY_OUTPUT_TOKENS: 'maxProMonthlyOutputTokens',
+        IMAGE_QUOTA_FREE:                        'imageQuotaFree',
+        IMAGE_QUOTA_PRO:                         'imageQuotaPro',
+        IMAGE_QUOTA_MAX_PRO:                     'imageQuotaMaxPro',
+      };
+
+      function loadLingModelLimits() {
+        api('/api/admin/lingmodel-limits')
+          .then(function (d) {
+            var effective = d.effective || {};
+            var overrides = d.overrides || {};
+            var latest = null;
+            Object.keys(LM_LIMIT_INPUTS).forEach(function (k) {
+              var meta = LM_LIMIT_INPUTS[k];
+              var input = document.getElementById(meta.input);
+              var srcEl = document.getElementById(meta.src);
+              var fieldName = LIMIT_EFFECTIVE_FIELDS[k];
+              var liveValue = effective[fieldName];
+              var override = overrides[k];
+              if (input) {
+                // Show the DB override (if any) in the input so editing is
+                // unambiguous. Empty input = "use env / default."
+                input.value = override ? override.value : '';
+              }
+              if (srcEl) {
+                if (override) {
+                  srcEl.textContent = 'DB override → ' + liveValue.toLocaleString();
+                } else {
+                  srcEl.textContent = 'env/default → ' + Number(liveValue).toLocaleString();
+                }
+              }
+              if (override && override.updated_at && (!latest || override.updated_at > latest)) {
+                latest = override.updated_at;
+              }
+            });
+            var u = document.getElementById('lm-lim-updated');
+            if (u) u.textContent = latest ? 'DB last updated ' + new Date(latest).toLocaleString() : '';
+          })
+          .catch(function () {});
+      }
+
+      document.getElementById('lm-lim-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var payload = {};
+        Object.keys(LM_LIMIT_INPUTS).forEach(function (k) {
+          var meta = LM_LIMIT_INPUTS[k];
+          var input = document.getElementById(meta.input);
+          if (!input) return;
+          // Empty string = clear DB override (fall back to env). The server
+          // accepts null / '' for the clear case.
+          payload[k] = input.value === '' ? null : input.value;
+        });
+        api('/api/admin/lingmodel-limits', { method: 'PUT', body: payload })
+          .then(function () {
+            msg.textContent = 'LingModel limits saved (effective immediately, no restart).';
+            msg.classList.add('ok');
+            loadLingModelLimits();
+          })
+          .catch(function (x) { msg.textContent = x.message || 'Could not save LingModel limits'; });
+      });
+
+      // ----- Cloud backend limits tile (per-tier quotas) -----
+
+      var CLOUD_TIERS = [['free', 'Free tier'], ['pro', 'Pro tier'], ['max_pro', 'Max Pro tier']];
+      var CLOUD_FIELDS = [
+        ['maxTables', 'Tables'],
+        ['maxObjects', 'Storage objects'],
+        ['maxObjectBytes', 'Max object size (bytes)'],
+        ['maxUsers', 'Auth users'],
+        ['maxFunctions', 'Cloud functions'],
+        ['maxEmailsPerDay', 'Emails / day'],
+        ['maxFunctionMs', 'Function timeout (ms)'],
+      ];
+      function clKey(t, f) { return 'cloud_limit_' + t + '_' + f; }
+      function clId(t, f) { return 'cl-' + t + '-' + f; }
+
+      function buildCloudLimitsForm() {
+        var body = document.getElementById('cloud-lim-body');
+        if (!body || body.dataset.built) return;
+        var html = '';
+        CLOUD_TIERS.forEach(function (tt) {
+          html += '<h3 style="font-size:0.875rem;margin:16px 0 8px;color:var(--text-dim);font-weight:600;">' + tt[1] + '</h3><div class="manual-grid">';
+          CLOUD_FIELDS.forEach(function (ff) {
+            var id = clId(tt[0], ff[0]);
+            html += '<div><label for="' + id + '">' + ff[1] + '</label>'
+              + '<input id="' + id + '" name="' + clKey(tt[0], ff[0]) + '" type="number" min="0" autocomplete="off">'
+              + '<div class="manual-sub" id="' + id + '-src" style="margin-top:4px;font-size:0.75rem;"></div></div>';
+          });
+          html += '</div>';
+        });
+        body.innerHTML = html;
+        body.dataset.built = '1';
+      }
+
+      function loadCloudLimits() {
+        buildCloudLimitsForm();
+        api('/api/admin/cloud-limits')
+          .then(function (d) {
+            var eff = d.effective || {}, ov = d.overrides || {}, latest = null;
+            CLOUD_TIERS.forEach(function (tt) {
+              CLOUD_FIELDS.forEach(function (ff) {
+                var key = clKey(tt[0], ff[0]), id = clId(tt[0], ff[0]);
+                var input = document.getElementById(id);
+                var srcEl = document.getElementById(id + '-src');
+                var override = ov[key];
+                var live = (eff[tt[0]] || {})[ff[0]];
+                if (input) input.value = override ? override.value : '';
+                if (srcEl) srcEl.textContent = (override ? 'DB override → ' : 'default → ') + Number(live).toLocaleString();
+                if (override && override.updated_at && (!latest || override.updated_at > latest)) latest = override.updated_at;
+              });
+            });
+            var u = document.getElementById('cloud-lim-updated');
+            if (u) u.textContent = latest ? 'DB last updated ' + new Date(latest).toLocaleString() : '';
+          })
+          .catch(function () {});
+      }
+
+      document.getElementById('cloud-lim-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var payload = {};
+        CLOUD_TIERS.forEach(function (tt) {
+          CLOUD_FIELDS.forEach(function (ff) {
+            var input = document.getElementById(clId(tt[0], ff[0]));
+            if (input) payload[clKey(tt[0], ff[0])] = input.value === '' ? null : input.value;
+          });
+        });
+        api('/api/admin/cloud-limits', { method: 'PUT', body: payload })
+          .then(function () {
+            msg.textContent = 'Cloud limits saved (effective immediately, no restart).';
+            msg.classList.add('ok');
+            loadCloudLimits();
+          })
+          .catch(function (x) { msg.textContent = x.message || 'Could not save cloud limits'; });
+      });
+
+      document.getElementById('cloud-lim-reset').addEventListener('click', function () {
+        if (!window.confirm('Clear ALL cloud-limit overrides and revert every tier to the built-in defaults?')) return;
+        var payload = {};
+        CLOUD_TIERS.forEach(function (tt) {
+          CLOUD_FIELDS.forEach(function (ff) { payload[clKey(tt[0], ff[0])] = null; });
+        });
+        api('/api/admin/cloud-limits', { method: 'PUT', body: payload })
+          .then(function () {
+            msg.textContent = 'Cloud limits reset to defaults.';
+            msg.classList.add('ok');
+            loadCloudLimits();
+          })
+          .catch(function (x) { msg.textContent = x.message || 'Could not reset cloud limits'; });
+      });
+
+      // ----- Deep Agent admin tile -----
+
+      var DA_CFG_INPUTS = {
+        deep_agent_enabled:                   { input: 'da-enabled', src: 'da-enabled-src' },
+        deep_agent_monthly_token_cap_pro:     { input: 'da-cap-pro', src: 'da-cap-pro-src' },
+        deep_agent_monthly_token_cap_max_pro: { input: 'da-cap-max', src: 'da-cap-max-src' },
+      };
+
+      function fmtInt(n) {
+        var x = Number(n || 0);
+        return Number.isFinite(x) ? x.toLocaleString() : '—';
+      }
+
+      function loadDeepAgentConfig() {
+        api('/api/admin/deep-agent-config')
+          .then(function (d) {
+            var latest = null;
+            Object.keys(DA_CFG_INPUTS).forEach(function (k) {
+              var row = d[k] || {};
+              var meta = DA_CFG_INPUTS[k];
+              var input = document.getElementById(meta.input);
+              var srcEl = document.getElementById(meta.src);
+              if (input) {
+                // dropdown vs text
+                if (input.tagName === 'SELECT') {
+                  input.value = row.db_value != null ? row.db_value : '';
+                } else {
+                  input.value = row.db_value ? fmtInt(row.db_value) : '';
+                  input.placeholder = row.env_value ? 'env: ' + fmtInt(row.env_value) : (k.indexOf('cap_max_pro') >= 0 ? 'env: 8,000,000' : 'env: 2,000,000');
+                }
+              }
+              if (srcEl) {
+                if (row.source === 'db') {
+                  srcEl.textContent = 'DB override → ' + (row.effective || '(empty)');
+                } else if (row.source === 'env') {
+                  srcEl.textContent = 'using env default → ' + (row.effective || '(empty)');
+                } else {
+                  srcEl.textContent = 'unset — using built-in default';
+                }
+              }
+              if (row.db_updated_at && (!latest || row.db_updated_at > latest)) latest = row.db_updated_at;
+            });
+            var u = document.getElementById('da-cfg-updated');
+            if (u) u.textContent = latest ? 'DB last updated ' + new Date(latest).toLocaleString() : '';
+          })
+          .catch(function () { /* silent */ });
+      }
+
+      function loadDeepAgentUsage() {
+        api('/api/admin/deep-agent-usage')
+          .then(function (d) {
+            var body = document.getElementById('da-usage-body');
+            var meta = document.getElementById('da-usage-meta');
+            if (meta) {
+              meta.textContent = 'Month ' + (d.month || '?') +
+                ' · Pro cap ' + fmtInt(d.caps && d.caps.pro) +
+                ' · Max Pro cap ' + fmtInt(d.caps && d.caps.max_pro) +
+                ' · Bonus stacks on top per user';
+            }
+            if (!body) return;
+            if (!Array.isArray(d.rows) || d.rows.length === 0) {
+              body.innerHTML = '<tr><td colspan="7" style="padding:10px;color:var(--text-dim);">No Deep Agent usage this month yet.</td></tr>';
+              return;
+            }
+            var capByTier = (d.caps && d.caps) || {};
+            body.innerHTML = d.rows.map(function (r) {
+              var tier = (r.tier || 'free').toLowerCase();
+              var tierCap = tier === 'max_pro' ? Number(capByTier.max_pro || 0)
+                          : tier === 'pro'     ? Number(capByTier.pro || 0)
+                          : 0;
+              var bonus = Number(r.bonus_tokens || 0);
+              var effCap = tierCap + bonus;
+              var pct = effCap > 0 ? Math.min(100, Math.round(100 * Number(r.total_tokens || 0) / effCap)) : 0;
+              var pctColor = pct >= 95 ? 'color:#ef4444;font-weight:600;'
+                           : pct >= 75 ? 'color:#f59e0b;'
+                           : '';
+              var bonusCell = bonus > 0
+                ? '<span title="' + escapeHtml(r.bonus_reason || '') + '" style="color:#7c3aed;">+' + fmtInt(bonus) + '</span>'
+                : '<span style="color:var(--text-dim);">—</span>';
+              return '<tr data-user-id="' + escapeHtml(r.user_id) + '" data-email="' + escapeHtml(r.email) + '" data-bonus="' + bonus + '">' +
+                '<td style="padding:6px 10px;">' + escapeHtml(r.email || '?') + '</td>' +
+                '<td style="padding:6px 10px;">' + escapeHtml(tier) + '</td>' +
+                '<td style="padding:6px 10px;text-align:right;">' + fmtInt(r.total_tokens) + '</td>' +
+                '<td style="padding:6px 10px;text-align:right;' + pctColor + '">' + (effCap > 0 ? pct + '%' : '—') + '</td>' +
+                '<td style="padding:6px 10px;text-align:right;">' + bonusCell + '</td>' +
+                '<td style="padding:6px 10px;text-align:right;">' + fmtInt(r.turns) + '</td>' +
+                '<td style="padding:6px 10px;text-align:center;">' +
+                  '<button type="button" class="da-grant-btn btn btn-ghost" style="padding:2px 8px;font-size:0.75rem;">Grant</button>' +
+                '</td>' +
+                '</tr>';
+            }).join('');
+            body.querySelectorAll('.da-grant-btn').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var tr = btn.closest('tr');
+                if (!tr) return;
+                var userId = tr.getAttribute('data-user-id');
+                var email = tr.getAttribute('data-email');
+                var curBonus = Number(tr.getAttribute('data-bonus') || 0);
+                var input = prompt('Grant bonus tokens to ' + email + ' for this month.\nCurrent: ' + curBonus.toLocaleString() + '\nEnter new total (0 to clear, can use commas):', String(curBonus));
+                if (input == null) return;
+                var reason = curBonus !== Number(String(input).replace(/[,_]/g, ''))
+                  ? prompt('Reason (optional, max 500 chars):', '') || ''
+                  : '';
+                api('/api/admin/users/' + encodeURIComponent(userId) + '/deep-agent-grant', {
+                  method: 'POST',
+                  body: { bonus_tokens: input, reason: reason },
+                })
+                  .then(function () {
+                    msg.textContent = 'Grant updated for ' + email + '.';
+                    msg.classList.add('ok');
+                    loadDeepAgentUsage();
+                  })
+                  .catch(function (x) { msg.textContent = x.message || 'Could not update grant'; });
+              });
+            });
+          })
+          .catch(function () { /* silent */ });
+      }
+
+      var fbCategoryFilter = '';
+      // Single source of truth for the feedback fetch. Previously this function
+      // had two parallel api() calls (one to watch for timeout, one to render),
+      // which doubled the requests. Now it's a single api() call wrapped in
+      // Promise.race against a 20-second hard timeout. On any failure path —
+      // network error, 401, 5xx, or timeout — the table flips off "Loading…"
+      // and shows the actual error message + a Retry button instead of staring
+      // at a spinner forever.
+      function loadFeedback() {
+        var qs = fbCategoryFilter ? ('?category=' + encodeURIComponent(fbCategoryFilter)) : '';
+        var body = document.getElementById('fb-body');
+        if (body) {
+          body.innerHTML = '<tr><td colspan="8" style="padding:10px;color:var(--text-dim);">Loading…</td></tr>';
+        }
+
+        var timeoutPromise = new Promise(function (_resolve, reject) {
+          setTimeout(function () { reject(new Error('timeout after 20s')); }, 20000);
+        });
+
+        Promise.race([api('/api/admin/feedback' + qs), timeoutPromise])
+          .then(function (d) {
+            var body = document.getElementById('fb-body');
+            var counts = document.getElementById('fb-counts');
+            if (counts) {
+              var parts = (Array.isArray(d.counts) ? d.counts : []).map(function (c) {
+                return c.category + ' ' + c.n;
+              });
+              counts.textContent = parts.length ? '· ' + parts.join(' · ') : '';
+            }
+            if (!body) return;
+            if (!Array.isArray(d.rows) || d.rows.length === 0) {
+              body.innerHTML = '<tr><td colspan="8" style="padding:10px;color:var(--text-dim);">No feedback yet.</td></tr>';
+              return;
+            }
+            body.innerHTML = d.rows.map(function (r) {
+              var when = (r.created_at || '').replace('T', ' ').replace(/\.\d+Z$/, 'Z');
+              var emailCell = r.email
+                ? '<a href="mailto:' + escapeHtml(r.email) + '">' + escapeHtml(r.email) + '</a>'
+                : '<span style="color:var(--text-dim);">—</span>';
+              // Screenshot column — lazy-loaded thumbnail. The list response now
+              // only carries `has_screenshot` (a 0/1 flag); the actual image
+              // bytes are fetched from /api/admin/feedback/:id/screenshot.
+              // `loading="lazy"` means the browser doesn't issue the request
+              // until the row is scrolled into the viewport — important when
+              // there are many rows and each screenshot is hundreds of KB.
+              var shotCell;
+              if (r.has_screenshot && r.id) {
+                var shotURL = '/api/admin/feedback/' + encodeURIComponent(r.id) + '/screenshot';
+                shotCell =
+                  '<a href="' + shotURL + '" target="_blank" rel="noopener" title="Open full-size">' +
+                    '<img src="' + shotURL + '" loading="lazy" alt="screenshot" ' +
+                    'style="height:40px;max-width:80px;border:1px solid var(--border);border-radius:3px;cursor:zoom-in;display:block;" />' +
+                  '</a>';
+              } else {
+                shotCell = '<span style="color:var(--text-dim);">—</span>';
+              }
+              return '<tr>' +
+                '<td style="padding:6px 10px;white-space:nowrap;color:var(--text-dim);">' + escapeHtml(when) + '</td>' +
+                '<td style="padding:6px 10px;font-weight:600;">' + escapeHtml(r.category || '') + '</td>' +
+                '<td style="padding:6px 10px;">' + escapeHtml(r.summary || '') + '</td>' +
+                '<td style="padding:6px 10px;color:var(--text-dim);white-space:pre-wrap;">' + escapeHtml(r.details || '') + '</td>' +
+                '<td style="padding:6px 10px;">' + emailCell + '</td>' +
+                '<td style="padding:6px 10px;color:var(--text-dim);">' + escapeHtml(r.app_version || '') + '</td>' +
+                '<td style="padding:6px 10px;color:var(--text-dim);">' + escapeHtml(r.os_version || '') + '</td>' +
+                '<td style="padding:6px 10px;">' + shotCell + '</td>' +
+              '</tr>';
+            }).join('');
+          })
+          .catch(function (err) {
+            var body = document.getElementById('fb-body');
+            if (!body) return;
+            var msg = (err && err.message) ? err.message : 'unknown error';
+            body.innerHTML =
+              '<tr><td colspan="8" style="padding:10px;color:var(--text-dim);">' +
+                'Couldn\'t load feedback (' + escapeHtml(msg) + '). ' +
+                '<button id="fb-retry-btn" type="button" ' +
+                  'style="margin-left:6px;padding:2px 10px;font-size:11px;cursor:pointer;">Retry</button>' +
+              '</td></tr>';
+            var retry = document.getElementById('fb-retry-btn');
+            if (retry) retry.addEventListener('click', loadFeedback);
+          });
+      }
+      document.querySelectorAll('[data-fb-cat]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          fbCategoryFilter = btn.getAttribute('data-fb-cat') || '';
+          loadFeedback();
+        });
+      });
+
+      function escapeHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+
+      document.getElementById('da-cfg-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var payload = {};
+        Object.keys(DA_CFG_INPUTS).forEach(function (k) {
+          var meta = DA_CFG_INPUTS[k];
+          var input = document.getElementById(meta.input);
+          if (!input) return;
+          payload[k] = input.value;
+        });
+        api('/api/admin/deep-agent-config', { method: 'PUT', body: payload })
+          .then(function () {
+            msg.textContent = 'Deep Agent config saved (effective immediately, no restart).';
+            msg.classList.add('ok');
+            loadDeepAgentConfig();
+            loadDeepAgentUsage();
+          })
+          .catch(function (x) { msg.textContent = x.message || 'Could not save Deep Agent config'; });
+      });
+
+      function loadCLIInstalls() {
+        api('/api/admin/cli-installs')
+          .then(function (s) {
+            document.getElementById('s-cli-active7').textContent  = (s.active_7d || 0).toLocaleString();
+            document.getElementById('s-cli-active30').textContent = (s.active_30d || 0).toLocaleString();
+            document.getElementById('s-cli-total').textContent    = (s.total || 0).toLocaleString();
+            document.getElementById('s-cli-active30-sub').textContent = (s.total ? ((s.active_30d / s.total) * 100).toFixed(0) + '% of total' : '');
+            var vers = (s.by_version_30d || []).map(function (r) {
+              return (r.version || '?') + ': ' + r.n;
+            });
+            document.getElementById('s-cli-versions').textContent = vers.length ? vers.join(' · ') : 'no data yet';
+            var plats = (s.by_platform_30d || []).map(function (r) {
+              return (r.os || '?') + '-' + (r.arch || '?') + ': ' + r.n;
+            });
+            document.getElementById('s-cli-platforms').textContent = plats.length ? plats.join(' · ') : '';
+          })
+          .catch(function () { /* leave dashes */ });
+      }
+
+      function loadStats() {
+        api('/api/admin/install-stats')
+          .then(function (s) {
+            document.getElementById('s-ai7').textContent  = s.active_installs_7d.toLocaleString();
+            document.getElementById('s-ai30').textContent = s.active_installs_30d.toLocaleString();
+            document.getElementById('s-dmg7').textContent  = s.dmg_downloads_7d.toLocaleString();
+            document.getElementById('s-dmg30').textContent = s.dmg_downloads_30d.toLocaleString();
+            var versions = Object.keys(s.dmg_by_version_30d || {}).sort();
+            document.getElementById('s-dmg30-ver').textContent = versions.length
+              ? versions.map(function (v) { return v.replace(/^.*LingCode-v/, 'v').replace(/-Installer\.dmg$/, '') + ': ' + s.dmg_by_version_30d[v]; }).join(' · ')
+              : 'HTTP 200 only';
+            document.getElementById('s-cli-inst7').textContent  = (s.cli_install_runs_7d || 0).toLocaleString();
+            document.getElementById('s-cli-inst30').textContent = (s.cli_install_runs_30d || 0).toLocaleString();
+            document.getElementById('s-cli-tar7').textContent   = (s.cli_tarball_downloads_7d || 0).toLocaleString();
+            document.getElementById('s-cli-tar30').textContent  = (s.cli_tarball_downloads_30d || 0).toLocaleString();
+            var pa = s.cli_by_platform_30d || {};
+            var paKeys = Object.keys(pa).sort();
+            document.getElementById('s-cli-tar30-pa').textContent = paKeys.length
+              ? paKeys.map(function (k) { return k + ': ' + pa[k]; }).join(' · ')
+              : '';
+            document.getElementById('s-su7').textContent  = s.signups_7d.toLocaleString();
+            document.getElementById('s-su30').textContent = s.signups_30d.toLocaleString();
+            document.getElementById('s-su-total').textContent = s.signups_total.toLocaleString() + ' total';
+          })
+          .catch(function () { /* silently leave dashes; user list still loads */ });
+      }
+
+      function fmtPct(n, d) {
+        if (!d) return '—';
+        return (100 * n / d).toFixed(0) + '%';
+      }
+
+      function loadModelTelemetry() {
+        var days = parseInt(document.getElementById('mt-window').value || '30', 10) || 30;
+        api('/api/admin/model-telemetry/overview?days=' + days)
+          .then(function (d) {
+            var t = d.totals || {};
+            document.getElementById('mt-installs').textContent = (t.unique_installs || 0).toLocaleString();
+            document.getElementById('mt-convs').textContent = (t.unique_conversations || 0).toLocaleString();
+            document.getElementById('mt-responses').textContent = (t.responses || 0).toLocaleString();
+            var acc = t.diffs_accepted || 0;
+            var rev = t.diffs_reverted || 0;
+            document.getElementById('mt-accept').textContent = fmtPct(acc, acc + rev);
+            document.getElementById('mt-accept-sub').textContent = acc.toLocaleString() + ' accepted · ' + rev.toLocaleString() + ' reverted';
+
+            var rows = d.per_model || [];
+            var body = document.getElementById('mt-per-model-body');
+            if (!rows.length) {
+              body.innerHTML = '<tr><td colspan="6" class="admin-empty">No telemetry yet.</td></tr>';
+            } else {
+              body.innerHTML = rows.map(function (r) {
+                var rate = fmtPct(r.diffs_accepted || 0, r.diff_outcomes || 0);
+                var lat = r.avg_latency_ms ? Math.round(r.avg_latency_ms).toLocaleString() + ' ms' : '—';
+                return '<tr>' +
+                  '<td><strong>' + escapeHtml(r.provider) + '</strong></td>' +
+                  '<td>' + escapeHtml(r.model) + '</td>' +
+                  '<td>' + (r.responses || 0).toLocaleString() + '</td>' +
+                  '<td>' + (r.diff_outcomes || 0).toLocaleString() + '</td>' +
+                  '<td>' + rate + '</td>' +
+                  '<td>' + lat + '</td>' +
+                '</tr>';
+              }).join('');
+            }
+          })
+          .catch(function () { /* silent — leave em-dashes */ });
+
+        api('/api/admin/model-telemetry/switches?days=' + days)
+          .then(function (d) {
+            var pairs = d.pairs || [];
+            var body = document.getElementById('mt-switches-body');
+            if (!pairs.length) {
+              body.innerHTML = '<tr><td colspan="6" class="admin-empty">No switches yet.</td></tr>';
+              return;
+            }
+            body.innerHTML = pairs.map(function (p) {
+              var pre = fmtPct(p.pre_accepted, p.pre_diffs);
+              var post = fmtPct(p.post_accepted, p.post_diffs);
+              var delta = '—';
+              if (p.pre_diffs && p.post_diffs) {
+                var dv = (p.post_accepted / p.post_diffs) - (p.pre_accepted / p.pre_diffs);
+                var sign = dv >= 0 ? '+' : '';
+                delta = sign + (100 * dv).toFixed(0) + '%';
+              }
+              return '<tr>' +
+                '<td><strong>' + escapeHtml(p.from_provider) + '</strong> · ' + escapeHtml(p.from_model) + '</td>' +
+                '<td><strong>' + escapeHtml(p.to_provider) + '</strong> · ' + escapeHtml(p.to_model) + '</td>' +
+                '<td>' + (p.switches || 0).toLocaleString() + '</td>' +
+                '<td>' + pre + ' <span style="color:var(--text-dim);font-size:0.8125rem;">(' + (p.pre_diffs || 0) + ')</span></td>' +
+                '<td>' + post + ' <span style="color:var(--text-dim);font-size:0.8125rem;">(' + (p.post_diffs || 0) + ')</span></td>' +
+                '<td>' + delta + '</td>' +
+              '</tr>';
+            }).join('');
+          })
+          .catch(function () { /* silent */ });
+      }
+
+      // Defensive helper — keeps a missing element from halting the IIFE.
+      // Previously a removed `#logout` button caused getElementById(...).addEventListener
+      // to throw, which prevented every loader below from running (empty Install &
+      // traction cards being the visible symptom).
+      function on(id, ev, fn) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener(ev, fn);
+      }
+
+      on('mt-window', 'change', loadModelTelemetry);
+
+      on('refresh', 'click', function () {
+        load(); loadStats(); loadHistory(); loadManual(); loadLingModelConfig(); loadLingModelLimits(); loadCloudLimits(); loadDeepAgentConfig(); loadDeepAgentUsage(); loadModelTelemetry(); loadCLIInstalls(); loadFeedback();
+      });
+      on('logout', 'click', function () {
+        api('/api/admin/logout', { method: 'POST' }).then(function () {
+          window.location.href = '/admin-signin.html';
+        });
+      });
+
+      document.getElementById('addform').addEventListener('submit', function (e) {
+        e.preventDefault();
+        msg.textContent = '';
+        msg.classList.remove('ok');
+        var email = document.getElementById('newemail').value.trim();
+        var tier = document.getElementById('newtier').value;
+        api('/api/admin/users', { method: 'POST', body: { email: email, tier: tier } })
+          .then(function () {
+            document.getElementById('newemail').value = '';
+            msg.textContent = 'User added.';
+            msg.classList.add('ok');
+            load();
+          })
+          .catch(function (x) {
+            msg.textContent = x.message || 'Could not add user';
+          });
+      });
+
+      api('/api/admin/session')
+        .then(function (s) {
+          if (!s.ok) {
+            window.location.href = '/admin-signin.html';
+            return;
+          }
+          // Once we know the session is good, flip the nav CTA from
+          // "Admin sign in" to "Sign out" so the page reflects reality.
+          var authLink = document.getElementById('admin-auth-link');
+          if (authLink) {
+            authLink.textContent = 'Sign out';
+            authLink.setAttribute('href', '#');
+            authLink.addEventListener('click', function (ev) {
+              ev.preventDefault();
+              api('/api/admin/logout', { method: 'POST' })
+                .then(function () { window.location.href = '/admin-signin.html'; })
+                .catch(function () { window.location.href = '/admin-signin.html'; });
+            });
+          }
+          load();
+          loadStats();
+          loadHistory();
+          loadManual();
+          loadLingModelConfig();
+          loadLingModelLimits();
+          loadCloudLimits();
+          loadDeepAgentConfig();
+          loadDeepAgentUsage();
+          loadModelTelemetry();
+          loadCLIInstalls();
+          loadFeedback();
+        })
+        .catch(function () {
+          window.location.href = '/admin-signin.html';
+        });
+    })();
+  </script>
+  <section style="max-width:1000px;margin:32px auto 0;padding:0 16px">
+    <h2 style="font-size:0.9375rem;margin:24px 0 8px;letter-spacing:-0.01em;">Marketer referral links</h2>
+    <p class="stat-note" style="margin:0 0 10px">Mint a link per marketer. <b>Download link</b> (/r/&lt;code&gt;) goes straight to the DMG; <b>Site link</b> (/r/&lt;code&gt;?site) lands on the homepage first. Both log the click and set the same attribution cookie. They check their own Clicks / Signups / Paid at their dashboard link (token-gated).</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <input id="ref-label" placeholder="Marketer name (e.g. Jane / YT channel)" style="flex:1;min-width:200px;padding:8px 10px;border:1px solid #d8d8e2;border-radius:8px;font-family:inherit"/>
+      <input id="ref-code" placeholder="code (optional, e.g. jane)" style="width:200px;padding:8px 10px;border:1px solid #d8d8e2;border-radius:8px;font-family:inherit"/>
+      <button id="ref-create" class="btn btn-primary" type="button">Create link</button>
+    </div>
+    <p id="ref-msg" style="font-size:.82rem;margin:0 0 10px;min-height:1em;color:#6b6c7a"></p>
+    <div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:.85rem">
+      <thead><tr style="text-align:left;color:#6b6c7a"><th style="padding:6px 8px">Code</th><th>Clicks</th><th>Signups</th><th>Paid</th><th>Links</th><th></th></tr></thead>
+      <tbody id="ref-tbody"></tbody>
+    </table></div>
+  </section>
+  <script>
+    (function () {
+      var origin = location.origin;
+      function rapi(path, opts) {
+        opts = opts || {}; opts.credentials = 'include'; opts.headers = opts.headers || {};
+        if (opts.body && typeof opts.body === 'object') { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(opts.body); }
+        return fetch(path, opts).then(function (r) { return r.text().then(function (t) { var j = {}; try { j = t ? JSON.parse(t) : {}; } catch (e) {} if (!r.ok || j.ok === false) throw new Error((j && (j.message || j.error)) || ('HTTP ' + r.status)); return j.data; }); });
+      }
+      function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+      var msg = document.getElementById('ref-msg');
+      function dashLink(d) { return origin + '/partner.html?code=' + encodeURIComponent(d.code) + '&token=' + encodeURIComponent(d.token); }
+      function shareLink(d) { return origin + '/r/' + d.code; }
+      function siteLink(d) { return origin + '/r/' + d.code + '?site'; }
+      function copyBtn(text, label) {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+        b.style.cssText = 'border:1px solid #d8d8e2;background:#fff;border-radius:6px;font-size:.72rem;padding:3px 7px;cursor:pointer;margin-right:4px';
+        b.onclick = function () { navigator.clipboard.writeText(text); var o = b.textContent; b.textContent = '✓'; setTimeout(function () { b.textContent = o; }, 1200); };
+        return b;
+      }
+      function render(rows) {
+        var tb = document.getElementById('ref-tbody'); tb.innerHTML = '';
+        if (!rows || !rows.length) { tb.innerHTML = '<tr><td colspan="6" style="padding:10px 8px;color:#6b6c7a">No marketer links yet.</td></tr>'; return; }
+        rows.forEach(function (d) {
+          var tr = document.createElement('tr'); tr.style.borderTop = '1px solid #eee';
+          tr.innerHTML = '<td style="padding:7px 8px"><code>' + esc(d.code) + '</code>' + (d.label ? '<br><span style="color:#6b6c7a;font-size:.78rem">' + esc(d.label) + '</span>' : '') + '</td>'
+            + '<td>' + (d.clicks || 0) + '</td><td>' + (d.signups || 0) + '</td><td style="color:#00b073;font-weight:600">' + (d.paid || 0) + '</td>';
+          var links = document.createElement('td'); links.style.padding = '7px 8px';
+          links.append(copyBtn(shareLink(d), 'Download link'), copyBtn(siteLink(d), 'Site link'), copyBtn(dashLink(d), 'Dashboard link'));
+          tr.append(links);
+          var act = document.createElement('td');
+          var del = document.createElement('button'); del.type = 'button'; del.textContent = 'Del';
+          del.style.cssText = 'border:1px solid #f3c9ca;background:#fff;color:#b42318;border-radius:6px;font-size:.72rem;padding:3px 7px;cursor:pointer';
+          del.onclick = function () { if (!confirm('Delete ' + d.code + '? Its stats are lost.')) return; rapi('/api/admin/referrals/' + encodeURIComponent(d.code), { method: 'DELETE' }).then(load).catch(function (e) { msg.textContent = e.message; }); };
+          act.append(del); tr.append(act); tb.append(tr);
+        });
+      }
+      function load() { rapi('/api/admin/referrals').then(render).catch(function (e) { if (e.message !== 'UNAUTH') msg.textContent = e.message; }); }
+      document.getElementById('ref-create').onclick = function () {
+        var label = document.getElementById('ref-label').value.trim();
+        var code = document.getElementById('ref-code').value.trim();
+        if (!label && !code) { msg.textContent = 'Enter a marketer name or a code.'; return; }
+        rapi('/api/admin/referrals', { method: 'POST', body: { label: label, code: code } }).then(function (d) {
+          msg.textContent = 'Created ' + d.code + ' — share: ' + shareLink(d);
+          document.getElementById('ref-label').value = ''; document.getElementById('ref-code').value = ''; load();
+        }).catch(function (e) { msg.textContent = e.message; });
+      };
+      load();
+    })();
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

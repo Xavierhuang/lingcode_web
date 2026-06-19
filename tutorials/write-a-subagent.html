@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I write a subagent for LingCode? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="A subagent is a specialist the main agent can delegate to. Write one when a task has a clean boundary, a different system prompt, or wants its own context window.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/write-a-subagent.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/write-a-subagent.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/write-a-subagent.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/write-a-subagent.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Write a subagent",
+  "description": "A subagent is a specialist the main agent can delegate to — its own system prompt, its own tools, its own context window. Use one when a task has a clean boundary, when its working assumptions differ from the conversation around it, or when you simply don't want it polluting the",
+  "url": "https://lingcode.dev/tutorials/write-a-subagent.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/write-a-subagent.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Write a subagent"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Write a subagent",
+      "item": "https://lingcode.dev/tutorials/write-a-subagent.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/write-a-subagent.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Write a subagent</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I write a subagent for LingCode?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Create a markdown file in <code>.claude/agents/&lt;your-agent&gt;.md</code> with frontmatter (<code>name</code>, <code>description</code>, optional <code>tools</code>) and a system prompt below. The main agent can delegate to it via the <code>Agent</code> tool — useful for tasks with isolated context.</p>
+      <p class="intro">A subagent is a specialist the main agent can delegate to — its own system prompt, its own tools, its own context window. Use one when a task has a clean boundary, when its working assumptions differ from the conversation around it, or when you simply don't want it polluting the main context.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The default mode of working with an agent is one long, growing conversation. Every prompt, every tool result, every file the agent reads — all of it accumulates in the same context window. That works fine for short tasks. It works badly for long ones, because two failure modes show up together. The first is dilution: the longer the chat, the more competing instructions the model is trying to balance, and the more important things start to drift. The second is leakage: a research task that should have been a read-only exploration ends up with the agent suggesting code changes it has no business making yet, because the main context is in "write" mode.</p>
+      <p>A subagent fixes both. It's a fresh agent invocation with its own system prompt and its own tool set, called by the main agent like a tool. The subagent does its job in isolation, returns a structured result, and disappears — its 20,000 tokens of intermediate scratch work never enter the parent conversation. Only the summary comes back.</p>
+      <p>The art of subagents is figuring out which tasks deserve one. The wrong answer is "everything" — delegating trivial work to subagents adds latency and confusion. The right answer is "tasks with a clean boundary and a different mental mode." Code review. Test generation. Codebase exploration. Anything that takes meaningful work but produces a compact result.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The subagent file format (markdown with frontmatter)</li>
+        <li>How a description guides delegation</li>
+        <li>Restricting which tools a subagent can use</li>
+        <li>When to write a subagent vs. a skill vs. a slash command</li>
+        <li>Common patterns: code review, test writer, doc summarizer</li>
+      </ul>
+
+      <h2>Step 1: The file format</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>One markdown file per subagent</h3>
+          <p>Subagents live in <code>.claude/agents/&lt;name&gt;.md</code> (project-local) or <code>~/.claude/agents/&lt;name&gt;.md</code> (user-wide). Each file is markdown with YAML frontmatter:</p>
+          <pre><code>---
+name: code-reviewer
+description: Use this for in-depth code review of staged or unstaged changes. Invoke when the user says "review this," "look over this diff," or before they push.
+tools: [Read, Grep, Glob, Bash]
+---
+
+# Code reviewer
+
+You are a senior code reviewer. Read the staged diff with `git diff --staged`,
+and the unstaged diff with `git diff`. For each meaningful change:
+
+- Note what was changed and whether it accomplishes the stated goal.
+- Flag bugs, race conditions, and security issues.
+- Flag missing tests for non-trivial logic.
+- Flag style violations only if egregious.
+
+Do NOT propose fixes — that's the main agent's job. Report findings only.
+</code></pre>
+          <p>The frontmatter has three meaningful fields: <strong>name</strong> (used to invoke), <strong>description</strong> (used for routing), and optionally <strong>tools</strong> (a restricted tool whitelist).</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Description guides delegation</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>The description is the routing logic</h3>
+          <p>When the main agent decides whether to delegate, it reads available subagents' descriptions and picks the one whose description matches the situation. A vague description ("helps with code") gets ignored; a specific one ("Use this for code review of staged or unstaged changes") gets picked.</p>
+          <p>Write descriptions in the form "<em>Use this for [task]</em>" or "<em>Invoke when the user [says/wants/needs] [thing]</em>." Imagine future-you reading the description cold — would you know when to dispatch?</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>The description is read by the model, not by humans.</strong> Be specific about triggers, not flowery about capabilities. "Use this when the user asks for tests" beats "An expert at writing comprehensive test suites with deep knowledge of testing patterns."
+      </div>
+
+      <h2>Step 3: Restrict tools</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>A subagent should only do its job</h3>
+          <p>By default a subagent can use any tool the main agent can. Restrict it with the <code>tools</code> field in the frontmatter to the minimum set needed for its purpose:</p>
+          <ul>
+            <li>A <strong>code reviewer</strong> needs <code>Read</code>, <code>Grep</code>, <code>Glob</code>, and maybe <code>Bash</code> for git commands — and should NOT have <code>Edit</code>, <code>Write</code>, or anything destructive. It reviews; it doesn't fix.</li>
+            <li>A <strong>research subagent</strong> needs reading tools and probably <code>WebFetch</code>. It explicitly should NOT have <code>Edit</code> or <code>Write</code>.</li>
+            <li>A <strong>test writer</strong> needs <code>Read</code>, <code>Grep</code>, <code>Edit</code>, <code>Write</code>, <code>Bash</code>. The full edit set, but scoped to test files by the system prompt.</li>
+          </ul>
+          <p>The tool list is policy, not preference. A subagent that lacks <code>Edit</code> literally cannot edit, regardless of what the model "wants" to do. This is exactly what you want for a code reviewer: even if the model is tempted to "just fix this small thing," it can't.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Invocation — implicit and explicit</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Two ways the main agent delegates</h3>
+          <p>Subagents are invoked two ways:</p>
+          <ul>
+            <li><strong>Implicit:</strong> the main agent reads the situation, sees a matching subagent description, and delegates without being told. This is the common case for well-described subagents. You see it happen as a tool call named "Agent" with the subagent's name in the parameters.</li>
+            <li><strong>Explicit:</strong> you say "use the code-reviewer subagent on this diff." The main agent dispatches as instructed. Useful when you know the right subagent and don't want to leave routing to chance.</li>
+          </ul>
+          <p>Either way, the subagent gets a fresh context window, does its work, returns a summary, and disappears. The main conversation continues with just the summary in scope.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: When a subagent is the wrong tool</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Three smells</h3>
+          <ul>
+            <li><strong>The task is conversational.</strong> Back-and-forth dialog doesn't fit subagents — they return one summary, not a chat. If you need iteration, the main agent should handle it.</li>
+            <li><strong>The result has to be all the work product.</strong> Subagents return summaries; their detailed work is gone. If you wanted to see the agent's actual diff exploration, a subagent loses it. Run in the main context.</li>
+            <li><strong>It's a one-line operation.</strong> "Format this file" doesn't need a subagent. The overhead of spinning one up is larger than the task. Reserve subagents for work that justifies a fresh context window.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 6: Subagent vs. skill vs. slash command</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Three customization tools, three different jobs</h3>
+          <ul>
+            <li><strong><a href="/tutorials/write-a-custom-skill.html">Skill</a></strong> — teaches the agent <em>how</em> to do something. The main agent reads the skill and applies it within the current context. No isolation.</li>
+            <li><strong>Subagent</strong> — delegates a task to a fresh agent with its own context. Isolation. Returns only a summary.</li>
+            <li><strong>Slash command</strong> — a user-typed shortcut that triggers a known prompt template. Convenience, not isolation.</li>
+          </ul>
+          <p>Rule of thumb: if you want isolation, write a subagent. If you want different behavior in the same context, write a skill. If you want a fast trigger, write a slash command.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Subagents see the main conversation only in summary form.</strong> When the main agent dispatches, it passes a brief — "review the staged diff and report findings." The subagent doesn't see the full chat history. Write subagent prompts that work from cold context.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/write-a-custom-skill.html" class="tutorial-next-card">
+            <h3>Write a custom skill</h3>
+            <p>For when you want to influence the agent's behavior without delegating</p>
+          </a>
+          <a href="/tutorials/add-custom-hooks.html" class="tutorial-next-card">
+            <h3>Add custom hooks</h3>
+            <p>The hard policy layer; subagents are soft delegation, hooks are sovereign</p>
+          </a>
+          <a href="/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>Install and configure plugins</h3>
+            <p>The right way to share subagents with a team</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLI token — LingCode</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <style>
+    .cli-hero { padding: 110px 32px 12px; text-align: center; }
+    .cli-hero h1 { font-size: clamp(1.75rem, 3vw, 2.25rem); margin: 0 0 8px; letter-spacing: -0.03em; }
+    .cli-wrap { max-width: 720px; margin: 0 auto; padding: 12px 32px 100px; }
+    .cli-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; text-align: left; }
+    .cli-card h2 { font-size: 0.95rem; font-weight: 600; margin: 0 0 10px; color: var(--text); }
+    .cli-card p { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6; margin: 0 0 12px; }
+    .token-box { display: flex; gap: 8px; align-items: stretch; margin-top: 12px; }
+    .token-box input {
+      flex: 1; font-family: 'Geist Mono', monospace; font-size: 0.85rem;
+      background: rgba(0,0,0,0.3); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; outline: none;
+    }
+    .token-box button {
+      background: var(--signal, #00d084); color: white; border: 0;
+      border-radius: 8px; padding: 0 16px; font-weight: 500;
+      font-size: 0.875rem; cursor: pointer; transition: background 0.12s;
+      font-family: 'Geist', sans-serif;
+    }
+    .token-box button:hover { background: #4f5fda; }
+    .token-box button.copied { background: #22c55e; }
+    .cli-snippet {
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px; margin-top: 10px;
+      font-family: 'Geist Mono', monospace; font-size: 0.825rem;
+      color: var(--text); overflow-x: auto; white-space: pre;
+    }
+    .cli-snippet .comment { color: var(--text-dim); }
+    .actions-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .actions-row button.danger {
+      background: transparent; color: #f87171;
+      border: 1px solid rgba(248,113,113,0.4);
+      border-radius: 8px; padding: 8px 14px;
+      font-weight: 500; font-size: 0.875rem; cursor: pointer;
+      font-family: 'Geist', sans-serif; transition: all 0.12s;
+    }
+    .actions-row button.danger:hover { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.7); }
+    .cli-guest { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+    .cli-guest a { color: var(--signal, #00d084); }
+  </style>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="cli-hero">
+      <p class="section-eyebrow">CLI</p>
+      <h1>LingCode CLI token</h1>
+    </section>
+
+    <div class="cli-wrap" id="cli-root">
+      <p class="cli-guest" id="cli-loading">Loading…</p>
+    </div>
+  </main>
+
+  <script src="nav.js?v=202605131900" defer></script>
+  <script>
+(function () {
+  var root = document.getElementById('cli-root');
+  var loading = document.getElementById('cli-loading');
+
+  // Device-flow params: when the CLI starts a localhost listener and opens
+  // this page with ?session=<uuid>&redirect=http://localhost:<port>, we hand
+  // the token off automatically instead of asking the user to copy/paste.
+  var params = new URLSearchParams(window.location.search);
+  var cliSession = params.get('session');
+  var cliRedirect = params.get('redirect');
+  var isDeviceFlow = !!(cliSession && cliRedirect);
+
+  function returnSelfPath() {
+    // Preserve session/redirect when bouncing through sign-in.
+    return '/cli-token.html' + window.location.search;
+  }
+
+  function showGuest() {
+    if (loading) loading.remove();
+    var next = encodeURIComponent(returnSelfPath());
+    root.innerHTML =
+      '<div class="cli-guest">' +
+        '<p>Sign in to mint a CLI token tied to your account.</p>' +
+        '<p><a href="/signin.html?next=' + next + '">Sign in</a> or <a href="/signup.html?next=' + next + '">Create an account</a></p>' +
+      '</div>';
+  }
+
+  function showDeviceFlowDone() {
+    if (loading) loading.remove();
+    root.innerHTML =
+      '<div class="cli-card" style="text-align:center">' +
+        '<h2>✓ CLI signed in</h2>' +
+        '<p>You can close this tab and return to your terminal.</p>' +
+      '</div>';
+  }
+
+  function showDeviceFlowFailed(message) {
+    if (loading) loading.remove();
+    root.innerHTML =
+      '<div class="cli-card" style="text-align:center">' +
+        '<h2>Could not hand off to the CLI</h2>' +
+        '<p>' + escapeHtml(message || 'The local CLI listener did not respond.') + '</p>' +
+        '<p style="margin-top:12px"><a href="/cli-token.html">Generate the token manually instead.</a></p>' +
+      '</div>';
+  }
+
+  function deliverToCLI(token) {
+    // Validate the redirect URL points at localhost — a misuse safeguard so
+    // a phishing page can't pass an arbitrary redirect_uri and exfiltrate
+    // someone's CLI token.
+    var u;
+    try { u = new URL(cliRedirect); } catch (_) {
+      showDeviceFlowFailed('Invalid CLI callback URL.');
+      return;
+    }
+    var host = u.hostname;
+    var ok = (host === 'localhost' || host === '127.0.0.1' || host === '::1');
+    if (!ok) {
+      showDeviceFlowFailed('Refusing to redirect to a non-localhost URL.');
+      return;
+    }
+    // Append session + token to the redirect.
+    u.searchParams.set('session', cliSession);
+    u.searchParams.set('token', token);
+    showDeviceFlowDone();
+    // Tiny delay so the user sees the success message before the browser
+    // navigates (and most CLIs auto-close their listener after the GET).
+    setTimeout(function () { window.location.href = u.toString(); }, 250);
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function render(token) {
+    if (loading) loading.remove();
+    root.innerHTML =
+      '<div class="cli-card">' +
+        '<h2>Your CLI token</h2>' +
+        '<p>Use this to authenticate the <code>lingcode</code> CLI against your account so it can run LingModel queries through your hosted quota — same as the Mac app and the web playground.</p>' +
+        '<div class="token-box">' +
+          '<input id="tok" type="text" readonly value="' + escapeHtml(token) + '">' +
+          '<button type="button" id="copy">Copy</button>' +
+        '</div>' +
+        '<div class="actions-row">' +
+          '<button type="button" class="danger" id="rotate">Rotate token</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="cli-card">' +
+        '<h2>Set it up</h2>' +
+        '<p>One command — the CLI stores it in your macOS Keychain (or a chmod-600 file on Linux).</p>' +
+        '<div class="cli-snippet">$ lingcode auth login --provider lingmodel\n' +
+          '<span class="comment"># paste the token above when prompted</span>\n' +
+          '\n' +
+          '$ lingcode ask --provider lingmodel "build me a pitch deck"\n' +
+          '$ lingcode ask --provider lingmodel --model lingmodel-advanced "..."</div>' +
+        '<p style="margin-top:14px">Without the <code>--model</code> flag, requests use LingModel Standard. Use <code>--model lingmodel-advanced</code> for LingModel Advanced (<code>lingmodel-pro</code> remains accepted). Tier limits apply.</p>' +
+      '</div>' +
+      '<div class="cli-card">' +
+        '<h2>Security</h2>' +
+        '<p>This token grants API-level access to your LingCode account. Don’t paste it into shared code or commit it to a repo. Click <strong>Rotate token</strong> if it leaks — the old token stops working immediately.</p>' +
+      '</div>' +
+      '<div class="cli-card">' +
+        '<h2>Web Control (different token)</h2>' +
+        '<p>Want to drive your local agent from a browser? <a href="/control.html">Open Web Control</a>. It uses the bearer at <code>~/.lingcode/server.token</code> on the machine running <code>lingcode serve</code> — separate from the LingModel token above.</p>' +
+      '</div>';
+
+    var input = document.getElementById('tok');
+    var copyBtn = document.getElementById('copy');
+    if (copyBtn && input) {
+      copyBtn.addEventListener('click', function () {
+        input.select();
+        try { navigator.clipboard.writeText(input.value); } catch (_) { document.execCommand('copy'); }
+        var orig = copyBtn.textContent;
+        copyBtn.classList.add('copied');
+        copyBtn.textContent = '✓ Copied';
+        setTimeout(function () { copyBtn.classList.remove('copied'); copyBtn.textContent = orig; }, 1400);
+      });
+    }
+    var rotateBtn = document.getElementById('rotate');
+    if (rotateBtn) {
+      rotateBtn.addEventListener('click', function () {
+        if (!window.confirm('Rotate token? The old one stops working immediately and any CLI sessions using it will need to re-authenticate.')) return;
+        rotateBtn.disabled = true;
+        rotateBtn.textContent = 'Rotating…';
+        fetch('/api/account/cli-token', { method: 'DELETE', credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (j && j.ok && j.token) {
+              render(j.token);
+            } else {
+              alert('Could not rotate token.');
+              rotateBtn.disabled = false;
+              rotateBtn.textContent = 'Rotate token';
+            }
+          })
+          .catch(function () {
+            alert('Could not rotate token.');
+            rotateBtn.disabled = false;
+            rotateBtn.textContent = 'Rotate token';
+          });
+      });
+    }
+  }
+
+  // Mint or fetch the token. POST is idempotent — server returns the
+  // existing token if one's present, otherwise creates a new one.
+  fetch('/api/account/cli-token', { method: 'POST', credentials: 'same-origin' })
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+    .then(function (x) {
+      if (!x.ok || !x.j || !x.j.ok || !x.j.token) {
+        showGuest();
+        return;
+      }
+      if (isDeviceFlow) {
+        deliverToCLI(x.j.token);
+      } else {
+        render(x.j.token);
+      }
+    })
+    .catch(function () { showGuest(); });
+})();
+  </script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

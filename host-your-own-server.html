@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provision a server and connect your domain — DigitalOcean, AWS, generic VPS | LingCode</title>
+  <meta name="description" content="Step-by-step tutorial: rent a Linux server on DigitalOcean, AWS Lightsail, or any VPS; install nginx; point your domain at it with DNS; add HTTPS with Let's Encrypt; hand it to LingCode's Magic Deploy.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/host-your-own-server.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/host-your-own-server.html">
+  <meta property="og:title" content="Provision a server and connect your domain">
+  <meta property="og:description" content="DigitalOcean, AWS Lightsail, AWS EC2, or any VPS — provision, point a domain at it, add HTTPS, and hand it to Magic Deploy.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Provision a server and connect your domain — LingCode">
+  <meta name="twitter:description" content="DO / AWS / generic VPS, end to end, including DNS and HTTPS.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 680px; margin-left: auto; margin-right: auto; }
+    .blog-content { max-width: 800px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content h4 { font-size: 1rem; margin: 20px 0 6px; color: var(--text); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 12px 0 20px; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .callout p { margin: 0; color: var(--text); }
+    .callout strong { color: var(--signal); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+    .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 20px 0 32px; }
+    .toc ul { margin: 0; padding-left: 20px; }
+    .toc li { margin-bottom: 4px; }
+    .compare-table { width: 100%; border-collapse: collapse; margin: 20px 0; table-layout: fixed; }
+    .compare-table th, .compare-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; word-break: break-word; overflow-wrap: anywhere; }
+    .compare-table th { color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .compare-table td { color: var(--text); font-size: 0.9rem; }
+    .compare-table td:first-child { font-weight: 600; color: var(--signal); }
+    .sibling-nav { max-width: 800px; margin: 0 auto; padding: 20px 32px 0; }
+    .sibling-nav-inner { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .sibling-nav-label { font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px; }
+    .sibling-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 0.8125rem; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+    .sibling-pill:hover { color: var(--text); border-color: var(--signal); text-decoration: none; }
+    .sibling-pill.current { background: var(--signal); color: #fff; border-color: var(--signal); cursor: default; }
+    .sibling-pill.current:hover { color: #fff; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <nav class="sibling-nav" aria-label="Deploy guide siblings">
+      <div class="sibling-nav-inner">
+        <span class="sibling-nav-label">Deploy guides:</span>
+        <a href="/magic-deploy-setup.html" class="sibling-pill">App Store</a>
+        <a href="/app-store-connect-fields.html" class="sibling-pill">ASC fields</a>
+        <a href="/google-play-deploy-setup.html" class="sibling-pill">Google Play</a>
+        <a href="/magic-deploy-web-platforms.html" class="sibling-pill">Web</a>
+        <a href="/host-your-own-server.html" class="sibling-pill current" aria-current="page">Provision</a>
+        <a href="/magic-deploy-scripts.html" class="sibling-pill">Scripts</a>
+      </div>
+    </nav>
+
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Tutorial</p>
+        <h1>Provision a server and connect your domain</h1>
+        <p>From "I have nothing" to "<code>https://yourdomain.com</code> serves my app." Pick a provider, rent a Linux box, point a domain at it, add HTTPS, and hand it to Magic Deploy.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+
+      <div class="toc">
+        <strong>On this page</strong>
+        <ul>
+          <li><a href="#choose">1. Pick a provider</a></li>
+          <li><a href="#digitalocean">2. Path A — DigitalOcean droplet (recommended for first-timers)</a></li>
+          <li><a href="#lightsail">3. Path B — AWS Lightsail (closest AWS equivalent)</a></li>
+          <li><a href="#ec2">4. Path C — AWS EC2 (full AWS, more knobs)</a></li>
+          <li><a href="#vps">5. Path D — Hetzner / Vultr / Linode / generic VPS</a></li>
+          <li><a href="#first-login">6. First login &amp; basic hardening</a></li>
+          <li><a href="#nginx">7. Install nginx and serve a test page</a></li>
+          <li><a href="#dns">8. Point your domain at the server</a></li>
+          <li><a href="#https">9. Add HTTPS with Let's Encrypt</a></li>
+          <li><a href="#magic-deploy">10. Hand it to Magic Deploy</a></li>
+          <li><a href="#troubleshooting">11. When things go wrong</a></li>
+        </ul>
+      </div>
+
+      <p>This guide assumes you can open a terminal and you own (or are about to buy) a domain name. No prior server admin experience required. Every command in here is copy-paste; every UI step names the button you're clicking. Total time on a clean coffee: ~30–45 minutes.</p>
+
+      <div class="callout">
+        <p><strong>Why this exists.</strong> Magic Deploy's "Your own server" target wants an SSH-reachable Linux box and asks for the host, user, and SSH key. The <a href="/magic-deploy-scripts.html">scripts cookbook</a> covers what to <em>run</em> on that box — but not how to get one in the first place. This page closes that gap.</p>
+      </div>
+
+      <h2 id="choose">1. Pick a provider</h2>
+      <p>For a first server hosting a small web app, side project, or static site, optimize for: cheap, simple control panel, sane defaults, easy DNS. Performance differences at the bottom tier are tiny — the operational overhead matters far more.</p>
+
+      <table class="compare-table">
+        <thead><tr><th>Provider</th><th>Cheapest plan</th><th>Why pick it</th><th>Skip if</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>DigitalOcean</td>
+            <td>$4/mo Droplet (512 MB)</td>
+            <td>Cleanest UI for first-timers. One-click Marketplace images (LAMP, MEAN, Docker, etc.). DNS hosting included free.</td>
+            <td>You're already paying for AWS / GCP and want one bill.</td>
+          </tr>
+          <tr>
+            <td>AWS Lightsail</td>
+            <td>$3.50/mo (512 MB)</td>
+            <td>Wraps EC2 in a DO-style flat-rate UI. Same datacenter as the rest of AWS — useful if you'll later add S3, RDS, etc.</td>
+            <td>You want autoscaling, VPCs, IAM-per-resource, or other "real" AWS features. Use EC2 instead.</td>
+          </tr>
+          <tr>
+            <td>AWS EC2</td>
+            <td>~$5/mo (t4g.nano)</td>
+            <td>The full AWS toolkit — VPC, security groups, IAM, autoscaling, AMIs. Required if you'll grow beyond one box.</td>
+            <td>You just want one box. Lightsail is the same thing with less paperwork.</td>
+          </tr>
+          <tr>
+            <td>Hetzner Cloud</td>
+            <td>~€4/mo (CX22, 4 GB)</td>
+            <td>Best price/performance in Europe by a wide margin. Also has US-East / US-West.</td>
+            <td>You need a region near non-EU/US users.</td>
+          </tr>
+          <tr>
+            <td>Vultr / Linode (Akamai)</td>
+            <td>$5–6/mo (1 GB)</td>
+            <td>Wide region selection. Linode now has a proper DNS manager. Vultr has more locations.</td>
+            <td>No strong preference — DigitalOcean is friendlier.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>If you're stuck, pick DigitalOcean.</strong> Its UI labels match what tutorials say, its DNS panel is right next to its server panel, and its $200 / 60-day signup credit means your first server is effectively free. The walkthrough below uses DO; the Lightsail and EC2 sections cover the AWS deltas.</p>
+
+      <h2 id="digitalocean">2. Path A — DigitalOcean droplet</h2>
+
+      <h3>2.1 Create an SSH key (one-time, on your Mac)</h3>
+      <p>SSH keys replace passwords. You generate a keypair locally; the public half goes onto the server, the private half stays on your laptop. Anyone with the private half can log in, so don't share it.</p>
+      <pre><code># Skip if you already have ~/.ssh/id_ed25519
+ssh-keygen -t ed25519 -C "your-email@example.com"
+# Press Enter at every prompt (default path, empty passphrase) for the simplest setup.
+# For better security, set a passphrase — macOS will remember it in Keychain.
+
+# Print the public key so you can paste it into DigitalOcean:
+cat ~/.ssh/id_ed25519.pub</code></pre>
+      <p>The output starts with <code>ssh-ed25519 AAAA…</code>. That whole line is what you'll paste.</p>
+
+      <h3>2.2 Create the droplet</h3>
+      <ol>
+        <li>Sign up at <a href="https://www.digitalocean.com/" rel="noopener noreferrer">digitalocean.com</a>. They'll ask for a card; the $200 signup credit is applied automatically.</li>
+        <li>Click <strong>Create</strong> → <strong>Droplets</strong>.</li>
+        <li><strong>Region</strong>: pick the one closest to your users. <em>NYC3</em>, <em>SFO3</em>, <em>FRA1</em>, <em>SGP1</em> are popular.</li>
+        <li><strong>Image</strong>: <em>Ubuntu 24.04 LTS x64</em>. (LTS = "Long Term Support", patched until 2029.)</li>
+        <li><strong>Size</strong>: <em>Basic → Regular → $4/mo</em> (1 vCPU, 512 MB RAM, 10 GB SSD). Upgrade later if you need to; downgrading is harder.</li>
+        <li><strong>Authentication</strong>: <em>SSH Key</em> → <em>New SSH Key</em>. Paste the <code>ssh-ed25519 …</code> line from step 2.1, give it a name like "MacBook," click <em>Add SSH Key</em>. Make sure the box for the key is checked.</li>
+        <li><strong>Hostname</strong>: anything memorable, e.g. <code>web-prod-1</code>. Cosmetic.</li>
+        <li><strong>Create Droplet</strong>. ~30 seconds later you'll see a public IPv4 address. Copy it.</li>
+      </ol>
+
+      <h3>2.3 Test SSH</h3>
+      <pre><code># Replace 203.0.113.42 with your droplet's IPv4 address
+ssh root@203.0.113.42</code></pre>
+      <p>First connection asks <em>"Are you sure you want to continue connecting?"</em> — type <code>yes</code>. You should land at a <code>root@web-prod-1:~#</code> prompt. <strong>Type <code>exit</code> for now</strong> — we'll come back after a security pass in <a href="#first-login">section 6</a>.</p>
+
+      <div class="callout">
+        <p><strong>Permission denied (publickey)?</strong> Either you didn't tick the SSH key box during droplet creation, or your <code>~/.ssh/id_ed25519</code> isn't the same key whose public half you pasted. Run <code>cat ~/.ssh/id_ed25519.pub</code> and confirm it matches what's listed under <em>Settings → Security → SSH Keys</em> on DigitalOcean. If it doesn't, you can add the right key via the droplet's <em>Recovery Console</em> or the <a href="https://docs.digitalocean.com/products/droplets/how-to/add-ssh-keys/" rel="noopener noreferrer">DO docs</a>.</p>
+      </div>
+
+      <h2 id="lightsail">3. Path B — AWS Lightsail</h2>
+      <p>Lightsail is AWS's answer to DigitalOcean: flat monthly pricing, simple UI, the same Linux underneath. If you're already in the AWS ecosystem (using S3, SES, Route 53, etc.), this lets you keep one bill.</p>
+
+      <h3>3.1 Create the instance</h3>
+      <ol>
+        <li>Sign in to <a href="https://lightsail.aws.amazon.com/" rel="noopener noreferrer">lightsail.aws.amazon.com</a>. (You need a regular AWS account; Lightsail just shares it.)</li>
+        <li>Click <strong>Create instance</strong>.</li>
+        <li><strong>Region</strong>: pick the closest one. Note that this is the AWS region (e.g. <code>us-east-1</code>) — useful later when wiring S3 or RDS in the same region.</li>
+        <li><strong>Platform</strong>: Linux/Unix.</li>
+        <li><strong>Blueprint</strong>: <em>OS Only → Ubuntu 24.04 LTS</em>. (The "Apps + OS" blueprints are pre-installed stacks; we want a clean slate.)</li>
+        <li><strong>Instance plan</strong>: $3.50/mo (512 MB) for testing, $5/mo (1 GB) if your app uses Node / Rails / Django. The first 3 months on the $3.50/mo plan are free.</li>
+        <li><strong>SSH key pair</strong>: click <em>Change SSH key pair</em> → <em>Upload new</em>. Paste the contents of <code>~/.ssh/id_ed25519.pub</code> from <a href="#digitalocean">section 2.1</a>. Don't use AWS's default key — the rest of this guide assumes <code>id_ed25519</code>.</li>
+        <li><strong>Create instance</strong>. Wait until status flips from <em>Pending</em> to <em>Running</em>.</li>
+      </ol>
+
+      <h3>3.2 Static IP (important)</h3>
+      <p>Lightsail instances get a public IP that changes if you stop/start them. Attach a static IP so DNS doesn't break:</p>
+      <ol>
+        <li>Click your instance → <strong>Networking</strong> tab → <em>Create static IP</em>.</li>
+        <li>Attach it to the instance you just created. Static IPs are <em>free while attached</em>; they're billed only if you detach and leave them dangling.</li>
+        <li>That static IP is the address you'll point your domain at.</li>
+      </ol>
+
+      <h3>3.3 Open ports for HTTP / HTTPS</h3>
+      <p>Lightsail's firewall opens SSH (22) by default. To serve websites you need to open 80 and 443:</p>
+      <ol>
+        <li>Instance → <strong>Networking</strong> → <em>IPv4 Firewall</em> → <em>Add rule</em>.</li>
+        <li>Add: <em>HTTP (TCP, port 80)</em> and <em>HTTPS (TCP, port 443)</em>.</li>
+      </ol>
+
+      <h3>3.4 Test SSH</h3>
+      <pre><code>ssh ubuntu@&lt;your-static-ip&gt;</code></pre>
+      <p>Lightsail Ubuntu instances use the <code>ubuntu</code> user (not <code>root</code>). Otherwise the rest of this guide is the same — when later sections say <code>ssh root@…</code>, use <code>ssh ubuntu@…</code> and prefix admin commands with <code>sudo</code>.</p>
+
+      <h2 id="ec2">4. Path C — AWS EC2</h2>
+      <p>EC2 is the full AWS compute primitive. More setup than Lightsail; necessary if you'll later want autoscaling groups, custom AMIs, multi-AZ, IAM roles per resource, or VPC peering.</p>
+
+      <h3>4.1 Launch the instance</h3>
+      <ol>
+        <li>EC2 Console → <em>Launch instance</em>.</li>
+        <li><strong>AMI</strong>: <em>Ubuntu Server 24.04 LTS</em> (free-tier eligible).</li>
+        <li><strong>Instance type</strong>: <code>t4g.nano</code> (ARM, ~$3/mo) or <code>t3.micro</code> (x86, free tier for new accounts the first 12 months).</li>
+        <li><strong>Key pair</strong>: <em>Create new key pair</em> if you don't have one in this region — <em>type: ED25519, format: .pem</em>. Save the <code>.pem</code> to <code>~/.ssh/aws-ec2.pem</code> and run <code>chmod 400 ~/.ssh/aws-ec2.pem</code> (EC2 refuses to use world-readable keys). Or pick <em>Use existing key pair</em> if you uploaded one earlier.</li>
+        <li><strong>Network settings</strong>: <em>Allow SSH</em> from <em>My IP</em>, plus <em>Allow HTTP</em> and <em>Allow HTTPS</em> from anywhere. (Allowing SSH from "anywhere" works but exposes port 22 to the world; you'll harden it later.)</li>
+        <li><strong>Storage</strong>: 8 GB gp3 is plenty for a starter app.</li>
+        <li><strong>Launch instance</strong>.</li>
+      </ol>
+
+      <h3>4.2 Elastic IP</h3>
+      <p>EC2's default public IP also changes on stop/start. Allocate an Elastic IP and associate it with the instance — same reason as Lightsail's static IP. Elastic IPs are <em>free while associated with a running instance</em>; AWS charges if you let one sit unattached.</p>
+      <p>EC2 → <em>Network &amp; Security → Elastic IPs → Allocate</em>, then <em>Associate</em> with your instance.</p>
+
+      <h3>4.3 Test SSH</h3>
+      <pre><code>ssh -i ~/.ssh/aws-ec2.pem ubuntu@&lt;elastic-ip&gt;</code></pre>
+      <p>Note the <code>-i</code> flag — EC2 doesn't use your default <code>~/.ssh/id_ed25519</code> unless you specifically uploaded that public key during launch. To stop typing <code>-i</code> every time, add this to <code>~/.ssh/config</code>:</p>
+      <pre><code>Host my-ec2
+    HostName &lt;elastic-ip&gt;
+    User ubuntu
+    IdentityFile ~/.ssh/aws-ec2.pem</code></pre>
+      <p>Then <code>ssh my-ec2</code> just works.</p>
+
+      <h2 id="vps">5. Path D — Hetzner / Vultr / Linode / generic VPS</h2>
+      <p>The flow is identical to DigitalOcean, with different button labels. Across providers:</p>
+      <ul>
+        <li><strong>Image</strong>: pick <em>Ubuntu 24.04 LTS</em> (or 22.04 LTS if 24.04 isn't offered).</li>
+        <li><strong>SSH key</strong>: paste your <code>id_ed25519.pub</code> during creation; this avoids the password-by-email path that some providers fall back to.</li>
+        <li><strong>Firewall</strong>: open ports 22, 80, 443. Hetzner Cloud requires you to attach a Firewall resource separately (it's free); most others bake it into the create form.</li>
+        <li><strong>Static IP</strong>: VPS providers give you one by default that's stable across stop/start. Confirm before pointing DNS at it.</li>
+      </ul>
+      <p>Concrete provider docs: <a href="https://docs.hetzner.com/cloud/servers/getting-started/creating-a-server/" rel="noopener noreferrer">Hetzner</a>, <a href="https://docs.vultr.com/how-to-deploy-a-new-vultr-cloud-server" rel="noopener noreferrer">Vultr</a>, <a href="https://www.linode.com/docs/products/compute/compute-instances/guides/create/" rel="noopener noreferrer">Linode</a>. Once your instance is up and SSH works, jump to <a href="#first-login">section 6</a>.</p>
+
+      <h2 id="first-login">6. First login &amp; basic hardening</h2>
+      <p>You now have an SSH-reachable box. Three things before installing anything: update packages, create a non-root user, turn on the firewall. ~5 minutes.</p>
+
+      <h3>6.1 Update everything</h3>
+      <pre><code>ssh root@&lt;your-ip&gt;     # or ssh ubuntu@&lt;your-ip&gt; on Lightsail/EC2
+
+apt update && apt upgrade -y
+apt install -y ufw fail2ban</code></pre>
+      <p><code>ufw</code> = uncomplicated firewall, friendlier wrapper around iptables. <code>fail2ban</code> auto-bans IPs that brute-force SSH.</p>
+
+      <h3>6.2 Create a non-root user</h3>
+      <p>Logging in as root every time is a footgun — one bad <code>rm -rf</code> wipes the box. Create a regular user and only escalate when needed.</p>
+      <pre><code>adduser deploy                     # set a password when prompted
+usermod -aG sudo deploy            # give them sudo
+mkdir -p /home/deploy/.ssh
+cp ~/.ssh/authorized_keys /home/deploy/.ssh/
+chown -R deploy:deploy /home/deploy/.ssh
+chmod 700 /home/deploy/.ssh
+chmod 600 /home/deploy/.ssh/authorized_keys</code></pre>
+      <p>Test from a <em>second</em> terminal (don't close the first one yet):</p>
+      <pre><code>ssh deploy@&lt;your-ip&gt;
+sudo whoami    # should print "root"</code></pre>
+      <p>If that works, you're done. From now on always SSH in as <code>deploy</code>.</p>
+
+      <h3>6.3 Disable root SSH login (optional, recommended)</h3>
+      <p>Edit <code>/etc/ssh/sshd_config</code>:</p>
+      <pre><code>sudo sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sudo sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo systemctl restart ssh</code></pre>
+      <p>Now: only key-based logins, only as <code>deploy</code> (or <code>ubuntu</code> on AWS). Brute-forcing SSH is now impossible without your private key.</p>
+
+      <h3>6.4 Turn on the firewall</h3>
+      <pre><code>sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp        # HTTP
+sudo ufw allow 443/tcp       # HTTPS
+sudo ufw enable              # answer 'y'
+sudo ufw status              # confirm all three rules are listed</code></pre>
+      <p>UFW will not block your existing SSH session — but if you ever forget <code>allow OpenSSH</code> before <code>enable</code>, you can lock yourself out. Always allow SSH first.</p>
+
+      <h2 id="nginx">7. Install nginx and serve a test page</h2>
+      <pre><code>sudo apt install -y nginx
+sudo systemctl enable --now nginx</code></pre>
+      <p>Open <code>http://&lt;your-ip&gt;</code> in a browser. You should see <em>"Welcome to nginx!"</em>. If not: check <code>sudo ufw status</code> (port 80 allowed?) and on Lightsail/EC2 check the cloud-side firewall too.</p>
+
+      <h3>7.1 Replace the default page</h3>
+      <p>nginx serves <code>/var/www/html</code> by default. Drop a real index file in:</p>
+      <pre><code>sudo bash -c 'cat &gt; /var/www/html/index.html &lt;&lt;EOF
+&lt;!doctype html&gt;
+&lt;title&gt;hello&lt;/title&gt;
+&lt;h1&gt;It works.&lt;/h1&gt;
+&lt;p&gt;Served from $(hostname) at $(date).&lt;/p&gt;
+EOF'
+
+# Make sure the deploy user can write here later (for rsync)
+sudo chown -R deploy:deploy /var/www/html</code></pre>
+      <p>Refresh the browser. You should see your new page.</p>
+
+      <h2 id="dns">8. Point your domain at the server</h2>
+      <p>You need to tell the internet that <code>yourdomain.com</code> = <code>your-server-ip</code>. That's a DNS <strong>A record</strong>. Where you set it depends on which company hosts your DNS — usually either your registrar (Namecheap, Google Domains successor, Porkbun, GoDaddy) or a third-party host (Cloudflare, Route 53, DigitalOcean DNS).</p>
+
+      <div class="callout">
+        <p><strong>Strong recommendation: put your DNS on Cloudflare.</strong> Free, fast, and adds a CDN + DDoS layer at no cost. The rest of this section assumes Cloudflare; the same A-record concept works at your registrar with different button labels.</p>
+      </div>
+
+      <h3>8.1 Move DNS to Cloudflare (one-time)</h3>
+      <ol>
+        <li>Sign up at <a href="https://dash.cloudflare.com/sign-up" rel="noopener noreferrer">cloudflare.com</a>.</li>
+        <li><em>Add a site</em> → enter your domain → pick the Free plan.</li>
+        <li>Cloudflare will scan and import your existing records. Skim them — anything weird? Usually just MX (mail) records and the existing A record. Click <em>Continue</em>.</li>
+        <li>Cloudflare gives you two nameservers like <code>aria.ns.cloudflare.com</code>, <code>ben.ns.cloudflare.com</code>.</li>
+        <li>Log in to your registrar (where you bought the domain). Find <em>Nameservers</em> for that domain and replace the existing ones with Cloudflare's.</li>
+        <li>Wait. Propagation is usually ~10 minutes; can be up to 24 hours. Cloudflare will email when it's live.</li>
+      </ol>
+
+      <h3>8.2 Add the A record</h3>
+      <p>Once Cloudflare is live for your domain:</p>
+      <ol>
+        <li>Cloudflare dashboard → your domain → <em>DNS → Records</em>.</li>
+        <li><em>Add record</em>:
+          <ul>
+            <li><strong>Type</strong>: A</li>
+            <li><strong>Name</strong>: <code>@</code> (this means the apex, i.e. <code>yourdomain.com</code> itself). Use a subdomain name like <code>app</code> if you want <code>app.yourdomain.com</code>.</li>
+            <li><strong>IPv4 address</strong>: your server's IP from earlier.</li>
+            <li><strong>Proxy status</strong>: <em>DNS only</em> (gray cloud) for now. We'll switch this back to <em>Proxied</em> (orange cloud) <em>after</em> certbot runs — Let's Encrypt's HTTP-01 challenge can struggle through Cloudflare's proxy.</li>
+            <li><strong>TTL</strong>: Auto.</li>
+          </ul>
+        </li>
+        <li>Save. Add a second record for <code>www</code> pointing to the same IP if you want both <code>yourdomain.com</code> and <code>www.yourdomain.com</code> to work.</li>
+      </ol>
+
+      <h3>8.3 Verify DNS</h3>
+      <pre><code>dig +short yourdomain.com
+# should print your server's IP
+
+curl -I http://yourdomain.com
+# should return HTTP/1.1 200 OK from nginx</code></pre>
+      <p>If <code>dig</code> shows nothing or the wrong IP, wait a few more minutes and try again. DNS caches can be sticky.</p>
+
+      <div class="callout">
+        <p><strong>Other DNS hosts.</strong> Same idea, different UI: <em>Route 53 → Hosted zones → your domain → Create record (Type A)</em>; <em>DigitalOcean → Networking → Domains → A record</em>; <em>Namecheap → Domain List → Manage → Advanced DNS → Add new record (A Record)</em>. The data is always: type=A, host=@ (or subdomain), value=server-IP.</p>
+      </div>
+
+      <h2 id="https">9. Add HTTPS with Let's Encrypt</h2>
+      <p>Browsers shame plain HTTP. Let's Encrypt issues free certificates; <code>certbot</code> is the official client and auto-renews them every 60 days.</p>
+
+      <pre><code>sudo apt install -y certbot python3-certbot-nginx
+
+# Replace yourdomain.com with the actual hostname.
+# Add -d www.yourdomain.com if you set up the www record too.
+sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com</code></pre>
+
+      <p>Certbot will:</p>
+      <ul>
+        <li>Ask for an email (used for expiry warnings — give it a real one).</li>
+        <li>Verify you control the domain by serving a temporary file at <code>http://yourdomain.com/.well-known/acme-challenge/…</code>. (This is why the Cloudflare proxy needs to be off — <em>DNS only</em> mode — during this step.)</li>
+        <li>Edit your nginx config to add the cert + redirect HTTP → HTTPS.</li>
+        <li>Reload nginx.</li>
+      </ul>
+
+      <p>Visit <code>https://yourdomain.com</code> — there's the lock icon. Run <code>sudo certbot renew --dry-run</code> to confirm auto-renewal works.</p>
+
+      <h3>9.1 Re-enable Cloudflare proxy (optional)</h3>
+      <p>If you want Cloudflare's CDN + DDoS protection, switch the A record back to <em>Proxied</em> (orange cloud) now. In Cloudflare, set <em>SSL/TLS → Overview</em> to <strong>Full (strict)</strong> — this makes Cloudflare verify your origin's Let's Encrypt cert. Don't use <em>Flexible</em>; it's a redirect loop trap.</p>
+
+      <h2 id="magic-deploy">10. Hand it to Magic Deploy</h2>
+      <p>You now have a server at a real domain serving real HTTPS. The last step is wiring it into LingCode's Magic Deploy popover so a deploy is one click.</p>
+
+      <ol>
+        <li>In LingCode, click the <strong>Magic Deploy</strong> button in the toolbar.</li>
+        <li>Under <em>Saved servers</em>, click <em>+ Add server</em>.</li>
+        <li>Fill in:
+          <ul>
+            <li><strong>Host</strong>: <code>yourdomain.com</code> (or the IP — both work)</li>
+            <li><strong>User</strong>: <code>deploy</code> (or <code>ubuntu</code> on AWS)</li>
+            <li><strong>Port</strong>: 22</li>
+            <li><strong>Auth</strong>: <em>SSH key</em> → pick <code>~/.ssh/id_ed25519</code> (or your AWS <code>.pem</code>)</li>
+            <li><strong>Remote directory</strong>: <code>/var/www/html</code> for a static site, or <code>/srv/&lt;app&gt;</code> for a Node/Python app — your choice.</li>
+          </ul>
+        </li>
+        <li>Optional: paste before-launch and after-deploy scripts from the <a href="/magic-deploy-scripts.html">Scripts cookbook</a>. For a static site: <em>Before launch</em> = <code>npm run build</code> (if applicable); <em>After deploy</em> = empty (nginx serves the files directly).</li>
+        <li>Save. The new server appears in the popover. Tick its checkbox and click <strong>Deploy</strong>.</li>
+      </ol>
+
+      <p>The popover shows progress: <em>preflight → rsync → after-deploy</em>. On success it prints the public URL. Subsequent deploys are one click.</p>
+
+      <h2 id="troubleshooting">11. When things go wrong</h2>
+
+      <h3>"Connection refused" on SSH</h3>
+      <p>Either the server isn't running (check the provider dashboard), the firewall blocks port 22 (the cloud-side firewall on Lightsail/EC2 is separate from <code>ufw</code> — both must allow SSH), or you typed the wrong IP. Try <code>nc -vz &lt;ip&gt; 22</code> from your laptop; if that fails, the firewall is the problem.</p>
+
+      <h3>"Permission denied (publickey)"</h3>
+      <p>Your local key isn't the one the server expects. <code>ssh -v deploy@&lt;ip&gt;</code> shows which keys are tried. If your key isn't on that list, run <code>ssh-add ~/.ssh/id_ed25519</code>. If the server doesn't have your public key, paste it manually via the provider's <em>recovery console</em> into <code>~deploy/.ssh/authorized_keys</code>.</p>
+
+      <h3>Domain doesn't resolve</h3>
+      <p><code>dig +short yourdomain.com @1.1.1.1</code> queries Cloudflare's resolver directly, bypassing your local cache. If <em>that</em> shows the right IP but your browser doesn't, your laptop is caching — <code>sudo dscacheutil -flushcache</code> on Mac, then retry.</p>
+
+      <h3>"403 Forbidden" or empty page after pointing DNS</h3>
+      <p>nginx is serving but the document root is empty or has wrong permissions. Check <code>ls -la /var/www/html</code>. The owner should be <code>deploy:deploy</code> (or whatever user your deploy script writes as), and the files should be readable by <code>www-data</code> (group <code>www-data</code> on the directory works, or world-readable <code>0644</code> files inside a <code>0755</code> directory).</p>
+
+      <h3>certbot fails: "DNS problem: NXDOMAIN" / "Failed authorization procedure"</h3>
+      <p>Most common cause: Cloudflare proxy is on (orange cloud) and intercepts the HTTP-01 challenge. Switch to <em>DNS only</em> (gray cloud) and retry. Second most common: DNS hasn't fully propagated yet — <code>dig</code> from a few different resolvers and wait if results disagree.</p>
+
+      <h3>certbot succeeds but browser still warns "Not secure"</h3>
+      <p>Browser cache. Hard-refresh (<code>⌘+Shift+R</code> on Mac), or open in a private window. Check <code>https://&lt;yourdomain&gt;/</code> with <code>curl -vI</code> — the cert chain should show <em>"Let's Encrypt"</em> as the issuer.</p>
+
+      <h3>"This site can't be reached" but server is up</h3>
+      <p>Provider-side firewall, again. Lightsail's <em>IPv4 Firewall</em> tab and EC2's <em>Security Group</em> are the most-forgotten settings. Both 80 and 443 must be open from <em>0.0.0.0/0</em> (anywhere) for public web traffic.</p>
+
+      <div class="blog-cta">
+        <p>Have a server. Have a domain on it. Have HTTPS. Now <a href="/magic-deploy-scripts.html">drop in the right Before-launch + After-deploy scripts</a> for your stack and you're done — every push to your repo is one Magic Deploy click away from production.</p>
+      </div>
+
+      <h2 style="border-top:1px solid var(--border); padding-top:24px;">Related guides</h2>
+      <ul>
+        <li><a href="/magic-deploy-scripts.html">Magic Deploy script cookbook</a> — what to run during Before-launch and After-deploy, by stack.</li>
+        <li><a href="/magic-deploy-web-platforms.html">Magic Deploy: web platforms</a> — Vercel, Netlify, Railway, Fly.io, Heroku.</li>
+        <li><a href="/deploy.html">Deploy hub</a> — all four deploy targets at a glance.</li>
+        <li><a href="/glossary.html">Glossary</a> — every deploy term in plain English.</li>
+      </ul>
+
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

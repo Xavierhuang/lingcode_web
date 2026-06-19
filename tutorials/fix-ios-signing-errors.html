@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix common iOS signing errors (No account for team, capability sync, entitlements)</title>
+  <meta name="description" content="Diagnose and fix iOS signing errors — &quot;No account for team,&quot; capability/entitlement sync between Xcode and developer.apple.com, automatic vs manual signing, and the simulator-doesn't-need-signing baseline. Scoped to the traps, not a full App Store submission guide.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/fix-ios-signing-errors.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/fix-ios-signing-errors.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/fix-ios-signing-errors.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/fix-ios-signing-errors.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Fix common iOS signing errors",
+  "description": "A diagnostic guide for the iOS signing errors that block first-time submissions and TestFlight uploads — focused on what each cryptic message actually means and how to resolve it. Not a full App Store submission walkthrough — for that, see First-time App Store submission .",
+  "url": "https://lingcode.dev/tutorials/fix-ios-signing-errors.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/fix-ios-signing-errors.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Fix common iOS signing errors"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Fix iOS signing errors",
+      "item": "https://lingcode.dev/tutorials/fix-ios-signing-errors.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/fix-ios-signing-errors.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Fix iOS signing errors</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Fix common iOS signing errors</h1>
+      <p class="intro">A diagnostic guide for the iOS signing errors that block first-time submissions and TestFlight uploads — focused on what each cryptic message actually means and how to resolve it. Not a full App Store submission walkthrough — for that, see <a href="/tutorials/first-time-ios-app-store-submission.html">First-time App Store submission</a>.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why iOS signing breaks differently than Mac signing</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>iOS signing has three coordination problems that Mac signing doesn't:</p>
+          <ul>
+            <li><strong>Provisioning profiles are server-side state.</strong> Every entitlement, capability, and device list lives at <code>developer.apple.com</code>. Xcode caches it locally. When the two disagree, builds fail with messages that name neither.</li>
+            <li><strong>Automatic signing tries to be helpful and isn't always.</strong> It will create profiles, add capabilities, and register devices on your behalf — but only if Xcode knows which team you mean. Multiple-team accounts trigger "No account for team" the first time you open a checked-out project.</li>
+            <li><strong>Capabilities have two enablement points.</strong> A capability needs to be enabled on the App ID at <code>developer.apple.com</code> <em>and</em> in the entitlements file in your project. Enabling one without the other produces errors that don't mention either location.</li>
+          </ul>
+          <p>The simulator is exempt from all of this — simulator builds don't sign or provision. If your build works in the simulator and fails on device or upload, the failure is in the signing layer, not the code.</p>
+        </div>
+      </div>
+
+      <h2>The simulator-doesn't-need-signing baseline</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Before chasing any signing error, prove the build works without signing. Run on the simulator first:</p>
+          <pre><code>xcodebuild build \
+  -project MyApp.xcodeproj \
+  -scheme MyApp \
+  -destination 'generic/platform=iOS Simulator'</code></pre>
+          <p>If this fails, your problem is code, not signing — go fix that first. If it succeeds, every subsequent failure on a device or in an Archive is a signing problem and the diagnostic table below applies.</p>
+          <div class="tip-box">
+            <strong>This split is the single most useful debugging move in iOS.</strong> A code error and a signing error look identical in Xcode's red-banner output. The simulator build separates them in one command.
+          </div>
+        </div>
+      </div>
+
+      <h2>"No account for team" — what it means</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>The classic first-time error on a fresh checkout:</p>
+          <pre><code>error: No account for team "ABCDE12345". Add a new account in
+Accounts settings or verify your selected team is correct.</code></pre>
+          <p>This does <em>not</em> mean the team doesn't exist. It means your Xcode (and by extension LingCode when it calls <code>xcodebuild</code>) isn't signed into an Apple ID that's a member of that team. Three ways to land here:</p>
+          <ul>
+            <li><strong>Fresh machine, no Apple ID added to Xcode yet.</strong> Open Xcode &gt; Settings &gt; Accounts and add your Apple ID. The team appears automatically once added.</li>
+            <li><strong>Multiple Apple IDs, wrong one selected for the project.</strong> The project's <code>DEVELOPMENT_TEAM</code> is pinned to one team's ID; your active Apple ID belongs to a different team. Either change the project's <code>DEVELOPMENT_TEAM</code> or add the right Apple ID.</li>
+            <li><strong>Apple ID expired / 2FA session lapsed.</strong> Xcode &gt; Settings &gt; Accounts &gt; click your Apple ID &gt; the team list is empty or shows a session warning. Re-authenticate.</li>
+          </ul>
+          <p>Find the project's Team ID without opening Xcode:</p>
+          <pre><code>grep -A1 DEVELOPMENT_TEAM MyApp.xcodeproj/project.pbxproj | head -10</code></pre>
+          <p>Then confirm that team is in your account at <code>developer.apple.com/account</code>.</p>
+        </div>
+      </div>
+
+      <h2>Automatic vs manual signing — pick deliberately</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Two signing modes, two failure profiles:</p>
+          <ul>
+            <li><strong>Automatic signing</strong> (Xcode &gt; project &gt; Signing &amp; Capabilities &gt; "Automatically manage signing"): Xcode creates and refreshes provisioning profiles on your behalf as you add capabilities or new test devices. Convenient for development; fragile in CI because the credentials needed to mutate <code>developer.apple.com</code> on your behalf aren't trivially scriptable.</li>
+            <li><strong>Manual signing</strong>: you pick the provisioning profile and signing certificate by name. Reproducible, scriptable, but every capability change requires regenerating the profile on the portal and re-downloading.</li>
+          </ul>
+          <p>The pragmatic split: automatic for local development, manual for archive/release. Switch the build configuration in Xcode &gt; Signing &amp; Capabilities &gt; "Automatically manage signing" per Debug/Release configuration. From the command line:</p>
+          <pre><code># Automatic (development)
+xcodebuild build \
+  -scheme MyApp \
+  -destination 'generic/platform=iOS' \
+  -allowProvisioningUpdates \
+  CODE_SIGN_STYLE=Automatic \
+  DEVELOPMENT_TEAM=ABCDE12345
+
+# Manual (release / CI)
+xcodebuild archive \
+  -scheme MyApp \
+  -archivePath build/MyApp.xcarchive \
+  -destination 'generic/platform=iOS' \
+  CODE_SIGN_STYLE=Manual \
+  DEVELOPMENT_TEAM=ABCDE12345 \
+  PROVISIONING_PROFILE_SPECIFIER="MyApp Distribution" \
+  CODE_SIGN_IDENTITY="Apple Distribution: Your Name (ABCDE12345)"</code></pre>
+          <p><code>-allowProvisioningUpdates</code> is the flag that lets <code>xcodebuild</code> talk to Apple's servers to refresh profiles. Without it, automatic-signing builds in CI fail with "no provisioning profile matches."</p>
+        </div>
+      </div>
+
+      <h2>Capability and entitlement sync</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>A capability is enabled in two places. Both must agree:</p>
+          <ul>
+            <li><strong>The App ID</strong> at <code>developer.apple.com/account/resources/identifiers</code> — capability checkboxes (Push Notifications, iCloud, Sign in with Apple, In-App Purchase, App Groups, Associated Domains, etc.).</li>
+            <li><strong>The entitlements file</strong> in your project (typically <code>MyApp.entitlements</code>) — XML key/value pairs that map to those capabilities.</li>
+          </ul>
+          <p>Errors that surface a mismatch:</p>
+          <pre><code>Provisioning profile "iOS Team Provisioning Profile: com.you.MyApp"
+doesn't include the aps-environment entitlement.</code></pre>
+          <p>This means your entitlements file declares Push Notifications (<code>aps-environment</code>) but the App ID at <code>developer.apple.com</code> doesn't have Push Notifications enabled. Either enable it on the portal and regenerate the profile, or remove the entitlement from your project.</p>
+          <pre><code>The executable was signed with invalid entitlements. The
+entitlements specified in your application's Code Signing
+Entitlements file do not match those specified in your
+provisioning profile.</code></pre>
+          <p>Same root cause, different message — the entitlements file and the profile disagree. The fix order is always: portal first, then regenerate the profile, then let Xcode pick it up.</p>
+          <p>Ask LingCode to dump the current entitlements from a built app for a sanity check:</p>
+          <pre><code>codesign -d --entitlements - build/MyApp.app</code></pre>
+          <p>And to dump what the provisioning profile actually grants:</p>
+          <pre><code>security cms -D -i build/MyApp.app/embedded.mobileprovision</code></pre>
+          <p>If the entitlements list in those two outputs doesn't match, that's the bug.</p>
+          <div class="warn-box">
+            <strong>Automatic signing partially hides this trap.</strong> Xcode <em>will</em> auto-enable a capability on the App ID when you tick it in Signing &amp; Capabilities — but only if your Apple ID has admin rights on the team. If you're a developer-role member of a company team, Xcode silently fails to enable it on the portal and you get the mismatch error on the next archive.
+          </div>
+        </div>
+      </div>
+
+      <h2>"No matching provisioning profile" — the diagnostic table</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>This error has six common causes. Work through them in order:</p>
+          <ul>
+            <li><strong>Bundle ID mismatch.</strong> The bundle ID in your project (<code>PRODUCT_BUNDLE_IDENTIFIER</code>) doesn't match the App ID on the portal. Most common after a rename. Confirm with <code>grep PRODUCT_BUNDLE_IDENTIFIER MyApp.xcodeproj/project.pbxproj</code>.</li>
+            <li><strong>Wrong profile type for the build configuration.</strong> Debug builds need a Development profile, Archive needs Distribution. Don't reuse one for the other.</li>
+            <li><strong>Expired profile.</strong> Profiles expire after a year. Regenerate on the portal and re-download.</li>
+            <li><strong>Capability added in Xcode but not on the portal</strong> (see Step 4). Manual signing surfaces this as a profile mismatch.</li>
+            <li><strong>Test device not registered.</strong> Development profiles include a fixed device list. New device = regenerate the profile after adding the device's UDID to the portal.</li>
+            <li><strong>Signing certificate expired or revoked.</strong> The profile is tied to a specific certificate; if the cert is gone, the profile is dead. Issue a new cert, regenerate the profile.</li>
+          </ul>
+          <p>The same error message covers all six. Walk the list rather than guessing.</p>
+        </div>
+      </div>
+
+      <h2>The "regenerate the profile" reflex</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>After any capability change, certificate rotation, or device add, the cached profile in Xcode is stale. The fix is the same every time:</p>
+          <ol>
+            <li>Go to <code>developer.apple.com/account/resources/profiles</code>.</li>
+            <li>Find the affected profile, click Edit, click Save (this regenerates against the current App ID state).</li>
+            <li>Download the new <code>.mobileprovision</code> file and double-click to install it into Xcode.</li>
+            <li>Or from the CLI: <code>xcodebuild -allowProvisioningUpdates …</code> and let Xcode fetch the refreshed profile itself.</li>
+          </ol>
+          <p>Skipping the "Edit &gt; Save" step on the portal is the single most common reason a regenerated download still produces the same error — the portal regenerates on save, not on download.</p>
+        </div>
+      </div>
+
+      <h2>"errSecInternalComponent" on iOS archive</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>If your iOS archive fails with <code>errSecInternalComponent</code>, the cause is the same as on macOS: the process running <code>xcodebuild</code> (or LingCode, or your CI worker) lacks Full Disk Access and can't read the signing key from the Keychain. The message is identical to a corrupt-keychain message, which is why people chase the wrong fix.</p>
+          <p>Resolution:</p>
+          <ul>
+            <li>System Settings &gt; Privacy &amp; Security &gt; Full Disk Access &gt; add Terminal.app (or your CI agent, or the host running LingCode).</li>
+            <li>Restart the terminal session — TCC grants don't apply to already-running processes.</li>
+            <li>Retry the archive.</li>
+          </ul>
+          <p>If FDA is already granted and the error persists, then it's a keychain problem — open Keychain Access, find the signing certificate, double-click the private key, and check Access Control allows <code>codesign</code>.</p>
+        </div>
+      </div>
+
+      <h2>When to give up and switch to manual signing</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Automatic signing is great until it isn't. Switch to manual when:</p>
+          <ul>
+            <li>You need reproducible CI builds. Automatic profile creation requires Apple ID credentials that don't belong in a CI environment.</li>
+            <li>You're on a developer-role account where Xcode can't auto-enable capabilities. Manual signing makes the failure visible at portal-time instead of archive-time.</li>
+            <li>You have multiple bundle IDs (main app + extensions + WatchKit) and Xcode is creating overlapping profiles.</li>
+            <li>You've spent more than 30 minutes on a "No matching provisioning profile" error that the regenerate-and-retry loop hasn't fixed.</li>
+          </ul>
+          <p>Manual signing trades convenience for visibility. Every error becomes a portal action rather than a black-box Xcode reconciliation.</p>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Drop this skill into LingCode's skills folder and ask LingCode to diagnose any iOS signing error — it walks the diagnostic ladder for you:</p>
+          <pre><code>---
+name: ios-signing-and-app-store
+description: Use when shipping an iOS app to TestFlight or the App Store — Apple Developer enrollment, automatic signing, capabilities provisioning, archive, export, and notarytool/Transporter upload. Triggers: 'No account for team', 'No matching provisioning profile', 'TestFlight upload fails', 'App Store submission', 'iOS signing error', capability/entitlement sync failure, simulator-doesn't-need-signing baseline question, errSecInternalComponent during xcodebuild. Actions: prove simulator builds, pick automatic vs manual signing, fix entitlement drift, run notarytool, upload via Transporter. Errors: 'No account for team X', 'Capabilities X requires entitlement', expired profile, bundle ID mismatch. Skip if: just running on simulator.
+---
+
+Diagnose and fix iOS signing errors.
+
+Step 0 — Prove the simulator builds clean. Simulator doesn't
+sign; if simulator fails, the problem is code, not signing.
+
+Step 1 — Resolve "No account for team": confirm the project's
+DEVELOPMENT_TEAM matches an Apple ID added in Xcode > Settings >
+Accounts. Re-auth on 2FA lapse.
+
+Step 2 — Pick signing mode deliberately. Automatic for local dev
+with -allowProvisioningUpdates. Manual for release/CI with
+PROVISIONING_PROFILE_SPECIFIER and CODE_SIGN_IDENTITY pinned.
+
+Step 3 — Capability/entitlement sync: a capability must be
+enabled BOTH on the App ID at developer.apple.com AND in the
+entitlements file. Verify with codesign -d --entitlements - and
+security cms -D -i embedded.mobileprovision.
+
+Step 4 — "No matching provisioning profile" walks six causes:
+bundle ID mismatch, wrong profile type, expired profile,
+unsynced capability, missing device, dead certificate.
+
+Step 5 — After ANY portal change: Edit > Save the profile on
+developer.apple.com (regenerates), then re-download or use
+-allowProvisioningUpdates.
+
+Step 6 — errSecInternalComponent = host process missing Full
+Disk Access (same as macOS). Fix in System Settings, restart
+terminal session.
+
+Step 7 — Escalate to manual signing if automatic has failed
+twice in a row.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/ios-signing-and-app-store/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/first-time-ios-app-store-submission.html" class="tutorial-next-card">
+            <h3>First-time App Store submission</h3>
+            <p>Once signing is clean, walk the full archive → export → upload pipeline end to end</p>
+          </a>
+          <a href="/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>Upload to TestFlight with LingCode</h3>
+            <p>Scripted TestFlight uploads using notarytool / Transporter from the command line</p>
+          </a>
+          <a href="/tutorials/codesign-and-notarize-a-mac-app.html" class="tutorial-next-card">
+            <h3>Codesign and notarize a Mac app</h3>
+            <p>The macOS counterpart — direct distribution outside the App Store with notarization</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

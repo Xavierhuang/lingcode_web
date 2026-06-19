@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insights — LingCode</title>
+  <meta name="description" content="Field notes from engineers who use LingCode in real codebases. AI agent workflows, prototyping fast, scaling decisions, tech-stack combinations that actually work.">
+  <link rel="canonical" href="https://lingcode.dev/insights.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .insights-hero {
+      padding: 110px 24px 64px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: radial-gradient(circle at 30% 50%, rgba(99,102,241,0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 50%, rgba(139,92,246,0.08) 0%, transparent 50%);
+    }
+    .insights-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; margin-bottom: 24px;
+      border: 1px solid var(--border-strong);
+      border-radius: 100px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem; color: var(--text-muted); font-weight: 500;
+    }
+    .insights-hero h1 {
+      font-size: clamp(2.25rem, 5vw, 3.35rem);
+      margin: 0 0 12px;
+      letter-spacing: -0.025em;
+      font-weight: 600;
+    }
+    .insights-hero p {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-muted);
+      margin: 0 auto;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+    .insights-content {
+      padding: 64px 24px 96px;
+    }
+    .insights-container {
+      max-width: 880px;
+      margin: 0 auto;
+    }
+    .insight-list {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .insight-card {
+      padding: 28px 32px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      transition: all 0.2s;
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+    .insight-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+      border-color: rgba(99,102,241,0.3);
+    }
+    .insight-card.placeholder {
+      opacity: 0.6;
+      pointer-events: none;
+      border-style: dashed;
+    }
+    .insight-meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .insight-meta .dot { color: var(--border-strong); }
+    .insight-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(99,102,241,0.1);
+      color: #4f46e5;
+      font-size: 0.7rem;
+    }
+    .insight-card h3 {
+      font-size: 1.35rem;
+      margin: 0 0 10px;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+    }
+    .insight-card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+    .insight-byline {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .pitch-block {
+      margin-top: 64px;
+      padding: 32px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      text-align: center;
+    }
+    .pitch-block h2 {
+      font-size: 1.5rem;
+      margin: 0 0 8px;
+    }
+    .pitch-block p {
+      color: var(--text-muted);
+      margin: 0 0 18px;
+      line-height: 1.5;
+    }
+    .pitch-cta {
+      display: inline-block;
+      padding: 10px 22px;
+      background: #6366f1;
+      color: white;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    .pitch-cta:hover { background: #4f46e5; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <section class="insights-hero">
+    <div class="insights-eyebrow">
+      <span class="dot"></span>
+      <span>Field notes</span>
+    </div>
+    <h1>Insights from engineers shipping with LingCode</h1>
+    <p>Real codebases. Real prompts. Real numbers. How power users prototype faster, scale agents in big repos, and pick the tech stack combinations that actually work.</p>
+  </section>
+
+  <section class="insights-content">
+    <div class="insights-container">
+      <div class="insight-list">
+
+        <a href="/insights/claude-agents-in-a-200k-line-xcode-project.html" class="insight-card">
+          <div class="insight-meta">
+            <span>Sample</span>
+            <span class="dot">·</span>
+            <span>2026-05-11</span>
+            <span class="dot">·</span>
+            <span>12 min read</span>
+            <span class="insight-tag">AI workflow</span>
+            <span class="insight-tag">Xcode</span>
+          </div>
+          <h3>How I use Claude agents in a 200K-line Xcode project</h3>
+          <p>Six months of running an autonomous agent against a real iOS codebase. Where it shines, where it breaks, and the five workflow patterns that became habit.</p>
+          <div class="insight-byline">By Mei Chen — Engineering Lead, Cipher</div>
+        </a>
+
+        <div class="insight-card placeholder">
+          <div class="insight-meta">
+            <span>Coming soon</span>
+            <span class="insight-tag">Prototyping</span>
+            <span class="insight-tag">Multi-agent</span>
+          </div>
+          <h3>From idea to TestFlight in six hours</h3>
+          <p>A real walkthrough of a side-project that shipped to TestFlight in an afternoon. Tech stack, prompts, pitfalls, and what was worth automating vs. what wasn't.</p>
+          <div class="insight-byline">By [contributor]</div>
+        </div>
+
+        <div class="insight-card placeholder">
+          <div class="insight-meta">
+            <span>Coming soon</span>
+            <span class="insight-tag">Scaling</span>
+            <span class="insight-tag">Cost</span>
+          </div>
+          <h3>Routing five providers: when each one wins</h3>
+          <p>A breakdown of which model gets which task, with cost-per-PR numbers across Claude, GPT, DeepSeek, Gemini, and LingModel over a quarter of real work.</p>
+          <div class="insight-byline">By [contributor]</div>
+        </div>
+
+      </div>
+
+      <div class="pitch-block">
+        <h2>Want to write one?</h2>
+        <p>We're commissioning field notes from engineers running LingCode in production. Real codebases, real numbers, your name on the byline. Honoraria for accepted pieces.</p>
+        <a href="mailto:hhuangweijia@gmail.com?subject=Insights%20pitch" class="pitch-cta">Pitch an idea →</a>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

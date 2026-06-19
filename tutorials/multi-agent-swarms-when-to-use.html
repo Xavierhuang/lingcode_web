@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-agent swarms: when to use, when to skip — LingCode Tutorials</title>
+  <meta name="description" content="Spawning multiple agents in parallel multiplies tokens and complexity. Sometimes that's the right trade — exploration, audits, adversarial review. Often it isn't. The decision rule and the patterns that work.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/multi-agent-swarms-when-to-use.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/multi-agent-swarms-when-to-use.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/multi-agent-swarms-when-to-use.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/multi-agent-swarms-when-to-use.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Multi-agent swarms: when to use, when to skip",
+  "description": "Spawning sub-agents multiplies both capability and cost. The naive default — \"one big agent loop that does everything sequentially\" — is right surprisingly often. The cases where a swarm wins are specific: independent parallel work, adversarial review, exploration with multiple a",
+  "url": "https://lingcode.dev/tutorials/multi-agent-swarms-when-to-use.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/multi-agent-swarms-when-to-use.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Multi-agent swarms: when to use, when to skip"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "LingCode & AI",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Multi-agent swarms: when to use, when to skip",
+      "item": "https://lingcode.dev/tutorials/multi-agent-swarms-when-to-use.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/multi-agent-swarms-when-to-use.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">LingCode &amp; AI</a>
+      <span>/</span>
+      <span>Multi-agent swarms: when to use, when to skip</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-advanced">● Advanced</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Multi-agent swarms: when to use, when to skip</h1>
+      <p class="intro">Spawning sub-agents multiplies both capability and cost. The naive default — "one big agent loop that does everything sequentially" — is right surprisingly often. The cases where a swarm wins are specific: independent parallel work, adversarial review, exploration with multiple angles. This is the decision rule and the patterns that hold up.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>LingCode supports both. A single agent runs a long conversation, accumulates context as it goes, and tackles tasks step by step — what most people mean when they say "Claude wrote the code." A swarm spawns one or more <strong>sub-agents</strong>, each with their own clean context and their own scoped task, run in parallel or in sequence, with results integrated by the parent. The marketing story is "more agents = better results"; the engineering reality is "more agents = more tokens, more synthesis work, more places to lose the thread." Both shapes have their place. Picking right makes the difference between getting work done faster and getting an expensive distraction.</p>
+      <p>The mental model that holds up: <strong>agents share nothing except what you explicitly pass.</strong> Each sub-agent starts fresh — no memory of the parent's earlier work, no shared scratchpad. The parent agent passes a prompt; the sub-agent does the task; the parent reads the result. That isolation is the swarm's power (parallel work without context contamination) <em>and</em> its cost (you can't ask a sub-agent to "continue what we were doing" — you have to re-explain). Tasks where the right move requires the full conversation history are exactly the tasks where a swarm hurts. Tasks where each sub-task is independent and well-scoped are exactly where a swarm helps.</p>
+      <p>This tutorial covers the decision rule, the four patterns that work, the three that don't, and the specific LingCode features (Explore, Plan, parallel Task spawning) that operationalize them. We'll use code-review and refactor scenarios as the running examples because that's where the contrast is sharpest.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>What sub-agents share and what they don't (the isolation rule)</li>
+        <li>Four patterns where swarms beat a single agent</li>
+        <li>Three anti-patterns where swarms underperform</li>
+        <li>Concrete cost: how token spend scales with agent count</li>
+        <li>The Explore vs Plan vs Task split LingCode already exposes</li>
+        <li>How to phrase a parent prompt so sub-agents don't drift</li>
+        <li>The synthesis problem and how to design around it</li>
+      </ul>
+
+      <h2>Step 1: The one-rule framework</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>"Can the sub-tasks be done without knowing about each other?"</h3>
+          <p>If yes → swarm is a candidate. If no → single agent.</p>
+          <p>Examples that pass the test (sub-agents work fine):</p>
+          <ul>
+            <li>"Audit each of these 5 microservices for security issues." Each audit is independent; results combine at the end.</li>
+            <li>"Read these 12 files and summarize what each does." Per-file summaries don't need each other.</li>
+            <li>"Try three different architectures for this feature, return the best one." Independent attempts with a final pick.</li>
+            <li>"Critique this PR (one agent), independently of the agent that wrote it." Adversarial pairing.</li>
+          </ul>
+          <p>Examples that fail the test (single agent wins):</p>
+          <ul>
+            <li>"Refactor this codebase to use TypeScript strict mode." Every file's change depends on the patterns established in the earlier files.</li>
+            <li>"Debug this failing test." The debugging is a chain of inferences; each step builds on the last.</li>
+            <li>"Write a tutorial about X." The first paragraph constrains the second; sequential thinking is the work.</li>
+          </ul>
+          <p>When you find yourself thinking "I'll spawn one agent to do the planning, then another to do the work" — pause. The planner's context is exactly what the worker needs; spawning a separate worker means re-feeding all of it. A single agent with a "plan-then-act" prompt usually beats two sequential agents because no context is lost in handoff.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: The four patterns that work</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Each one wins for a specific reason</h3>
+          <p><strong>Pattern 1: Parallel independent work.</strong> N tasks, none depend on each other, results combine at the end. The canonical case: "audit these 5 services in parallel." Five sub-agents run simultaneously; total wall-clock time ≈ longest single audit, not sum of all audits. Token cost scales linearly with N but you're paying for actual work, not coordination.</p>
+          <p><strong>Pattern 2: Exploration with multiple angles.</strong> "Try three implementation approaches for this feature." Each sub-agent attempts one approach in isolation. The parent reads the three results and picks (or synthesizes). Wins when you'd otherwise commit to one approach prematurely; the parallel exploration catches the case where approach #2 was clearly better but you'd never have written it.</p>
+          <p><strong>Pattern 3: Adversarial review.</strong> One agent produces output; a second agent — with a clean context — reviews it. The reviewer's lack of context is the feature: they catch things the author rationalized. The classic version is "writer agent + editor agent" but it works for code (proposer + critic) and design (designer + skeptic). Two-agent minimum; more reviewers don't usually help.</p>
+          <p><strong>Pattern 4: Long-horizon plans with isolated stages.</strong> Some workflows have stages that legitimately don't need each other's working state — "research this topic" then "draft a doc using the research" then "format and lint the doc." Each stage's output is the next stage's input; intermediate scratch doesn't need to survive. A sequence of sub-agents (each fed only the prior's final output) keeps context budgets low and lets each stage focus.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: The three anti-patterns</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Cases where spawning sub-agents costs more than it earns</h3>
+          <p><strong>Anti-pattern 1: Spawning a sub-agent for a small task.</strong> If the task fits in 5–10 sentences of prompt and would take the parent under a minute, spawning a sub-agent adds setup overhead (re-explaining context, re-loading any tools the sub-agent needs) that exceeds the actual work. Threshold: only spawn for tasks that need their own dedicated context window or take genuine minutes of compute.</p>
+          <p><strong>Anti-pattern 2: The orchestrator-for-its-own-sake.</strong> Spawning a "manager" sub-agent whose only job is to spawn other sub-agents. The manager has no skill the parent lacks; it just adds a token-spending hop. If the parent can decide which sub-agents to spawn, the parent should spawn them directly.</p>
+          <p><strong>Anti-pattern 3: Chained sub-agents that should be one conversation.</strong> "Agent A reads the file, Agent B analyzes what A read, Agent C writes the fix." If A's understanding of the file is what B and C need, the chain is paying re-explanation cost at every handoff. A single agent reading the file and then doing A→B→C in conversation wins. The rule of thumb: <em>if the natural data flow between stages is everything the prior stage knew, the stages should be one agent.</em></p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Token cost grows roughly N×.</strong> Three sub-agents on the same task means roughly three times the token spend of a single agent doing it sequentially — sometimes more, because each sub-agent re-reads context the parent already had. Run the cost math before scaling: at $3/M input tokens for Claude Sonnet, a 3-agent swarm on a 500K-token codebase costs ~$4.50 per run before output tokens. Worth it for genuine exploration; expensive for "I had agents do it" theater.
+      </div>
+
+      <h2>Step 4: Phrasing the parent prompt</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Make the sub-agent's job crisp; don't make it figure out its own scope</h3>
+          <p>Sub-agents have no memory of the parent's reasoning. Whatever the parent passes is all they get. Two common mistakes in parent prompts:</p>
+          <ul>
+            <li><strong>Underspecification.</strong> "Audit this service" lets the sub-agent decide what to look at — security, performance, architecture, naming. Five sub-agents on five services may all interpret "audit" differently, producing reports that don't compare. Pin the scope: "Audit this service for SQL-injection patterns specifically. Look for unsanitized inputs reaching the DB layer; report each finding with file:line and a suggested fix."</li>
+            <li><strong>Over-explanation.</strong> Dumping the parent's full context into the sub-agent prompt defeats the swarm's purpose. The sub-agent now has the same context bloat the parent had. Pass only what the sub-agent specifically needs.</li>
+          </ul>
+          <p>A good parent prompt to a sub-agent reads like a self-contained bug report: enough context to do the work, no narrative about why the parent decided to delegate.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: LingCode's primitives</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Explore, Plan, parallel Tasks, custom subagents</h3>
+          <p>LingCode exposes the patterns above as specific tools:</p>
+          <ul>
+            <li><strong>Explore subagent</strong> — fast read-only search for "find / count / locate" work. Cheap, isolated context, returns excerpts. Use when the answer is "which files mention X" or "what's the structure of Y." Don't use for code editing — it can't write.</li>
+            <li><strong>Plan subagent</strong> — designs an implementation strategy for a non-trivial task. Returns step-by-step plans with critical-file identification. Use as the "plan stage" of Pattern 4 (long-horizon).</li>
+            <li><strong>General-purpose subagent</strong> — full agent loop with all tools. Use for genuinely parallel work: spawn N of these for N independent tasks.</li>
+            <li><strong>Custom subagents</strong> via <code>.claude/agents/</code> — define your own with constrained tool sets. Useful for repeated specialized tasks ("the SQL-injection auditor"). See <a href="/tutorials/write-a-subagent.html">Write a subagent</a>.</li>
+          </ul>
+          <p>The pattern matrix:</p>
+          <ul>
+            <li><em>Parallel independent (Pattern 1)</em> → multiple Explore or general-purpose agents in a single message.</li>
+            <li><em>Exploration with angles (Pattern 2)</em> → multiple general-purpose agents, each with a different approach in the prompt.</li>
+            <li><em>Adversarial review (Pattern 3)</em> → main agent produces, a custom "reviewer" subagent critiques.</li>
+            <li><em>Long-horizon (Pattern 4)</em> → sequential Explore → Plan → general-purpose chain.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Spawn in parallel, not in serial.</strong> If you're spawning 5 sub-agents for Pattern 1 (independent work), send them in a single message with 5 tool calls. LingCode runs them concurrently; total time is the longest single run. Spawning them one at a time serializes the work and 5× your wall-clock time for no reason.
+      </div>
+
+      <h2>Step 6: The synthesis problem</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>N agents return; now what?</h3>
+          <p>The output of a swarm is N partial answers. Combining them is its own task — and the most common place a swarm setup degrades into worse-than-single-agent results. Three approaches:</p>
+          <ul>
+            <li><strong>Concatenate.</strong> If each sub-agent's output is independent (e.g., per-file summaries), just stack them in a final report. Cheapest; works when there's no overlap to reconcile.</li>
+            <li><strong>Voting or top-pick.</strong> If sub-agents explored N alternatives (Pattern 2), the parent reads all N and picks the best (or merges the strongest parts). The parent's judgment is the synthesis.</li>
+            <li><strong>A synthesis pass.</strong> Feed all N outputs back into the parent (or a dedicated synthesizer subagent) with a prompt like "Here are five independent reports on the same codebase. Identify findings that appear in ≥3 reports — those are the high-confidence issues. Identify unique findings that look material — those need a second look."</li>
+          </ul>
+          <p>If synthesis is genuinely hard — the sub-agents produced overlapping, contradictory, hard-to-reconcile outputs — that's often a sign the task didn't actually pass the "independent sub-tasks" test from Step 1. Reconsider whether a single agent would have produced a cleaner answer.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: Worked examples</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Three real LingCode tasks, scored</h3>
+          <p><strong>Task: "Add tests for these 8 modules that have no test coverage."</strong> Each module's test suite is independent; the modules don't share code under test. <em>Pattern 1.</em> Spawn 8 general-purpose subagents, one per module, in parallel. Wall-clock time ≈ longest single test suite. Cost ≈ 8× single agent on one module. Worth it.</p>
+          <p><strong>Task: "Refactor this 50-file codebase from JavaScript to TypeScript."</strong> Every file's typing depends on imports / exports of other files; type definitions established early constrain later files. <em>Single agent.</em> A swarm would re-derive the same type model in each sub-agent and produce inconsistent type definitions across files. Sequential agent that holds the type map in context wins.</p>
+          <p><strong>Task: "Investigate this production crash."</strong> Debugging is inferential; each new piece of evidence redirects the next step. <em>Single agent.</em> Spawning a "log reader" and a "stack tracer" and a "git blamer" produces three partial views that the parent has to reconcile — exactly the work the single agent would have done while reading the artifacts itself, with full context.</p>
+          <p><strong>Task: "Write a marketing landing page; have one agent draft it and another critique it for clarity."</strong> Adversarial review benefits from clean context. <em>Pattern 3.</em> Author drafts; critic reviews without seeing the brainstorming; author revises based on the critique. Two agents, sequential, not parallel.</p>
+        </div>
+      </div>
+
+      <h2>When in doubt, single agent</h2>
+      <p>The most reliable default in 2026 is "one agent, long context, careful prompt." Modern Claude models handle 200K-token contexts well; modern tooling lets a single agent inspect 100s of files in one run. The cases where swarms add real value are specific and increasingly few — the model improvements that closed the "context too small" gap also closed most of the case for swarms. Use them when the task genuinely has independent parallel structure, or when adversarial isolation between author and reviewer is the point. Skip them when "more agents" is just decoration.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/write-a-subagent.html" class="tutorial-next-card">
+            <h3>Write a subagent</h3>
+            <p>Define a custom subagent in .claude/agents/ — needed for Pattern 3 (specialized reviewers)</p>
+          </a>
+          <a href="/tutorials/test-and-observe-your-llm-app.html" class="tutorial-next-card">
+            <h3>Test and observe your LLM app</h3>
+            <p>How to tell whether your swarm setup is actually better than a single agent — measure it</p>
+          </a>
+          <a href="/tutorials/writing-better-prompts.html" class="tutorial-next-card">
+            <h3>Writing better prompts</h3>
+            <p>The parent prompt that orchestrates sub-agents is the highest-leverage prompt to get right</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

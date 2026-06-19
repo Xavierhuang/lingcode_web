@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin sign in — LingCode</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <style>
+    .admin-auth { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 100px 24px 48px; }
+    .admin-auth-card {
+      width: 100%; max-width: 400px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 32px;
+    }
+    .admin-auth-card h1 { font-size: 1.375rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .admin-auth-card .sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 24px; line-height: 1.5; }
+    .admin-field { margin-bottom: 16px; }
+    .admin-field label { display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+    .admin-field input {
+      width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-strong);
+      background: var(--bg); color: var(--text); font-size: 1rem; font-family: var(--font);
+    }
+    .admin-field input:focus { outline: none; border-color: var(--signal); }
+    .admin-error { color: var(--red); font-size: 0.875rem; margin-top: 12px; min-height: 1.25em; }
+    .admin-auth-card .btn { width: 100%; justify-content: center; margin-top: 8px; }
+    .admin-back { margin-top: 20px; text-align: center; }
+    .admin-back a { color: var(--text-muted); font-size: 0.875rem; text-decoration: none; }
+    .admin-back a:hover { color: var(--signal); }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="admin-auth">
+    <div class="admin-auth-card">
+      <h1>Admin sign in</h1>
+      <p class="sub">Dashboard for signups and subscription tiers. Not linked from the public site.</p>
+      <form id="form" autocomplete="current-password">
+        <div class="admin-field">
+          <label for="pw">Password</label>
+          <input type="password" id="pw" name="password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary">Sign in</button>
+        <p class="admin-error" id="err"></p>
+      </form>
+      <div class="admin-back"><a href="/">Back to site</a></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var form = document.getElementById('form');
+      var err = document.getElementById('err');
+
+      function api(path, opts) {
+        opts = opts || {};
+        opts.credentials = 'include';
+        opts.headers = opts.headers || {};
+        if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
+          opts.headers['Content-Type'] = 'application/json';
+          opts.body = JSON.stringify(opts.body);
+        }
+        return fetch(path, opts).then(function (r) {
+          return r.json().then(function (j) {
+            if (!r.ok) throw new Error(j.error || r.statusText);
+            return j;
+          });
+        });
+      }
+
+      api('/api/admin/session').then(function (s) {
+        if (s.ok) window.location.replace('/admin-dashboard.html');
+      }).catch(function () {});
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        err.textContent = '';
+        var pw = document.getElementById('pw').value;
+        api('/api/admin/login', { method: 'POST', body: { password: pw } })
+          .then(function () {
+            window.location.href = '/admin-dashboard.html';
+          })
+          .catch(function (x) {
+            err.textContent = x.message || 'Sign in failed';
+          });
+      });
+    })();
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

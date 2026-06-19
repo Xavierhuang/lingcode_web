@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 Claude API 构建应用 — 提示词缓存、工具调用与模型迁移</title>
+  <meta name="description" content="没有启用提示词缓存的 Claude API 集成，等于在重复为已付过的 Token 买单。LingCode 以正确的方式集成 Anthropic SDK，内置缓存、工具调用与模型迁移。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/build-with-the-claude-api.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/build-with-the-claude-api.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/build-with-the-claude-api.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/build-with-the-claude-api.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Claude API 构建应用 — 提示词缓存、工具调用与模型迁移",
+  "description": "没有启用提示词缓存的 Claude API 集成，等于在重复为已付过的 Token 买单。仅凭缓存一项，通常就能将费用削减一半。本教程带你走完 Anthropic SDK 的标准调用范式，以及真正影响账单的优化手段，并说明新模型发布时哪些地方需要改、哪些不用动。",
+  "url": "https://lingcode.dev/zh/tutorials/build-with-the-claude-api.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/build-with-the-claude-api.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 Claude API 构建应用 — 提示词缓存、工具调用与模型迁移"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 Claude API 构建应用",
+      "item": "https://lingcode.dev/zh/tutorials/build-with-the-claude-api.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/build-with-the-claude-api.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">后端集成</a>
+      <span>/</span>
+      <span>使用 Claude API 构建应用</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>使用 Claude API 构建应用 — 提示词缓存、工具调用与模型迁移</h1>
+      <p class="intro">没有启用提示词缓存的 Claude API 集成，等于在重复为已付过的 Token 买单。仅凭缓存一项，通常就能将费用削减一半。本教程带你走完 Anthropic SDK 的标准调用范式，以及真正影响账单的优化手段——并说明新模型发布时，哪些地方需要改、哪些不用动。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么"能跑就行"是最贵的默认选项</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>文档里最短的 Anthropic SDK 示例确实能运行——但它默认带着三个软性缺陷，在任何有真实流量的场景下都会烧钱：</p>
+          <ul>
+            <li><strong>没有提示词缓存。</strong>每次请求都要重新计费完整的系统提示、完整的工具定义，以及上传的所有上下文。缓存后的 Token 费用约为基础输入价格的 10%。如果你的聊天机器人有 4 KB 的系统提示、每天 100 个用户，跳过缓存等于每天都在白白花钱。</li>
+            <li><strong>用字符串解析来处理工具调用。</strong>手写"如果模型返回 <code>SEARCH(...)</code> 就执行搜索"这类逻辑，是一条充满痛苦的路——脆弱、没有 Schema 校验、不支持并行工具调用。SDK 提供了完善的 <code>tools</code> 结构，直接用它就好。</li>
+            <li><strong>模型字符串硬编码到处都是。</strong>下一个 Sonnet 或 Opus 发布时，你希望只改一行，而不是改十二行。把它集中管理。</li>
+          </ul>
+          <p>LingCode 理解 Anthropic SDK 的调用范式，生成的集成代码默认包含缓存、工具调用和模型常量——让它来构建功能，你第一次拿到的就是优化后的版本。</p>
+        </div>
+      </div>
+
+      <h2>你需要准备什么</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong> — <a href="/LingCode-Installer.dmg" download>下载安装包</a>。</li>
+            <li><strong>Anthropic API 密钥</strong> — 在 <a href="https://console.anthropic.com">console.anthropic.com</a> 获取。将其写入 <code>.env</code> 文件，变量名为 <code>ANTHROPIC_API_KEY</code>。</li>
+            <li><strong>Node 或 Python 项目</strong> — 下方示例使用 TypeScript（<code>@anthropic-ai/sdk</code>），因为它覆盖了最完整的 API 形态；Python 版 <code>anthropic</code> SDK 与之方法一一对应。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>最简标准调用</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>让 LingCode 帮你搭建 SDK 的初始结构。它生成的代码形态如下：</p>
+          <pre><code>// src/claude.ts
+import Anthropic from "@anthropic-ai/sdk";
+
+const MODEL = "claude-sonnet-4-7-20260101"; // one place to bump
+const client = new Anthropic(); // reads ANTHROPIC_API_KEY from env
+
+export async function ask(userText: string) {
+  const res = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    messages: [{ role: "user", content: userText }],
+  });
+  return res.content[0].type === "text" ? res.content[0].text : "";
+}</code></pre>
+          <p>有三点值得注意：<code>MODEL</code> 是一个常量——所有调用都通过它路由。<code>max_tokens</code> 是显式指定的——SDK 要求必须提供。响应体是一个内容块数组，而不是字符串；模型可能返回多个块（文本、工具调用、思考过程），所以要始终检查类型。</p>
+          <div class="tip-box">
+            <strong>Python 的写法完全一样。</strong> <code>from anthropic import Anthropic; client = Anthropic(); client.messages.create(...)</code>。选你后端使用的语言即可，API 接口是一致的。
+          </div>
+        </div>
+      </div>
+
+      <h2>提示词缓存 — 不可跳过的优化</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>如果每次请求的系统提示都相同——通常都是——就把它标记为可缓存，第一次调用之后只需支付基础价格的 10%。五分钟的改动，有时能省下一半账单。</p>
+          <pre><code>const SYSTEM_PROMPT = `You are a support agent for Acme Widgets.
+Your knowledge base:
+
+${KNOWLEDGE_BASE_TEXT}
+
+Always cite the section number when answering.`;
+
+const res = await client.messages.create({
+  model: MODEL,
+  max_tokens: 1024,
+  system: [
+    {
+      type: "text",
+      text: SYSTEM_PROMPT,
+      cache_control: { type: "ephemeral" },
+    },
+  ],
+  messages: [{ role: "user", content: userText }],
+});</code></pre>
+          <p>有两条规则需要牢记：</p>
+          <ul>
+            <li><strong>缓存稳定的前缀部分。</strong>系统提示、工具定义、用户正在查询的大型文档——任何在对话轮次之间不会变化的内容都适合缓存。缓存键是字面的前缀字节，因此哪怕改动一个字符都会使缓存失效。</li>
+            <li><strong>有最小 Token 数限制。</strong>被缓存的内容块有 Token 数量下限（撰写本文时，Sonnet 为 1024，Haiku 为 2048）。太短的系统提示不会被缓存——SDK 也不会报错，只是悄悄按全价计费。请通过响应中的 <code>res.usage.cache_creation_input_tokens</code> 和 <code>cache_read_input_tokens</code> 来确认缓存是否真正命中。</li>
+          </ul>
+          <div class="warn-box">
+            <strong>注意缓存的 TTL。</strong>临时缓存条目在最后一次命中后约 5 分钟过期。如果你的流量是突发型的（发一个请求，然后 10 分钟没有流量），每次突发都要重新付创建成本。对于稳定的高流量，临时缓存是净收益；对于不规律的流量，需要权衡。
+          </div>
+        </div>
+      </div>
+
+      <h2>工具调用 — 正确的姿势</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>工具调用是一个三步协议：你声明工具，模型返回 <code>tool_use</code> 块，你回复 <code>tool_result</code>。SDK 提供了类型化的结构；不要把它退化成字符串解析。</p>
+          <pre><code>const tools = [
+  {
+    name: "get_weather",
+    description: "Get current weather for a city.",
+    input_schema: {
+      type: "object",
+      properties: {
+        city: { type: "string", description: "City name, e.g. 'Paris'." },
+      },
+      required: ["city"],
+    },
+  },
+];
+
+let messages = [{ role: "user", content: "What's the weather in Tokyo?" }];
+
+while (true) {
+  const res = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    tools,
+    messages,
+  });
+
+  if (res.stop_reason !== "tool_use") {
+    // Plain answer — done.
+    return res.content;
+  }
+
+  // The model wants a tool. Run it, reply, loop.
+  const toolUse = res.content.find((b) => b.type === "tool_use");
+  const result = await runTool(toolUse.name, toolUse.input);
+
+  messages.push({ role: "assistant", content: res.content });
+  messages.push({
+    role: "user",
+    content: [
+      {
+        type: "tool_result",
+        tool_use_id: toolUse.id,
+        content: JSON.stringify(result),
+      },
+    ],
+  });
+}</code></pre>
+          <p>当 <code>stop_reason</code> 不是 <code>tool_use</code> 时（通常是 <code>end_turn</code>），循环结束。模型可能在一次响应中返回多个 <code>tool_use</code> 块（即并行工具调用）；把它们全部执行，然后在一条用户消息中返回所有 <code>tool_result</code>。</p>
+          <div class="tip-box">
+            <strong>也要缓存工具数组。</strong>工具定义在请求间是稳定的——在列表最后一个工具上添加 <code>cache_control: { type: "ephemeral" }</code>，即可将整个工具块标记为可缓存。工具数组越大，效果和缓存大型系统提示一样显著。
+          </div>
+        </div>
+      </div>
+
+      <h2>流式输出 — 让聊天界面不再让用户等</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>同样的调用，改为流式：</p>
+          <pre><code>const stream = client.messages.stream({
+  model: MODEL,
+  max_tokens: 1024,
+  messages: [{ role: "user", content: userText }],
+});
+
+for await (const event of stream) {
+  if (event.type === "content_block_delta" &&
+      event.delta.type === "text_delta") {
+    process.stdout.write(event.delta.text);
+  }
+}
+
+const final = await stream.finalMessage();
+console.log("usage:", final.usage);</code></pre>
+          <p>流式事件包括 <code>message_start</code>、<code>content_block_start</code>、<code>content_block_delta</code>、<code>content_block_stop</code>、<code>message_delta</code>、<code>message_stop</code>。大多数 UI 场景只需要渲染 <code>text_delta</code> 增量；其余的是内务事件。<code>finalMessage()</code> 会返回完整响应——用量统计和停止原因都在里面。</p>
+        </div>
+      </div>
+
+      <h2>其他值得了解的接口</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>LingCode 可以帮你接入以下任何一项，但它们不是随意的选择——每个都有特定的适用场景：</p>
+          <ul>
+            <li><strong>Batch API。</strong>一次提交最多 10 万个请求，24 小时内返回结果，价格比同步调用便宜 50%。适合夜间批量数据处理；不适合聊天场景。</li>
+            <li><strong>Files API。</strong>上传一次 PDF 或文档，通过 ID 在多次请求中复用。当同一份文件被反复查询时，配合提示词缓存效果更佳。</li>
+            <li><strong>引用（Citations）。</strong>将文档作为内容块传入，并设置 <code>citations: { enabled: true }</code>，模型会返回指向源文本片段的引用对象。这是真实的溯源，不是模型凭感觉给出的答案。</li>
+            <li><strong>扩展思考（Extended thinking）。</strong>在复杂问题上设置 <code>thinking: { type: "enabled", budget_tokens: 5000 }</code>。模型会生成一个 <code>thinking</code> 内容块（在工具调用间保持，不会重新推理）。代价是这些思考 Token 会计费。适合数学、代码、多步骤规划；对"总结这段话"这类任务则是大材小用。</li>
+            <li><strong>记忆（Memory）。</strong>新的 <code>memory</code> 工具让模型能在多个会话间写入持久笔记。适合长期运行的智能体；在依赖它之前，先确认该模型的训练数据中确实包含此工具（查看模型说明页）。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>模型版本迁移</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>新的 Sonnet 或 Opus 发布时，迁移通常只需改一行——但回归检测是你的责任。API 在这些版本间是稳定的；模型的行为却不一定。</p>
+          <pre><code>// Before
+const MODEL = "claude-sonnet-4-6-20251022";
+
+// After
+const MODEL = "claude-sonnet-4-7-20260101";</code></pre>
+          <p>替换后需要检查以下几点：</p>
+          <ul>
+            <li><strong>运行现有的评估套件。</strong>如果你还没有，现在正是补上的时机——选 20 个有代表性的输入，对比两个模型版本的输出差异。</li>
+            <li><strong>重新验证提示词缓存。</strong>新模型 = 新缓存。第一次请求必然是缓存未命中，这是正常的。验证后续请求是否命中缓存（<code>cache_read_input_tokens &gt; 0</code>）。</li>
+            <li><strong>重新验证工具调用结构。</strong>较新的模型有时偏好不同的工具参数结构。如果工具调用出现了回退，修复方法通常是收紧工具描述，而不是回滚模型版本。</li>
+            <li><strong>重新检查 max_tokens。</strong>较新的模型可能支持更大的输出窗口；如果你的提示词曾经被截断，考虑调高 <code>max_tokens</code>。</li>
+          </ul>
+          <p>废弃模型的迁移流程相同——Anthropic 会公布下线日期，在此之前更新常量即可。当你问 LingCode "当前 Sonnet 模型字符串是什么"时，它会读取模型废弃页面，并生成带回归测试的迁移代码。</p>
+          <div class="warn-box">
+            <strong>不要在生产环境中使用 <code>claude-3-5-sonnet-latest</code> 这类别名。</strong>它们会在你不知情的情况下漂移。请固定到带日期的快照版本（如 <code>claude-sonnet-4-7-20260101</code>），并有计划地进行迁移。
+          </div>
+        </div>
+      </div>
+
+      <h2>费用监控 — 追踪真正重要的指标</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>每次 Anthropic 响应都携带用量统计。记录它们：</p>
+          <pre><code>console.log({
+  input: res.usage.input_tokens,
+  output: res.usage.output_tokens,
+  cache_create: res.usage.cache_creation_input_tokens,
+  cache_read: res.usage.cache_read_input_tokens,
+});</code></pre>
+          <p>有两个数字值得重点关注：<code>cache_read_input_tokens / (cache_read + input + cache_create)</code> 是你的缓存命中率——对于聊天机器人来说，超过 50% 意味着缓存正在发挥作用。<code>output_tokens / input_tokens</code> 是你的冗余比——如果它在数周内持续上升，说明你的提示词在悄悄引导模型输出更长的回答，账单也在跟着涨。</p>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用这套工作流</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>将整套工作流封装成一个 Skill，这样每次让 LingCode 接入 Claude 时，它都能自动选择正确的 API 结构、缓存策略和模型常量：</p>
+          <pre><code>---
+name: claude-api
+description: Build, debug, and optimize Claude API / Anthropic SDK apps in TypeScript or Python. Apps built with this skill should include prompt caching. Also handles migrating between Claude model versions (Sonnet/Opus/Haiku 4.5 → 4.6 → 4.7, retired-model replacements). Triggers: anthropic SDK import, @anthropic-ai/sdk usage, prompt caching questions, tool use loops, streaming, batch API, files API, citations, memory, thinking. Actions: build Claude app, add prompt caching, migrate model version, fix Anthropic API error, optimize tokens, wire tool use. Skip if: code imports openai or other-provider SDK.
+---
+
+When wiring or modifying Claude API code:
+
+1. Use @anthropic-ai/sdk (TS) or anthropic (Python). Same shape.
+2. Centralize the model string in one constant — never inline.
+   Pin to dated snapshots, not -latest aliases.
+3. Mark stable prefixes cacheable with
+   cache_control: { type: "ephemeral" }: system prompt, tools
+   array, large reused documents. Verify cache hits via
+   res.usage.cache_read_input_tokens.
+4. Use the SDK tool-use shape (tools: [...], tool_use block,
+   tool_result reply). Never string-parse tool calls.
+5. Handle parallel tool calls — a single response may contain
+   multiple tool_use blocks; run all, reply with all tool_results
+   in one user message.
+6. For chat UIs, stream content_block_delta events. Use
+   finalMessage() for the assembled response.
+7. Log usage stats on every call. Watch cache hit rate and
+   output/input ratio over time.
+8. On model migrations: change the constant, re-run the eval
+   suite, verify cache still hits, check tool-call shape didn't
+   regress.
+
+Prefer Batch API for offline enrichment (50% cheaper, 24h SLA).
+Prefer Files API + caching for repeated queries against the same
+document. Use extended thinking only when the problem warrants it
+(math, code, multi-step planning).</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/claude-api/SKILL.md</code> — 具体路径和 Skill 的发现机制，请参阅 <a href="/zh/tutorials/install-a-skill.html">安装 Skill</a>。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/setting-up-api-keys.html" class="tutorial-next-card">
+            <h3>配置 API 密钥</h3>
+            <p>正确存储和轮换 ANTHROPIC_API_KEY 等密钥，避免泄露</p>
+          </a>
+          <a href="/zh/tutorials/dispatch-parallel-agents.html" class="tutorial-next-card">
+            <h3>并行调度智能体</h3>
+            <p>当有多个独立的 Claude 调用需要执行时，并行化以缩短总耗时</p>
+          </a>
+          <a href="/zh/tutorials/run-a-prompt-on-a-schedule.html" class="tutorial-next-card">
+            <h3>定时执行提示词</h3>
+            <p>将 Claude 调用设置为每天早晨自动运行，或在本地按间隔循环执行</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创业者和需要专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资说明</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

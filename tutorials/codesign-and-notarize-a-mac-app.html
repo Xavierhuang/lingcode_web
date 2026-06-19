@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codesign and notarize a Mac app for distribution outside the App Store</title>
+  <meta name="description" content="Archive, codesign, notarize, and staple a Mac app for direct distribution — including the macOS 26.2+ TCC trap that breaks /Volumes writes, the errSecInternalComponent Full Disk Access trap, and Sparkle sign_update recovery after DerivedData wipes.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/codesign-and-notarize-a-mac-app.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/codesign-and-notarize-a-mac-app.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/codesign-and-notarize-a-mac-app.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/codesign-and-notarize-a-mac-app.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Codesign and notarize a Mac app for distribution outside the App Store",
+  "description": "Shipping a .app directly to users — bypassing the App Store — means archive, codesign, notarize, staple, package. The recipe is small. The traps are not.",
+  "url": "https://lingcode.dev/tutorials/codesign-and-notarize-a-mac-app.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/codesign-and-notarize-a-mac-app.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Codesign and notarize a Mac app for distribution outside the App Store"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Codesign and notarize a Mac app",
+      "item": "https://lingcode.dev/tutorials/codesign-and-notarize-a-mac-app.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/codesign-and-notarize-a-mac-app.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Codesign and notarize a Mac app</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Codesign and notarize a Mac app for distribution outside the App Store</h1>
+      <p class="intro">Shipping a <code>.app</code> directly to users — bypassing the App Store — means archive, codesign, notarize, staple, package. The recipe is small. The traps are not.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why this tutorial exists</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>Apple's notarization docs cover the happy path. They do not cover the three things that actually go wrong:</p>
+          <ul>
+            <li><strong>macOS 26.2+ silently revoked <code>/Volumes</code> write access for unsandboxed processes without Full Disk Access.</strong> Every DMG tool that mounts read-write at <code>/Volumes/MyApp/</code> and tries to copy files in now fails. The error surfaces as <em>"internal error in Code Signing subsystem"</em> mid-build — nothing about TCC, nothing about disks. You will chase your signing identity for an hour before finding it.</li>
+            <li><strong><code>errSecInternalComponent</code> from <code>codesign</code> means the host process can't read the Keychain.</strong> Not a corrupt certificate, not a missing private key — your terminal (or LingCode, or whatever is running <code>codesign</code>) lacks Full Disk Access. The error message is identical to half a dozen other failure modes, so the diagnosis is non-obvious.</li>
+            <li><strong>Sparkle's <code>sign_update</code> tool disappears whenever DerivedData is cleaned.</strong> Xcode rebuilds it on next archive, but if your release script runs <em>before</em> the rebuild it dies on a missing binary. The fix isn't to wait — it's to grab a prebuilt <code>sign_update</code> from the matching Sparkle GitHub release.</li>
+          </ul>
+          <p>LingCode runs this whole pipeline end to end. The steps below show what it does and how to recognize each failure the moment it surfaces.</p>
+        </div>
+      </div>
+
+      <h2>What you need before LingCode can ship</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>An active Apple Developer Program membership.</strong> Free Apple ID isn't enough — notarization requires a paid account.</li>
+            <li><strong>A "Developer ID Application" certificate</strong> in your login Keychain. Issued from <code>developer.apple.com</code> &gt; Certificates. Distinct from "Apple Development" (used for Xcode debug builds) and "Apple Distribution" (App Store).</li>
+            <li><strong>An app-specific password</strong> for notarytool. Generate at <code>appleid.apple.com</code> &gt; Sign-In and Security &gt; App-Specific Passwords. Don't use your Apple ID password directly.</li>
+            <li><strong>Your Team ID.</strong> Ten characters, visible at <code>developer.apple.com/account</code>. notarytool needs it explicitly.</li>
+            <li><strong>An entitlements file</strong> matching what your app actually does — Hardened Runtime is mandatory for notarization. Sandboxing is optional for direct distribution but required if you ever move to the App Store.</li>
+          </ul>
+          <p>Store the notarytool credentials in the Keychain once so you don't paste secrets into every release:</p>
+          <pre><code>xcrun notarytool store-credentials "AC_PASSWORD" \
+  --apple-id "you@example.com" \
+  --team-id "ABCDE12345" \
+  --password "xxxx-xxxx-xxxx-xxxx"</code></pre>
+          <p>From here on every <code>notarytool</code> command refers to <code>--keychain-profile "AC_PASSWORD"</code>, never the raw password.</p>
+        </div>
+      </div>
+
+      <h2>Phase 1 — Archive</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Ask LingCode to archive your app from the command line. The archive is a self-contained build product with debug symbols — what Xcode's Organizer would produce, just scripted:</p>
+          <pre><code>xcodebuild archive \
+  -project MyApp.xcodeproj \
+  -scheme MyApp \
+  -configuration Release \
+  -archivePath build/MyApp.xcarchive \
+  -destination "generic/platform=macOS" \
+  CODE_SIGN_STYLE=Manual \
+  DEVELOPMENT_TEAM=ABCDE12345 \
+  CODE_SIGN_IDENTITY="Developer ID Application: Your Name (ABCDE12345)"</code></pre>
+          <p>Manual signing here is deliberate — automatic signing in non-interactive scripts is the first thing that breaks in CI and the first thing to surface confusing keychain prompts. Pin the identity and team ID and the build is reproducible.</p>
+          <div class="tip-box">
+            <strong>If this step fails with <em>"No signing certificate"</em>:</strong> your Developer ID Application cert isn't in the login Keychain or has expired. <code>security find-identity -v -p codesigning</code> lists everything available; if your cert is missing, re-download it from <code>developer.apple.com</code>.
+          </div>
+        </div>
+      </div>
+
+      <h2>Phase 2 — Export</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Export the archive into a plain <code>.app</code> bundle. This is where the export options plist matters — direct distribution uses <code>developer-id</code>, App Store uses <code>app-store</code>:</p>
+          <pre><code># ExportOptions.plist
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+  &lt;key&gt;method&lt;/key&gt;
+  &lt;string&gt;developer-id&lt;/string&gt;
+  &lt;key&gt;teamID&lt;/key&gt;
+  &lt;string&gt;ABCDE12345&lt;/string&gt;
+  &lt;key&gt;signingStyle&lt;/key&gt;
+  &lt;string&gt;manual&lt;/string&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;
+
+xcodebuild -exportArchive \
+  -archivePath build/MyApp.xcarchive \
+  -exportPath build/export \
+  -exportOptionsPlist ExportOptions.plist</code></pre>
+          <p>After this, <code>build/export/MyApp.app</code> exists and is already signed by Xcode's export step. The next phase re-signs anything Xcode didn't sign — embedded helpers, frameworks, bundled binaries.</p>
+        </div>
+      </div>
+
+      <h2>Phase 3 — Codesign (and the FDA trap)</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>If your app bundles helper binaries (a CLI, a Node runtime, a Sparkle updater, a Python interpreter), they need to be signed individually <em>before</em> the outer bundle is signed. The order matters — sign inside-out:</p>
+          <pre><code># Sign each embedded binary first
+codesign --force --options runtime --timestamp \
+  --sign "Developer ID Application: Your Name (ABCDE12345)" \
+  --entitlements MyApp.entitlements \
+  "build/export/MyApp.app/Contents/Resources/bin/node"
+
+codesign --force --options runtime --timestamp \
+  --sign "Developer ID Application: Your Name (ABCDE12345)" \
+  --entitlements MyApp.entitlements \
+  "build/export/MyApp.app/Contents/Resources/bin/mycli"
+
+# Then re-sign the outer app bundle
+codesign --force --options runtime --timestamp --deep \
+  --sign "Developer ID Application: Your Name (ABCDE12345)" \
+  --entitlements MyApp.entitlements \
+  "build/export/MyApp.app"
+
+# Verify
+codesign --verify --deep --strict --verbose=2 "build/export/MyApp.app"
+spctl --assess --type execute --verbose "build/export/MyApp.app"</code></pre>
+          <p><code>--options runtime</code> enables Hardened Runtime. Without it, notarization rejects the build. <code>--timestamp</code> attaches a secure timestamp from Apple's server — also required.</p>
+          <div class="warn-box">
+            <strong>The <code>errSecInternalComponent</code> trap.</strong> If <code>codesign</code> fails with <em>"errSecInternalComponent"</em>, your terminal (or the process running codesign) doesn't have Full Disk Access. macOS blocks Keychain reads to private key material without it. Fix: System Settings &gt; Privacy &amp; Security &gt; Full Disk Access &gt; add Terminal.app (or whichever host process you're running from). Restart the terminal session before retrying. This is also why running ship scripts from inside another sandboxed host can fail mysteriously — run from a real Terminal.app window.
+          </div>
+        </div>
+      </div>
+
+      <h2>Phase 4 — Notarize and wait</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Notarization runs server-side at Apple. You zip the signed app, upload, and wait. The <code>--wait</code> flag blocks until the result comes back — usually 1–5 minutes, sometimes 30+:</p>
+          <pre><code># Zip the signed app
+ditto -c -k --keepParent "build/export/MyApp.app" "build/MyApp.zip"
+
+# Submit and block until done
+xcrun notarytool submit "build/MyApp.zip" \
+  --keychain-profile "AC_PASSWORD" \
+  --wait</code></pre>
+          <p>On success the output reads <code>status: Accepted</code> with a UUID. If it says <code>Invalid</code>, pull the log:</p>
+          <pre><code>xcrun notarytool log &lt;submission-uuid&gt; \
+  --keychain-profile "AC_PASSWORD" \
+  notarization-log.json</code></pre>
+          <p>The JSON pinpoints which binary failed and why. Common causes: unsigned embedded helper (re-do Phase 3), missing Hardened Runtime flag, missing secure timestamp, or use of a private API in a third-party framework.</p>
+          <div class="tip-box">
+            <strong>Don't proceed to stapling until status is Accepted.</strong> A "soft accept" doesn't exist — either the build is notarized or it isn't.
+          </div>
+        </div>
+      </div>
+
+      <h2>Phase 5 — Staple</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Stapling attaches the notarization ticket to the app bundle so Gatekeeper can verify it offline (first launch on a user's Mac doesn't need network):</p>
+          <pre><code>xcrun stapler staple "build/export/MyApp.app"
+xcrun stapler validate "build/export/MyApp.app"</code></pre>
+          <p>The bundle is now ready to distribute. You can hand the <code>.app</code> directly to a user, but for a polished install you'll want it inside a DMG.</p>
+        </div>
+      </div>
+
+      <h2>Build the DMG — and the /Volumes trap</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>The naïve DMG recipe: <code>hdiutil create</code> a read-write image, mount at <code>/Volumes/MyApp/</code>, copy the app in, set the volume icon, unmount, convert to compressed read-only. This works on macOS 14 and earlier.</p>
+          <p>On macOS 26.2+, mounting at <code>/Volumes/</code> as an unsandboxed script without Full Disk Access fails silently or returns mid-pipeline errors that look like signing failures. The fix is to mount inside <code>/private/tmp/</code> instead, which TCC doesn't gate:</p>
+          <pre><code># Stage layout in a writable scratch dir
+STAGING="$(mktemp -d)/MyApp-staging"
+mkdir -p "$STAGING"
+cp -R "build/export/MyApp.app" "$STAGING/"
+ln -s /Applications "$STAGING/Applications"
+
+# Build the DMG via /private/tmp, not /Volumes
+hdiutil create -volname "MyApp" \
+  -srcfolder "$STAGING" \
+  -ov -format UDZO \
+  "build/MyApp.dmg"
+
+# Sign the DMG itself
+codesign --force --timestamp \
+  --sign "Developer ID Application: Your Name (ABCDE12345)" \
+  "build/MyApp.dmg"
+
+# Notarize and staple the DMG (separately from the app)
+xcrun notarytool submit "build/MyApp.dmg" \
+  --keychain-profile "AC_PASSWORD" --wait
+xcrun stapler staple "build/MyApp.dmg"</code></pre>
+          <p>The DMG needs its own notarization round-trip. Apple treats the disk image as a separately distributable artifact and Gatekeeper will block download-then-mount if the DMG itself isn't notarized.</p>
+          <div class="warn-box">
+            <strong>If <code>hdiutil create</code> reports <em>"Resource busy"</em> or <em>"hdiutil: create failed"</em> on macOS 26.2+:</strong> it's the TCC <code>/Volumes</code> block. Either grant your terminal Full Disk Access, or — better — keep the staging path inside <code>/private/tmp/</code> and never touch <code>/Volumes/</code> directly.
+          </div>
+        </div>
+      </div>
+
+      <h2>Sparkle sign_update recovery</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>If your app uses Sparkle for auto-updates, your release script signs each DMG with an EdDSA key and appends the signature to your appcast. The tool is <code>sign_update</code>, built from the Sparkle source:</p>
+          <pre><code>sign_update build/MyApp.dmg
+# Outputs: sparkle:edSignature="…" length="…"</code></pre>
+          <p>The trap: <code>sign_update</code> lives in DerivedData (Xcode builds it on demand from the Sparkle Swift package). Any <code>rm -rf ~/Library/Developer/Xcode/DerivedData</code> wipes it. Your release script then fails on a missing binary, and the obvious fix — "rebuild the project" — costs 10+ minutes per attempt because Xcode has to re-resolve packages.</p>
+          <p>The faster fix: grab the prebuilt <code>sign_update</code> from the matching Sparkle GitHub release. Sparkle ships a tarball at <code>https://github.com/sparkle-project/Sparkle/releases/</code> that contains <code>bin/sign_update</code> — just check it into your repo or download it from your release script:</p>
+          <pre><code># In your release script, before signing
+if ! command -v sign_update &gt;/dev/null; then
+  SPARKLE_VERSION="2.6.4"   # whatever matches your project
+  curl -fsSL "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" \
+    | tar -xJ -C /tmp/sparkle
+  export PATH="/tmp/sparkle/bin:$PATH"
+fi
+sign_update build/MyApp.dmg</code></pre>
+          <p>This decouples your release pipeline from Xcode's DerivedData state. A fresh checkout on a fresh machine ships in minutes, not an Xcode rebuild later.</p>
+        </div>
+      </div>
+
+      <h2>Diagnostic ladder</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>When something fails mid-pipeline, walk the ladder top-to-bottom — each rung is faster to check than the next:</p>
+          <ul>
+            <li><strong><code>security find-identity -v -p codesigning</code></strong> — is the Developer ID Application cert present and unexpired? If not, the rest of the pipeline can't start.</li>
+            <li><strong><code>codesign --verify --deep --strict --verbose=2 MyApp.app</code></strong> — is the bundle internally consistent? Mismatches between embedded helper signatures and the outer bundle surface here.</li>
+            <li><strong><code>spctl --assess --type execute --verbose MyApp.app</code></strong> — would Gatekeeper accept this bundle right now? Pre-notarization this says "rejected"; post-staple it should say "accepted source=Notarized Developer ID."</li>
+            <li><strong><code>xcrun notarytool log &lt;uuid&gt; …</code></strong> — Apple's authoritative answer for any notarization rejection. Don't guess; pull the log.</li>
+            <li><strong><code>stapler validate MyApp.app</code></strong> — is the notarization ticket actually attached? If you skip stapling, first-launch on a fresh machine without network silently blocks.</li>
+            <li><strong>System Settings &gt; Privacy &amp; Security &gt; Full Disk Access</strong> — is the host process listed? <code>errSecInternalComponent</code> and <code>/Volumes</code> write failures both come from missing FDA.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>Drop this skill into LingCode's skills folder and ask LingCode for "codesign and notarize this Mac app" to run the whole pipeline:</p>
+          <pre><code>---
+name: mac-codesign-and-notarize
+description: Use when shipping a macOS app outside the App Store — codesign, notarize, staple, DMG creation, and Sparkle EdDSA signing. Triggers: 'codesign fails', 'notarization rejected', 'errSecInternalComponent', 'internal error in Code Signing subsystem', 'sign_update not found', 'DMG mount fails', /Volumes write blocked, Sparkle EdDSA issue, hardened runtime error. Actions: archive, export with developer-id method, codesign with --options runtime + --timestamp, notarytool submit --wait, stapler staple, hdiutil create DMG, sign Sparkle update. Errors: errSecInternalComponent (FDA missing), macOS 26.2+ TCC /Volumes trap, missing sign_update after DerivedData clean. Skip if: App Store submission (use ios-signing-and-app-store) or simulator builds.
+---
+
+Codesign, notarize, and staple a Mac app for direct distribution.
+
+Phase 1 — Archive: xcodebuild archive with manual signing,
+Developer ID Application identity pinned.
+
+Phase 2 — Export: xcodebuild -exportArchive with developer-id
+method in ExportOptions.plist.
+
+Phase 3 — Codesign: sign embedded helpers inside-out before the
+outer bundle. --options runtime + --timestamp required. If
+codesign reports errSecInternalComponent, the host process is
+missing Full Disk Access — fix in System Settings first.
+
+Phase 4 — Notarize: ditto into a zip, notarytool submit --wait
+with --keychain-profile. On Invalid, pull notarytool log for the
+exact rejected binary.
+
+Phase 5 — Staple: stapler staple, then stapler validate.
+
+DMG step: stage inside /private/tmp (NOT /Volumes — macOS 26.2+
+TCC blocks /Volumes writes without FDA). hdiutil create -format
+UDZO, codesign the DMG, notarize and staple separately.
+
+Sparkle sign_update: if missing after DerivedData clean, fetch
+the prebuilt binary from the matching Sparkle GitHub release
+rather than waiting for an Xcode rebuild.
+
+Diagnostic order: security find-identity → codesign --verify →
+spctl --assess → notarytool log → stapler validate → FDA check.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/mac-codesign-and-notarize/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/first-time-ios-app-store-submission.html" class="tutorial-next-card">
+            <h3>First-time App Store submission</h3>
+            <p>iOS distribution has a different signing model — walk it end to end before your first submission</p>
+          </a>
+          <a href="/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>Upload to TestFlight with LingCode</h3>
+            <p>Same notarytool family, different artifact — scripted upload to TestFlight</p>
+          </a>
+          <a href="/tutorials/fix-ios-signing-errors.html" class="tutorial-next-card">
+            <h3>Fix common iOS signing errors</h3>
+            <p>"No account for team," capability sync, automatic vs manual — the iOS counterparts</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

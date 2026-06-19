@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>起草一份发布公告 — LingCode 教程</title>
+  <meta name="description" content="LingCode 的 Announce 按钮读取你最近的提交，并同时起草 Slack 帖子、推文、LinkedIn 更新、博客段落和 CHANGELOG 条目 —— 让"写代码"和"宣布它"不再是两件分开的事。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/draft-a-release-announcement.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/draft-a-release-announcement.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/draft-a-release-announcement.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/draft-a-release-announcement.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>起草一份发布公告</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 入门</span>
+      </div>
+      <h1>起草一份发布公告</h1>
+      <p class="intro">写代码是一件事，告诉别人你写了什么又是另一件事 —— Slack、一条推文、一则 LinkedIn 帖子、一段博客文字、一条 CHANGELOG 记录。等你把这五份都写完，刚发布完那阵子的兴奋劲早就没了。Announce 按钮把这五个出口压缩成"一键"：它读取你最近的提交，把所有五种格式同时草拟出来，你只需要审稿和发送。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>大多数"发布公告类"工具会掉进两个陷阱里的一个。第一个是"发布说明生成器"陷阱：把你的提交标题拼接成一份项目符号列表。你确实得到了一条 CHANGELOG 条目，但其它都没有，而且那份列表读起来跟 <code>git log</code> 没两样 —— 因为它就是。第二个是"社交媒体编辑器"陷阱：给你一个空白文本框和一个字数统计，然后你在周五下午四点临时变成文案。Announce 走的是另一条路：它读取真实的 diff，请 AI 写一段"用户角度看到底发生了什么、为什么用户会在意"的人类摘要，再把这段摘要同时铺到五种格式里。你做的只是审稿、修一两句话；繁重的部分已经做完了。</p>
+      <p>这篇教程会从零开始走一遍这个循环。读完你会知道：怎么起草一份发布公告、怎么配置自己想要的几条腿，以及"书签"这个概念怎么让"自上次以来发生了什么"在没有数据库的情况下工作。</p>
+
+      <h2>你会学到</h2>
+      <ul>
+        <li>Announce 一次运行可以产出的四种输出</li>
+        <li>三种模式各自的适用场景</li>
+        <li>书签如何追踪"已经宣布过什么"</li>
+        <li>在哪里配 Slack、在哪里开启"保存营销草稿"</li>
+        <li>功能上线之后一次典型的 Announce 流程</li>
+      </ul>
+
+      <h2>第一步：找到按钮</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>工具栏里的纸飞机图标</h3>
+          <p>打开一个项目（必须是一个有至少一次提交的 git 仓库；只 <code>git init</code> 但没提交是没东西可宣布的）。看主窗口工具栏 —— 有一个小纸飞机图标，开启"显示工具栏标签"时它的文字就是 <strong>Announce</strong>。这就是入口。点一下它，会从图标下面弹出一个面板。</p>
+          <p>如果没开任何项目就点这个按钮，会出一个友好的"无打开项目"提示面板 —— 先打开一个文件夹。</p>
+          <p>这个面板就是向导本身。它分五个阶段：<strong>输入 → 起草 → 审稿 → 发送 → 完成</strong>。大多数时候你只会看到输入、审稿、完成这三步。</p>
+        </div>
+      </div>
+
+      <h2>第二步：挑一个模式</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>三种模式，一个决定</h3>
+          <p>输入面板顶部有一个 <strong>Mode</strong>（模式）选择器。这个选择只是在回答一个问题："我的代码是不是已经 push 过了？"</p>
+          <ul>
+            <li><strong>Announce only（仅宣布）</strong> <em>（默认）</em> —— 代码已经 commit 并 push 时用。Announce 不会动 git，只会把"上一次书签 到 HEAD"之间的提交起草成一份公告。</li>
+            <li><strong>All-in-one（一气呵成）</strong> —— 你手上还有未暂存、未提交的工作，想现在就推送出去时用。Announce 会全部 stage、用占位消息 commit、push 到 origin，然后再起草公告。</li>
+            <li><strong>Two-step（两步走）</strong> —— 跟 Announce only 一样，但"上次宣布"的书签只在你显式去设置里点"标记 HEAD 为已宣布"时才前进。适合同一份公告你想反复迭代几次再定稿。</li>
+          </ul>
+          <p>大多数日子你用 <strong>Announce only</strong> 就够了。其它两个是给特殊情况用的。</p>
+        </div>
+      </div>
+
+      <h2>第三步：理解书签</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>"新东西"到底是怎么定义的</h3>
+          <p>Announce 需要知道该总结哪些提交。它为每个仓库保存一个 <strong>书签</strong> —— 一个 commit SHA，标记着你上一次宣布到哪里。它每次起草的范围就是 <code>书签..HEAD</code>。</p>
+          <p>一个仓库第一次 announce 时还没有书签 —— Announce 会把最近 50 次提交当作范围，方便你做一份"从一开始"的初次公告。等你第一次发完，书签会自动前进到当前 HEAD，下一次就只看这个点之后的提交。</p>
+          <p>你可以在 <strong>设置 → Build &amp; Ship → Announce</strong> 里查看或覆盖书签，那里有两个按钮："将 HEAD 标记为上次已宣布"和"清除书签"。</p>
+          <div class="callout">
+            <strong>为什么不直接用 git tag？</strong> 因为 tag 自带"发布版本"的语义 —— 它是给版本号用的，不是给"我发过一条推"用的。书签是一个对 git 没意义、对 Announce 才有意义的软指针。
+          </div>
+        </div>
+      </div>
+
+      <h2>第四步：选要发哪几条腿</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>四个开关，四种输出</h3>
+          <p>模式选择器下面有三个开关（再加一个在设置里）：</p>
+          <ul>
+            <li><strong>Post to Slack（发到 Slack）</strong> —— 通过你配好的 webhook 把一条结构化消息发出去。消息里包含：标题、摘要、带短哈希的提交列表、diff 统计（变更文件数 / 新增 / 删除）、当前分支。在你接好 webhook 之前是禁用状态（见第六步）。</li>
+            <li><strong>Draft marketing copy（起草营销文案）</strong> —— AI 起草<strong>三个变体</strong>：一条推文（≤280 字符，对话风格，一个 CTA）、一则 LinkedIn 帖子（约 500 字符，专业、段落式）、一段博客文字（约 150 词，可以是一两段）。审稿面板里能看到全部三个并带复制按钮。</li>
+            <li><strong>Append to CHANGELOG.md（追加到 CHANGELOG）</strong> —— AI 把这次变更分类到六个分类之一（Added / Changed / Fixed / Removed / Deprecated / Security），在你仓库的 <code>CHANGELOG.md</code> 对应分类下加一条项目符号；文件不存在就创建；然后自动把文件 stage，等你下次 commit 一起提交。</li>
+            <li><strong>Also save marketing drafts to docs/announce/（同时保存营销草稿到 docs/announce/）</strong> <em>（在设置里）</em> —— 开启后，营销文案会同时写到 <code>docs/announce/&lt;日期&gt;-&lt;slug&gt;.md</code>，你之后能在 Finder 里翻出来。</li>
+          </ul>
+          <p>每条腿独立可选。常见组合：内部小改动用"只发 CHANGELOG"，团队相关用"Slack + CHANGELOG"，对外发布用四条腿全开。</p>
+        </div>
+      </div>
+
+      <h2>第五步：审稿</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>你能看到什么、能改什么</h3>
+          <p>点 <strong>Draft announcement</strong>（起草公告）之后，AI 会按顺序跑三个 prompt：</p>
+          <ol>
+            <li><strong>摘要</strong> —— 读取提交和 diff，产出一行标题（≤60 字符）和一段 3 句话的摘要。</li>
+            <li><strong>营销</strong> —— 拿摘要作为输入，产出推文 / LinkedIn / 博客三个变体。</li>
+            <li><strong>分类</strong> —— 为 CHANGELOG 选一个分类（Added / Changed / 等等）。</li>
+          </ol>
+          <p>审稿面板把这些堆叠展示：标题、摘要、Slack 帖子（可以在文本编辑器里就地编辑 —— 这是唯一一条能就地改的腿）、三个营销变体（每个带复制按钮）、CHANGELOG 条目预览。</p>
+          <p>如果哪里看着不对 —— 太长、语气不对、分类错了 —— 之后你可以在跟 AI 聊天时调一调 prompt，或者直接在 Slack 那一块就地改文字。营销变体最好当作"草稿起点"，你复制到自己的社交工具里再润色。</p>
+        </div>
+      </div>
+
+      <h2>第六步：接上 Slack（一次性）</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>设置 Incoming Webhook</h3>
+          <p>要让 Slack 这条腿生效，你需要一个 incoming webhook URL。在 Slack 里：<strong>Apps → Manage → Custom Integrations → Incoming Webhooks</strong>，选一个频道，复制 webhook URL。然后在 LingCode 里：<strong>设置 → Credentials → Slack incoming webhook</strong>，粘贴，保存。</p>
+          <p>在你设好之前，弹出面板里的 "Post to Slack" 开关是禁用状态，旁边会有一行提示指你去设置。webhook URL 保存在 Keychain 里，service 名是 <code>LingCode</code>。</p>
+          <p>不用 Slack？那就一直让那个开关关着，只用营销文案和 CHANGELOG 两条腿就行。</p>
+        </div>
+      </div>
+
+      <h2>第七步：发送</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>点了"发送"之后到底发生了什么</h3>
+          <p>在审稿面板点 <strong>Send</strong>（发送）。Announce 会按顺序跑每条已启用的腿：</p>
+          <ul>
+            <li>Slack 帖子作为一次 HTTP POST 发到你的 webhook。</li>
+            <li>如果开了"保存营销草稿"，营销内容会写到 <code>docs/announce/&lt;日期&gt;-&lt;slug&gt;.md</code>。</li>
+            <li>CHANGELOG 条目被写入并 stage。</li>
+          </ul>
+          <p>之后你会到结果面板，那里列出每条腿的结果（对勾或叉），加一句结果文字（"已发布"、"已保存到 draft-2026-05-19-magic-link.md"、"已追加到 Added 区段 —— 已 stage 等待下次提交"），以及一个文件夹图标 —— 点它能直接在 Finder 里高亮营销草稿和 CHANGELOG 文件。</p>
+          <p>如果某条腿失败了，其它腿还是会继续完成 —— Slack webhook 返回 404 不会挡掉 CHANGELOG 的写入。结果面板会告诉你具体哪条腿失败、为什么。</p>
+          <p>幕后，书签会前进到你当前的 HEAD（除非你在 Two-step 模式下），所以下次 Announce 只会覆盖在这之后新增的提交。</p>
+        </div>
+      </div>
+
+      <h2>一次典型的循环</h2>
+      <p>用过几次之后你会落到这种节奏：</p>
+      <ol>
+        <li>你写完了一个功能。Commit。Push。</li>
+        <li>点工具栏上的纸飞机。</li>
+        <li>瞄一眼提交列表 —— 确认是想要的范围。把这次不想要的腿关掉。</li>
+        <li>点 <strong>Draft announcement</strong>。等 10–20 秒看 AI 流式输出。</li>
+        <li>扫一眼 Slack 草稿，改一句话，把推文复制到你的社交工具里，点 <strong>Send</strong>。</li>
+        <li>CHANGELOG 文件已经 stage 了。把它放进你下次提交里（或者单独 commit 一次 "Update CHANGELOG"）。</li>
+      </ol>
+      <p>总耗时：大约一分钟。对比一下手写五个变体要多久。</p>
+
+      <div class="callout">
+        <strong>Announce 跟 Ship 不是一回事。</strong> Mobile 菜单里的 "Ship…"（以及 ⌘⇧⌥S）打开的是另一个功能 —— iOS App Store 发布向导。Announce 是用来"告诉别人"的；Ship 是用来"分发二进制"的。别搞混。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/codesign-and-notarize-a-mac-app.html" class="tutorial-next-card">
+            <h3>给 Mac app 做签名和公证</h3>
+            <p>配套技能：怎么真正把二进制 ship 出去，这样才有东西可"宣布"</p>
+          </a>
+          <a href="/zh/tutorials/writing-better-prompts.html" class="tutorial-next-card">
+            <h3>写更好的 prompt</h3>
+            <p>如果 AI 的草稿语气一直对不上 —— 写好 prompt 比上自定义指令省事得多</p>
+          </a>
+          <a href="/zh/tutorials/brainstorm-before-you-build.html" class="tutorial-next-card">
+            <h3>动手前先头脑风暴</h3>
+            <p>同样的循环，往生命周期前一步走 —— 先想清楚要 ship 什么</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI app 开发工具。为想发布的创始人和想要真工具的工程师而做。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/zh/cli.html">CLI</a></li>
+        <li><a href="/zh/features.html">Mac IDE</a></li>
+        <li><a href="/zh/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/zh/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/zh/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不是 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">每周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例</a></li>
+        <li><a href="/zh/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">介绍</a></li>
+        <li><a href="/privacy.html">隐私</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · 为发布而生</span>
+    <span>原生 · 快 · 诚实</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        const toggle = document.getElementById('nav-toggle');
+        if (toggle) toggle.checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

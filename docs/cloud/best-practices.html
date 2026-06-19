@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode Cloud best practices — the production guide | Docs</title>
+  <meta name="description" content="Ship LingCode Cloud apps to production: model for table-CRUD, paginate and count cheaply, index hot paths, lock down RLS and secrets, keep server logic in functions, stay within tier quotas, and run the pre-ship checklist.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/best-practices.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/best-practices.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/best-practices.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/best-practices.html">
+  <meta property="og:title" content="LingCode Cloud best practices — the production guide">
+  <meta property="og:description" content="Model for table-CRUD, paginate cheaply, index hot paths, lock down RLS and secrets, keep server logic in functions, and stay within tier quotas before you ship.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Best practices</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Production guide</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Best practices &amp; production guide</h1>
+      <p class="tldr"><strong>TL;DR:</strong> LingCode Cloud is fast to prototype on and forgiving in development — but a few habits separate a demo from a backend you can ship. Model your data for one-table-at-a-time reads, paginate and count without scanning, index the columns you filter on, turn on row-level security everywhere the anon key can reach, keep private keys in the vault and server logic in <a href="/docs/cloud/functions.html">functions</a>, and stay inside your tier's quotas. Then run the <a href="#preship">pre-ship checklist</a>.</p>
+      <p class="intro">Most of these rules fall out of one fact: the client SDK talks to a thin table-CRUD gateway, not to Postgres. That shapes how you model, how you read, and where security lives. Each section below is a short <em>why</em> plus concrete guidance, with the relevant guide linked so you can go deeper.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>1. Model for table-CRUD</h2>
+      <p>The runtime data API is <strong>one table at a time</strong> — no JOINs, no upserts, and at most 200 rows per page. If you design a normalized schema and then try to stitch it back together with client-side fan-out, every screen costs a round-trip per relation. Model for your <em>read paths</em> instead.</p>
+      <ul>
+        <li><strong>Denormalize</strong> where it saves a round-trip — copy the handful of fields a list view needs onto the row it renders, rather than fetching the parent separately.</li>
+        <li><strong>Create a VIEW</strong> in a migration for anything genuinely relational, then <code>select()</code> from it exactly like a table. The JOIN runs in Postgres; the client sees one flat result.</li>
+        <li>Use <strong>stable surrogate keys</strong> — <code>bigint generated always as identity</code> or <code>uuid</code> — never a mutable natural key.</li>
+        <li>Stamp a <code>user_id</code> column on every user-owned row so RLS has something to key off.</li>
+      </ul>
+      <pre><code>-- a read-path view: join once in the DB, select() it like a table
+create view order_lines_expanded as
+select l.id, l.order_id, l.qty, p.name as product_name, p.price
+from   order_lines l
+join   products p on p.id = l.product_id;</code></pre>
+      <p>See the <a href="/docs/cloud/database.html">Database guide</a> for the full query-builder surface and the no-JOIN/upsert rule.</p>
+
+      <h2>2. Paginate &amp; count without scanning</h2>
+      <p><code>select()</code> returns <strong>at most 200 rows</strong>. Reach for pagination early — it's not an optimization, it's the ceiling. Order by an <em>indexed</em> column and page with <code>.limit()</code> and <code>.range()</code>.</p>
+      <pre><code>const { data } = await lingcode
+  .from('posts')
+  .order('created_at', { ascending: false })  // indexed column
+  .range(0, 49)                               // first 50
+  .select();</code></pre>
+      <p>Counting is the trap. <strong>Don't</strong> count by fetching every page and summing lengths — that's an O(n) scan over the whole table on every view. Instead:</p>
+      <ul>
+        <li>Keep a <strong>counter column</strong> you maintain as rows are written, or</li>
+        <li>Expose totals and aggregates through a <strong>VIEW</strong> computed in the database and <code>select()</code> the single aggregate row.</li>
+      </ul>
+      <p>More on filters, ordering, and ranges in the <a href="/docs/cloud/database.html">Database guide</a>.</p>
+
+      <h2>3. Index what you filter and order by</h2>
+      <p>An unindexed filter or sort scans the table. That's invisible at 50 rows and fatal at 50,000. In a migration, add an index for <strong>every column you filter or order by at scale</strong>, and for every <strong>foreign-key column</strong>.</p>
+      <pre><code>create index if not exists idx_posts_author    on posts (author_id);
+create index if not exists idx_posts_created_at on posts (created_at desc);</code></pre>
+      <p><strong>pgvector</strong> columns need a vector index once the table grows — see the <a href="/docs/cloud/vector-search.html">Vector search guide</a>. And you don't have to find these by hand: the <strong>advisors</strong> scanner flags missing indexes and unindexed foreign keys for you. Run it before you ship — see <a href="/tutorials/scan-your-backend-with-advisors.html">Scan your backend with advisors</a>. Migrations basics are in the <a href="/docs/cloud/database.html">Database guide</a>.</p>
+
+      <h2>4. Security checklist</h2>
+      <p>The anon key ships in your browser bundle, so <strong>the server is the only place security actually happens</strong>. Treat the database as hostile-by-default and let RLS gate every read and write.</p>
+      <ul>
+        <li><strong>Enable RLS on every table the anon key can reach</strong>, and write a per-command policy (select / insert / update / delete) — RLS-on with no policy denies everything; RLS-off exposes everything.</li>
+        <li>The <strong>anon key is public</strong> by design — never treat it as a secret or rely on its obscurity.</li>
+        <li>Keep <strong>private vendor keys in the Secrets vault</strong> and read them only from <a href="/docs/cloud/functions.html">functions</a>, which run server-side. See the <a href="/docs/cloud/secrets.html">Secrets guide</a>.</li>
+        <li>Run the <strong>advisors before every ship</strong> to catch tables left open.</li>
+        <li><strong>Test policies as a signed-in app user</strong>, not from the console — the console bypasses RLS, so a query that works there can still be blocked (or wide open) for real users.</li>
+      </ul>
+      <p>The full policy model is in the <a href="/docs/cloud/security.html">Security guide</a>.</p>
+
+      <h2>5. Server logic &amp; secrets</h2>
+      <p>If a call needs a private key, it can't run in the browser — the key would be visible to anyone who opens dev tools. Vendor API calls and any key-bearing logic belong in <strong>functions</strong> that read <code>ctx.secrets</code>:</p>
+      <pre><code>// function — the secret never reaches the client
+export default async (req, ctx) =&gt; {
+  const key = ctx.secrets.STRIPE_SECRET_KEY;
+  // ...call the vendor server-side, return only what's safe...
+};</code></pre>
+      <p>Functions are short-lived, though. Two cases belong in a <strong>hosted Worker route</strong> instead of a function:</p>
+      <ul>
+        <li>A <strong>raw-body webhook</strong> (a Stripe webhook, for example) that needs the unparsed request body for signature verification.</li>
+        <li><strong>Request-time SSR</strong> — rendering on every request as part of a full-stack app.</li>
+      </ul>
+      <p>See the <a href="/docs/cloud/functions.html">Functions guide</a> and the <a href="/docs/cloud/hosting.html">Hosting guide</a>.</p>
+
+      <h2>6. Quotas &amp; cost</h2>
+      <p>Every tier has caps, and hitting one in production is a worse surprise than planning for it. Know yours before launch:</p>
+      <ul>
+        <li>Number of <strong>tables</strong>, <strong>objects</strong>, and <strong>total storage</strong>.</li>
+        <li><strong>Function count</strong> and <strong>function wall-clock</strong> — <code>3s</code> / <code>10s</code> / <code>30s</code> depending on tier.</li>
+        <li><strong>Emails per day.</strong></li>
+      </ul>
+      <p>The backend flags storage at <strong>80%</strong> and <strong>95%</strong> — watch for those warnings rather than waiting for a hard stop. And because functions are short-lived (<strong>≤30s</strong>), anything longer must be offloaded — split the work, queue it, or move it to a hosted Worker. Tier caps are listed on the <a href="/pricing.html">pricing page</a>.</p>
+
+      <h2>7. Migrations discipline</h2>
+      <p>Schema drift between environments is the quiet killer of "works on my backend." Make migrations the <strong>only</strong> way schema changes — never click-edit structure ad hoc.</p>
+      <ul>
+        <li>Run all DDL through the console's <strong>SQL</strong> tab or <code>apply_migration</code>.</li>
+        <li>Write <strong>idempotent</strong> DDL — <code>create table if not exists</code>, <code>create index if not exists</code> — so re-applying is safe.</li>
+        <li>Keep <strong>indexes, constraints, views, and RLS policies</strong> in migrations alongside the tables they belong to, not as one-off console edits.</li>
+      </ul>
+      <pre><code>create table if not exists invites (
+  id         uuid primary key default gen_random_uuid(),
+  email      text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_invites_email on invites (email);</code></pre>
+      <p>Migration mechanics live in the <a href="/docs/cloud/database.html">Database guide</a>.</p>
+
+      <h2>8. Performance</h2>
+      <p>Three habits keep an app responsive without extra infrastructure:</p>
+      <ul>
+        <li><strong>Subscribe, don't poll.</strong> Use realtime <code>subscribe()</code> to get row changes pushed over SSE instead of re-fetching on a timer — fewer requests, lower latency. See the <a href="/docs/cloud/realtime.html">Realtime guide</a>.</li>
+        <li><strong>Embed vectors at write time</strong> so search is just a query, not an embed-then-search round-trip. See the <a href="/docs/cloud/vector-search.html">Vector search guide</a>.</li>
+        <li><strong>Batch telemetry</strong> and let it auto-flush rather than sending an event per interaction. See the <a href="/docs/cloud/telemetry.html">Telemetry guide</a>.</li>
+      </ul>
+
+      <div class="info-box" id="preship">
+        <h3>Pre-ship checklist</h3>
+        <p>Before you flip an app to production, confirm:</p>
+        <ul>
+          <li><strong>RLS is on</strong> for every table the anon key can reach, and <strong>policies are written</strong> per command.</li>
+          <li>The <strong>advisors run clean</strong> — no missing indexes, no unindexed foreign keys, no open tables.</li>
+          <li>There's an <strong>index for every hot filter and sort</strong>.</li>
+          <li><strong>Secrets are in the vault</strong> — no private keys anywhere in client code.</li>
+          <li><strong>Defaults are set</strong> for every remote-config flag, so a missing value never breaks the app.</li>
+          <li>You're <strong>within tier quotas</strong> on tables, objects, storage, functions, function wall-clock, and emails/day.</li>
+        </ul>
+      </div>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/security.html">
+            <span class="card-eyebrow">Security</span>
+            <h3>Security guide</h3>
+            <p>RLS end to end: enable it, write per-command policies, and test as a real signed-in user.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/database.html">
+            <span class="card-eyebrow">Data</span>
+            <h3>Database guide</h3>
+            <p>Tables, the query builder, views, indexes, migrations, and the no-JOIN/upsert rule.</p>
+          </a>
+          <a class="tutorial-next-card" href="/tutorials/scan-your-backend-with-advisors.html">
+            <span class="card-eyebrow">Tutorial</span>
+            <h3>Scan with advisors</h3>
+            <p>Run the advisors scanner to catch missing indexes, unindexed foreign keys, and open tables.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

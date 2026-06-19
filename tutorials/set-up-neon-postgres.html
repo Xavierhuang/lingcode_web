@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set up Neon (managed Postgres) — LingCode Tutorials</title>
+  <meta name="description" content="Serverless Postgres with branching. Sign up, create a database, get the connection string, connect from your app. Free tier covers most early projects.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-neon-postgres.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-neon-postgres.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-neon-postgres.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/set-up-neon-postgres.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Set up Neon (managed Postgres)",
+  "description": "Serverless Postgres — scales to zero when idle, instant branching for dev environments, generous free tier. Sign up, copy the connection string, ship. Five minutes to a real database.",
+  "url": "https://lingcode.dev/tutorials/set-up-neon-postgres.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/set-up-neon-postgres.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Sign up + create a project",
+      "url": "https://lingcode.dev/tutorials/set-up-neon-postgres.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Connect from your app",
+      "url": "https://lingcode.dev/tutorials/set-up-neon-postgres.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Create your first table",
+      "url": "https://lingcode.dev/tutorials/set-up-neon-postgres.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Set up Neon (managed Postgres)",
+      "item": "https://lingcode.dev/tutorials/set-up-neon-postgres.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/set-up-neon-postgres.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Backend integrations</a>
+      <span>/</span>
+      <span>Set up Neon (managed Postgres)</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Set up Neon (managed Postgres)</h1>
+      <p class="intro">Serverless Postgres — scales to zero when idle, instant branching for dev environments, generous free tier. Sign up, copy the connection string, ship. Five minutes to a real database.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>When to pick Neon</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick Neon when</strong> — you want managed Postgres without bundled auth/storage. Or when you want database branching (one DB per pull request). Or when you want scale-to-zero pricing (idle DBs cost almost nothing).</li>
+            <li><strong>Pick <a href="/tutorials/set-up-supabase-database-and-auth.html">Supabase</a></strong> if you also want auth + storage in one signup.</li>
+            <li><strong>Pick <a href="/tutorials/set-up-planetscale-mysql.html">PlanetScale</a></strong> if MySQL fits your stack better.</li>
+            <li><strong>Pick AWS RDS / Cloud SQL</strong> if you're already deep in AWS / GCP.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Sign up + create a project</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Sign up at <a href="https://console.neon.tech/signup" target="_blank" rel="noopener">console.neon.tech ↗</a>. Free; GitHub or Google OAuth.</p>
+          <p>Create a project:</p>
+          <ul>
+            <li><strong>Name</strong> — anything.</li>
+            <li><strong>Postgres version</strong> — 17 (latest stable) recommended.</li>
+            <li><strong>Region</strong> — closest to your app server. AWS regions; Azure too.</li>
+            <li><strong>Database name</strong> — default <code>neondb</code> is fine.</li>
+          </ul>
+          <p>Provisioning takes ~5 seconds (one of Neon's tricks — Postgres copy-on-write from a base image).</p>
+        </div>
+      </div>
+
+      <h2>Grab the connection string</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Project dashboard shows the connection string immediately. Format:</p>
+          <pre><code>postgresql://&lt;user&gt;:&lt;password&gt;@ep-xxxxxx.region.aws.neon.tech/neondb?sslmode=require</code></pre>
+          <p>Copy it. Store in your backend env:</p>
+          <pre><code>DATABASE_URL=postgresql://user:pass@ep-xxxxxx.region.aws.neon.tech/neondb?sslmode=require</code></pre>
+          <p><strong>Two connection modes:</strong></p>
+          <ul>
+            <li><strong>Direct connection</strong> (shown above) — for long-running servers, traditional Node.js apps with a connection pool.</li>
+            <li><strong>Pooled connection</strong> — hostname has <code>-pooler</code> suffix; for serverless functions / edge runtimes where you can't hold a long-lived connection. Use this from Vercel, Cloudflare Workers, AWS Lambda.</li>
+          </ul>
+          <p>Neon's dashboard has a "Connection string" panel with both modes; copy the one that matches your runtime.</p>
+        </div>
+      </div>
+
+      <h2>Connect from your app</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Any Postgres library works — it's plain Postgres. Two common patterns:</p>
+          <p><strong>Traditional server (Node + pg):</strong></p>
+          <pre><code>npm install pg</code></pre>
+          <pre><code>import { Pool } from "pg";
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+const { rows } = await pool.query("SELECT * FROM users WHERE id = $1", [123]);</code></pre>
+          <p><strong>Serverless / edge (Neon's HTTP driver — no TCP):</strong></p>
+          <pre><code>npm install @neondatabase/serverless</code></pre>
+          <pre><code>import { neon } from "@neondatabase/serverless";
+
+const sql = neon(process.env.DATABASE_URL);
+
+const users = await sql`SELECT * FROM users WHERE id = ${123}`;</code></pre>
+          <p>The HTTP driver works in Cloudflare Workers, Vercel Edge Functions, and other places traditional TCP-based Postgres clients can't run. <a href="https://neon.tech/docs/serverless/serverless-driver" target="_blank" rel="noopener">Neon serverless driver docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Create your first table</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p><strong>Option A — Neon SQL Editor:</strong> dashboard → <strong>SQL Editor</strong>. Paste:</p>
+          <pre><code>CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);</code></pre>
+          <p>Click run.</p>
+          <p><strong>Option B — your own ORM</strong>: any standard tooling works since this is just Postgres. Common picks:</p>
+          <ul>
+            <li><a href="https://orm.drizzle.team/" target="_blank" rel="noopener">Drizzle ORM ↗</a> — TypeScript-first; great DX.</li>
+            <li><a href="https://www.prisma.io/" target="_blank" rel="noopener">Prisma ↗</a> — most popular; full schema management.</li>
+            <li><a href="https://kysely.dev/" target="_blank" rel="noopener">Kysely ↗</a> — typed query builder.</li>
+            <li><a href="https://node-postgres.com/" target="_blank" rel="noopener">node-postgres (pg) ↗</a> — raw SQL; smallest dep.</li>
+          </ul>
+          <p>Define your schema however you like; run migrations against the Neon URL.</p>
+        </div>
+      </div>
+
+      <h2>Database branching (the killer feature)</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Neon's branches are like git branches — copy-on-write snapshots of your database at any point in time. Take a branch, run migrations against it, throw it away if it's wrong.</p>
+          <p>Dashboard → <strong>Branches → Create branch</strong>. New branch is ready in seconds; gets its own connection string.</p>
+          <p>Use cases:</p>
+          <ul>
+            <li><strong>One branch per pull request.</strong> Run your CI's migration against a fresh branch from main; test the new schema in isolation; throw the branch away on PR merge.</li>
+            <li><strong>Staging without copying data.</strong> Branch from prod → use as staging. No data export/import.</li>
+            <li><strong>Time-travel debugging.</strong> Branch from "5 minutes ago" to inspect what was in the DB right before a bad migration.</li>
+          </ul>
+          <p><a href="https://neon.tech/docs/introduction/branching" target="_blank" rel="noopener">Branching docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Schema migrations</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Neon doesn't impose a migration tool — use whatever you like:</p>
+          <ul>
+            <li><strong>Drizzle Kit</strong> — <code>drizzle-kit generate</code> + <code>drizzle-kit migrate</code>. Generates SQL from TypeScript schema.</li>
+            <li><strong>Prisma</strong> — <code>prisma migrate dev</code> / <code>prisma migrate deploy</code>.</li>
+            <li><strong>node-pg-migrate</strong> — plain SQL migration files; minimal dependency footprint.</li>
+            <li><strong>Atlas</strong> — declarative; diffs schemas. <a href="https://atlasgo.io/" target="_blank" rel="noopener">atlasgo.io ↗</a>.</li>
+            <li><strong>Pure SQL files</strong> — keep them in git, apply with <code>psql</code>.</li>
+          </ul>
+          <p>The Neon branching pattern shines for migration safety: branch first, run the migration on the branch, verify it worked, then apply to main.</p>
+        </div>
+      </div>
+
+      <h2>Pooling reality check</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>If you're on a serverless runtime (Vercel, Cloudflare Workers, AWS Lambda), <strong>use the pooled connection string</strong>:</p>
+          <pre><code>postgresql://user:pass@ep-xxxxxx-pooler.region.aws.neon.tech/neondb?sslmode=require</code></pre>
+          <p>The <code>-pooler</code> suffix routes through Neon's connection pooler. Without it, each cold-start opens a new connection; you hit Postgres's connection limit fast.</p>
+          <p>Note: pooled connections don't support session-level features (advisory locks, <code>SET</code> statements that should persist, prepared statements). Use direct connection if you need those, with your own pool (e.g., pgBouncer).</p>
+        </div>
+      </div>
+
+      <h2>Backups + point-in-time restore</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Free tier: 24-hour history (you can branch from any point in the last day). Paid tiers extend history to 7 days, 30 days, or longer.</p>
+          <p>To "restore from backup," you branch from a previous timestamp and re-point your app at that branch's connection string. Faster than traditional dump/restore.</p>
+          <p>Manual backups via <code>pg_dump</code> still work for archival to S3 / cold storage. Run on a cron.</p>
+        </div>
+      </div>
+
+      <h2>Monitoring</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Dashboard → <strong>Monitoring</strong>. Shows:</p>
+          <ul>
+            <li>CPU + RAM per compute</li>
+            <li>Active connections</li>
+            <li>Database size</li>
+            <li>Storage history (how much data has been written / changed over time)</li>
+          </ul>
+          <p>For deeper observability — slow query log, index usage stats — enable <a href="https://neon.tech/docs/extensions/pg_stat_statements" target="_blank" rel="noopener">pg_stat_statements ↗</a> and run standard Postgres performance queries against it.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Auto-scaling reality.</strong> Neon's compute scales to zero after a few minutes of inactivity. First request after scale-to-zero takes ~500ms to "wake up." Fine for indie projects; for production with user-facing latency requirements, configure a minimum compute size that doesn't suspend. <a href="https://neon.tech/docs/manage/endpoints#autoscaling-configuration" target="_blank" rel="noopener">Autoscaling docs ↗</a>.
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>Free tier: 0.5 GB storage, 24-hour point-in-time recovery, 10 projects. Real for early stage.</p>
+          <p>Launch tier: $19/mo — 10 GB storage, 7-day PITR. Pro tier: $69/mo — 50 GB, 30-day PITR, autoscaling. <a href="https://neon.tech/pricing" target="_blank" rel="noopener">Neon pricing ↗</a>.</p>
+          <p>Compute usage billed separately past free tier; scale-to-zero keeps idle costs near zero.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://neon.tech/docs" target="_blank" rel="noopener">Neon docs ↗</a></li>
+        <li><a href="https://neon.tech/docs/serverless/serverless-driver" target="_blank" rel="noopener">Serverless driver ↗</a></li>
+        <li><a href="https://neon.tech/docs/introduction/branching" target="_blank" rel="noopener">Branching ↗</a></li>
+        <li><a href="https://neon.tech/docs/get-started-with-neon/connect-neon" target="_blank" rel="noopener">Connection options ↗</a></li>
+        <li><a href="https://neon.tech/docs/guides/framework" target="_blank" rel="noopener">Framework integration guides ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>Set up Supabase (database + auth)</h3>
+            <p>If you also need auth/storage in the same product</p>
+          </a>
+          <a href="/tutorials/set-up-planetscale-mysql.html" class="tutorial-next-card">
+            <h3>Set up PlanetScale (MySQL)</h3>
+            <p>MySQL alternative with similar serverless model</p>
+          </a>
+          <a href="/tutorials/auth-with-clerk.html" class="tutorial-next-card">
+            <h3>Auth with Clerk</h3>
+            <p>Pair Neon (DB) + Clerk (auth) for a flexible managed-everything stack</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

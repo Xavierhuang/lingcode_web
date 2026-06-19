@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I call ElevenLabs and other APIs from my LingCode Cloud backend? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Store a third-party API key (ElevenLabs, OpenAI, anything) on a LingCode Cloud backend and call it from your app without leaking the key. Encrypted secrets, the elevenlabs-tts and http-fetch function templates, and the egress allow-list.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/call-external-apis-from-your-backend.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/call-external-apis-from-your-backend.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/call-external-apis-from-your-backend.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-02T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-02T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/call-external-apis-from-your-backend.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Call external APIs from your backend",
+  "description": "Store a third-party API key encrypted on a LingCode Cloud backend and call the service from your app via the elevenlabs-tts and http-fetch function templates — the key stays server-side, and outbound calls are restricted to an owner-set allow-list.",
+  "url": "https://lingcode.dev/tutorials/call-external-apis-from-your-backend.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-02",
+  "dateModified": "2026-06-02",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/tutorials/call-external-apis-from-your-backend.html" },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Call external APIs from your backend"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Search", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "Backend integrations", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Call external APIs from your backend", "item": "https://lingcode.dev/tutorials/call-external-apis-from-your-backend.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/call-external-apis-from-your-backend.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Call external APIs from your backend</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-06-02</span>
+      </div>
+      <h1>How do I call ElevenLabs and other APIs from my backend?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> In the backend console (<a href="/backends.html">lingcode.dev/backends</a> → <strong>Settings → Secrets &amp; integrations</strong>) add your key, e.g. <code>ELEVENLABS_API_KEY</code>. Then call it from your app with <code>client.functions.invoke('elevenlabs-tts', { text })</code> — the key never leaves the server. For any other service, allow-list its domain under <strong>Allowed fetch hosts</strong> and use <code>client.functions.invoke('http-fetch', { url, headers })</code>, referencing secrets as <code>{{MY_KEY}}</code>.</p>
+      <p class="intro">The dangerous way to use a third-party API from a web app is the obvious one: put the key in your frontend code. Now it's in every visitor's browser. The right pattern is to keep the key on a server and call the service from there — but standing up "a server" just to hide a key is exactly the friction LingCode Cloud removes. Your managed backend already <em>is</em> that server, so it can hold the secret and make the call for you.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>This builds on a <a href="/tutorials/connect-a-managed-backend.html">connected managed backend</a>. Two pieces make external calls safe: an <strong>encrypted secret store</strong> (where the key lives, server-side, never sent to the browser) and <strong>function templates</strong> that run on the backend and make the outbound request with that key injected.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Where to store a third-party API key so it never reaches the client</li>
+        <li>The one-liner to call ElevenLabs text-to-speech from your app</li>
+        <li>How to call <em>any</em> allow-listed API with the generic <code>http-fetch</code> function</li>
+        <li>Why there's an allow-list, and what it protects you from</li>
+      </ul>
+
+      <h2>Step 1 — store the key as a secret</h2>
+      <p>Open <a href="/backends.html">lingcode.dev/backends</a> (signed in with the same account as your IDE), pick your backend, and go to <strong>Settings → Secrets &amp; integrations</strong>. Add a secret with an <code>UPPER_SNAKE</code> name and paste the value — for ElevenLabs that's <code>ELEVENLABS_API_KEY</code>. It's encrypted at rest (AES-256-GCM) and the console only ever shows you the key <em>names</em> afterward, never the values. Nothing about this secret is reachable from your app's code or network — only backend functions can read it.</p>
+
+      <h2>Step 2 — call ElevenLabs in one line</h2>
+      <p>There's a vetted <code>elevenlabs-tts</code> function built in. From your app (using the <a href="/tutorials/connect-a-managed-backend.html">LingCode SDK</a> the agent already wires up):</p>
+      <pre><code class="mono">const { data } = await client.functions.invoke('elevenlabs-tts', {
+  text: 'Hello from LingCode Cloud',
+  // voice_id and model_id are optional
+});
+// data.audio_base64 is MP3 audio you can play:
+new Audio('data:audio/mpeg;base64,' + data.audio_base64).play();</code></pre>
+      <p>The function runs on the backend, reads <code>ELEVENLABS_API_KEY</code> from the vault, calls ElevenLabs, and returns the audio. Your frontend never sees the key. If you ask the agent ("add a button that reads this text aloud with ElevenLabs"), it knows this template exists and writes exactly this call.</p>
+
+      <h2>Step 3 — any other API with <code>http-fetch</code></h2>
+      <p>For a service without a dedicated template, use the generic <code>http-fetch</code> — but first <strong>allow-list its domain</strong> under <strong>Settings → Allowed fetch hosts</strong> (e.g. <code>api.openai.com</code>). Then:</p>
+      <pre><code class="mono">const { data } = await client.functions.invoke('http-fetch', {
+  url: 'https://api.openai.com/v1/responses',
+  method: 'POST',
+  headers: { Authorization: 'Bearer {{OPENAI_API_KEY}}', 'content-type': 'application/json' },
+  body: { model: 'gpt-4o-mini', input: 'Say hi' },
+});</code></pre>
+      <p>The <code>{{OPENAI_API_KEY}}</code> token is replaced server-side with the secret you stored — it's never in the request your app makes. <code>data</code> carries the response status, headers, and body (parsed JSON when applicable).</p>
+
+      <div class="info-box">
+        <h3>Why the allow-list?</h3>
+        <p><code>http-fetch</code> runs <em>inside</em> LingCode's network, so an unrestricted "fetch any URL" would be a server-side request forgery (SSRF) hole — a way to poke internal services. The allow-list is the guard: only domains you explicitly add are reachable, and the request is additionally blocked from resolving to any private/internal address. Empty allow-list = no outbound calls. Dedicated templates like <code>elevenlabs-tts</code> are pre-vetted to a fixed host, so they don't need the allow-list.</p>
+      </div>
+
+      <div class="warn-box">
+        <strong>Keep keys in secrets, not code:</strong> the whole point is that the key lives in the encrypted vault and only the backend reads it. Never paste a live key into your app's source, a prompt, or an environment that ships to the browser. If a key leaks, rotate it at the provider and update the secret.</strong>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>Connect a managed backend</h3>
+            <p>The backend that holds the secret and runs the function</p>
+          </a>
+          <a href="/tutorials/semantic-and-hybrid-search.html" class="tutorial-next-card">
+            <h3>Semantic &amp; hybrid search</h3>
+            <p>Add meaning-based search with built-in embeddings</p>
+          </a>
+          <a href="/tutorials/require-mfa-on-your-backend.html" class="tutorial-next-card">
+            <h3>Require MFA on your backend</h3>
+            <p>Add a second factor for your backend's users</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col"><h4>Product</h4><ul><li><a href="/try.html">Web (/try)</a></li><li><a href="/cli.html">CLI</a></li><li><a href="/features.html">Mac IDE</a></li><li><a href="/pricing.html">Pricing</a></li><li><a href="/changelog.html">Changelog</a></li></ul></div>
+    <div class="footer-col"><h4>Developers</h4><ul><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li><li><a href="/getting-started.html">Getting started</a></li><li><a href="/cli.html">CLI reference</a></li><li><a href="/why-not-cursor.html">Why not Cursor</a></li></ul></div>
+    <div class="footer-col"><h4>Community</h4><ul><li><a href="/community.html">Friday workshops</a></li><li><a href="/community.html">For universities</a></li><li><a href="/examples.html">Showcase</a></li><li><a href="/blog.html">Blog</a></li><li><a href="/support.html">Support</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="/manifesto.html">Manifesto</a></li><li><a href="/pitch.html">Pitch</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/signin.html">Sign in</a></li><li><a href="/signup.html">Sign up</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

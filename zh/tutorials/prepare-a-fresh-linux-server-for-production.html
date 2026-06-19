@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>为生产环境准备全新 Linux 服务器 — LingCode 教程</title>
+  <meta name="description" content="全新的 Ubuntu VPS 并未做好生产就绪的准备。系统更新、非 root 用户、SSH 加固、ufw、fail2ban、swap、自动安全更新——这是你第一次部署前必须完成的通用清单。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/prepare-a-fresh-linux-server-for-production.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/prepare-a-fresh-linux-server-for-production.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/prepare-a-fresh-linux-server-for-production.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/prepare-a-fresh-linux-server-for-production.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "为生产环境准备全新 Linux 服务器",
+  "description": "全新的 Ubuntu VPS 并未做好生产就绪的准备。公网 IP 上线后数小时内，自动化扫描器就会对 SSH 尝试 root/admin/test 等常见密码。通用清单——更新、非 root 用户、仅 SSH 密钥认证、防火墙、fail2ban、swap、自动补丁——将一台裸机变成可以放心指向域名的服务器。",
+  "url": "https://lingcode.dev/zh/tutorials/prepare-a-fresh-linux-server-for-production.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/prepare-a-fresh-linux-server-for-production.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "为生产环境准备全新 Linux 服务器"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "为生产环境准备全新 Linux 服务器",
+      "item": "https://lingcode.dev/zh/tutorials/prepare-a-fresh-linux-server-for-production.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/prepare-a-fresh-linux-server-for-production.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>为生产环境准备全新 Linux 服务器</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>为生产环境准备全新 Linux 服务器</h1>
+      <p class="intro">全新的 Ubuntu VPS 并不具备生产就绪的状态。公网 IP 上线后数小时内，自动化扫描器就会在 SSH 上尝试 root/admin/test 等常见密码。通用清单——更新、非 root 用户、仅 SSH 密钥认证、防火墙、fail2ban、swap、自动补丁——能将一台裸机变成可以放心指向域名的服务器。二十分钟的投入，在第一次真正需要的时候就会得到回报。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>全新 Linux VPS 的默认状态是"一切放行，请进"。SSH 开启了 root 登录，密码认证也处于启用状态（通常是服务商通过邮件发送的默认密码），没有运行任何防火墙，也没有配置自动更新。公网 IP 分配后数分钟内，日志里就会出现来自自动化僵尸网络的大量 SSH 尝试记录，每小时数以千计，它们不断试探常见用户名和弱密码。大多数会失败，但也有漏网之鱼。</p>
+      <p>以下的加固措施并不特别。DigitalOcean、AWS、Hetzner、Linode 以及其他所有 VPS 服务商十年来一直在推荐同样的清单。之所以要认真完成，而不是跳过，是因为这些步骤<em>有条件地很快</em>：第一次需要二十分钟；之后每次复制同一份镜像或复用同一个 Ansible role 就行了。做过一次之后，这永远不会成为瓶颈。</p>
+      <p>本教程将逐步介绍 Ubuntu 22.04 / 24.04 服务器的通用首次启动清单（Debian 操作完全相同；Alpine 有所不同，相关差异会单独说明）。完成这些步骤后，你的服务器将具备：一个非 root 的部署用户、仅 SSH 密钥认证、活跃的防火墙、SSH 暴力破解限速、适合实例大小的 swap 文件、正常运行的日志轮转，以及配置好的无人值守安全更新。之后你就可以<a href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html">部署你的应用程序</a>了。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>自动化扫描器对新开公网 IP 的攻击方式（以及为什么 root SSH 是主要目标）</li>
+        <li>用户模型：<code>root</code> 仅用于紧急情况；日常工作通过具有 sudo 权限的用户进行</li>
+        <li>能关闭最常见攻击面的 SSH 配置</li>
+        <li>ufw——最简洁易用的防火墙，以及每台 Web 服务器都需要的三条规则</li>
+        <li>fail2ban——自动封禁 SSH 重复失败登录的 IP</li>
+        <li>Swap 文件：何时需要、需要多大；那个没人提的 OOM 安全机制</li>
+        <li>Unattended-upgrades：那个你忘记打的补丁，会被自动帮你打上</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前置条件：</strong>一台具有公网 IP 和 root 访问权限的全新 Ubuntu 22.04 或 24.04 服务器。本地 SSH 公钥（<code>~/.ssh/id_ed25519.pub</code> 或 <code>~/.ssh/id_rsa.pub</code>）。如果你的笔记本上还没有 SSH 密钥，请先生成一个：<code>ssh-keygen -t ed25519 -C "you@yourmail.com"</code>。<strong>不要跳过这一步、继续使用密码认证</strong>——那样会让本教程的其他步骤失去意义。
+      </div>
+
+      <h2>第一步：在做任何事之前先更新系统</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>新服务器上的第一条命令</h3>
+          <p>你启动的镜像是某个时间点的快照。从快照到你启动之间，安全补丁已经发布。在做其他任何事之前先把它们拉下来，因为后续步骤假设你使用的是最新的软件包：</p>
+          <pre><code>ssh root@&lt;PUBLIC_IP&gt;
+apt update
+apt full-upgrade -y
+# 内核更新可能会提示重启——选择接受。
+reboot</code></pre>
+          <p>等待一分钟后重新连接。现在你运行的是最新的补丁。选用 <code>full-upgrade</code> 而非 <code>upgrade</code>，是因为后者会搁置那些需要依赖变更的包——而那些通常正是安全相关的包。</p>
+        </div>
+      </div>
+
+      <h2>第二步：创建非 root 部署用户</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>root 留给紧急情况；日常工作通过 sudo 进行</h3>
+          <p>每个常见的用户名——<code>root</code>、<code>admin</code>、<code>ubuntu</code>、<code>deploy</code>、<code>www</code>——都在被扫描器猜测。缓解措施是<em>将</em>非默认用户名与仅密钥认证结合起来，但用户名的重要性其实低于人们的想象——防火墙和密钥认证才是真正起作用的。随便取个好记的名字；用 <code>deploy</code> 就挺好。</p>
+          <pre><code>adduser deploy
+# 设置一个密码。你基本上永远不会手动输入它；
+# 随机生成一个长密码存进密码管理器即可。
+# 只有在 sudo 要求时才会用到（你也可以禁用它）。
+
+usermod -aG sudo deploy</code></pre>
+          <p>将你的 SSH 密钥复制到新用户的 <code>authorized_keys</code>，这样你就可以无密码登录为 <code>deploy</code>：</p>
+          <pre><code>rsync --archive --chown=deploy:deploy ~/.ssh /home/deploy
+# rsync 会将 root 的 .ssh/authorized_keys 复制到 /home/deploy/.ssh/
+# 并修正所有权。验证：
+ls -la /home/deploy/.ssh/</code></pre>
+          <p>打开<em>第二个</em>终端（先不要断开 root 会话）并测试：</p>
+          <pre><code>ssh deploy@&lt;PUBLIC_IP&gt;
+# 应该可以无密码登录。从现在起，以 deploy 身份工作；
+# 需要时用 sudo 提权。</code></pre>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>暂时不要断开 root 会话。</strong>如果下一步错误配置了 SSH 并将你锁在外面，还开着的 root 会话就是你修复问题的方式。在第四步完整成功之前，请保持它开启。
+      </div>
+
+      <h2>第三步：禁用 SSH 的 root 登录和密码认证</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>sshd_config 中的两行配置；这是单次最大的安全收益</h3>
+          <p>以 <code>deploy</code> 用户身份操作（这样你也能顺便验证 sudo 可用）：</p>
+          <pre><code>sudo nano /etc/ssh/sshd_config</code></pre>
+          <p>找到并设置以下内容（如有注释则取消注释）：</p>
+          <pre><code>PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+# 可选但建议：
+ChallengeResponseAuthentication no
+UsePAM yes
+KbdInteractiveAuthentication no</code></pre>
+          <p>保存。在 Ubuntu 22.04+ 上，SSH 配置经常分散在 <code>/etc/ssh/sshd_config.d/*.conf</code> 文件中；服务商镜像有时会放一个 <code>50-cloud-init.conf</code>，重新启用密码认证。检查一下：</p>
+          <pre><code>sudo grep -rE "^(Password|PermitRoot)" /etc/ssh/sshd_config /etc/ssh/sshd_config.d/
+# .d/ 目录中任何将 PasswordAuthentication 设为 yes 或
+# PermitRootLogin 设为 yes 的行都会覆盖你的修改。将它们注释掉。</code></pre>
+          <p>应用配置：</p>
+          <pre><code>sudo systemctl restart ssh
+# （在旧版 Ubuntu 上，unit 名称是 sshd.service。systemctl restart sshd
+#  效果相同；systemd 会解析别名。）</code></pre>
+          <p>在你的笔记本上，打开一个<em>新</em>终端，尝试：</p>
+          <pre><code>ssh deploy@&lt;PUBLIC_IP&gt;     # 应该仍然能正常登录
+ssh root@&lt;PUBLIC_IP&gt;       # 应该被拒绝："Permission denied (publickey)"</code></pre>
+          <p>如果两者的表现都符合预期，原来的 root 会话就可以关闭了。如果出了任何问题，原窗口中开着的 root 终端就是你重新编辑 <code>sshd_config</code> 的方式。</p>
+        </div>
+      </div>
+
+      <h2>第四步：启用 ufw 并配置每台 Web 服务器都需要的三条规则</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>默认拒绝，只开放必要端口</h3>
+          <p>ufw（"简单防火墙"）是带有友好界面的 iptables。在 Ubuntu 上已预装但默认未激活：</p>
+          <pre><code>sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow OpenSSH       # 端口 22
+sudo ufw allow http          # 端口 80
+sudo ufw allow https         # 端口 443
+sudo ufw enable
+# 它会提示断开 SSH 的警告——你在上一行已经放行了，所以是安全的。
+sudo ufw status verbose</code></pre>
+          <p>如果你的服务商有自己的外部防火墙（Lightsail 的防火墙标签、AWS 安全组、DigitalOcean Cloud Firewalls），请同时保留 ufw <em>和</em>服务商防火墙。双重防护；任何一层都能在另一层失效时守住阵线。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>如果你的应用监听非标准端口</strong>（Node 开发用的 3000、Postgres 的 5432、Redis 的 6379）——<em>不要</em>在 ufw 中开放这些端口。将它们绑定到 <code>127.0.0.1</code>，通过 nginx 在 80/443 端口对外提供服务。防火墙规则列表应该永远只有三行；其他一切都走内部通道。
+      </div>
+
+      <h2>第五步：安装 fail2ban</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>自动封禁登录失败的 IP</h3>
+          <p>fail2ban 监视日志文件中的失败登录尝试，并添加防火墙规则封禁相应 IP。在仅密钥 SSH 的情况下，这是双重保险，但保险本身的成本很低：</p>
+          <pre><code>sudo apt install -y fail2ban
+sudo systemctl enable --now fail2ban</code></pre>
+          <p>默认的 jail 会监控 SSH。在<em>本地</em>配置文件中覆盖默认设置（不要编辑原始文件——软件包更新会将其覆盖）：</p>
+          <pre><code>sudo tee /etc/fail2ban/jail.local &gt;/dev/null &lt;&lt;'EOF'
+[DEFAULT]
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+
+[sshd]
+enabled = true
+EOF
+sudo systemctl restart fail2ban</code></pre>
+          <p>验证：<code>sudo fail2ban-client status sshd</code>。已封禁的 IP 会随时间积累；如果你不小心把自己封禁了，使用 <code>sudo fail2ban-client unban &lt;IP&gt;</code> 解封。</p>
+        </div>
+      </div>
+
+      <h2>第六步：添加 swap（小内存实例尤为重要）</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>不是为了性能——是为了在 OOM 时不挂掉</h3>
+          <p>大多数 VPS 服务商默认不分配 swap。在 512 MB 或 1 GB 的实例上，一次突发内存峰值（失控的日志解析、配置有误的 Node 应用）会触发 Linux OOM killer，它通常会干掉内存占用最高的进程——往往就是你的应用。Swap 不能让系统变快；它给 OOM killer 提供了喘息空间，防止最糟糕的情况——"服务随机消失"。</p>
+          <pre><code># 对于 1 GB 实例，2 GB swap 是合理的。按比例调整。
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# 使其在重启后持久化：
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# 调优：swap 使用的激进程度。数值越低 = 越晚才动用 swap。
+echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/99-swap.conf
+sudo sysctl -p /etc/sysctl.d/99-swap.conf
+
+# 验证：
+free -h</code></pre>
+          <p><code>free -h</code> 的输出现在会显示 Swap 行，容量为 2.0 GB。服务器再也不会因为一次内存峰值就 OOM 掉你的应用了。</p>
+        </div>
+      </div>
+
+      <h2>第七步：配置 unattended-upgrades</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>安全补丁在你睡觉时自动打上</h3>
+          <p>没打的补丁，就是漏洞利用的入口。Ubuntu 自带 <code>unattended-upgrades</code> 用于自动安全更新；在大多数服务商镜像上它已安装但未启用：</p>
+          <pre><code>sudo apt install -y unattended-upgrades apt-listchanges
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+# 对"自动下载并安装稳定版更新"选择"是"
+
+# 验证它按计划运行：
+systemctl status unattended-upgrades.timer</code></pre>
+          <p>默认只有安全更新会自动应用。应用更新（Node、Postgres）保持手动——这些更新可能破坏兼容性，不应自动应用。如果想启用更广泛的自动更新（不推荐用于生产环境），编辑 <code>/etc/apt/apt.conf.d/50unattended-upgrades</code> 并取消注释其他源的行。</p>
+          <p>内核更新后自动重启默认<em>关闭</em>。如果你想开启（推荐用于无状态服务器），在同一文件中设置 <code>Unattended-Upgrade::Automatic-Reboot "true";</code> 和 <code>Unattended-Upgrade::Automatic-Reboot-Time "03:00";</code>。有持久化状态的服务器（数据库）应保持手动重启。</p>
+        </div>
+      </div>
+
+      <h2>第八步：日志轮转完整性检查</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>已经配置好了；验证它正常工作</h3>
+          <p>Ubuntu 自带配置合理的 <code>logrotate</code>。你不需要额外设置，但要验证它确实在运行——配置错误的 logrotate 会在几个月内用旧日志填满磁盘：</p>
+          <pre><code>sudo logrotate -d /etc/logrotate.conf 2&gt;&amp;1 | head -20
+# -d 是"调试"模式——显示它将要做什么，但不实际执行。
+# 你应该看到日志文件被识别并等待轮转。
+
+# 手动运行（强制执行）：
+sudo logrotate -f /etc/logrotate.conf</code></pre>
+          <p>当你安装自己的服务（nginx、postgres、自定义应用）时，它们通常会在 <code>/etc/logrotate.d/</code> 中放置配置文件。默认设置——每周轮转、保留 4 周、压缩旧日志——对大多数服务来说都足够了。</p>
+        </div>
+      </div>
+
+      <h2>第九步：最终重启并验证</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <h3>在宣告胜利之前先确认能挺过重启</h3>
+          <pre><code>sudo reboot
+# 等待 30 秒，然后重新连接：
+ssh deploy@&lt;PUBLIC_IP&gt;</code></pre>
+          <p>重新连接后，快速运行五项检查：</p>
+          <pre><code># 1. 你是 deploy 用户，而不是 root。
+whoami    # → deploy
+
+# 2. Swap 处于活跃状态。
+free -h | grep Swap    # → 2.0Gi total
+
+# 3. 防火墙处于活跃状态并已正确配置。
+sudo ufw status    # → Status: active，以及你的三条规则
+
+# 4. fail2ban 正在运行。
+sudo systemctl is-active fail2ban    # → active
+
+# 5. Unattended-upgrades 正在运行。
+sudo systemctl is-active unattended-upgrades.timer    # → active</code></pre>
+          <p>五项全绿：服务器已就绪。是时候安装你的应用程序栈并部署了。</p>
+        </div>
+      </div>
+
+      <h2>本教程未涵盖的内容（以及如何进阶）</h2>
+      <p><strong>数据库 / 缓存</strong>——Postgres、Redis 等是独立的话题，各有其加固方式。参见<a href="/zh/tutorials/install-postgres-and-redis-on-your-server.html">安装 Postgres 和 Redis</a>。</p>
+      <p><strong>将 SSH 移到非标准端口</strong>——将 SSH 从 22 迁移到随机高端口存在争议：它能减少日志中大部分僵尸网络的噪音，但这属于通过隐晦实现的安全（security-through-obscurity），而非真正的防护。fail2ban + 仅密钥认证 + 禁止 root 才是真正有效的防御。如果你确实要移动端口，记得 <code>ufw allow &lt;new-port&gt;/tcp</code> 并更新本地的 <code>~/.ssh/config</code>。</p>
+      <p><strong>监控与日志传输</strong>——本地 syslog 作为审计记录还不错，但在服务器无法访问时毫无调试价值。CloudWatch agent（AWS）、Grafana Cloud（免费层）或 Sentry（用于应用错误）可以将日志传输到服务器之外。</p>
+      <p><strong>备份</strong>——服务商快照是最简单的基础。对于数据库状态，通过 cron 定期执行 <code>pg_dump | gzip | aws s3 cp -</code>，并定期验证恢复流程。</p>
+      <p><strong>幂等性重复执行</strong>——当你需要在第二台服务器上重复这些操作时，将它写成 Ansible playbook 或 bash 脚本。服务商专属镜像是下一步的选择；枯燥的文本脚本才是正确的起点。</p>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/install-postgres-and-redis-on-your-server.html" class="tutorial-next-card">
+            <h3>在服务器上安装 Postgres 和 Redis</h3>
+            <p>为你的应用提供后端服务，并配置那些默认未开启的安全选项</p>
+          </a>
+          <a href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>在 Lightsail 上运行 Node API</h3>
+            <p>服务器已加固，现在来部署点什么吧</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-server-from-aws-ec2.html" class="tutorial-next-card">
+            <h3>从 EC2 购买服务器</h3>
+            <p>另一条 AWS 服务器路径——同样适用这份加固清单</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

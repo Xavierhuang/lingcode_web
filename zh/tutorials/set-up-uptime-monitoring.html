@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>设置可用性监控 — LingCode 教程</title>
+  <meta name="description" content="外部探针不断询问"您的网站能访问吗？"这与错误追踪不同 — Sentry 告诉您代码何时崩溃；可用性监控告诉您何时没有人能访问您的网站。/health 端点与唤醒您的告警。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-uptime-monitoring.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-uptime-monitoring.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-uptime-monitoring.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/set-up-uptime-monitoring.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "设置可用性监控",
+  "description": "五分钟的配置，换来十年的"我比用户先知道出了问题"。外部服务每分钟从多个地区向您的网站发送探针；当探针失败时，您会在用户发推吐槽之前收到通知。这是最物美价廉的可靠性工具。",
+  "url": "https://lingcode.dev/zh/tutorials/set-up-uptime-monitoring.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/set-up-uptime-monitoring.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "设置可用性监控"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "设置可用性监控",
+      "item": "https://lingcode.dev/zh/tutorials/set-up-uptime-monitoring.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/set-up-uptime-monitoring.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">发布与基础设施</a>
+      <span>/</span>
+      <span>设置可用性监控</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>设置可用性监控</h1>
+      <p class="intro">五分钟的配置，换来十年的"我比用户先知道出了问题"。外部服务每分钟从多个地区向您的网站发送探针；当探针失败时，您会在用户发推吐槽之前收到通知。这是最物美价廉的可靠性工具。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>可用性监控和错误追踪听起来相似，但两者并不相同。<a href="/zh/tutorials/set-up-sentry-error-tracking.html">Sentry</a> 从内部监控您的应用代码——当请求崩溃时，Sentry 捕获异常并告知您。可用性监控则从外部监控您的网站——当服务器完全无法访问时，Sentry 无法通知您，因为 Sentry 自己也连不上服务器。两者相辅相成，缺一不可。本教程介绍后者。</p>
+      <p>核心原理很简单：外部服务每隔一分钟（或每五分钟，取决于套餐）向您的 URL 发起 HTTPS 请求，检查响应结果，当响应异常时发出告警。"正常"可以是以下任意条件：HTTP 200、响应体中包含特定字符串、响应时间低于 N 毫秒、TLS 证书有效。检测来自多个地理区域，以避免单区域网络问题产生误报。告警通过您选择的渠道送达：电子邮件、短信、Slack、Discord、PagerDuty、手机推送通知。</p>
+      <p>本教程以 <strong>UptimeRobot</strong> 为默认选项——其免费套餐能满足大多数个人和小型企业的需求（50 个监控器，5 分钟间隔），界面也确实简洁易用。Better Stack、Pingdom、StatusCake 和 Hyperping 功能相当；本教程的方法对它们同样适用。我们将完成以下内容：创建监控器、设计一个能区分"进程存活"与"数据库可达"的 <code>/health</code> 端点、接入 Slack 通知，以及（可选）搭建一个公开状态页面，让用户在出现问题时能自行查看。</p>
+
+      <h2>您将学到什么</h2>
+      <ul>
+        <li>可用性监控与错误追踪的区别，以及为何两者都需要</li>
+        <li>如何设计真正有用的 <code>/health</code> 端点——而不只是 <code>res.send("ok")</code></li>
+        <li>配置 HTTPS 监控（5 分钟间隔，多区域）</li>
+        <li>接入 Slack / Discord / 短信告警</li>
+        <li>状态页面：何时值得搭建，何时过度设计</li>
+        <li>避免告警疲劳——阈值与宽限期设置</li>
+        <li>附加内容：监控定时任务（cron 健康检查）</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前置条件：</strong>一个能响应 HTTPS 的公开 URL（已部署的网站、API 端点，或任何指向主机的域名）。如果您的 URL 还是 <code>localhost:3000</code>，请先部署——可用性监控需要一个公开端点才能探测。有 Slack 或 Discord 工作区会更方便，但不是必须的；邮件告警默认就能使用。
+      </div>
+
+      <h2>第一步：设计 /health 端点</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>三种类型，至少选一种</h3>
+          <p>您可以直接监控首页 URL——对于静态网站来说这没问题。但对于有数据库和依赖服务的应用，首页即使在数据库不可达时也可能返回 200（缓存的 HTML、静态降级页、通用错误页）。专门构建的 <code>/health</code> 端点能区分三个层级：</p>
+          <ul>
+            <li><strong>存活检查（Liveness）</strong>——"进程正在运行并响应请求。"一行代码即可实现：<code>app.get('/health', (req, res) =&gt; res.send('ok'))</code>。适合检测进程崩溃，但无法检测依赖故障。</li>
+            <li><strong>就绪检查（Readiness）</strong>——"进程正在运行，<em>并且</em>能与其依赖通信。"检查 Postgres 是否响应；检查 Redis 是否响应；检查所有必要的外部服务是否可达。全部通过则返回 200，否则返回 503 并附带详细信息。</li>
+            <li><strong>深度检查（Deep health）</strong>——与就绪检查相同，但检查项更多（队列长度、近期错误率等）。适用于状态页面和监控面板；通常响应太慢，不适合每分钟的可用性探测。</li>
+          </ul>
+          <p>对于可用性监控，<strong>就绪检查</strong>是最合适的形式：</p>
+          <pre><code>app.get('/health', async (req, res) =&gt; {
+  try {
+    await db.query('SELECT 1');
+    await redis.ping();
+    res.json({ status: 'ok', db: 'ok', redis: 'ok' });
+  } catch (err) {
+    res.status(503).json({ status: 'degraded', error: err.message });
+  }
+});</code></pre>
+          <p>这样，<code>/health</code> 返回 200 就意味着"进程存活，<em>且</em>依赖可达"——比监控首页提供了更有力的信号。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>保持 <code>/health</code> 轻量且无需认证。</strong>不要对其设置鉴权（监控器无法完成认证）；不要让它执行开销大的查询；不要在它前面加限流。该端点每分钟被多个监控器调用——如果它很慢，您的账单会增加；如果它受到拦截，监控器会误报故障。
+      </div>
+
+      <h2>第二步：创建 UptimeRobot 监控器</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>免费套餐满足大多数个人需求</h3>
+          <p>前往 <a href="https://uptimerobot.com" target="_blank" rel="noopener">uptimerobot.com</a> 注册。免费套餐包含 50 个监控器，5 分钟间隔。（付费 Solo 套餐每月 $7，支持 1 分钟间隔和短信通知。）</p>
+          <p>进入控制台 → <strong>+ New Monitor</strong>：</p>
+          <ul>
+            <li><strong>Monitor Type（监控类型）：</strong>HTTP(s)。</li>
+            <li><strong>Friendly Name（友好名称）：</strong>"Mybrand API" 或类似名称——会显示在告警中。</li>
+            <li><strong>URL：</strong><code>https://mybrand.com/health</code>。</li>
+            <li><strong>Monitoring Interval（监控间隔）：</strong>5 分钟（免费）或 1 分钟（付费）。</li>
+            <li><strong>Monitor Timeout（超时时间）：</strong>30 秒。响应超时的请求计为宕机。</li>
+            <li><strong>Advanced → Keyword Monitoring（关键词监控）</strong>：可选但实用。将关键词设为 <code>"ok"</code>，类型选"Yes — alert when keyword does not exist"。这样监控器不仅检查 HTTP 状态码，还会核实响应体中是否包含该字符串。那些返回 200 但附带错误信息的页面再也骗不过它了。</li>
+          </ul>
+          <p>保存后，监控器会在一分钟内开始探测，响应时间图表随即开始填充数据。</p>
+        </div>
+      </div>
+
+      <h2>第三步：添加告警渠道</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>邮件是默认选项；Slack / Discord 能精准唤醒责任人</h3>
+          <p>UptimeRobot 控制台 → <strong>My Settings</strong> → <strong>Alert Contacts</strong> → <strong>Add Alert Contact</strong>。每个"联系人"对应一个告警目标：</p>
+          <ul>
+            <li><strong>邮件</strong>——默认使用注册邮箱。免费。</li>
+            <li><strong>Slack</strong>——类型选 Slack，粘贴 Incoming Webhook URL。在 Slack 中：管理员在 <code>&lt;workspace&gt;.slack.com/apps</code> 搜索"Incoming Webhooks"→ 选择频道 → 复制 URL。告警会以监控器名称和宕机时长的形式发送到该频道。</li>
+            <li><strong>Discord</strong>——同理。Discord Webhook URL 来自频道的<strong>集成</strong>设置。</li>
+            <li><strong>短信</strong>——仅限付费套餐。适合"凌晨 3 点生产环境宕机时叫醒我"的场景。</li>
+            <li><strong>Webhook</strong>——用于接入自有系统（PagerDuty、Opsgenie、自定义系统）。状态变更时，UptimeRobot 会 POST 一个 JSON 数据包。</li>
+          </ul>
+          <p>添加联系人后，编辑监控器并勾选哪些联系人应接收其告警。生产监控器通常同时启用邮件、Slack 和短信；测试环境监控器仅启用邮件。</p>
+        </div>
+      </div>
+
+      <h2>第四步：避免告警疲劳</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>让告警真正有意义的关键设置</h3>
+          <p>对每次抖动都发出告警的监控器，最终会沦为背景噪音。三个设置可以改善这一问题：</p>
+          <ul>
+            <li><strong>宽限期（连续失败次数）：</strong>仅在 URL 连续失败 N 次后才发出告警。默认值 1 过于激进——建议设为 2 或 3。单次瞬间抖动不再打扰您，真正的故障仍会在 10–15 分钟内触发告警。</li>
+            <li><strong>多区域确认：</strong>在 UptimeRobot Pro 及竞品中，仅当多个监控区域均认定网站宕机时才发出告警。有效减少单区域网络问题导致的误报。</li>
+            <li><strong>维护窗口：</strong>将计划内的停机时间（发布窗口、计划维护）设为维护期，避免监控器在此期间发出告警。UptimeRobot：监控器 → <strong>Maintenance Window</strong> → 循环或一次性。</li>
+          </ul>
+          <p>目标是"每条告警都是真实的，每次真实故障都有告警"。朝任何一个方向偏移都会削弱监控的价值。</p>
+        </div>
+      </div>
+
+      <h2>第五步：状态页面（可选）</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>向用户公开服务可用性</h3>
+          <p>状态页面（status.mybrand.com）向用户展示您的服务各部分是否正常运行。出现问题时，用户查看状态页面而不是发邮件给客服。一切正常时，状态页面也是一种信任背书。</p>
+          <ul>
+            <li><strong>UptimeRobot 内置公开状态页面</strong>——免费，与您的监控器绑定。<strong>控制台 → Status Pages → Create</strong>。默认使用 UptimeRobot 子域名；付费套餐支持自定义域名。三分钟即可配置完成。</li>
+            <li><strong>Better Stack / Better Uptime</strong>——竞品服务，提供更丰富的状态页面（故障历史、计划维护公告、订阅通知）。仅限付费但价格合理；如果您有付费用户，值得考虑。</li>
+            <li><strong>Atlassian Statuspage</strong>——企业标准方案。价格昂贵（$29+/月），对小项目而言过于复杂。</li>
+            <li><strong>Cachet 或 Upptime 自托管</strong>——开源状态页面。免费但有运维成本。</li>
+          </ul>
+          <p>对于大多数用户量低于 1 万的项目，UptimeRobot 免费状态页面已经足够。只有当用户开始要求查看故障历史时，再考虑升级。</p>
+        </div>
+      </div>
+
+      <h2>第六步（附加）：监控定时任务</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>悄悄停止运行的 cron 任务</h3>
+          <p>HTTP 可用性监控只能捕获 HTTP 层面的故障。另一种常见的无声故障是：一个 cron 任务（夜间备份、每周摘要邮件、每小时清理）已经中断两周，却无人知晓。</p>
+          <p>解决方案：使用 <strong>Healthchecks.io</strong>（最多 20 个检查项免费）等服务，为每个 cron 任务生成一个唯一 URL。任务每次成功执行后向该 URL 发送探针。如果探针在预期时间内停止到达，Healthchecks 就会发出告警。</p>
+          <pre><code># In your cron job script, last line:
+curl -fsS --retry 3 https://hc-ping.com/&lt;your-unique-uuid&gt; &gt; /dev/null
+
+# In crontab:
+0 3 * * * /usr/local/bin/backup.sh &amp;&amp; curl -fsS https://hc-ping.com/&lt;uuid&gt;</code></pre>
+          <p>Healthchecks 知晓预期的执行计划（您自行配置），并在探针超期时通知您。这对备份任务尤为有用——"备份是否执行"这个问题，往往只有在需要还原数据的那一天才会被追问。</p>
+        </div>
+      </div>
+
+      <h2>何时不值得配置可用性监控</h2>
+      <p><strong>Vercel / Netlify / Cloudflare Pages 上的静态网站。</strong>这些平台的 CDN 可用性接近 100%；如果它们出现宕机，影响范围远超您的网站。添加可用性监控能捕获"您的配置导致构建失败"的情况，但这类问题通常会优先出现在部署日志中。</p>
+      <p><strong>仅供内部使用、无用户、无营收影响的工具。</strong>如果宕机只影响到您自己，且您无论如何都会在一小时内发现，那么监控器及其维护成本就不值得了。</p>
+      <p><strong>您在接下来 24 小时内无法响应告警。</strong>可用性监控最有价值的前提，是有人随时待命响应告警。没有这个条件，告警只会在收件箱里积压。等到您能真正处置凌晨 3 点告警的阶段，再配置监控也不迟。</p>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>配置 Sentry 错误追踪</h3>
+            <p>可用性监控的互补工具——在代码内部捕获错误，而不仅仅是在网络层</p>
+          </a>
+          <a href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>在 Lightsail 上运行 Node API</h3>
+            <p>/health 端点所在的后端服务</p>
+          </a>
+          <a href="/zh/tutorials/automate-deploys-with-github-actions.html" class="tutorial-next-card">
+            <h3>用 GitHub Actions 实现 CI/CD</h3>
+            <p>在上线前，将 /health 端点和可用性监控纳入您的部署检查清单</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速交付的创始人和追求真实工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

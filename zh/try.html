@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>在浏览器中体验 LingCode — 多模型 AI 编程</title>
+<meta content="同一个提示词，并排对比 Claude、DeepSeek-V4、OpenAI、Gemini 的回答。API 密钥保留在浏览器本地。选择文件夹后，AI 通过 File System Access API 直接编辑真实文件。" name="description"/>
+<meta content="index, follow" name="robots"/>
+<link href="https://lingcode.dev/zh/try.html" rel="canonical"/>
+<link href="https://lingcode.dev/try.html" hreflang="en" rel="alternate"/>
+<link href="https://lingcode.dev/zh/try.html" hreflang="zh" rel="alternate"/>
+<link href="https://lingcode.dev/try.html" hreflang="x-default" rel="alternate"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<meta name="theme-color" content="#FAFAFF"/>
+<link href="/style.css?v=20260531a" rel="stylesheet"/>
+<link href="/try/try.css?v=20260531d" rel="stylesheet"/>
+<script async="" src="/analytics.js?v=20260428a"></script>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/zh/try.html">体验</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">价格</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/tutorials.html">教程</a></li>
+    <li><a href="/zh/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html?next=/zh/try.html" id="nav-signin">登录</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>退出</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+<div id="dashboard-view" hidden>
+  <header class="dash-hero">
+    <h1 class="dash-title" data-i18n="tryp.dash_title">用 AI 构建应用</h1>
+    <p class="dash-lede" data-i18n="tryp.dash_lede">描述你想构建的内容，我们生成代码、预览并发布。</p>
+    <form class="dash-prompt-row" id="dash-prompt-form" autocomplete="off">
+      <textarea id="dash-prompt" class="dash-prompt" rows="2" placeholder="带 Stripe 结账的三档定价页面" spellcheck="false"></textarea>
+      <button type="submit" class="dash-launch-btn" id="dash-launch-btn" data-i18n="tryp.dash_launch">启动</button>
+    </form>
+    <p class="dash-prompt-hint"><span class="cmd-hint">⌘+Enter 启动</span></p>
+  </header>
+  <section class="dash-section">
+    <h2 class="dash-section-label" data-i18n="tryp.dash_templates">或者从模板开始</h2>
+    <div id="dash-templates-grid" class="dash-grid"></div>
+  </section>
+  <section class="dash-section" id="dash-your-apps-section" hidden>
+    <h2 class="dash-section-label" data-i18n="tryp.dash_your_apps">我的应用</h2>
+    <div id="dash-your-apps-grid" class="dash-grid"></div>
+  </section>
+</div>
+<div id="app-view">
+<header class="app-topbar" id="app-topbar">
+  <div class="topbar-left">
+    <button id="topbar-back" class="topbar-icon-btn" type="button" aria-label="返回主页" title="返回主页">←</button>
+    <span id="topbar-app-name" class="topbar-app-name">未命名应用</span>
+  </div>
+  <div class="topbar-chips" id="topbar-chips">
+    <button id="chip-supabase" class="chip" type="button" hidden>
+      <span class="chip-dot"></span><span class="chip-label">Supabase</span>
+    </button>
+    <button id="chip-github" class="chip" type="button" hidden>
+      <span class="chip-dot"></span><span class="chip-label">GitHub</span>
+    </button>
+    <button id="chip-collab" class="chip" type="button" hidden>
+      <span class="chip-dot"></span><span class="chip-label">Collab</span>
+    </button>
+  </div>
+  <div class="topbar-right">
+    <button id="topbar-edit-btn" class="topbar-btn" type="button" aria-pressed="false" title="切换可视化编辑 — 点击元素即可编辑文字和样式" aria-label="切换可视化编辑">✏ 编辑</button>
+    <button id="topbar-compare-btn" class="topbar-btn" type="button" aria-pressed="false" data-i18n="tryp.topbar_compare">对比</button>
+    <div class="topbar-more-wrap">
+      <button id="topbar-more-btn" class="topbar-btn" type="button" aria-haspopup="menu" aria-expanded="false" data-i18n="tryp.topbar_more">更多 ⋯</button>
+      <div id="topbar-more-menu" class="topbar-menu" hidden role="menu"></div>
+    </div>
+    <button id="topbar-deploy-btn" class="topbar-btn topbar-btn-primary" type="button" data-i18n="tryp.topbar_deploy">部署</button>
+  </div>
+</header>
+<section class="try-hero-wrap">
+<div class="swarm-chip" role="img" aria-label="集群模式 — 多个 AI 智能体并行运行">
+  <svg class="swarm-glyph" viewBox="0 0 32 18" width="22" height="14" aria-hidden="true" focusable="false">
+    <!-- Four dots in flight formation: the alpha agent in front,
+         two mid-pack, one trailing — the LingCode swarm sigil. -->
+    <circle cx="6"  cy="9" r="3"   class="swarm-d0"/>
+    <circle cx="15" cy="5" r="2.4" class="swarm-d1"/>
+    <circle cx="15" cy="13" r="2.4" class="swarm-d1"/>
+    <circle cx="24" cy="9" r="1.9" class="swarm-d2"/>
+    <!-- Subtle motion trail to suggest the agents are racing. -->
+    <line x1="0"  y1="9" x2="3"  y2="9" class="swarm-trail" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>
+  <span class="swarm-label">集群模式</span>
+  <span class="swarm-sep" aria-hidden="true">·</span>
+  <span class="swarm-sub">所有模型，并行运行</span>
+</div>
+<h1 data-i18n="tryp.hero_h1">同一个提示词，每个模型，<br/>并排对比。</h1>
+<p class="try-hero-lede" id="hero-lede"></p>
+</section>
+<main class="try-shell">
+<div class="try-prompt-row">
+<div class="try-prompt-inner">
+<textarea id="prompt" placeholder="给我做一个 AI 创业公司的融资 PPT" spellcheck="false"></textarea>
+</div>
+<button disabled="" id="send" aria-label="发送">发送</button>
+</div>
+<p class="try-prompt-hint"><span hidden="" id="anon-trial-hint"></span> <span class="cmd-hint" style="opacity:0.7;">⌘+Enter 运行</span></p>
+<!-- Lovable-style starter cards. main.js renders into this anchor. -->
+<div class="try-examples-grid" id="try-examples-grid"></div>
+<!-- Templates gallery — real starter prototypes. main-templates.js
+         renders into this anchor; click loads the HTML into the shared-
+         prototype preview modal. The header is added once at first render
+         and hidden when the manifest is empty. -->
+<section class="try-templates-section" hidden="" id="try-templates-section">
+<h2 class="try-templates-title" data-i18n="tryp.templates_h2">或者从模板开始</h2>
+<p class="try-templates-blurb" data-i18n="tryp.templates_subtitle">精心打磨的入门原型，可以直接迭代。打开一个，然后让 AI 帮你改造。</p>
+<div class="try-examples-grid" id="try-templates-grid"></div>
+</section>
+<!-- "More options" disclosure — wraps Providers + Workspace so the
+         empty state has a single clear focal point (the prompt). Inner
+         toggles still work independently inside this outer disclosure. -->
+<div aria-expanded="false" class="try-advanced" id="advanced-disclosure">
+<button aria-controls="advanced-body" aria-expanded="false" class="try-advanced-summary" type="button">
+<span class="caret">▸</span>
+<span class="label" id="advanced-label">更多选项</span>
+<span class="state" id="advanced-state-summary"></span>
+</button>
+<div class="try-advanced-body" id="advanced-body">
+<button aria-expanded="false" class="try-section-label try-section-toggle" id="providers-toggle" type="button">
+<span class="caret">▸</span> <span data-i18n="tryp.providers">模型提供商</span> <span class="hint" data-i18n="tryp.providers_summary_default" id="providers-summary">LingModel 已就绪 · 点击配置其他提供商</span>
+</button>
+<div class="try-keys" hidden="" id="key-grid"></div>
+<button aria-expanded="false" class="try-section-label try-section-toggle" id="workspace-toggle" type="button">
+<span class="caret">▸</span> <span data-i18n="tryp.workspace">工作区</span> <span class="hint" data-i18n="tryp.workspace_subtitle">可选 — 让智能体访问你的文件</span>
+</button>
+<div class="try-folder" hidden="" id="folder-row">
+<div class="try-folder-tabs" id="folder-tabs" role="tablist">
+<button class="active" data-i18n="tryp.tab_folder" data-mode="folder" type="button">📁 文件夹</button>
+<button data-i18n="tryp.tab_files" data-mode="files" type="button">📄 文件</button>
+<button data-i18n="tryp.tab_paste" data-mode="paste" type="button">📝 粘贴</button>
+<button data-i18n="tryp.tab_github" data-mode="github" type="button">🔗 GitHub</button>
+</div>
+<div class="try-folder-pane active" data-pane="folder">
+<button class="primary" data-i18n="tryp.pick_folder" id="pick-folder" type="button">📁 选择文件夹…</button>
+<span class="pane-hint" id="folder-pane-hint">…或将文件夹拖拽到此处。</span>
+</div>
+<div class="try-folder-pane" data-pane="files">
+<button class="primary" data-i18n="tryp.pick_files" id="pick-files" type="button">📄 选择文件…</button>
+<input id="files-input" multiple="" style="display:none" type="file"/>
+<span class="pane-hint" data-i18n="tryp.files_hint">拖拽或选择 — 保存在内存中，编辑后以 zip 形式下载。</span>
+</div>
+<div class="try-folder-pane" data-pane="paste">
+<textarea id="paste-input" placeholder="--- src/app.ts
+export function hello() { return 'world'; }
+--- README.md
+# Hello
+…"></textarea>
+<div class="try-folder-row" style="width:100%">
+<button class="primary" data-i18n="tryp.load_pasted" id="paste-load" type="button">加载粘贴的文件</button>
+<span class="pane-hint">在每个文件内容前使用 <code>--- path/to/file.ext</code> 这样一行。</span>
+</div>
+</div>
+<div class="try-folder-pane" data-pane="github">
+<input id="github-input" placeholder="github.com/owner/repo  或  owner/repo （可选 /tree/branch）" type="text"/>
+<button class="primary" data-i18n="tryp.load_repo" id="github-load" type="button">加载仓库</button>
+<span class="pane-hint" data-i18n="tryp.public_repos_hint">仅支持公开仓库。通过 API 读取，编辑保留在内存中。</span>
+</div>
+<div class="try-folder-row">
+<span class="folder-state" id="folder-state">未选择文件夹 → 仅聊天模式。选择后可授予对这些文件的读 / 写 / 列出权限。</span>
+</div>
+<div class="try-folder-foot" id="folder-actions" style="display:none">
+<span class="actions-label" data-i18n="tryp.auto_generate">基于本项目自动生成：</span>
+<button class="auto-btn" data-i18n="tryp.gen_pitch" id="auto-deck" type="button">📊 融资 PPT</button>
+<button class="auto-btn" data-i18n="tryp.gen_arch" id="auto-arch" type="button">📄 架构文档</button>
+<button class="auto-btn" data-i18n="tryp.gen_readme" id="auto-readme" type="button">📋 README</button>
+</div>
+<div class="try-folder-foot" id="folder-foot" style="display:none">
+<button class="save-btn" data-i18n="tryp.save_zip" id="save-zip" style="display:none" type="button">💾 保存修改为 zip</button>
+<button class="clear-btn" data-i18n="tryp.clear_workspace" id="clear-workspace" type="button">清空工作区</button>
+<span id="folder-foot-note"></span>
+</div>
+</div>
+</div><!-- /.try-advanced-body -->
+</div><!-- /#advanced-disclosure -->
+<!-- Workspace: tab strip on top, active provider preview + chat sidebar.
+         Hidden until the first run inserts a pane. -->
+<div class="try-workspace tabbed" hidden="" id="workspace">
+<div class="try-workspace-tabbar">
+<div class="try-workspace-tabs" id="workspace-tabs" role="tablist"></div>
+<div class="try-workspace-toolbar" id="workspace-toolbar" hidden>
+<button aria-pressed="false" class="try-workspace-mode" id="workspace-focus-toggle" type="button">专注</button>
+<button class="try-workspace-mode" id="workspace-mode-toggle" title="并排对比所有提供商" type="button">▦ 对比</button>
+<button class="try-workspace-mode" id="checkpoint-btn" title="保存命名检查点（⌘S）" type="button">☑ 检查点</button>
+<button class="try-workspace-mode" id="checkpoint-history-btn" title="查看检查点历史" type="button">⏱ 历史</button>
+<!-- Tools dropdown: collapses 9 advanced/integration buttons behind a
+     single trigger so the toolbar stays scannable. Each menu item keeps
+     its original id (#supabase-btn etc.) so the existing click handlers
+     wired in main-supabase.js / main-knowledge.js / etc. still bind. -->
+<div class="try-workspace-tools-wrap">
+<button class="try-workspace-mode" id="workspace-tools-btn" type="button" aria-haspopup="menu" aria-expanded="false" title="集成与高级工具">🛠 工具 ▾</button>
+<div class="try-workspace-tools-menu" id="workspace-tools-menu" role="menu" hidden>
+<button class="try-workspace-mode" id="github-push-btn" title="提交并推送到 GitHub" type="button">↑ 推送到 GitHub</button>
+<button class="try-workspace-mode" id="supabase-btn" title="连接 Supabase 项目以启用真实身份验证和数据库" type="button">⚡ Supabase</button>
+<button class="try-workspace-mode" id="knowledge-btn" title="固定 .md / .txt 文件或笔记，每次对话都会带上" type="button">📚 知识库</button>
+<button class="try-workspace-mode" id="secrets-btn" title="固定加密密钥供 AI 的 Edge Function 部署使用" type="button">🔐 密钥</button>
+<button class="try-workspace-mode" id="site-config-btn" title="品牌、域名、分析、表单 — 自动注入到每个生成的页面" type="button">🌐 站点</button>
+<button class="try-workspace-mode" id="domains-btn" title="为你发布的原型绑定自定义子域名（Cloudflare CNAME）" type="button">🌍 域名</button>
+<button class="try-workspace-mode" id="mcp-btn" title="连接 HTTP MCP 服务器，将工具暴露给智能体（Linear、Notion、Sentry 等）" type="button">🧩 MCP</button>
+<button class="try-workspace-mode" id="projects-btn" title="保存与加载命名项目" type="button">📂 项目</button>
+<button class="try-workspace-mode" id="collab-btn" title="邀请协作者实时共同编辑此原型（先发布才能启用）" type="button">👥 协作</button>
+</div>
+</div>
+<!-- Close button at the right edge — discards the current workspace
+     (turns, panes, loaded prototype) by reloading /try.html. Same
+     semantics as the sidebar's "+ New project" button. -->
+<button class="try-workspace-close" id="workspace-close-btn" type="button" title="关闭工作区（丢弃当前会话）" aria-label="关闭工作区">✕</button>
+</div>
+</div>
+<p class="try-workspace-builder-hint" hidden="" id="workspace-builder-hint" role="note"></p>
+<div class="try-panes" id="panes"></div>
+</div>
+<!-- Visual edits side-panel (Lovable-style) — slides in over the chat
+     when an element in the preview is picked. -->
+<aside aria-hidden="true" class="try-visual-edits" hidden id="visual-edits">
+  <div class="ve-head">
+    <span class="ve-title">可视化编辑</span>
+    <button class="ve-close" id="ve-close" type="button">关闭</button>
+  </div>
+  <div class="ve-body">
+    <div class="ve-section">
+      <span class="ve-section-label">元素</span>
+      <span class="ve-tag" id="ve-tag">—</span>
+    </div>
+    <div class="ve-section">
+      <label class="ve-section-label" for="ve-text">文字内容</label>
+      <textarea class="ve-text" id="ve-text" rows="3" spellcheck="false"></textarea>
+    </div>
+    <div class="ve-section">
+      <span class="ve-section-label">字体</span>
+      <div class="ve-row">
+        <label class="ve-field">
+          <span>字号</span>
+          <input id="ve-font-size" placeholder="16px" type="text" />
+        </label>
+        <label class="ve-field">
+          <span>粗细</span>
+          <select id="ve-font-weight">
+            <option value="">—</option>
+            <option value="300">细 (300)</option>
+            <option value="400">常规 (400)</option>
+            <option value="500">中等 (500)</option>
+            <option value="600">半粗 (600)</option>
+            <option value="700">粗体 (700)</option>
+          </select>
+        </label>
+      </div>
+      <div class="ve-row">
+        <label class="ve-field">
+          <span>样式</span>
+          <select id="ve-font-style">
+            <option value="">—</option>
+            <option value="normal">正常</option>
+            <option value="italic">斜体</option>
+          </select>
+        </label>
+        <label class="ve-field">
+          <span>对齐</span>
+          <select id="ve-text-align">
+            <option value="">—</option>
+            <option value="left">左对齐</option>
+            <option value="center">居中</option>
+            <option value="right">右对齐</option>
+            <option value="justify">两端对齐</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="ve-section">
+      <span class="ve-section-label">颜色</span>
+      <div class="ve-row">
+        <label class="ve-field">
+          <span>文字</span>
+          <input id="ve-color" placeholder="#000" type="text" />
+        </label>
+        <label class="ve-field">
+          <span>背景</span>
+          <input id="ve-bg" placeholder="transparent" type="text" />
+        </label>
+      </div>
+    </div>
+    <div class="ve-section">
+      <label class="ve-section-label" for="ve-chat">让 AI 修改此元素</label>
+      <textarea class="ve-chat" id="ve-chat" rows="2" placeholder="例如：加粗这段文字，换用衬线字体…" spellcheck="false"></textarea>
+      <button class="ve-chat-send" id="ve-chat-send" type="button">AI 应用</button>
+    </div>
+  </div>
+</aside>
+<!-- Conversion CTA — revealed by JS after the first successful run.
+         /try is the top-of-funnel demo; this is the "now use it for real" handoff. -->
+<div class="try-mac-cta" hidden="" id="mac-cta">
+<div class="cta-body" data-i18n="tryp.cta_body">
+<strong>LingCode for Mac</strong> 是同一个智能体的原生版本，直接操作你本地的真实文件。浏览器只是演示，IDE 才是真正的产品。
+      </div>
+<ul class="cta-features">
+<li data-i18n="tryp.cta_b1"><strong>⌘ + 点击任意元素</strong> 即可让 AI 就地修改</li>
+<li data-i18n="tryp.cta_b2"><strong>Bash · Edit · MCP · hooks · sessions</strong> — 完整的智能体工具箱，远不止聊天</li>
+<li data-i18n="tryp.cta_b3"><strong>工作保护</strong> + 离线模式 — 未经你许可，代码绝不离开本机</li>
+</ul>
+<a class="cta-button" data-i18n="tryp.cta_button" href="/">下载 LingCode for Mac · 免费 →</a>
+</div>
+<div class="try-foot">
+<span data-i18n="tryp.foot_span">想要 <code>Bash</code>、<code>Edit</code>、MCP、hooks、sessions？安装 CLI：<code>curl -fsSL https://lingcode.dev/install-cli.sh | sh</code></span>
+<a data-i18n="tryp.see_docs" href="/zh/cli.html">查看完整文档 →</a>
+</div>
+</main>
+</div><!-- /#app-view -->
+
+<!-- Cloud backend console — dedicated full-screen view (hash route #cloud=<id>).
+     mountCloudConsole() builds its chrome into this div; router toggles it. -->
+<div id="cloud-view" hidden></div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和想要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/zh/try.html">Web (/体验)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/zh/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">价格</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/zh/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">快速上手</a></li>
+        <li><a href="/zh/cli.html">CLI 文档</a></li>
+        <li><a href="/zh/why-not-cursor.html">为何不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校版</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/zh/blog.html">博客</a></li>
+        <li><a href="/zh/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/zh/privacy.html">隐私</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · 为发布而生</span>
+    <span>原生 · 快速 · 诚实</span>
+  </div>
+</footer>
+<button class="try-mobile-chat-backdrop" hidden="" id="try-mobile-chat-backdrop" tabindex="-1" type="button"></button>
+<div class="try-tabbed-mobile-dock" hidden="" id="try-tabbed-mobile-dock">
+<p aria-live="polite" class="try-mobile-stream-pill" hidden="" id="try-mobile-stream-pill"></p>
+<div class="try-tabbed-mobile-dock-bar">
+<button class="try-mobile-chat-toggle" hidden="" id="try-mobile-chat-toggle" type="button"></button>
+</div>
+</div>
+<button class="try-focus-close" id="workspace-focus-close" type="button">
+<svg aria-hidden="true" fill="none" height="18" viewbox="0 0 24 24" width="18">
+<path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+</svg>
+</button>
+<script src="/try/main.js?v=20260611b" type="module"></script>
+<script src="/nav-auth.js" defer></script>
+<script>
+(function () {
+  const PROMPTS = [
+    '给我做一个 AI 创业公司的融资 PPT',
+    '带 Stripe 结账的三档定价页面',
+    '做一个可以拖拽的看板应用',
+    '咖啡店官网，支持在线点单',
+    '带深色模式的实时聊天界面',
+    '个人作品集，项目卡片有动画效果',
+    '带连续打卡和图表的习惯追踪器',
+    '展示营收指标和折线图的数据仪表盘',
+    '邮箱 + Google 一键登录注册流程',
+    '带波形可视化的音乐播放器',
+  ];
+
+  const TYPE_SPEED   = 38;   // ms per character while typing
+  const ERASE_SPEED  = 18;   // ms per character while erasing
+  const PAUSE_FULL   = 2200; // ms to hold the complete phrase
+  const PAUSE_EMPTY  = 400;  // ms to wait before typing next phrase
+
+  function animatePlaceholder(el) {
+    if (!el) return;
+    let idx   = 0;
+    let timer = null;
+    let phase = 'type'; // 'type' | 'hold' | 'erase' | 'gap'
+    let pos   = 0;
+    const original = el.getAttribute('placeholder') || PROMPTS[0];
+
+    function isBusy() {
+      return document.activeElement === el || el.value.length > 0;
+    }
+
+    function step() {
+      if (isBusy()) { timer = setTimeout(step, 500); return; }
+      const target = PROMPTS[idx];
+
+      if (phase === 'type') {
+        pos++;
+        el.setAttribute('placeholder', target.slice(0, pos));
+        if (pos >= target.length) { phase = 'hold'; timer = setTimeout(step, PAUSE_FULL); }
+        else                       { timer = setTimeout(step, TYPE_SPEED); }
+
+      } else if (phase === 'hold') {
+        phase = 'erase';
+        timer = setTimeout(step, 0);
+
+      } else if (phase === 'erase') {
+        pos--;
+        el.setAttribute('placeholder', target.slice(0, pos));
+        if (pos <= 0) { phase = 'gap'; idx = (idx + 1) % PROMPTS.length; timer = setTimeout(step, PAUSE_EMPTY); }
+        else          { timer = setTimeout(step, ERASE_SPEED); }
+
+      } else { // gap
+        phase = 'type';
+        timer = setTimeout(step, 0);
+      }
+    }
+
+    // Start after a short random delay so two fields don't sync perfectly
+    timer = setTimeout(step, 800 + Math.random() * 600);
+
+    el.addEventListener('focus',  () => { clearTimeout(timer); el.setAttribute('placeholder', ''); });
+    el.addEventListener('blur',   () => { if (!el.value) { pos = 0; phase = 'type'; timer = setTimeout(step, 600); } });
+  }
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  animatePlaceholder(document.getElementById('prompt'));
+  animatePlaceholder(document.getElementById('dash-prompt'));
+})();
+</script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magic Deploy Scripts: Before-launch & After-deploy Cookbook | LingCode</title>
+  <meta name="description" content="Copy-paste starter scripts for Magic Deploy's Before-launch and After-deploy steps. Covers Node, Python, Go, Ruby, PHP, static sites, nginx, pm2, systemd, Docker, and more.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/magic-deploy-scripts.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/magic-deploy-scripts.html">
+  <meta property="og:title" content="Magic Deploy Scripts: Before-launch & After-deploy Cookbook">
+  <meta property="og:description" content="Starter scripts for the Before-launch and After-deploy steps, organized by stack and by server type.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Magic Deploy Scripts — Before-launch & After-deploy Cookbook">
+  <meta name="twitter:description" content="Starter scripts by stack: Node, Python, Go, Ruby, PHP, static sites, nginx, pm2, systemd, Docker.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .blog-content { max-width: 800px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 12px 0 20px; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .callout p { margin: 0; color: var(--text); }
+    .callout strong { color: var(--signal); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+    .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 20px 0 32px; }
+    .toc ul { margin: 0; padding-left: 20px; }
+    .toc li { margin-bottom: 4px; }
+    .sibling-nav { max-width: 800px; margin: 0 auto; padding: 20px 32px 0; }
+    .sibling-nav-inner { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .sibling-nav-label { font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px; }
+    .sibling-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 0.8125rem; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+    .sibling-pill:hover { color: var(--text); border-color: var(--signal); text-decoration: none; }
+    .sibling-pill.current { background: var(--signal); color: #fff; border-color: var(--signal); cursor: default; }
+    .sibling-pill.current:hover { color: #fff; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <nav class="sibling-nav" aria-label="Deploy guide siblings">
+      <div class="sibling-nav-inner">
+        <span class="sibling-nav-label">Deploy guides:</span>
+        <a href="/magic-deploy-setup.html" class="sibling-pill">App Store</a>
+        <a href="/app-store-connect-fields.html" class="sibling-pill">ASC fields</a>
+        <a href="/google-play-deploy-setup.html" class="sibling-pill">Google Play</a>
+        <a href="/magic-deploy-web-platforms.html" class="sibling-pill">Web</a>
+        <a href="/host-your-own-server.html" class="sibling-pill">Provision</a>
+        <a href="/magic-deploy-scripts.html" class="sibling-pill current" aria-current="page">Scripts</a>
+      </div>
+    </nav>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Guide</p>
+        <h1>Magic Deploy Script Cookbook</h1>
+        <p>Copy-paste starters for the <strong>Before launch</strong> and <strong>After deploy</strong> steps, organized by stack. Lift what fits; ignore the rest.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2>What these two fields do</h2>
+      <p>Magic Deploy's generic (non–App Store) flow has two script hooks. You'll see them when you're deploying a web or server app — not the App Store / Play Store panes.</p>
+      <ul>
+        <li><strong>Before launch (local)</strong> runs one command per line in your project folder <em>before</em> rsync. Use it to build assets, run tests, verify outputs, and prepare the exact directory tree you want uploaded. Any non-zero exit code here aborts the deploy.</li>
+        <li><strong>After deploy (remote)</strong> runs one SSH session per line on the server <em>after</em> upload finishes. Use it to fix permissions, restart services, run migrations, warm caches, or perform a health check. <code>{DateTime}</code> inside the string is expanded to the current timestamp when the script runs — handy for release directories.</li>
+      </ul>
+
+      <div class="callout">
+        <p><strong>Exit codes matter.</strong> LingCode watches for non-zero exits in both phases. A failing <code>test</code>, <code>grep -q</code>, or explicit <code>|| exit 1</code> will halt the deploy and surface the error in the progress log — which is exactly what you want. Don't write scripts that silently swallow failures.</p>
+      </div>
+
+      <div class="callout">
+        <p><strong>Why the two-phase split?</strong> These two phases run in fundamentally different execution contexts. <em>Before launch</em> runs on <strong>your Mac</strong> — it has access to your source tree, your local Node / Python / Go / Ruby toolchain, and your dev-only credentials. <em>After deploy</em> runs over SSH on the <strong>server</strong> — it has access to system services (<code>nginx</code>, <code>systemd</code>, <code>pm2</code>), the real database, and production secrets. Mixing them up — e.g. trying to run your build toolchain on a minimal production box, or running <code>systemctl reload nginx</code> locally — is a category error that kills most first-time deploy attempts.</p>
+      </div>
+
+      <div class="toc">
+        <ul>
+          <li><a href="#before-launch">Before launch (local) — by stack</a></li>
+          <li><a href="#after-deploy">After deploy (remote) — by need</a></li>
+          <li><a href="#combined">Combined patterns</a></li>
+          <li><a href="#debugging">Debugging failed scripts</a></li>
+        </ul>
+      </div>
+
+      <h2 id="before-launch">Before launch (local) — by stack</h2>
+
+      <h3>Static HTML / hand-written site</h3>
+      <p>Nothing to build. Either leave the field empty, or add a sanity check so a typo doesn't ship a broken site:</p>
+      <pre><code>test -f index.html || { echo >&2 "Missing index.html"; exit 1; }</code></pre>
+
+      <h3>Next.js (static export)</h3>
+      <pre><code>npm ci
+npm run build
+npm run export
+test -f out/index.html || { echo >&2 "Export failed — no out/index.html"; exit 1; }</code></pre>
+      <p>If you're using the newer App Router with <code>output: 'export'</code> in <code>next.config.js</code>, skip the <code>export</code> step — <code>build</code> writes to <code>out/</code> directly.</p>
+
+      <h3>Next.js (SSR / Node runtime)</h3>
+      <pre><code>npm ci
+npm run build
+test -d .next || { echo >&2 "No .next dir"; exit 1; }</code></pre>
+
+      <h3>Vite / React / Vue / Svelte</h3>
+      <pre><code>npm ci
+npm run build
+test -f dist/index.html || { echo >&2 "Build missing dist/index.html"; exit 1; }</code></pre>
+      <p>Replace <code>dist/</code> with <code>build/</code> for create-react-app projects.</p>
+
+      <h3>Astro</h3>
+      <pre><code>npm ci
+npm run build
+test -d dist || exit 1</code></pre>
+
+      <h3>Hugo</h3>
+      <pre><code>hugo --minify --gc
+test -f public/index.html || exit 1</code></pre>
+
+      <h3>Jekyll</h3>
+      <pre><code>bundle install --path vendor/bundle
+bundle exec jekyll build
+test -f _site/index.html || exit 1</code></pre>
+
+      <h3>Node server (Express / Fastify / Hono)</h3>
+      <pre><code>npm ci
+npm run build            # if you have a TypeScript step
+npm test                 # fail the deploy on red tests
+test -f dist/server.js || exit 1</code></pre>
+      <p>For Bun projects, swap <code>npm ci</code> for <code>bun install --frozen-lockfile</code>, and <code>npm run build</code> for <code>bun run build</code>.</p>
+
+      <h3>Python (FastAPI / Flask / Django)</h3>
+      <p>Python apps usually don't "build" — but you want frozen deps and collected static files:</p>
+      <pre><code>python -m venv .venv
+. .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+python -m pytest -x                    # fail fast on red tests
+python manage.py collectstatic --noinput  # Django only
+deactivate</code></pre>
+
+      <h3>Go</h3>
+      <p>Build a static Linux binary on your Mac, ship it:</p>
+      <pre><code>GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/app ./cmd/app
+test -x dist/app || exit 1</code></pre>
+
+      <h3>Rust</h3>
+      <pre><code>cargo test
+cargo build --release
+test -x target/release/myapp || exit 1</code></pre>
+      <p>For cross-compilation to Linux x86_64 from a Mac, set up a cross-toolchain and use <code>--target x86_64-unknown-linux-musl</code>.</p>
+
+      <h3>PHP / Laravel</h3>
+      <pre><code>composer install --no-dev --optimize-autoloader --no-interaction
+npm ci && npm run build
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache</code></pre>
+
+      <h3>Ruby on Rails</h3>
+      <pre><code>bundle install --deployment --without development test
+bundle exec rails assets:precompile
+test -d public/assets || exit 1</code></pre>
+
+      <h3>Package everything as a tarball</h3>
+      <p>Some server setups want a single archive rather than individual files rsync'd. Put this as the <em>last</em> line of Before launch:</p>
+      <pre><code>tar -czf deploy.tar.gz -C dist .
+# or, including everything except .git and OS junk:
+zip -q -r deploy.zip . -x '*.git/*' -x '*/.DS_Store' -x 'node_modules/*'</code></pre>
+
+      <h2 id="after-deploy">After deploy (remote) — by need</h2>
+      <p>Each line below runs in its own SSH session. <code>{DateTime}</code> expands to a timestamp LingCode generates at run time (e.g. <code>20260419-133742</code>).</p>
+
+      <h3>Fix file permissions</h3>
+      <pre><code>chmod -R a+rX .
+# If the web server runs as www-data:
+chown -R www-data:www-data /var/www/myapp</code></pre>
+
+      <h3>Reload nginx (static or reverse-proxied sites)</h3>
+      <pre><code>sudo nginx -t && sudo systemctl reload nginx</code></pre>
+      <p>The <code>-t</code> flag validates config before reloading — safer than a blind <code>reload</code> that can kill a running server with a broken config.</p>
+
+      <h3>Restart a Node app under pm2</h3>
+      <pre><code>pm2 reload all --update-env
+pm2 save</code></pre>
+      <p><code>reload</code> is zero-downtime; <code>restart</code> isn't. Use <code>reload</code> in prod unless your app can't hot-swap.</p>
+
+      <h3>Restart a Node app via systemd</h3>
+      <pre><code>sudo systemctl restart myapp.service
+sudo systemctl is-active --quiet myapp.service || exit 1</code></pre>
+
+      <h3>Restart a Python app (Gunicorn / Uvicorn under systemd)</h3>
+      <pre><code>sudo systemctl restart gunicorn
+sudo systemctl is-active --quiet gunicorn || exit 1</code></pre>
+
+      <h3>Docker Compose redeploy</h3>
+      <pre><code>cd /srv/myapp && docker compose pull
+cd /srv/myapp && docker compose up -d --remove-orphans
+docker image prune -f</code></pre>
+
+      <h3>Run database migrations</h3>
+      <pre><code>cd /var/www/myapp && php artisan migrate --force       # Laravel
+cd /var/www/myapp && bundle exec rails db:migrate      # Rails
+cd /var/www/myapp && alembic upgrade head              # SQLAlchemy/FastAPI
+cd /var/www/myapp && npx prisma migrate deploy         # Prisma</code></pre>
+
+      <h3>Timestamped release directories with atomic swap</h3>
+      <p>Zero-downtime deploys usually look like: upload to a new versioned dir, flip a symlink. LingCode expands <code>{DateTime}</code> to a timestamp you can use as the release dir name:</p>
+      <pre><code>cp -r /var/www/uploads/. /var/www/releases/{DateTime}
+ln -sfn /var/www/releases/{DateTime} /var/www/current
+sudo systemctl reload nginx</code></pre>
+      <p>Combine with a <em>Before launch</em> step that prepares a clean <code>/var/www/uploads</code>-equivalent on the local side.</p>
+
+      <h3>Health check</h3>
+      <p>Run this as the <em>last</em> remote line. If it fails, the deploy is marked failed and you know before users do:</p>
+      <pre><code>curl -sfSL http://localhost:3000/healthz > /dev/null || { echo "Health check failed"; exit 1; }</code></pre>
+
+      <h3>Cache warm</h3>
+      <pre><code>curl -sfL https://yoursite.com/ > /dev/null
+curl -sfL https://yoursite.com/sitemap.xml > /dev/null</code></pre>
+
+      <h3>Log a deploy marker</h3>
+      <pre><code>echo "{DateTime}  deploy from LingCode" | sudo tee -a /var/log/deploys.log</code></pre>
+
+      <h2 id="combined">Combined patterns</h2>
+
+      <h3>Static site on nginx (simplest useful flow)</h3>
+      <p><strong>Before launch (local):</strong></p>
+      <pre><code>npm ci
+npm run build
+test -f dist/index.html || exit 1</code></pre>
+      <p><strong>After deploy (remote):</strong></p>
+      <pre><code>chmod -R a+rX .
+sudo nginx -t && sudo systemctl reload nginx
+curl -sfSL http://localhost/ > /dev/null</code></pre>
+
+      <h3>Node app under pm2 with zero-downtime releases</h3>
+      <p><strong>Before launch (local):</strong></p>
+      <pre><code>npm ci
+npm run build
+npm test
+tar -czf deploy.tar.gz dist/ package.json package-lock.json</code></pre>
+      <p><strong>After deploy (remote):</strong></p>
+      <pre><code>cd /var/www/myapp && tar -xzf deploy.tar.gz
+cd /var/www/myapp && npm ci --omit=dev
+pm2 reload ecosystem.config.js --update-env
+sleep 2 && curl -sfSL http://localhost:3000/healthz > /dev/null || exit 1</code></pre>
+
+      <h3>Django on Gunicorn + nginx</h3>
+      <p><strong>Before launch:</strong></p>
+      <pre><code>python -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+python manage.py collectstatic --noinput
+deactivate</code></pre>
+      <p><strong>After deploy:</strong></p>
+      <pre><code>cd /var/www/myapp && . .venv/bin/activate && python manage.py migrate --noinput
+sudo systemctl restart gunicorn
+sudo nginx -t && sudo systemctl reload nginx
+curl -sfSL http://localhost/ > /dev/null</code></pre>
+
+      <h3>Dockerized app with image pinning</h3>
+      <p><strong>Before launch:</strong></p>
+      <pre><code>docker build -t myapp:{DateTime} .
+docker save myapp:{DateTime} | gzip > image.tar.gz</code></pre>
+      <p><strong>After deploy:</strong></p>
+      <pre><code>cd /srv/myapp && gunzip < image.tar.gz | docker load
+cd /srv/myapp && sed -i "s|IMAGE_TAG=.*|IMAGE_TAG={DateTime}|" .env
+cd /srv/myapp && docker compose up -d
+curl -sfSL http://localhost/healthz > /dev/null</code></pre>
+
+      <h2 id="debugging">Debugging failed scripts</h2>
+      <p>Both phases stream their output into the Magic Deploy progress log, prefixed by which command just ran. When something fails:</p>
+      <ul>
+        <li><strong>Before launch</strong> — scroll to the end of the log and find the failing line. Everything after <code>npm ERR!</code>, <code>error:</code>, or <code>cannot stat</code> is usually the cause. Fix, retry.</li>
+        <li><strong>After deploy</strong> — remember this ran over SSH on the server. The error is whatever the remote command printed. Common culprits: missing <code>sudo</code>, missing environment variable (SSH sessions don't inherit your interactive shell's <code>PATH</code>), or the command not being on <code>PATH</code> at all (use absolute paths like <code>/usr/bin/systemctl</code> if in doubt).</li>
+        <li><strong>Silent failures</strong> — if a deploy "succeeded" but the site is broken, you probably skipped a health check. Add one as the last After-deploy line and you'll catch these immediately.</li>
+      </ul>
+
+      <div class="callout">
+        <p><strong>Tip: test scripts locally first.</strong> Before you run a deploy that ends in <code>sudo systemctl restart gunicorn</code>, SSH into the box yourself and run each line manually. If one doesn't work standalone, it won't work inside Magic Deploy either, and you'll have spent a 2-minute rsync for nothing.</p>
+      </div>
+
+      <h2>Further reading</h2>
+      <p>Classic documentation for the tools these scripts invoke:</p>
+      <ul>
+        <li><a href="/glossary.html">LingCode deploy glossary</a> — terms like <a href="/glossary.html#jwt">JWT</a>, <a href="/glossary.html#keystore">keystore</a>, and more.</li>
+        <li><a href="https://rsync.samba.org/documentation.html" rel="noopener noreferrer">rsync manual</a> — what LingCode uses under the hood to sync your files.</li>
+        <li><a href="https://www.freedesktop.org/software/systemd/man/systemctl.html" rel="noopener noreferrer">systemctl reference</a> — for restarting services on Linux boxes.</li>
+        <li><a href="https://pm2.keymetrics.io/docs/usage/quick-start/" rel="noopener noreferrer">pm2 quick start</a> — Node process manager used widely in the After-deploy scripts.</li>
+        <li><a href="https://docs.nginx.com/nginx/admin-guide/web-server/web-server/" rel="noopener noreferrer">nginx web server admin guide</a> — nginx config, reload semantics, and virtual hosts.</li>
+        <li><a href="https://docs.docker.com/compose/" rel="noopener noreferrer">Docker Compose</a> — for containerized deploys.</li>
+        <li><a href="https://www.openssh.com/manual.html" rel="noopener noreferrer">OpenSSH manual</a> — how the SSH connections LingCode opens actually work.</li>
+      </ul>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">Shipping to a store instead?</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">See the <a href="/magic-deploy-setup.html">App Store Connect setup guide</a> (iOS + macOS) or the <a href="/google-play-deploy-setup.html">Google Play service account guide</a>.</p>
+        <a href="/">Download LingCode for Mac</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

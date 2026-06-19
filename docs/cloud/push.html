@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Push notifications — LingCode Cloud | Docs</title>
+  <meta name="description" content="Add Web Push to apps built on LingCode Cloud: feature-detect support, subscribe the user (VAPID + service worker), store the subscription server-side, and send notifications from a function. SDK and REST reference.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/push.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/push.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/push.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/push.html">
+  <meta property="og:title" content="Push notifications — LingCode Cloud">
+  <meta property="og:description" content="Feature-detect Web Push support, subscribe the user, store the subscription server-side, and send notifications from a function.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Push notifications</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Push notifications</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Web Push lets you notify a user even when your app's tab is closed. It's the browser's standard Web Push (VAPID) flow — it needs HTTPS, a service worker, and the user's permission. The SDK's <code>client.push</code> does two things in the browser: <code>isSupported()</code> to feature-detect, and <code>subscribe()</code> to register your service worker, prompt for permission, and store the user's subscription on the backend. <strong>Sending</strong> the notification is a separate server-side step — you push to the stored subscription from a <a href="/docs/cloud/functions.html">function</a> or your <a href="/docs/cloud/hosting.html">hosted app</a>, not from the browser.</p>
+      <p class="intro">Most "notifications" people want are really two halves that look like one. The browser half is about <em>earning permission</em> and capturing where to deliver — that happens in your page, with the user watching. The delivery half is a server poking that saved address later, when something actually happened. LingCode Cloud handles the awkward middle: it stores each user's subscription tied to their account so you can reach them after the tab is long gone. This page covers the browser half end-to-end and points you at the server half.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>Why it works this way</h2>
+      <p>A push notification has to arrive when your code <em>isn't running</em> — the user closed the tab hours ago. That's why the standard requires three things up front:</p>
+      <ul>
+        <li><strong>HTTPS</strong> — push is a privileged capability, so it's only available on secure origins.</li>
+        <li><strong>A service worker</strong> — a small script that the browser keeps alive on your behalf. Incoming pushes are delivered <em>to</em> the service worker, which decides what to show.</li>
+        <li><strong>The user's permission</strong> — granted once, per user, and revocable at any time in browser settings.</li>
+      </ul>
+      <p>To subscribe, the browser also needs your backend's <strong>VAPID public key</strong> — the identity that lets the push service trust that pushes claiming to be from you really are. LingCode Cloud manages that key for you; the SDK fetches it under the hood. When the subscription is created, it gets <strong>stored on the backend and tied to the signed-in user</strong> so you can target them later.</p>
+
+      <div class="info-box">
+        <h3>The split that trips people up</h3>
+        <p>The browser <em>subscribes</em>; the server <em>sends</em>. You cannot fire a notification from the page that just called <code>subscribe()</code> — the page only captured the address. Actually pushing a message goes from a <a href="/docs/cloud/functions.html">function</a> or your <a href="/docs/cloud/hosting.html">hosted app</a> to the user's stored subscription, server-side. Build the subscribe flow first, prove the row lands, then wire up sending.</p>
+      </div>
+
+      <h2>The browser flow</h2>
+      <p>Inside <code>/try</code> and the Mac preview, <code>window.lingcode</code> already exists. In your own app, create the client first (see the <a href="/docs/cloud/">overview</a>), then run these three steps.</p>
+
+      <div class="docs-steps">
+        <div class="docs-step">
+          <h3>Feature-detect first</h3>
+          <p>Not every browser or context can do push. Check before you show any "Enable notifications" UI — there's no point offering a button that can't work.</p>
+          <pre><code>if (!lingcode.push.isSupported()) {
+  // Hide your "Enable notifications" button — push isn't available here.
+  return;
+}</code></pre>
+          <p><code>isSupported()</code> returns a boolean synchronously.</p>
+        </div>
+        <div class="docs-step">
+          <h3>Subscribe the user</h3>
+          <p>Call <code>subscribe()</code> in response to a user gesture (e.g. a button click). It registers your service worker, subscribes through the browser's <code>PushManager</code>, and stores the subscription on the backend against the current user. This call triggers the browser's permission prompt.</p>
+          <pre><code>const { data, error } = await lingcode.push.subscribe({
+  serviceWorker: '/sw.js'
+});
+
+if (error) {
+  // User denied permission, or push isn't available — fall back gracefully.
+  console.warn('Could not enable push:', error);
+} else {
+  // Subscription saved server-side; the user is now reachable.
+}</code></pre>
+          <p>The <code>opts</code> argument is optional; <code>{ serviceWorker?: string }</code> points at your service worker file. Every call returns <code>{ data, error }</code>.</p>
+        </div>
+        <div class="docs-step">
+          <h3>Send from the server</h3>
+          <p>This step does <strong>not</strong> happen in the browser. Once the subscription is stored, push a message to it from a <a href="/docs/cloud/functions.html">function</a> or your <a href="/docs/cloud/hosting.html">hosted app</a> — anywhere server-side that can reach the user's stored subscription. The browser's only job was to capture permission and the delivery address; everything after that is triggered by your backend when something actually happens.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>You must ship a service worker.</strong> Push delivery runs through it — there's no push without a <code>/sw.js</code> (or whatever path you pass to <code>subscribe()</code>). Make sure that file is actually served at the path you reference, on the same origin.
+      </div>
+
+      <h2>Under the hood (REST)</h2>
+      <p>The SDK wraps two endpoints. You rarely call them directly, but knowing the shapes helps when debugging.</p>
+
+      <h3>Fetch the VAPID public key</h3>
+      <p>The browser needs the backend's VAPID public key before it can subscribe. The SDK fetches it for you:</p>
+      <pre><code>GET https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/push/vapid-public
+
+→ { "key": "&lt;vapid-public-key&gt;" }</code></pre>
+
+      <h3>Store a subscription</h3>
+      <p>After the browser's <code>PushManager</code> produces a subscription object, the SDK posts it to the backend to store it against the current user:</p>
+      <pre><code>POST https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/push/subscribe
+
+{
+  "subscription": {
+    "endpoint": "https://&lt;push-service&gt;/...",
+    "keys": {
+      "p256dh": "&lt;client-public-key&gt;",
+      "auth": "&lt;auth-secret&gt;"
+    }
+  }
+}</code></pre>
+
+      <h3>Errors</h3>
+      <ul>
+        <li><code>push_not_available</code> — the browser or context can't do push, or push isn't configured on this backend.</li>
+        <li><code>invalid_subscription</code> — the subscription object is malformed.</li>
+      </ul>
+
+      <h2>Requirements &amp; gotchas</h2>
+      <div class="info-box">
+        <h3>Where push works</h3>
+        <p><strong>HTTPS only.</strong> It works on your hosted app's secure URL — <code>*.run.lingcode.dev</code> or your <a href="/docs/cloud/hosting.html">custom domain</a> — and on <code>http://localhost</code> for development. Plain <code>http://</code> on any other host will not support push.</p>
+      </div>
+
+      <div class="warn-box">
+        <strong>Permission is per-user and revocable.</strong> The user grants permission for your origin, and they can revoke it in browser settings at any time — your code won't be told. Always feature-detect with <code>isSupported()</code> and handle the not-granted case (the <code>error</code> from <code>subscribe()</code>) instead of assuming a subscription exists.
+      </div>
+
+      <ul>
+        <li><strong>Ship a service worker file</strong> (e.g. <code>/sw.js</code>) — push delivery runs through it.</li>
+        <li><strong>iOS Safari requires Home Screen install.</strong> The user must add your site to their Home Screen before web push works on iOS. There's no way around this from your code.</li>
+        <li><strong>A subscription is tied to the signed-in user.</strong> If you want to target someone later, <a href="/docs/cloud/auth.html">sign them in</a> first — otherwise there's no user to attach the subscription to.</li>
+      </ul>
+
+      <div class="tutorial-next">
+        <h2>What's next</h2>
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/functions.html">
+            <span class="card-eyebrow">Compute</span>
+            <h3>Functions</h3>
+            <p>Send the actual push from a server-side function — read secrets, run on demand, reach the stored subscription.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/hosting.html">
+            <span class="card-eyebrow">Deploy</span>
+            <h3>App hosting</h3>
+            <p>Serve your app (and its <code>/sw.js</code>) over HTTPS on <code>*.run.lingcode.dev</code> or a custom domain.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">Reference</span>
+            <h3>API reference</h3>
+            <p>The full SDK surface and every <code>/api/cloud/be/&lt;id&gt;/…</code> REST endpoint, with shapes.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

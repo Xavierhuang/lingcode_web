@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>重新部署网站 — LingCode 教程</title>
+  <meta name="description" content="将代码变更推送到线上站点。Vercel、Netlify、Render、Cloudflare Pages、Railway、Fly.io — 各平台的重新部署命令与生效时间。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/redeploy-a-website.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/redeploy-a-website.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/redeploy-a-website.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/redeploy-a-website.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "重新部署网站",
+  "description": "将代码变更推送到线上站点。在现代 PaaS 平台上，重新部署通常只需要 git push — 托管平台会监听你的分支并自动触发重建。以下是各主流平台的重新部署命令与生效时间。",
+  "url": "https://lingcode.dev/zh/tutorials/redeploy-a-website.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/redeploy-a-website.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "重新部署网站"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "重新部署网站",
+      "item": "https://lingcode.dev/zh/tutorials/redeploy-a-website.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/redeploy-a-website.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">发布与基础设施</a>
+      <span>/</span>
+      <span>重新部署网站</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>重新部署网站</h1>
+      <p class="intro">将代码变更推送到线上站点。在现代 PaaS 平台上，重新部署通常只需要 <code>git push</code> — 托管平台会监听你的分支并自动触发重建。以下是各主流平台的重新部署命令与生效时间。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Vercel — <a href="https://vercel.com/docs/deployments" target="_blank" rel="noopener">文档 ↗</a></h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>如果仓库已连接，直接推送即可。</p>
+          <pre><code>git push origin main</code></pre>
+          <p>Vercel 检测到推送后会自动构建并部署。</p>
+          <p>或通过 CLI（<a href="https://vercel.com/docs/cli" target="_blank" rel="noopener">vercel CLI ↗</a>）：</p>
+          <pre><code>vercel --prod</code></pre>
+          <p><strong>耗时：</strong>典型的 Next.js / 静态站点约需 30 秒至 3 分钟。</p>
+        </div>
+      </div>
+
+      <h2>Netlify — <a href="https://docs.netlify.com/site-deploys/overview/" target="_blank" rel="noopener">文档 ↗</a></h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>推送到已连接的分支：</p>
+          <pre><code>git push origin main</code></pre>
+          <p>或通过 CLI：</p>
+          <pre><code>netlify deploy --prod</code></pre>
+          <p><strong>耗时：</strong>1 至 3 分钟。</p>
+        </div>
+      </div>
+
+      <h2>Cloudflare Pages — <a href="https://developers.cloudflare.com/pages/" target="_blank" rel="noopener">文档 ↗</a></h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>推送到已连接的分支：</p>
+          <pre><code>git push origin main</code></pre>
+          <p>或通过 Wrangler（<a href="https://developers.cloudflare.com/workers/wrangler/" target="_blank" rel="noopener">Wrangler 文档 ↗</a>）：</p>
+          <pre><code>npx wrangler pages deploy ./dist --project-name=my-site</code></pre>
+          <p><strong>耗时：</strong>1 至 2 分钟。</p>
+        </div>
+      </div>
+
+      <h2>Render — <a href="/zh/tutorials/deploy-on-render.html">我们的教程</a> · <a href="https://render.com/docs/deploys" target="_blank" rel="noopener">文档 ↗</a></h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>推送到已连接的分支：</p>
+          <pre><code>git push origin main</code></pre>
+          <p>或从控制台手动触发：<strong>Manual Deploy → Deploy latest commit</strong>。</p>
+          <p><strong>耗时：</strong>2 至 5 分钟（Render 需要重建容器）。</p>
+        </div>
+      </div>
+
+      <h2>Railway — <a href="/zh/tutorials/deploy-on-railway.html">我们的教程</a> · <a href="https://docs.railway.com/" target="_blank" rel="noopener">文档 ↗</a></h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>推送到已连接的分支：</p>
+          <pre><code>git push origin main</code></pre>
+          <p>或从控制台触发：进入服务 → <strong>Deployments → Redeploy</strong>。</p>
+          <p><strong>耗时：</strong>30 秒至 2 分钟。</p>
+        </div>
+      </div>
+
+      <h2>Fly.io — <a href="/zh/tutorials/deploy-on-fly-io.html">我们的教程</a> · <a href="https://fly.io/docs/launch/deploy/" target="_blank" rel="noopener">文档 ↗</a></h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Fly 以 CLI 为主（默认不自动检测 git 推送）：</p>
+          <pre><code>fly deploy</code></pre>
+          <p>此命令会重建镜像并滚动更新各 Machine。<strong>耗时：</strong>每个区域约 1 至 3 分钟。</p>
+        </div>
+      </div>
+
+      <h2>GitHub Pages — <a href="https://docs.github.com/pages" target="_blank" rel="noopener">文档 ↗</a></h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>推送到 GitHub Pages 所服务的分支（通常是 <code>gh-pages</code> 或 <code>main</code>）：</p>
+          <pre><code>git push origin main</code></pre>
+          <p><strong>耗时：</strong>30 秒至 10 分钟。繁忙时段 GitHub Pages 可能较慢。</p>
+        </div>
+      </div>
+
+      <h2>自托管（Linux VPS）</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>如果你使用自己的服务器，请参阅<a href="/zh/tutorials/redeploy-a-vps.html">重新部署自托管服务器</a> — 流程有所不同（git pull + 重启服务）。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>实时查看部署进度。</strong> 各 PaaS 平台均在控制台提供实时构建日志。Vercel、Netlify、Cloudflare 还会在构建过程中生成每次部署的预览 URL，便于在正式 URL 切换前进行测试。
+      </div>
+
+      <div class="warn-box">
+        <strong>构建失败时，上一次成功的部署仍会保持在线。</strong> 现代托管平台只有在新构建成功后才会切换流量。一次错误提交不会导致站点下线，但控制台会显示"Failed"，直到你推送修复为止。优先检查构建日志——错误通常是缺少环境变量或本地忽略的 TypeScript 错误。
+      </div>
+
+      <h2>缓存刷新</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>部署已上线，但本地缓存了旧版 CSS/JS 的用户在缓存过期前看不到变更。有两种解决方案：</p>
+          <ul>
+            <li><strong>带哈希的资源文件名</strong>（大多数框架默认开启）— 每次构建生成如 <code>main.a1b2c3.js</code> 这样的文件名，浏览器会自动加载新版本。</li>
+            <li><strong>CDN 清除</strong> — 若站点使用了 Cloudflare，静态资源缓存可能需要手动清除。操作路径：Cloudflare 控制台 → Caching → Purge。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/redeploy-a-vps.html" class="tutorial-next-card">
+            <h3>重新部署自托管 VPS</h3>
+            <p>不同的工作流程 — git pull、重启服务、验证</p>
+          </a>
+          <a href="/zh/tutorials/reupload-an-ios-build-to-testflight.html" class="tutorial-next-card">
+            <h3>重新上传 iOS 构建到 TestFlight</h3>
+            <p>移动端的对应流程 — 更新构建号、归档、上传</p>
+          </a>
+          <a href="/zh/tutorials/put-cloudflare-in-front-of-any-host.html" class="tutorial-next-card">
+            <h3>为任意托管服务接入 Cloudflare</h3>
+            <p>为任何部署添加 CDN 缓存与免费 TLS</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和追求专业工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">路演</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

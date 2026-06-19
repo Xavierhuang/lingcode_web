@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What to fill in App Store Connect — every field, with examples | LingCode</title>
+  <meta name="description" content="Field-by-field walkthrough of every form in App Store Connect: app record, App Information, Pricing, Privacy, Age Rating, version metadata, screenshots, App Review Information. Character limits, gotchas, and submit-blockers.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/app-store-connect-fields.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/app-store-connect-fields.html">
+  <meta property="og:title" content="What to fill in App Store Connect — every field, with examples">
+  <meta property="og:description" content="The 'what do I put in this box?' question, answered for every field on every form in App Store Connect.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="What to fill in App Store Connect — LingCode">
+  <meta name="twitter:description" content="Every field, every limit, every gotcha. From 'Create New App' to 'Submit for Review'.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 680px; margin-left: auto; margin-right: auto; }
+    .blog-content { max-width: 800px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content h4 { font-size: 1rem; margin: 20px 0 6px; color: var(--text); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 12px 0 20px; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .callout p { margin: 0; color: var(--text); }
+    .callout strong { color: var(--signal); }
+    .callout.warn { border-left-color: #d97757; }
+    .callout.warn strong { color: #d97757; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+    .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 20px 0 32px; }
+    .toc ul { margin: 0; padding-left: 20px; }
+    .toc li { margin-bottom: 4px; }
+    .field-table { width: 100%; border-collapse: collapse; margin: 20px 0; table-layout: fixed; }
+    .field-table th, .field-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; word-break: break-word; overflow-wrap: anywhere; font-size: 0.9rem; }
+    .field-table th { color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field-table td { color: var(--text); }
+    .field-table td:first-child { font-weight: 600; color: var(--signal); width: 28%; }
+    .field-table td:nth-child(2) { width: 14%; color: var(--text-muted); font-family: ui-monospace, monospace; font-size: 0.8125rem; }
+    .sibling-nav { max-width: 800px; margin: 0 auto; padding: 20px 32px 0; }
+    .sibling-nav-inner { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .sibling-nav-label { font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px; }
+    .sibling-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 0.8125rem; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+    .sibling-pill:hover { color: var(--text); border-color: var(--signal); text-decoration: none; }
+    .sibling-pill.current { background: var(--signal); color: #fff; border-color: var(--signal); cursor: default; }
+    .sibling-pill.current:hover { color: #fff; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <nav class="sibling-nav" aria-label="Deploy guide siblings">
+      <div class="sibling-nav-inner">
+        <span class="sibling-nav-label">Deploy guides:</span>
+        <a href="/magic-deploy-setup.html" class="sibling-pill">App Store</a>
+        <a href="/app-store-connect-fields.html" class="sibling-pill current" aria-current="page">App Store Connect fields</a>
+        <a href="/google-play-deploy-setup.html" class="sibling-pill">Google Play</a>
+        <a href="/magic-deploy-web-platforms.html" class="sibling-pill">Web</a>
+        <a href="/host-your-own-server.html" class="sibling-pill">Provision</a>
+        <a href="/magic-deploy-scripts.html" class="sibling-pill">Scripts</a>
+      </div>
+    </nav>
+
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Reference</p>
+        <h1>What to fill in App Store Connect</h1>
+        <p>Every field on every form, with examples, character limits, and the gotchas that block submissions. From "Create New App" to "Submit for Review."</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+
+      <div class="toc">
+        <strong>On this page</strong>
+        <ul>
+          <li><a href="#before">1. Before you start</a></li>
+          <li><a href="#create">2. Create the app record (5 fields, immutable)</a></li>
+          <li><a href="#app-information">3. App Information (always-on fields)</a></li>
+          <li><a href="#pricing">4. Pricing &amp; Availability</a></li>
+          <li><a href="#privacy">5. App Privacy (the legal one)</a></li>
+          <li><a href="#age-rating">6. Age Rating questionnaire</a></li>
+          <li><a href="#version">7. Version metadata (per-release)</a></li>
+          <li><a href="#screenshots">8. Screenshots &amp; previews — exact specs</a></li>
+          <li><a href="#review-info">9. App Review Information</a></li>
+          <li><a href="#release">10. Version Release timing</a></li>
+          <li><a href="#submit">11. Submit for Review</a></li>
+          <li><a href="#gotchas">12. Top submit-blockers</a></li>
+        </ul>
+      </div>
+
+      <p>This page exists because the App Store Connect UI is a 12-form gauntlet and Apple's own docs are scattered across 40-odd pages. Here it's one scroll. Use it as a checklist on your first submission and a reference on every one after.</p>
+
+      <div class="callout">
+        <p><strong>Where this fits.</strong> <a href="/magic-deploy-setup.html">Magic Deploy</a> handles the binary: archive, sign, upload to TestFlight in one click. <em>This page</em> covers everything you fill in <strong>around</strong> that binary — the metadata, screenshots, pricing, and disclosures. The two together are the whole submission.</p>
+      </div>
+
+      <h2 id="before">1. Before you start</h2>
+      <p>You need three things before you can create an app record:</p>
+      <ol>
+        <li>An <strong>Apple Developer Program</strong> membership ($99/year). Sign up at <a href="https://developer.apple.com/programs/enroll/" rel="noopener noreferrer">developer.apple.com/programs/enroll</a>. Individual or Organization — both can ship to the App Store.</li>
+        <li>A <strong>Bundle ID</strong> registered at <a href="https://developer.apple.com/account/resources/identifiers/list" rel="noopener noreferrer">developer.apple.com/account/resources/identifiers</a>. The reverse-DNS name (<code>com.yourcompany.appname</code>) that ties Xcode → App Store Connect → certificates → entitlements together. <strong>Pick carefully — this string is permanent.</strong> Also: pick the right <em>type</em>:
+          <ul>
+            <li><em>App ID</em> for iOS / iPadOS / tvOS / watchOS / visionOS apps</li>
+            <li><em>App ID</em> with the "Mac" platform checkbox for macOS apps</li>
+            <li>Use an explicit ID (<code>com.you.app</code>), not a wildcard (<code>com.you.*</code>) — wildcards can't be used for App Store distribution.</li>
+          </ul>
+        </li>
+        <li>The app's <strong>icon</strong> built into the binary at the right resolutions (1024×1024 marketing icon mandatory; Asset Catalog "AppIcon" set in Xcode handles the per-device sizes). Apple now requires the 1024 icon to be <em>opaque</em> (no transparency, no alpha channel).</li>
+      </ol>
+
+      <h2 id="create">2. Create the app record</h2>
+      <p>App Store Connect → <em>My Apps</em> → <em>+</em> → <em>New App</em>. Five fields. Most are <strong>permanent</strong>; getting them wrong now means a deletion-and-recreation later.</p>
+
+      <table class="field-table">
+        <thead><tr><th>Field</th><th>Limit</th><th>What to put / Why it matters</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Platforms</td>
+            <td>—</td>
+            <td>Tick every platform this app record will ship to (iOS, macOS, tvOS, visionOS). You can add more later, but each platform shares the same name + bundle ID, so think about it now. macOS Catalyst counts as iOS here, not macOS.</td>
+          </tr>
+          <tr>
+            <td>Name</td>
+            <td>30 chars</td>
+            <td>The display name shown on the Store and the home screen. Public. Don't include the category in the name (Apple rejects "MyApp – Note Taking" — use the Subtitle for that). Editable, but only between submissions.</td>
+          </tr>
+          <tr>
+            <td>Primary Language</td>
+            <td>—</td>
+            <td><strong>Permanent.</strong> The fallback locale for users whose language you haven't localized to. Almost always <em>English (US)</em> unless you're region-specific. Cannot be changed after the first submission goes live.</td>
+          </tr>
+          <tr>
+            <td>Bundle ID</td>
+            <td>—</td>
+            <td><strong>Permanent.</strong> Pick the App ID you registered in step 1. If you don't see yours, you registered it under a different team or for a different platform. Once an app record uses a Bundle ID, that ID can't be deleted or repointed.</td>
+          </tr>
+          <tr>
+            <td>SKU</td>
+            <td>—</td>
+            <td>Internal stock-keeping identifier. Never shown publicly. Used in sales reports and the API. Use something like <code>MYAPP-IOS-001</code>. Unique within your account; can be any string. Don't put PII or anything you'd be embarrassed to see in a CSV.</td>
+          </tr>
+          <tr>
+            <td>User Access</td>
+            <td>—</td>
+            <td>Leave on <em>Full Access</em> unless you have an account with multiple developers and you want to wall this app off from some of them.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Click <strong>Create</strong>. You're now looking at an empty app record. The next sections are the forms you'll fill from here.</p>
+
+      <h2 id="app-information">3. App Information</h2>
+      <p>Left sidebar → <em>App Information</em>. These fields apply to every version of your app — you fill them once and update them rarely.</p>
+
+      <table class="field-table">
+        <thead><tr><th>Field</th><th>Limit</th><th>What to put / Why it matters</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Localizable Name</td>
+            <td>30 chars</td>
+            <td>Same as the Name from creation. Localizable: per-language overrides under <em>Add Language</em>.</td>
+          </tr>
+          <tr>
+            <td>Subtitle</td>
+            <td>30 chars</td>
+            <td>One-liner shown under the name on the Store. <strong>This is some of your most valuable real estate</strong> — use it for keywords + a hook ("Note-taking for engineers"). Localizable. Editable any time.</td>
+          </tr>
+          <tr>
+            <td>Privacy Policy URL</td>
+            <td>—</td>
+            <td><strong>Required.</strong> Public URL that loads the moment Apple's reviewer hits it (no login walls). If you don't have one, generate a starter at <a href="https://www.privacypolicies.com/" rel="noopener noreferrer">privacypolicies.com</a> and host it on your domain. Localizable.</td>
+          </tr>
+          <tr>
+            <td>Category</td>
+            <td>—</td>
+            <td>Pick a Primary and (optionally) Secondary from Apple's fixed list (Books, Business, Education, Finance, Food &amp; Drink, Games, Graphics &amp; Design, Health &amp; Fitness, Lifestyle, Music, News, Photo &amp; Video, Productivity, Reference, Shopping, Social Networking, Sports, Travel, Utilities, Weather, etc.). The Primary one drives Search ranking and the chart your app competes on; pick the most accurate, not the least-crowded.</td>
+          </tr>
+          <tr>
+            <td>Content Rights</td>
+            <td>—</td>
+            <td>"Does your app contain, show, or access third-party content?" Tick yes if you display licensed media (music, video, news), no for purely user-generated. If yes, you'll need rights documentation on file with Apple — keep contracts/permissions.</td>
+          </tr>
+          <tr>
+            <td>Age Rating</td>
+            <td>—</td>
+            <td>Edit → questionnaire (covered in <a href="#age-rating">section 6</a>).</td>
+          </tr>
+          <tr>
+            <td>Custom Product Pages</td>
+            <td>—</td>
+            <td>Optional. Lets you create alternate Store pages with different screenshots/text and drive traffic to them via custom URLs (great for ads / A/B tests). Skip on first submission.</td>
+          </tr>
+          <tr>
+            <td>In-App Events</td>
+            <td>—</td>
+            <td>Optional, only relevant if you run timed events (live streams, challenges, sales). Skip on first submission.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 id="pricing">4. Pricing &amp; Availability</h2>
+      <p>Left sidebar → <em>Pricing and Availability</em>.</p>
+
+      <table class="field-table">
+        <thead><tr><th>Field</th><th>Limit</th><th>What to put / Why it matters</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Base Country / Region</td>
+            <td>—</td>
+            <td>The country whose price you set; Apple converts to other territories using their <em>price tier</em> matrix automatically. Pick the country where you live or where most of your customers are.</td>
+          </tr>
+          <tr>
+            <td>Price Tier</td>
+            <td>—</td>
+            <td>Tier 0 = free. Otherwise tiers run $0.49 → $9999.99 in increments Apple defines. <strong>You cannot set arbitrary prices</strong> — only tier values. The tier in your base country determines all other countries; you can override per-country if you want.</td>
+          </tr>
+          <tr>
+            <td>Availability</td>
+            <td>—</td>
+            <td>175 territories ticked by default. Untick any country your app legally can't ship to (encryption rules, content laws). For paid apps, Apple's tax obligations differ by territory — <em>Tax and Banking</em> needs to be filled in <em>Agreements, Tax, and Banking</em> first or Apple will hold your earnings.</td>
+          </tr>
+          <tr>
+            <td>Volume Purchase Program</td>
+            <td>—</td>
+            <td>Tick if you want enterprises and schools to buy your app in bulk at a 50% discount through Apple's VPP. Free for you to enable; only relevant for paid apps.</td>
+          </tr>
+          <tr>
+            <td>Pre-Order</td>
+            <td>—</td>
+            <td>Optional. Lets users "pre-order" up to 180 days before release. Useful for marketing big launches; overkill for most apps.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn">
+        <p><strong>Tax + Banking is a separate gauntlet.</strong> For paid apps and apps with In-App Purchase, you must complete the <em>Paid Applications Agreement</em> + tax forms (W-9 for US, W-8BEN for non-US) + banking info before your first submission. Find it under <em>Business → Agreements, Tax, and Banking</em>. <strong>Until that's done, paid downloads are blocked.</strong> Apple won't tell you this is the problem — the app will just be unavailable in some countries with no error.</p>
+      </div>
+
+      <h2 id="privacy">5. App Privacy</h2>
+      <p>Left sidebar → <em>App Privacy</em>. This is the public "Privacy Nutrition Label" shown on your Store page. <strong>You answer it as a legal attestation</strong> — wrong answers can get the app pulled.</p>
+
+      <p>Apple asks you to declare every type of data your app (or any SDK in your app) collects. For each type, you specify:</p>
+      <ul>
+        <li><strong>Linked to user</strong>? (i.e. tied to their identity / account)</li>
+        <li><strong>Used for tracking</strong>? (linked across other companies' apps/sites for ads — triggers App Tracking Transparency)</li>
+        <li><strong>Purpose</strong>: analytics, app functionality, third-party advertising, developer's advertising, product personalization, other</li>
+      </ul>
+
+      <p>Categories Apple enumerates (full list in their <a href="https://developer.apple.com/app-store/app-privacy-details/" rel="noopener noreferrer">App Privacy details</a>):</p>
+      <ul>
+        <li>Contact Info — name, email, phone, address</li>
+        <li>Health &amp; Fitness — HealthKit data, fitness</li>
+        <li>Financial Info — payment info, credit info</li>
+        <li>Location — precise / coarse</li>
+        <li>Sensitive Info — race, religion, sexual orientation, etc.</li>
+        <li>Contacts — your address book</li>
+        <li>User Content — photos, videos, gameplay content, audio, customer support, other</li>
+        <li>Browsing History</li>
+        <li>Search History</li>
+        <li>Identifiers — User ID, Device ID</li>
+        <li>Purchases</li>
+        <li>Usage Data — product interaction, advertising data, other</li>
+        <li>Diagnostics — crash data, performance data, other</li>
+      </ul>
+
+      <div class="callout warn">
+        <p><strong>SDKs count.</strong> If you use Firebase, Google Analytics, Meta SDK, Sentry, Crashlytics, etc., <em>their data collection counts as yours</em>. Each major SDK publishes its own privacy disclosure list — check it and roll those into your answers. Common gotcha: Crash reporters collect <em>Diagnostics → Crash Data</em> and <em>Identifiers → Device ID</em> even if you didn't write a line of "tracking" code.</p>
+      </div>
+
+      <p><strong>Why this isn't auto-filled by tools:</strong> Apple deliberately requires the developer to attest to this in the web UI as a legal record. No tool — including Magic Submit — can answer this for you. Allow ~15 minutes the first time; subsequent updates are usually no-op unless you added an SDK.</p>
+
+      <h2 id="age-rating">6. Age Rating</h2>
+      <p><em>App Information → Age Rating → Edit</em>. A questionnaire about content frequency. Apple computes your rating (4+, 9+, 12+, 17+) from your answers.</p>
+
+      <p>Categories asked about: Cartoon/Fantasy Violence, Realistic Violence, Sexual Content/Nudity, Profanity, Alcohol/Tobacco/Drugs, Mature/Suggestive Themes, Simulated Gambling, Horror/Fear, Medical/Treatment Info, Unrestricted Web Access, Gambling, Contests.</p>
+
+      <p>For each: <em>None</em> / <em>Infrequent / Mild</em> / <em>Frequent / Intense</em>.</p>
+
+      <p>Rules of thumb:</p>
+      <ul>
+        <li>Most productivity / utility apps: <em>None</em> on every category → 4+.</li>
+        <li>Anything with an in-app browser (WKWebView pointing at user-supplied URLs) → tick <strong>Unrestricted Web Access</strong>. This forces 17+ regardless of other answers, because Apple can't audit what users will browse.</li>
+        <li>Social apps with user-generated content: tick "Unrestricted Web Access" only if users can post arbitrary URLs without moderation; otherwise leave it off and let the content categories drive the rating.</li>
+      </ul>
+
+      <p><strong>Why this isn't auto-filled either</strong>: same reason as App Privacy — it's a legal attestation. Magic Submit can open this page in your browser, but you fill it.</p>
+
+      <h2 id="version">7. Version metadata</h2>
+      <p>Left sidebar → <em>iOS App</em> / <em>macOS App</em> → the version row (e.g. "1.0 Prepare for Submission"). These fields are <strong>per-version</strong> — you fill them every release.</p>
+
+      <table class="field-table">
+        <thead><tr><th>Field</th><th>Limit</th><th>What to put / Why it matters</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Version</td>
+            <td>—</td>
+            <td>Semver string (<code>1.0.0</code>, <code>1.0.1</code>, …). <strong>Must be ≥ the previous public version.</strong> Match it to <code>CFBundleShortVersionString</code> in your Info.plist or the upload's rejected. Magic Deploy doesn't auto-bump this — you do, in Xcode's target settings.</td>
+          </tr>
+          <tr>
+            <td>What's New</td>
+            <td>4000 chars</td>
+            <td>Release notes. Empty on first submission. From v1.0.1+, this is required and shown in the Updates tab. Localizable. Be specific — "Bug fixes" gets ignored; "Fixed crash when exporting PDFs over 100 pages" gets read.</td>
+          </tr>
+          <tr>
+            <td>Promotional Text</td>
+            <td>170 chars</td>
+            <td>Marketing line above the description. <strong>Editable any time without resubmitting</strong> — Apple's only "live" field. Use it for time-sensitive callouts ("New: Markdown export"). Localizable.</td>
+          </tr>
+          <tr>
+            <td>Description</td>
+            <td>4000 chars</td>
+            <td>The pitch. Plain text, line breaks render. Apple's algorithms parse this for keywords too, but Apple has said keywords-stuffing in the Description hurts more than it helps. Lead with the value prop in the first 3 lines (the rest is hidden under "more"). Localizable.</td>
+          </tr>
+          <tr>
+            <td>Keywords</td>
+            <td>100 chars total</td>
+            <td>Comma-separated list, <strong>not visible to users</strong>, used by Search. Most powerful real estate per character. Don't repeat the App Name or Subtitle (already indexed). Don't include competitor names — Apple rejects. Use comma without spaces (<code>note,markdown,export,sync</code>) to fit more. Localizable.</td>
+          </tr>
+          <tr>
+            <td>Support URL</td>
+            <td>—</td>
+            <td><strong>Required.</strong> Public URL where users can get help. Loads without login. If you don't have a site, a public Notion/Linear page or a GitHub Issues link works. Localizable.</td>
+          </tr>
+          <tr>
+            <td>Marketing URL</td>
+            <td>—</td>
+            <td>Optional. Your app's home page on your site. Localizable.</td>
+          </tr>
+          <tr>
+            <td>Copyright</td>
+            <td>—</td>
+            <td>Year + entity name: <code>2026 Your Company, Inc.</code> or <code>2026 Jane Doe</code>. Apple checks this matches your developer account's entity.</td>
+          </tr>
+          <tr>
+            <td>Trade Representative Contact</td>
+            <td>—</td>
+            <td>EU DSA requirement (since 2024). Address, phone, email of a contact for EU regulatory queries. Apple stores this; users in EU can request to see it. <strong>Required for distribution in the EU.</strong></td>
+          </tr>
+          <tr>
+            <td>Routing App Coverage File</td>
+            <td>—</td>
+            <td>Only relevant for navigation/maps apps that handle <code>http://maps.apple.com/?dirflg=…</code> URL routing. Skip otherwise.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 id="screenshots">8. Screenshots &amp; previews</h2>
+      <p>Same page as Version metadata, top section. <strong>This is the part that fails the most reviews</strong> — wrong size = instant rejection without explanation other than "binary is invalid."</p>
+
+      <h3>iPhone screenshots — required device classes</h3>
+      <p>Apple requires <em>at least one</em> screenshot for one of the largest current iPhone sizes. Apple uses these to render previews on smaller iPhone screens too — you don't need to upload every size.</p>
+
+      <table class="field-table">
+        <thead><tr><th>Device class</th><th>Pixel size</th><th>What it represents</th></tr></thead>
+        <tbody>
+          <tr><td>6.9" Display</td><td>1290 × 2796 (portrait)</td><td>iPhone 16 Pro Max, 15 Pro Max, 14 Pro Max — required for new submissions in 2025+. Apple stretches these to cover all smaller sizes if you upload nothing else.</td></tr>
+          <tr><td>6.5" Display</td><td>1242 × 2688 (portrait)</td><td>iPhone XS Max, 11 Pro Max, 8 Plus class. Optional but used as fallback.</td></tr>
+          <tr><td>5.5" Display</td><td>1242 × 2208 (portrait)</td><td>iPhone 8 Plus / 7 Plus. Optional. <strong>Apple deprecated this requirement in 2024</strong> — no longer needed.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>iPad screenshots</h3>
+      <table class="field-table">
+        <thead><tr><th>Device class</th><th>Pixel size</th><th>What it represents</th></tr></thead>
+        <tbody>
+          <tr><td>13" Display</td><td>2064 × 2752 (portrait) or 2752 × 2064 (landscape)</td><td>iPad Pro M4 (13"). <strong>Required if your app supports iPad</strong> and you ship to iOS.</td></tr>
+          <tr><td>12.9" Display</td><td>2048 × 2732 / 2732 × 2048</td><td>iPad Pro 6th-gen and prior. Apple now treats 13" as the canonical — uploading both is allowed but redundant.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>macOS screenshots</h3>
+      <p>Required if you ship a Mac app. Sizes: <strong>1280 × 800</strong>, <strong>1440 × 900</strong>, <strong>2560 × 1600</strong>, or <strong>2880 × 1800</strong>. Pick one — most submissions use 2560 × 1600 (Retina 13") since it's sharp on every display Apple sells.</p>
+
+      <h3>Per-screenshot rules</h3>
+      <ul>
+        <li><strong>Up to 10 per device class.</strong> Order matters — first one is the gallery thumbnail.</li>
+        <li><strong>PNG or JPG.</strong> No transparency. No animated formats.</li>
+        <li><strong>RGB color space</strong>, not P3 (will be silently downconverted).</li>
+        <li><strong>No status bar mockups.</strong> Apple wants the actual UIStatusBar in your screenshot, or a clean status-free shot. Don't paste fake "9:41 AM" bars unless they match Apple's marketing-image standard.</li>
+        <li><strong>No "coming soon" overlays</strong> for features not in this build. Apple rejects.</li>
+        <li><strong>No price stickers</strong> or "Free!" badges. Apple rejects.</li>
+        <li><strong>No competitor names.</strong> Apple rejects.</li>
+      </ul>
+
+      <h3>App Previews (video)</h3>
+      <p>Optional. Up to 3 per device class, each 15–30 seconds, .mov or .mp4, ProRes recommended. Records on-device gameplay/usage; static text/marketing footage is rejected ("Apple wants to see the app in action").</p>
+
+      <h2 id="review-info">9. App Review Information</h2>
+      <p>Same page, scroll down past Screenshots.</p>
+
+      <table class="field-table">
+        <thead><tr><th>Field</th><th>Limit</th><th>What to put / Why it matters</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Sign-In Required</td>
+            <td>—</td>
+            <td>Tick if your app requires login to use any feature. <strong>If yes, demo credentials are MANDATORY</strong> — without them, instant rejection.</td>
+          </tr>
+          <tr>
+            <td>Demo Account: User Name</td>
+            <td>—</td>
+            <td>Working credentials Apple's reviewer uses. Real account, in your prod database, with realistic data. Do not lock it; reviewer will hit it from various IPs and devices.</td>
+          </tr>
+          <tr>
+            <td>Demo Account: Password</td>
+            <td>—</td>
+            <td>Same idea. Don't 2FA-protect this account. Apple's reviewers will not retrieve a code from your server.</td>
+          </tr>
+          <tr>
+            <td>Notes</td>
+            <td>—</td>
+            <td>Anything the reviewer needs to test all features. Examples: "To test the export flow, navigate Home → +. To test push notifications, send any message from a second device." Be specific — vague notes get the app rejected for "missing functionality."</td>
+          </tr>
+          <tr>
+            <td>Contact Information</td>
+            <td>—</td>
+            <td>First name, last name, phone (international format), email of someone who can answer Apple's reviewer fast. Apple does call this number. Often.</td>
+          </tr>
+          <tr>
+            <td>Attachment</td>
+            <td>—</td>
+            <td>Optional. Use for proof-of-rights documents, regulatory licenses, NDA-required test plans. Doesn't appear publicly.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 id="release">10. Version Release</h2>
+      <p>Same page, top.</p>
+      <ul>
+        <li><strong>Manually release this version</strong>: app sits in <em>Pending Developer Release</em> after Apple approves it; goes live when you click Release. Lets you sync with marketing / press / your launch tweet.</li>
+        <li><strong>Automatically release this version</strong>: goes live ~30 minutes after Apple approves. Default; fine for most updates.</li>
+        <li><strong>Automatically release this version after App Review, no earlier than [date]</strong>: same as above but pinned to a launch date. Apple will hold the binary until your date even if review finishes early.</li>
+      </ul>
+      <p><strong>Phased release (optional)</strong>: rolls the update out to a percentage of users per day over 7 days (1% → 2% → 5% → 10% → 20% → 50% → 100%). Lets you abort the rollout if you spot a regression. Only available for updates, not first submissions. <em>Highly recommended</em> for any app over a few thousand DAU.</p>
+
+      <h2 id="submit">11. Submit for Review</h2>
+      <p>Top right: <em>Add for Review</em> → <em>Submit to App Review</em>. Pre-flight checklist Apple makes you tick:</p>
+      <ul>
+        <li>Export Compliance — does your app use encryption? <strong>Almost always yes</strong>, because HTTPS counts as encryption use. Apple gives you exemptions to declare:
+          <ul>
+            <li>"Uses encryption only for HTTPS / SSL" → exempt under ATS</li>
+            <li>"Uses encryption that's already exempt under U.S. export law" → most apps</li>
+            <li>If unsure, fill out the actual form. The penalty for misdeclaring is the app being pulled.</li>
+          </ul>
+        </li>
+        <li>Content Rights — same checkbox as App Information. Just match it.</li>
+        <li>Advertising Identifier (IDFA) — does the app use IDFA for ads / tracking / attribution? Honest yes/no. If yes, you'll need App Tracking Transparency prompt code (<code>ATTrackingManager.requestTrackingAuthorization</code>) in the binary.</li>
+      </ul>
+      <p>Click <strong>Submit</strong>. The status flips to <em>Waiting for Review</em>, then <em>In Review</em> (~24h median, can be faster), then <em>Pending Developer Release</em> or <em>Ready for Sale</em>.</p>
+
+      <h2 id="gotchas">12. Top submit-blockers</h2>
+      <p>The five rejections that hit most first-time submitters:</p>
+
+      <ol>
+        <li><strong>Guideline 2.1 — App Completeness.</strong> Reviewer hit a feature that crashed or didn't work. Fix: test on a real device with airplane mode + slow networks before submitting. Most "incomplete" rejections are network-related.</li>
+        <li><strong>Guideline 2.3.10 — Accurate Metadata.</strong> Your description / screenshots claim a feature your binary doesn't have. Fix: prune marketing copy down to what the build actually does today.</li>
+        <li><strong>Guideline 5.1.1 — Privacy / Data Collection and Storage.</strong> Sign-in flow asks for data unrelated to the app. Fix: only ask for what you need; defer optional sign-in until the user hits a feature requiring an account.</li>
+        <li><strong>Guideline 4.0 — Design / Minimum Functionality.</strong> "App is too minimal / a website wrapper." Fix: ship at least one capability that wouldn't work as a webpage (offline mode, push, biometrics, sensors, share sheet).</li>
+        <li><strong>Demo account credentials missing or expired.</strong> See <a href="#review-info">section 9</a>. The single most preventable rejection.</li>
+      </ol>
+
+      <div class="callout">
+        <p><strong>If rejected:</strong> read the message in the Resolution Center. Reply with a fix or an explanation; you do not need to resubmit a new build unless the binary itself is the problem. ~30% of "rejections" turn into approvals after a clarifying reply.</p>
+      </div>
+
+      <div class="blog-cta">
+        <p>Done filling? Hand the binary upload to <a href="/magic-deploy-setup.html">Magic Deploy</a> and the metadata to <a href="/magic-deploy-setup.html#magic-submit"><strong>Magic Submit</strong></a> — fills the API-doable ~80% of these fields automatically (Description, Keywords, What's New, Promotional Text, URLs, build selection) and opens the App Privacy + Age Rating pages in your browser to finish the rest.</p>
+      </div>
+
+      <h2 style="border-top:1px solid var(--border); padding-top:24px;">Related guides</h2>
+      <ul>
+        <li><a href="/magic-deploy-setup.html">Magic Deploy: App Store</a> — how the binary gets archived, signed, and uploaded.</li>
+        <li><a href="/learn-code-signing.html">How App Store code signing works</a> — the trust chain explained.</li>
+        <li><a href="/learn-jwt-auth.html">JWT auth in 5 minutes</a> — how Apple's API authenticates.</li>
+        <li><a href="/glossary.html">Glossary</a> — every deploy term in plain English.</li>
+        <li><a href="https://developer.apple.com/app-store/review/guidelines/" rel="noopener noreferrer">Apple's App Review Guidelines</a> — the source of truth, updated frequently.</li>
+      </ul>
+
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

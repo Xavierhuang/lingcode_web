@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Storage — public &amp; private buckets, inline and direct-to-storage uploads | LingCode Cloud Docs</title>
+  <meta name="description" content="File storage in LingCode Cloud: S3-compatible public (CDN-served) and private (user-scoped) buckets, automatic inline vs. direct-to-storage presigned uploads for GB-scale files, per-tier limits, and the full SDK and REST surface.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/storage.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/storage.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/storage.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/storage.html">
+  <meta property="og:title" content="LingCode Cloud — Storage">
+  <meta property="og:description" content="Public and private buckets, inline uploads, and direct-to-storage presigned PUTs for GB-scale files — with the SDK and REST reference.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .limit-table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.9rem; }
+    .limit-table th, .limit-table td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .limit-table th { font-family: "Geist Mono", monospace; font-size: 0.72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--signal); font-weight: 500; }
+    .limit-table td:first-child { font-weight: 600; color: var(--text); }
+    .limit-table code { font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Storage</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Files</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Storage</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Every LingCode Cloud backend includes file storage backed by S3-compatible object storage (with an optional CDN). There are two buckets: <code>public</code> (CDN-served, world-readable) and <code>private</code> (user-scoped, requires the signed-in user's token). You upload with <code>lingcode.storage.from('public').upload(path, file)</code> and the SDK automatically routes small files inline and large files straight to object storage via a presigned PUT — so GB-scale video and audio just work.</p>
+      <p class="intro">Most apps need somewhere to put files: avatars, photo uploads, generated PDFs, audio clips. Storage is the part of your backend that holds those bytes. The design question is almost always the same — is this file something the whole world can see by URL, or is it private to one user? LingCode answers that with two buckets, and the rest of this guide is about picking the right one and uploading without thinking about file size.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>Why two buckets</h2>
+      <p>A file's visibility is a property of <em>where you put it</em>, not a per-request decision you make later. That keeps the rules simple and impossible to get subtly wrong:</p>
+      <ul>
+        <li><strong><code>public</code></strong> — served through a CDN and world-readable. Anyone with the URL can fetch the file. This is for assets you intend to embed by URL: avatars, public images, marketing media, anything you'd happily drop into an <code>&lt;img&gt;</code> tag. Public objects get a stable URL you can compute synchronously with <code>getPublicUrl(path)</code>.</li>
+        <li><strong><code>private</code></strong> — user-scoped. Reading a private object requires the signed-in user's token; there's no public URL. This is for per-user documents — uploaded contracts, private photos, anything that should never leak by guessing a URL. Gate reads with the user token and ownership the same way you'd gate a private database row.</li>
+      </ul>
+      <p>You address a file by its <strong>path within a bucket</strong> — for example <code>avatars/me.png</code> in the <code>public</code> bucket. Object keys are namespaced per backend and per bucket on the server, and any path traversal (<code>.</code> / <code>..</code>) is stripped, so you can't reach into another backend's files.</p>
+
+      <div class="info-box">
+        <h3>Public vs. private — the one-line rule</h3>
+        <p>If you'll embed it by URL and don't mind anyone fetching it, use <code>public</code> and render <code>getPublicUrl(path)</code>. If it belongs to one user and reads must be authenticated, use <code>private</code> and pair it with RLS-style ownership on the rows that point at it. When in doubt, default to <code>private</code> — you can always copy to public later.</p>
+      </div>
+
+      <h2>The SDK surface</h2>
+      <p>Call <code>lingcode.storage.from(bucket)</code> to get a bucket handle, where <code>bucket</code> is <code>'public'</code> or <code>'private'</code>. Every method returns the same <code>{ data, error }</code> Result shape as the rest of the SDK (except <code>getPublicUrl</code>, which is synchronous and returns a plain string).</p>
+      <pre><code>const bucket = lingcode.storage.from('public');
+
+// upload(path, file, { contentType? }) -> { data: { bucket, path, bytes, url }, error }
+//   file may be a Blob | File | ArrayBuffer | string
+await bucket.upload('avatars/me.png', file, { contentType: 'image/png' });
+
+// download(path) -> { data: Blob, error }
+const { data: blob } = await bucket.download('avatars/me.png');
+
+// getPublicUrl(path) -> string   (synchronous; only meaningful for the public bucket)
+const url = bucket.getPublicUrl('avatars/me.png');
+
+// remove(path) -> { data: { removed: boolean }, error }
+await bucket.remove('avatars/me.png');</code></pre>
+
+      <h2>The upload story: small vs. large</h2>
+      <p>You only ever call one method — <code>upload()</code> — and the SDK decides how to move the bytes based on size. This is the single most important thing to understand about Storage, because it's what lets the same one-line call handle both a 40 KB avatar and a 2 GB screen recording.</p>
+      <ul>
+        <li><strong>Small files (≤ ~5 MB)</strong> go <strong>inline</strong>, through the data gateway. The bytes are base64-encoded and ride along in the request body. Simple, one round-trip, no extra moving parts.</li>
+        <li><strong>Larger files</strong> upload <strong>directly to object storage</strong> via a <strong>presigned PUT URL</strong>. The SDK asks the backend for a short-lived upload URL, PUTs the bytes straight at object storage (so they never transit your app server), then finalizes to record the object. This is what makes GB-scale media — video, audio — practical without melting the gateway.</li>
+      </ul>
+      <p>The SDK hides this split entirely. If you're calling REST yourself, the large path is a deliberate two-step: <code>create-upload-url</code> → <code>PUT</code> to the returned URL → <code>finalize</code> (covered below). For very large media, just call <code>upload()</code> and let the SDK take the presigned path automatically.</p>
+
+      <div class="info-box">
+        <h3>Why presigned uploads matter</h3>
+        <p>Pushing a 2 GB file through your application server means that server has to buffer and stream 2 GB — slow, memory-hungry, and easy to time out. A presigned PUT sidesteps the server entirely: the browser talks straight to object storage over a URL that's only valid for your specific object for a short window. You get GB-scale uploads for free without the gateway ever touching the bytes.</p>
+      </div>
+
+      <h2>Per-tier limits</h2>
+      <p>Storage is metered on four axes, and the ceilings depend on your plan tier. Exceeding any cap returns <strong>HTTP 402 <code>quota_exceeded</code></strong>. The backend warns at <strong>80%</strong> of your storage allowance and flags <strong>critical at 95%</strong>, so you'll see pressure before you hit the wall.</p>
+      <table class="limit-table">
+        <thead>
+          <tr>
+            <th>Limit</th>
+            <th>What it caps</th>
+            <th>Free</th>
+            <th>Pro</th>
+            <th>Max Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>maxObjectBytes</code></td>
+            <td>Inline upload, per object</td>
+            <td>1 MB</td>
+            <td>5 MB</td>
+            <td>10 MB</td>
+          </tr>
+          <tr>
+            <td><code>maxUploadBytes</code></td>
+            <td>Direct presigned-PUT, per object</td>
+            <td>50 MB</td>
+            <td>1 GB</td>
+            <td>5 GB</td>
+          </tr>
+          <tr>
+            <td><code>maxStorageBytes</code></td>
+            <td>Total stored bytes per backend</td>
+            <td>500 MB</td>
+            <td>5 GB</td>
+            <td>20 GB</td>
+          </tr>
+          <tr>
+            <td><code>maxObjects</code></td>
+            <td>Object count per backend</td>
+            <td>50</td>
+            <td>1,000</td>
+            <td>10,000</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>The single-PUT ceiling is 5 GB regardless of tier — that's the largest object a direct presigned PUT can write. Full numbers, alongside the rest of the plan limits, live on <a href="/pricing.html">the pricing page</a>.</p>
+
+      <div class="warn-box">
+        <strong>A 402 is a quota signal, not a bug.</strong> If <code>upload()</code> returns <code>error.code === 'quota_exceeded'</code>, you've hit one of the four caps — too many objects, too many total bytes, or a single object over the per-object limit for your tier. Surface it to the user (or prune old objects with <code>remove()</code>) rather than retrying.
+      </div>
+
+      <h2>Worked examples</h2>
+
+      <h3>Upload an avatar to public and render it</h3>
+      <p>Avatars are the textbook <code>public</code> case — you want a stable URL you can drop into an image tag. Upload, then read back the public URL synchronously (or just use the <code>url</code> the upload returns).</p>
+      <pre><code>const file = document.querySelector('#avatar-input').files[0];
+
+const { data, error } = await lingcode.storage
+  .from('public')
+  .upload(`avatars/${user.id}.png`, file, { contentType: file.type });
+
+if (error) {
+  console.error('upload failed', error);
+} else {
+  // data = { bucket, path, bytes, url }
+  document.querySelector('#avatar').src = data.url;
+}
+
+// Or compute the stable URL at any later time, without re-uploading:
+const url = lingcode.storage.from('public').getPublicUrl(`avatars/${user.id}.png`);</code></pre>
+
+      <h3>Upload a private document</h3>
+      <p>A user's private files go in the <code>private</code> bucket. There's no public URL — reads require the signed-in user's token, so make sure you're signed in (see the <a href="/docs/cloud/auth.html">Auth guide</a>). Fetch it back with <code>download()</code>, which returns a <code>Blob</code>.</p>
+      <pre><code>// Upload — scoped to the signed-in user
+const { error } = await lingcode.storage
+  .from('private')
+  .upload(`docs/${user.id}/contract.pdf`, pdfFile, {
+    contentType: 'application/pdf',
+  });
+
+// Read it back later (requires the user token)
+const { data: blob, error: dlErr } = await lingcode.storage
+  .from('private')
+  .download(`docs/${user.id}/contract.pdf`);
+
+if (!dlErr) {
+  const objectUrl = URL.createObjectURL(blob);
+  window.open(objectUrl); // open the PDF in a new tab
+}</code></pre>
+      <p>Store the <code>path</code> on a database row the user owns and let RLS gate who can see that row — that's how you turn "who can read this file" into the same ownership check you already use for data.</p>
+
+      <h3>Upload large media — just call upload()</h3>
+      <p>You don't do anything special for big files. The SDK sees the size and switches to the presigned path on its own.</p>
+      <pre><code>const video = document.querySelector('#video-input').files[0]; // e.g. 1.4 GB
+
+// Same call. The SDK uploads this directly to object storage via a presigned PUT.
+const { data, error } = await lingcode.storage
+  .from('private')
+  .upload(`recordings/${user.id}/${Date.now()}.mp4`, video, {
+    contentType: 'video/mp4',
+  });</code></pre>
+
+      <h3>Remove a file</h3>
+      <pre><code>const { data, error } = await lingcode.storage
+  .from('public')
+  .remove(`avatars/${user.id}.png`);
+
+// data = { removed: true }</code></pre>
+
+      <h2 id="rest">Under the hood (REST)</h2>
+      <p>The SDK is a thin wrapper over a handful of HTTP endpoints. You'll only reach for these if you're working outside JavaScript or want to control the large-upload steps yourself. The base is <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code>. Authenticate with the anon key (as a <code>Bearer</code> token or <code>?apikey=</code>) or the user token; <code>bucket</code> defaults if omitted. Object keys are namespaced per backend and bucket, and <code>.</code>/<code>..</code> path traversal is stripped.</p>
+
+      <h3>Inline upload (small files)</h3>
+      <pre><code>POST /storage/upload
+Authorization: Bearer &lt;anon-or-user-token&gt;
+Content-Type: application/json
+
+{ "bucket": "public", "path": "avatars/me.png",
+  "content_type": "image/png", "data_b64": "&lt;base64-bytes&gt;" }
+
+-> { "bucket": "public", "path": "avatars/me.png", "bytes": 40213, "url": "https://..." }</code></pre>
+
+      <h3>Read an object</h3>
+      <pre><code>GET /storage/object?bucket=public&amp;path=avatars/me.png
+Authorization: Bearer &lt;anon-or-user-token&gt;
+
+-> the file bytes (302-redirects to the CDN URL for public objects)</code></pre>
+
+      <h3>Remove an object</h3>
+      <pre><code>POST /storage/remove
+
+{ "bucket": "public", "path": "avatars/me.png" }
+
+-> { "removed": true }</code></pre>
+
+      <h3>Direct-to-storage upload (large files), in three steps</h3>
+      <p>This is what the SDK does automatically for files past the inline cap. First, ask for a presigned upload URL:</p>
+      <pre><code>POST /storage/create-upload-url
+
+{ "bucket": "private", "path": "recordings/big.mp4",
+  "content_type": "video/mp4" }
+
+-> { "uploadUrl": "https://...", "method": "PUT",
+     "headers": { ... }, "bucket": "private", "path": "recordings/big.mp4" }</code></pre>
+      <p>Second, PUT the bytes straight at <code>uploadUrl</code> using the returned <code>method</code> and <code>headers</code> — these bytes go to object storage, not to your app server:</p>
+      <pre><code>PUT &lt;uploadUrl&gt;
+&lt;headers from the previous response&gt;
+
+&lt;raw file bytes&gt;</code></pre>
+      <p>Third, finalize to record the object so it counts against your backend and becomes readable:</p>
+      <pre><code>POST /storage/finalize
+
+{ "bucket": "private", "path": "recordings/big.mp4" }
+
+-> { "bucket": "private", "path": "recordings/big.mp4", "bytes": 1490233856, "url": "https://..." }</code></pre>
+
+      <div class="info-box">
+        <h3>Which path will my upload take?</h3>
+        <p>If your object is under the inline per-object cap for your tier (<code>maxObjectBytes</code> — 1 / 5 / 10 MB), one <code>POST /storage/upload</code> is all you need. Anything bigger uses the three-step presigned flow and is bounded by <code>maxUploadBytes</code> (50 MB / 1 GB / 5 GB) and the 5 GB single-PUT ceiling. The SDK's <code>upload()</code> picks for you; you only juggle the steps when calling REST directly.</p>
+      </div>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/database.html">
+            <h3>Database →</h3>
+            <p>Store the path your uploads return on a row, and gate file access with the same RLS ownership you use for data.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/functions.html">
+            <h3>Functions →</h3>
+            <p>Process uploads server-side — generate thumbnails, transcode media, or kick off work after a file lands.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/api-reference.html">
+            <h3>API reference →</h3>
+            <p>The full SDK surface and every REST endpoint, with request and response shapes for storage and beyond.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

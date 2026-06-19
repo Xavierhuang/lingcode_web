@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>安全与行级安全（RLS）—— LingCode Cloud | 文档</title>
+  <meta name="description" content="LingCode Cloud 如何守护数据安全：公开的 anon key（匿名密钥）之所以安全，靠的是 Postgres 行级安全（RLS），而不是把密钥藏起来。了解威胁模型、核心 RLS 模式、可直接复制的策略 SQL，以及帮你抓错的 advisors。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/security.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/security.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/security.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/security.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/security.html">
+  <meta property="og:title" content="安全与行级安全（RLS）—— LingCode Cloud">
+  <meta property="og:description" content="行级安全（RLS）才是让公开 anon key 能安全放进浏览器的根本。威胁模型、核心 RLS 模式、可直接复制的策略 SQL，以及帮你抓错的 advisors。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>安全与 RLS</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● 上线前必读</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>安全与行级安全（RLS）</h1>
+      <p class="tldr"><strong>一句话：</strong>放在浏览器打包产物里的公开 <strong>anon key（匿名密钥）</strong>之所以安全，靠的是<strong>行级安全（RLS）</strong>——由服务端 Postgres 强制执行的策略，而不是把密钥藏起来。anon key 能访问到的每一张表，都应当既启用 RLS <em>又</em>配上策略。一次性启用它，写好「仅所有者可见」的策略去校验 <code>current_setting('app.user_id', true)</code>，以已登录用户的身份测试，并在每次上线前跑一遍 <a href="/zh/tutorials/scan-your-backend-with-advisors.html">advisors（扫描器）</a>。</p>
+      <p class="intro">这是你把后端摆到真实用户面前之前该读的一页。它从威胁模型讲起——为什么公开密钥没问题、真正保护数据的是什么——接着给你一套覆盖绝大多数应用的 RLS 模式、常见配方的可直接复制 SQL，以及那张帮你兜住「人人第一次都会犯」的错误的安全网。核心思路：访问权限由你用 SQL 写的策略决定，Postgres 在每一次查询时都会执行它们。把这些写对，其余的自然就成立了。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>为什么这很重要：威胁模型</h2>
+      <p>接入 SDK 时，你会往浏览器里塞两个值：一个<strong>数据 URL</strong>和一个公开的 <strong>anon key</strong>。anon key 不是秘密。它跟着你的客户端打包产物一起发出去，出现在每一个请求里，任何人都能读到它。这是有意为之的设计。</p>
+      <p>安全<em>不</em>来自把密钥藏起来，而来自<strong>行级安全（RLS）</strong>——一组用普通 Postgres SQL 写成的策略，数据库会在服务端为每一次查询、在返回任何行之前先评估它们。密钥只用来标明你在跟哪个后端对话；策略才决定这个请求被允许看到和改动什么。</p>
+      <p>所以规则简单而绝对：<strong>anon key 能访问到的每一张表，都应当启用 RLS 并配上策略。</strong>一张表恰好处于以下三种状态之一：</p>
+      <ul>
+        <li><strong>RLS 关闭</strong>——这张表<em>完全敞开</em>。任何持有 anon key 的请求都能读写每一行。对于用户数据，这几乎从来不是你想要的。</li>
+        <li><strong>RLS 开启，但没有策略</strong>——这张表<em>完全封闭</em>。通过数据网关看不到也写不了任何一行（所有者控制台仍然能看到）。安全，但在你加上策略之前毫无用处。</li>
+        <li><strong>RLS 开启，并配有策略</strong>——访问权限恰好等于你的策略所允许的范围。这是每一张面向用户的表的目标状态。</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>anon key 本就是公开设计——永远不要指望它保密。</strong>任何不该被未登录访客看到的东西，都必须靠策略挡住，而不是靠密钥「难找」。还有，永远不要把<em>私有</em>厂商密钥（Stripe secret、第三方 API key）放进表里或客户端——它们该进<a href="/zh/docs/cloud/secrets.html">密钥保险库</a>，只在服务端<a href="/zh/docs/cloud/functions.html">函数</a>里读取。
+      </div>
+
+      <h2>强制机制是怎么运作的</h2>
+      <p>值得理解一下策略背后的机制，因为正是它让你写的 SQL 成立。</p>
+      <ul>
+        <li>每一次应用查询都以一个<strong>低权限 Postgres 角色</strong>运行，作用范围被限定在你后端自己的 schema 内。它够不到任何其他后端的 schema——隔离是结构性的，而不仅仅靠策略。</li>
+        <li>已登录用户的 id 通过 <code>current_setting('app.user_id', true)</code> 暴露给你的策略。它是一个 <strong>TEXT</strong> 值，并且<strong>在请求未登录时为 NULL</strong>——SDK 只在登录之后才设置它。在策略里把它转换成你那一列的类型（<code>::uuid</code>、<code>::text</code> 等等）。</li>
+        <li>策略就是普通的 Postgres SQL。你把它们写进<strong>迁移（migrations）</strong>里——通过控制台的 SQL 标签页，或让 agent 调用 <code>apply_migration</code>——绝不要作为运行时调用。</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>所有者控制台和迁移以管理员身份运行，会绕过 RLS。</strong>当你从控制台查询时，无论策略如何你都能看到全部——所以控制台是测试访问规则的错误场所。<strong>永远以已登录的应用用户身份测试策略</strong>（也要测未登录的），绝不要从控制台测，否则你会误以为一条坏掉的策略是好的。
+      </div>
+
+      <h2>核心模式</h2>
+      <p>这是覆盖绝大多数应用的模式：一张表，每一行都归属于某一个用户，且只有那个用户能看到或改动它。两步——启用 RLS，然后加上策略。</p>
+      <pre><code>-- 1) 启用 RLS。没有这一步，策略什么都不做。
+ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
+
+-- 2) 仅所有者：一行只对拥有它的用户可见 / 可改。
+CREATE POLICY "todos are private to their owner" ON todos
+  USING (user_id = current_setting('app.user_id', true)::uuid)
+  WITH CHECK (user_id = current_setting('app.user_id', true)::uuid);</code></pre>
+      <p>这里两个子句在做两件不同的事，区别很关键：</p>
+      <ul>
+        <li><strong><code>USING</code></strong> 决定哪些<em>已存在</em>的行可见——它过滤 <code>SELECT</code>，并把关一个 <code>UPDATE</code> 或 <code>DELETE</code> 被允许触及哪些行。</li>
+        <li><strong><code>WITH CHECK</code></strong> 校验你被允许写<em>入</em>的行——它在 <code>INSERT</code> 和 <code>UPDATE</code> 时把关新行或被改后的行。没有它，用户就能插入一行打上别人 <code>user_id</code> 的记录。</li>
+      </ul>
+      <p>注意那个类型转换：<code>current_setting('app.user_id', true)</code> 返回 TEXT，所以你把它转成那一列的类型——这里是 <code>::uuid</code>。再注意请求未登录时会发生什么：<code>current_setting</code> 返回 <strong>NULL</strong>，比较 <code>user_id = NULL</code> 永远不为真，<strong>没有任何行匹配</strong>，访问被拒绝。未登录场景的安全是自动成立的。</p>
+
+      <div class="info-box">
+        <h3>为什么 USING 和 WITH CHECK 都要出现</h3>
+        <p>一个常见的初学错误是只写 <code>USING</code>。那能让已存在的行变私有——但 <code>INSERT</code> 没有已存在的行可供过滤，所以没有 <code>WITH CHECK</code> 时，客户端就能创建带任意 <code>user_id</code> 的行，包括别人的。对于仅所有者的表，两个子句都写上、用同样的条件。当它们应当不同时（公开读、所有者写），改用按命令拆分的策略——见下面的配方。</p>
+      </div>
+
+      <h2>配方</h2>
+
+      <h3>自动盖上所有者（这样客户端无法伪造）</h3>
+      <p>与其信任客户端发来正确的 <code>user_id</code>，不如给这一列一个默认值，由已登录用户来填。客户端根本不去设置它：</p>
+      <pre><code>ALTER TABLE todos
+  ALTER COLUMN user_id SET DEFAULT current_setting('app.user_id', true)::uuid;</code></pre>
+      <p>现在，不带 <code>user_id</code> 的 <code>insert({ title: 'Buy milk' })</code> 会落下一行，归属于当前登录者。把它和上面的仅所有者策略搭配起来，客户端就没有任何办法去声称一行不属于自己的记录归它所有。</p>
+
+      <h3>公开读，所有者写</h3>
+      <p>对于博客或公开信息流之类的东西，任何人都可以读每一行，但只有所有者可以创建、修改或删除自己的行。因为命令各不相同，要用 <code>FOR SELECT</code> / <code>FOR INSERT</code> / <code>FOR UPDATE</code> / <code>FOR DELETE</code> 为每个命令各写一条策略：</p>
+      <pre><code>ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "anyone can read" ON posts
+  FOR SELECT USING (true);
+
+CREATE POLICY "owner can insert" ON posts
+  FOR INSERT WITH CHECK (user_id = current_setting('app.user_id', true)::uuid);
+
+CREATE POLICY "owner can modify" ON posts
+  FOR UPDATE USING (user_id = current_setting('app.user_id', true)::uuid);
+
+CREATE POLICY "owner can delete" ON posts
+  FOR DELETE USING (user_id = current_setting('app.user_id', true)::uuid);</code></pre>
+      <p>带 <code>USING (true)</code> 的 <code>FOR SELECT</code> 策略让每一行都可公开读取。各条写策略把单个命令限定到所有者。每当读访问与写访问不一致时，按命令拆分就是你该拿起的工具——把每个命令收紧到它恰好需要的程度。</p>
+
+      <h2>安全网：advisors</h2>
+      <p>你迟早会写错某条策略——人人都会。后端自带一个 <strong>advisors</strong> 扫描器，它读取你的 schema，在真正的 RLS 错误到达用户之前把它们标出来。它能抓到的，包括：</p>
+      <ul>
+        <li><strong>有策略但 RLS 是关的。</strong>一张表有策略却毫无作用，因为从没跑过 <code>ENABLE ROW LEVEL SECURITY</code>——于是这张表看似受保护，实则门户大开。修复：<code>ALTER TABLE … ENABLE ROW LEVEL SECURITY;</code>。</li>
+        <li><strong>anon key 能访问、却没有 RLS 或策略的表。</strong>就是那种完全敞开的情形——任何人都能读写的用户数据。</li>
+        <li><strong>可变的函数 <code>search_path</code></strong>——针对那些 search path 可被操纵的函数发出的安全告警。</li>
+      </ul>
+      <p><strong>每次上线前都跑一遍 advisors。</strong>这是最快的办法，用来抓住「我写了一条策略」和「这条策略真的生效了」之间的那道缝隙。参见<a href="/zh/tutorials/scan-your-backend-with-advisors.html">用 advisors 扫描后端</a>。</p>
+
+      <div class="info-box">
+        <h3>实时订阅遵守同一套策略</h3>
+        <p>RLS 不只用于一次性查询。<a href="/zh/docs/cloud/realtime.html">实时</a>变更事件在投递前会拿<em>同一套</em>策略重新校验，所以订阅者收到的，永远只是它用普通 <code>select()</code> 也能读到的那些行。你不必为实时单独写规则——把表的策略写对，实时更新就会继承它。</p>
+      </div>
+
+      <h2>串起来：上线前检查清单</h2>
+      <ul>
+        <li>每一张面向用户的表：<code>ENABLE ROW LEVEL SECURITY</code> <em>并且</em>至少一条策略。</li>
+        <li>仅所有者的表：一条同时带 <code>USING</code> 和 <code>WITH CHECK</code> 的策略，把 <code>current_setting('app.user_id', true)</code> 转换成那一列的类型。</li>
+        <li>用列默认值自动盖上 <code>user_id</code>，让客户端无法伪造归属。</li>
+        <li>混合访问：拆成 <code>FOR SELECT</code> / <code>INSERT</code> / <code>UPDATE</code> / <code>DELETE</code> 策略。</li>
+        <li>以已登录用户和未登录用户的身份测试——<strong>不要</strong>从控制台测（它会绕过 RLS）。</li>
+        <li>私有厂商密钥放进<a href="/zh/docs/cloud/secrets.html">密钥保险库</a>，绝不放进表或客户端。</li>
+        <li>部署前跑一遍 <a href="/zh/tutorials/scan-your-backend-with-advisors.html">advisors</a>，清掉每一条 RLS 相关的告警。</li>
+      </ul>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/database.html">
+            <span class="card-eyebrow">数据</span>
+            <h3>数据库</h3>
+            <p>表、迁移、查询构造器，以及 RLS 策略与索引、约束共处的地方。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/auth.html">
+            <span class="card-eyebrow">身份</span>
+            <h3>认证</h3>
+            <p>用户如何登录——以及 <code>app.user_id</code> 是怎么被设置的，好让你的策略有人可校验。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/tutorials/scan-your-backend-with-advisors.html">
+            <span class="card-eyebrow">教程</span>
+            <h3>用 advisors 扫描</h3>
+            <p>在上线前运行扫描器，标出 RLS 关闭的表、敞开的表，以及其他安全缺口。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

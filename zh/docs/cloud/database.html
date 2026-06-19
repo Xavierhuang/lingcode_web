@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据库 —— LingCode Cloud | 文档</title>
+  <meta name="description" content="LingCode Cloud 数据库指南：一个通过表级 CRUD 网关、一次一张表访问的私有 Postgres schema。链式查询构造器、过滤运算符、迁移、RLS，以及为什么没有 JOIN、没有 upsert、单页不超过 200 行。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/database.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/database.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/database.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/database.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/database.html">
+  <meta property="og:title" content="数据库 —— LingCode Cloud">
+  <meta property="og:description" content="一个通过表级 CRUD 网关访问的私有 Postgres schema：查询构造器、过滤运算符、迁移、RLS，以及「不支持 JOIN / 不支持 upsert」这条规则。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .tutorial-next-card { display: block; padding: 18px 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); text-decoration: none; transition: border-color .15s ease, transform .15s ease; }
+    .tutorial-next-card:hover { border-color: var(--signal); transform: translateY(-2px); }
+    .tutorial-next-card .card-eyebrow { font-family: "Geist Mono", monospace; font-size: 0.7rem; letter-spacing: .04em; text-transform: uppercase; color: var(--signal); display: block; margin-bottom: 8px; }
+    .tutorial-next-card h3 { margin: 0 0 6px; font-size: 1rem; color: var(--text); }
+    .tutorial-next-card p { margin: 0; font-size: 0.875rem; color: var(--text-dim); line-height: 1.5; }
+    table.docs-table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.9rem; }
+    table.docs-table th, table.docs-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    table.docs-table th { font-family: "Geist Mono", monospace; font-size: 0.74rem; letter-spacing: .03em; text-transform: uppercase; color: var(--text-dim); }
+    table.docs-table code { white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/database.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>数据库</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● 数据</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>数据库</h1>
+      <p class="tldr"><strong>一句话：</strong>每个后端都是一个独立 schema 里的私有 Postgres 数据库，带行级安全（RLS）。你的客户端从不打开 SQL 连接——它通过 SDK 与一层轻量的<strong>表级 CRUD 网关</strong>（一次一张表）对话（形态类似 Supabase / Firebase）。anon key（匿名密钥）可以安全地随浏览器发布，因为守门的是服务端的 RLS，而不是密钥的保密性。schema——表、索引、视图、约束、策略——来自<strong>迁移（migrations）</strong>，从不通过运行时调用。运行时 API 是 CRUD，不是原始 SQL：<strong>没有 JOIN、没有 upsert、单页 200 行。</strong></p>
+      <p class="intro">本页讲的是数据平面：你如何读写行，以及同样重要的——网关会做什么、不会做什么。如果你来自 PostgREST 或者习惯写原始 SQL，在动手写第一行代码之前最值得记住的一点是：运行时是刻意做成<em>非</em> SQL 的。提前理解这条边界，正是「一次写对」与「拿到 400」之间的差别。我们先讲为什么，再讲怎么做。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>心智模型</h2>
+      <p>一个 LingCode Cloud 后端是一个真正的 Postgres 数据库——但你不直接连接它。相反，SDK 与一个坐落在数据库前面的小型 CRUD 网关对话，它一次只接受针对一张表的一个操作。正是这个网关，让这套架构可以安全地放进浏览器打包产物里。</p>
+      <p>下面是这条推理链：</p>
+      <ul>
+        <li><strong>anon key（匿名密钥）</strong>按设计就是公开的——它存在于你的客户端代码里。</li>
+        <li>因为客户端不能运行任意 SQL，它就无法越权。每个请求都是「在表 X 上、带这些过滤器，做 select/insert/update/delete」。</li>
+        <li>这些请求中的每一个，都在服务端以一个低权限角色运行，并施加<strong>行级安全（RLS）</strong>，作用域限定在已登录用户身上。用户永远只能看到、只能触碰策略允许的那些行。</li>
+        <li>任何真正关系型的东西——JOIN、视图、索引、约束、生成列——都活在下一层，也就是你的<strong>迁移（migrations）</strong>里，那里运行的是真正的 DDL。</li>
+      </ul>
+
+      <div class="info-box">
+        <h3>两层，两种语言</h3>
+        <p>记住这条分界，绝大多数意外就消失了。<strong>运行时</strong>（你的应用在每个请求上做的事）是通过 SDK 的表级 CRUD（一次一张表）——没有 SQL。<strong>schema</strong>（你一次性搭好、或随时间演进的东西）是通过迁移的完整 SQL DDL。当某件事在运行时感觉做不到——一个 JOIN、一个聚合、一个唯一性保证——答案几乎总是「把它下推到迁移里」。</p>
+      </div>
+
+      <h2>查询构造器</h2>
+      <p>每个查询都从 <code>client.from('table')</code> 开始。它返回一个链式构造器：你叠加过滤器和修饰符，然后以一个真正发起请求并返回 promise 的终结动词结尾。在 <code>/try</code> 和 Mac 预览里，客户端已经以 <code>window.lingcode</code> 的形式存在于页面上；在你自己的应用里，你创建它一次（参见<a href="/zh/tutorials/use-lingcode-cloud-in-your-own-app.html">在自己的应用里使用 LingCode Cloud</a>）。</p>
+
+      <pre><code>const { data, error } = await lingcode
+  .from('todos')
+  .eq('done', false)
+  .order('created_at', { ascending: false })
+  .limit(50)
+  .select();
+
+if (error) {
+  console.error(error.code, error.status);
+} else {
+  render(data); // T[]
+}</code></pre>
+
+      <p>每个终结操作都解析为一个 <code>Result</code>：<code>{ data, error }</code>。成功时 <code>error</code> 为 <code>null</code>，<code>data</code> 是行的数组。失败时 <code>data</code> 为 <code>null</code>，<code>error</code> 为 <code>{ code, status }</code>——一个稳定的字符串码加上 HTTP 状态码。永远检查 <code>error</code>；对于服务端拒绝的请求，SDK 不会抛出异常。</p>
+
+      <h3>过滤器</h3>
+      <p>你想链多少过滤器都行——它们以 <strong>AND</strong> 组合在一起。每个都返回构造器，所以顺序无关紧要。</p>
+
+      <table class="docs-table">
+        <thead><tr><th>过滤器</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td><code>.eq(col, val)</code></td><td>列等于值</td></tr>
+          <tr><td><code>.neq(col, val)</code></td><td>列不等于值</td></tr>
+          <tr><td><code>.gt(col, val)</code></td><td>大于</td></tr>
+          <tr><td><code>.gte(col, val)</code></td><td>大于或等于</td></tr>
+          <tr><td><code>.lt(col, val)</code></td><td>小于</td></tr>
+          <tr><td><code>.lte(col, val)</code></td><td>小于或等于</td></tr>
+          <tr><td><code>.like(col, str)</code></td><td>区分大小写的模式匹配</td></tr>
+          <tr><td><code>.ilike(col, str)</code></td><td>不区分大小写的模式匹配</td></tr>
+          <tr><td><code>.in(col, [vals])</code></td><td>列是所列值之一</td></tr>
+          <tr><td><code>.is(col, null | 'not_null')</code></td><td>IS NULL / IS NOT NULL</td></tr>
+          <tr><td><code>.match({ a: 1, b: 2 })</code></td><td>一次性写多个 <code>.eq</code> 过滤器的简写</td></tr>
+        </tbody>
+      </table>
+
+      <h3>修饰符</h3>
+      <table class="docs-table">
+        <thead><tr><th>修饰符</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td><code>.order(col, { ascending?: boolean })</code></td><td>按某列排序；默认升序</td></tr>
+          <tr><td><code>.limit(n)</code></td><td>限制返回的行数</td></tr>
+          <tr><td><code>.range(from, to)</code></td><td>返回一段闭区间的行切片（用于分页）</td></tr>
+        </tbody>
+      </table>
+
+      <h3>终结操作</h3>
+      <p>动词发起请求。每个都返回 <code>Promise&lt;Result&lt;T[]&gt;&gt;</code>。</p>
+      <table class="docs-table">
+        <thead><tr><th>操作</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td><code>.select()</code></td><td>读取匹配链式过滤器的行</td></tr>
+          <tr><td><code>.insert(row | row[])</code></td><td>插入一行或一个行的数组</td></tr>
+          <tr><td><code>.update(patch)</code></td><td>对匹配的行应用一个部分补丁</td></tr>
+          <tr><td><code>.delete()</code></td><td>删除匹配的行</td></tr>
+          <tr><td><code>.subscribe(onChange, onError?)</code></td><td>打开一个对行变更的实时订阅</td></tr>
+        </tbody>
+      </table>
+
+      <div class="warn-box">
+        <strong><code>.update()</code> 和 <code>.delete()</code> 在没有过滤器时拒绝运行。</strong>一个不带 <code>.eq</code>/<code>.in</code>/<code>.match</code>（等等）的补丁或删除会命中表里的每一行，所以网关会用 <code>where_required</code> 拒绝它，而不是让你不小心清空一张表。请始终把变更限定在你真正想要的那些行上。
+      </div>
+
+      <pre><code>// 更新——先过滤，再打补丁：
+await lingcode.from('todos').eq('id', 7).update({ done: true });
+
+// 删除——同样的规则：
+await lingcode.from('todos').eq('id', 7).delete();
+
+// 这个会抛出 / 被拒绝（没有过滤器）：
+await lingcode.from('todos').delete(); // → error.code === 'where_required'</code></pre>
+
+      <p><code>.subscribe()</code> 是进入实时的入口——订阅一张表上的 INSERT/UPDATE/DELETE，并按 RLS 过滤，用户只看到属于自己的行。它在<a href="/zh/docs/cloud/realtime.html">实时指南</a>里有完整说明；这里不再重复。</p>
+
+      <h2>关键约束：CRUD，而非 SQL</h2>
+      <p>这一节值得读两遍。运行时数据 API 是表级 CRUD。三件在 SQL 里属于条件反射的事情，在运行时并不存在，而每一件都有一个干净的惯用做法来替代。来自 PostgREST 或原始 SQL 的人，正是在这里划出「一次写对 vs 400」的那条线。</p>
+
+      <h3>没有 JOIN</h3>
+      <p>你不能在一个查询里连接两张表。你有三个选项，大致按推荐程度排列：</p>
+      <ul>
+        <li><strong>分别取每张表，在代码里拼合</strong>——拉出父行，收集它们的 id，用 <code>.in()</code> 取出子行，然后在 JavaScript 里组装成你想要的形状。</li>
+        <li><strong>反范式化</strong>——如果你总是把某个字段和另一张表的行一起读，那就在写入时把它拷贝到这一行上。</li>
+        <li><strong>在迁移里创建一个 VIEW</strong>——把这个 JOIN 作为一个数据库视图定义一次，然后像对一张表那样从它 <code>select()</code>。</li>
+      </ul>
+
+      <p>之前（直觉的写法——在运行时行不通）：</p>
+      <pre><code>// ✗ 没有 join。这不是网关能做的事。
+const { data } = await lingcode
+  .from('todos')
+  .select('*, users(name)'); // → 不做关系展开</code></pre>
+
+      <p>之后——在代码里拼合：</p>
+      <pre><code>const { data: todos } = await lingcode.from('todos').select();
+
+const userIds = [...new Set(todos.map(t =&gt; t.user_id))];
+const { data: users } = await lingcode
+  .from('users')
+  .in('id', userIds)
+  .select();
+
+const byId = Object.fromEntries(users.map(u =&gt; [u.id, u]));
+const rows = todos.map(t =&gt; ({ ...t, user: byId[t.user_id] }));</code></pre>
+
+      <p>之后——或者在迁移里把视图定义一次，然后像读表一样读它：</p>
+      <pre><code>-- migration（运行一次，完整 DDL）：
+create view todos_with_user as
+  select t.*, u.name as user_name
+  from todos t
+  join users u on u.id = t.user_id;</code></pre>
+      <pre><code>// 运行时——对 SDK 来说这个视图就是一张表：
+const { data } = await lingcode.from('todos_with_user').select();</code></pre>
+
+      <h3>没有 upsert / ON CONFLICT</h3>
+      <p>没有 upsert，也没有 <code>ON CONFLICT</code>。惯用做法是：<strong>先 insert；遇到重复键错误时，再 fetch 并 update。</strong></p>
+      <pre><code>async function upsertProfile(profile) {
+  const ins = await lingcode.from('profiles').insert(profile);
+  if (!ins.error) return ins;
+
+  // 重复键 → 退回到对冲突行做 update。
+  return lingcode
+    .from('profiles')
+    .eq('user_id', profile.user_id)
+    .update(profile);
+}</code></pre>
+
+      <h3>200 行一页</h3>
+      <p><code>select()</code> <strong>最多返回 200 行</strong>。要取更大的范围，就用 <code>.limit()</code> 和 <code>.range()</code> 显式分页。而且因为运行时没有 JOIN 或聚合，计数和求和要么在你的代码里（对当前页）算，要么在迁移里创建的视图里算。</p>
+      <pre><code>// 每次 200 行翻页取结果：
+async function* allTodos() {
+  const PAGE = 200;
+  for (let from = 0; ; from += PAGE) {
+    const { data } = await lingcode
+      .from('todos')
+      .order('id', { ascending: true })
+      .range(from, from + PAGE - 1)
+      .select();
+    if (!data || data.length === 0) return;
+    yield* data;
+    if (data.length &lt; PAGE) return;
+  }
+}</code></pre>
+
+      <div class="info-box">
+        <h3>经验法则</h3>
+        <p>如果一个查询需要 JOIN、需要 upsert、需要聚合，或者需要一次拿到超过一页的行——这就是一个信号，提示你把工作下推到<strong>迁移</strong>里（一个视图、一个生成列、一个唯一约束），或者在你的应用代码里循环处理。运行时网关会刻意保持简单。</p>
+      </div>
+
+      <h2>迁移与 schema</h2>
+      <p>所有 schema——表、索引、视图、约束、生成列、种子数据，以及 RLS 策略——都来自迁移。运行一次迁移有两种方式：</p>
+      <ul>
+        <li>从控制台的 <strong>SQL</strong> 标签页：打开 <a href="https://lingcode.dev/backends.html">lingcode.dev/backends.html</a> 并选中你的后端。</li>
+        <li>让 agent 替你调用 <code>apply_migration</code>。</li>
+      </ul>
+      <p>迁移运行<strong>完整 DDL</strong>。使用 <code>IF NOT EXISTS</code>，让迁移幂等、可安全地重跑：</p>
+      <pre><code>create table if not exists todos (
+  id         bigint generated always as identity primary key,
+  user_id    uuid,
+  title      text not null,
+  done       boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists todos_user_idx on todos (user_id);</code></pre>
+
+      <div class="warn-box">
+        <strong>控制台的查询编辑器是只读（SELECT-only）的。</strong>它接受读语句——<code>SELECT</code>、<code>WITH</code>、<code>TABLE</code>、<code>EXPLAIN</code>、<code>SHOW</code>——并用 <code>read_only_violation</code> 拒绝任何写入或改变 schema 的语句。要运行 DDL 或 DML，请走<strong>迁移</strong>路径（SQL 标签页的迁移执行器，或 <code>apply_migration</code>），而不是这个临时查询编辑器。
+      </div>
+
+      <p>完整的工作流——编写、排序、重跑迁移——参见<a href="/zh/tutorials/manage-database-migrations.html">管理数据库迁移</a>。有了 schema 之后，运行 linter：<a href="/zh/tutorials/scan-your-backend-with-advisors.html">用 advisors 扫描后端</a>会在缺失的 RLS 策略、缺失的索引、缺失的主键在生产环境里咬到你之前先把它们标出来。</p>
+
+      <h2>行级安全与租户隔离</h2>
+      <p>每个后端都活在它自己的 Postgres schema 里，配一个专属的低权限角色。运行时查询——SDK 用 anon key 发起的那些——以这个角色运行，并把<strong>已登录用户的 id 暴露给策略</strong>。正是这一点让「用户只能看到 <code>user_id</code> 等于自己 id 的行」这样的策略生效：网关运行你的查询，但 Postgres 会悄悄地把它过滤到策略允许的那些行。</p>
+      <pre><code>-- 在迁移里：开启 RLS 并把行限定到各自的所有者
+alter table todos enable row level security;
+
+create policy todos_owner on todos
+  using (user_id = current_user_id());</code></pre>
+      <p><strong>控制台 / 所有者路径</strong>则不同：它<strong>绕过 RLS</strong>，让你可以从 <a href="https://lingcode.dev/backends.html">backends.html</a> 管理所有用户的每一行。这是特权那一侧——与你的应用使用的 anon-key 运行时路径不同。</p>
+      <p>这是 anon key 可以安全发布的另一半原因：它永远只能行使低权限、受 RLS 把守的运行时角色。写好你的策略，公开密钥就不带任何风险。</p>
+
+      <h2>各档位限制</h2>
+      <p>每个后端都有一个按套餐分档的表数量上限：</p>
+      <table class="docs-table">
+        <thead><tr><th>限制</th><th>Free</th><th>Pro</th><th>Max Pro</th></tr></thead>
+        <tbody>
+          <tr><td><code>maxTables</code></td><td>10</td><td>50</td><td>200</td></tr>
+        </tbody>
+      </table>
+      <p>另外还有对 <code>maxObjects</code>（存储对象数）和 <code>maxUsers</code> 的分档限制——完整数字见<a href="/pricing.html">定价页</a>。超过任何上限会返回 HTTP <strong>402</strong>，错误码为 <code>quota_exceeded</code>。</p>
+
+      <h2>错误码</h2>
+      <p>当 <code>error</code> 非空时，<code>code</code> 告诉你发生了什么，<code>status</code> 携带 HTTP 状态码：</p>
+      <table class="docs-table">
+        <thead><tr><th>Code</th><th>Status</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td><code>where_required</code></td><td>—</td><td>发起了一个不带过滤器的 <code>update</code> 或 <code>delete</code></td></tr>
+          <tr><td><code>table_not_found</code></td><td>404</td><td>表不存在（拼写错误，或者还没有迁移）</td></tr>
+          <tr><td><code>invalid_request</code></td><td>400</td><td>请求格式不正确</td></tr>
+          <tr><td><code>not_provisioned</code></td><td>409</td><td>后端还没上线——开通尚未完成</td></tr>
+          <tr><td><code>quota_exceeded</code></td><td>402</td><td>触及了某个分档上限（表、对象、用户）</td></tr>
+        </tbody>
+      </table>
+
+      <h2>底层机制（REST）</h2>
+      <p>SDK 是对四个 REST 端点的轻量封装。基址是 <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code>，每个调用都携带 anon key——要么作为 <code>Bearer</code> token，要么作为 <code>?apikey=</code> 查询参数。每个端点接受一个 JSON 请求体，描述表、过滤器，以及行或补丁。</p>
+      <table class="docs-table">
+        <thead><tr><th>端点</th><th>SDK 动词</th></tr></thead>
+        <tbody>
+          <tr><td><code>POST /select</code></td><td><code>.select()</code></td></tr>
+          <tr><td><code>POST /insert</code></td><td><code>.insert()</code></td></tr>
+          <tr><td><code>POST /update</code></td><td><code>.update()</code></td></tr>
+          <tr><td><code>POST /delete</code></td><td><code>.delete()</code></td></tr>
+        </tbody>
+      </table>
+      <pre><code>curl -X POST 'https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/select' \
+  -H 'Authorization: Bearer &lt;your-anon-key&gt;' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "table": "todos",
+    "filters": [{ "op": "eq", "col": "done", "val": false }],
+    "order":   [{ "col": "created_at", "ascending": false }],
+    "limit":   50
+  }'</code></pre>
+      <p>你几乎总会选择 SDK，它在这些端点之上给你一个链式构造器。完整的请求/响应结构见 <a href="/zh/docs/cloud/api-reference.html#rest">API 参考</a>。</p>
+
+      <div class="tutorial-next">
+        <h2>接下来</h2>
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/realtime.html">
+            <span class="card-eyebrow">Live</span>
+            <h3>实时订阅</h3>
+            <p>用 <code>.subscribe()</code> 通过 SSE 订阅行变更，并按 RLS 过滤到已登录用户。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">Reference</span>
+            <h3>API 参考</h3>
+            <p>完整的 SDK 接口，以及每一个 <code>/api/cloud/be/&lt;id&gt;/…</code> REST 端点，附请求与响应结构。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/tutorials/use-lingcode-cloud-in-your-own-app.html">
+            <span class="card-eyebrow">Tutorial</span>
+            <h3>在自己的应用里使用</h3>
+            <p>用一个后端 URL 和 anon key 把 SDK 端到端地接进你自己的项目。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

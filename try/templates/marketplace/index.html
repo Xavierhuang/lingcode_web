@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Helix Goods — Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-stone-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased">
+    <header class="sticky top-0 z-30 backdrop-blur bg-white/80 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800">
+      <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <a href="#" class="flex items-center gap-2 font-semibold">
+          <span class="inline-flex h-7 w-7 rounded-lg bg-rose-600 text-white items-center justify-center text-sm">⌬</span>
+          Helix Goods
+        </a>
+        <div class="flex items-center gap-3">
+          <button onclick="document.documentElement.classList.toggle('dark')" class="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-slate-100">Theme</button>
+          <button id="cart-btn" class="relative inline-flex items-center gap-2 text-sm border border-slate-300 dark:border-slate-700 px-3 py-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800">
+            🛒 Cart <span id="cart-count" class="hidden text-xs bg-rose-600 text-white rounded-full px-1.5 py-0.5">0</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-8">
+      <section class="mb-8">
+        <h1 class="text-3xl font-semibold tracking-tight">Made for makers.</h1>
+        <p class="mt-2 text-slate-500 max-w-xl">Curated tools and goods. Every purchase ships within 48 hours.</p>
+      </section>
+
+      <div class="flex items-center gap-2 mb-6 text-sm">
+        <button data-cat="all" class="cat px-3 py-1.5 rounded-md font-medium bg-slate-900 text-white dark:bg-white dark:text-slate-900">All</button>
+        <button data-cat="desk" class="cat px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Desk</button>
+        <button data-cat="craft" class="cat px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Craft</button>
+        <button data-cat="kitchen" class="cat px-3 py-1.5 rounded-md text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Kitchen</button>
+      </div>
+
+      <div id="grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"></div>
+    </main>
+
+    <!-- Cart drawer -->
+    <div id="cart-drawer" class="hidden fixed inset-0 z-40">
+      <div id="cart-overlay" class="absolute inset-0 bg-black/40"></div>
+      <aside class="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <h2 class="font-semibold">Your cart</h2>
+          <button id="cart-close" class="text-slate-500 hover:text-slate-900 dark:hover:text-slate-100">✕</button>
+        </div>
+        <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-3"></div>
+        <div class="p-5 border-t border-slate-200 dark:border-slate-800 space-y-3">
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-500">Subtotal</span>
+            <span id="cart-subtotal" class="font-medium tabular-nums">$0.00</span>
+          </div>
+          <button id="checkout-btn" disabled class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 rounded-md disabled:opacity-50 disabled:cursor-not-allowed">Checkout</button>
+          <p id="checkout-status" class="text-xs text-slate-500 text-center min-h-[1em]"></p>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      const PRODUCTS = [
+        { id: 'p1', name: 'Walnut desk pad', price: 4500, cat: 'desk', img: '🪵', blurb: 'Hand-finished hardwood, 24×14"' },
+        { id: 'p2', name: 'Aluminum pen', price: 2200, cat: 'desk', img: '🖊', blurb: 'Brushed, refillable, lifetime' },
+        { id: 'p3', name: 'Linen apron', price: 3800, cat: 'craft', img: '🧵', blurb: 'Belgian linen, garment-washed' },
+        { id: 'p4', name: 'Maple cutting board', price: 5200, cat: 'kitchen', img: '🪵', blurb: 'End-grain, 18×12"' },
+        { id: 'p5', name: 'Brass bookmark', price: 1800, cat: 'desk', img: '📑', blurb: 'Solid brass, 20g' },
+        { id: 'p6', name: 'Ceramic mug', price: 2800, cat: 'kitchen', img: '☕', blurb: 'Stoneware, 12oz' },
+        { id: 'p7', name: 'Cotton napkin set', price: 2400, cat: 'kitchen', img: '🧺', blurb: 'Set of 4, fade-resistant' },
+        { id: 'p8', name: 'Leather notebook', price: 4200, cat: 'craft', img: '📓', blurb: 'Vegetable-tanned, 96pp' },
+      ];
+
+      const STORAGE_KEY = 'helix-goods-cart-v1';
+      let cart = load();
+      let activeCat = 'all';
+
+      function load() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
+      }
+      function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)); }
+      function fmt(cents) { return '$' + (cents / 100).toFixed(2); }
+
+      function visibleProducts() {
+        return activeCat === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.cat === activeCat);
+      }
+
+      function renderGrid() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        for (const p of visibleProducts()) {
+          const card = document.createElement('article');
+          card.className = 'group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col';
+          card.innerHTML = `
+            <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center text-5xl">${p.img}</div>
+            <div class="p-4 flex flex-col flex-1">
+              <div class="font-medium">${p.name}</div>
+              <div class="text-xs text-slate-500 mt-0.5 line-clamp-2">${p.blurb}</div>
+              <div class="mt-auto pt-3 flex items-center justify-between">
+                <div class="font-semibold tabular-nums">${fmt(p.price)}</div>
+                <button data-id="${p.id}" class="add-btn text-sm border border-slate-300 dark:border-slate-700 px-3 py-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 font-medium">Add</button>
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
+        }
+        for (const btn of grid.querySelectorAll('.add-btn')) {
+          btn.addEventListener('click', () => addToCart(btn.dataset.id));
+        }
+      }
+
+      function renderCartCount() {
+        const count = Object.values(cart).reduce((a, b) => a + b, 0);
+        const badge = document.getElementById('cart-count');
+        if (count > 0) { badge.textContent = String(count); badge.classList.remove('hidden'); }
+        else { badge.classList.add('hidden'); }
+      }
+
+      function renderCartDrawer() {
+        const items = document.getElementById('cart-items');
+        items.innerHTML = '';
+        let subtotal = 0;
+        const ids = Object.keys(cart);
+        if (ids.length === 0) {
+          items.innerHTML = '<p class="text-sm text-slate-500 text-center py-12">Cart is empty.</p>';
+          document.getElementById('checkout-btn').disabled = true;
+        } else {
+          document.getElementById('checkout-btn').disabled = false;
+        }
+        for (const id of ids) {
+          const p = PRODUCTS.find(x => x.id === id);
+          if (!p) continue;
+          const qty = cart[id];
+          subtotal += p.price * qty;
+          const row = document.createElement('div');
+          row.className = 'flex items-center gap-3';
+          row.innerHTML = `
+            <div class="h-12 w-12 rounded-md bg-stone-100 dark:bg-slate-800 flex items-center justify-center text-2xl">${p.img}</div>
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-sm truncate">${p.name}</div>
+              <div class="text-xs text-slate-500">${fmt(p.price)} × ${qty}</div>
+            </div>
+            <div class="flex items-center gap-1">
+              <button data-id="${id}" data-d="-1" class="qty-btn h-7 w-7 rounded border border-slate-300 dark:border-slate-700 text-sm">-</button>
+              <span class="text-sm tabular-nums w-6 text-center">${qty}</span>
+              <button data-id="${id}" data-d="1" class="qty-btn h-7 w-7 rounded border border-slate-300 dark:border-slate-700 text-sm">+</button>
+            </div>
+          `;
+          items.appendChild(row);
+        }
+        for (const btn of items.querySelectorAll('.qty-btn')) {
+          btn.addEventListener('click', () => updateQty(btn.dataset.id, parseInt(btn.dataset.d, 10)));
+        }
+        document.getElementById('cart-subtotal').textContent = fmt(subtotal);
+      }
+
+      function addToCart(id) { cart[id] = (cart[id] || 0) + 1; save(); renderCartCount(); renderCartDrawer(); }
+      function updateQty(id, delta) {
+        cart[id] = (cart[id] || 0) + delta;
+        if (cart[id] <= 0) delete cart[id];
+        save(); renderCartCount(); renderCartDrawer();
+      }
+
+      // Cart drawer wiring
+      const drawer = document.getElementById('cart-drawer');
+      document.getElementById('cart-btn').addEventListener('click', () => { renderCartDrawer(); drawer.classList.remove('hidden'); });
+      document.getElementById('cart-close').addEventListener('click', () => drawer.classList.add('hidden'));
+      document.getElementById('cart-overlay').addEventListener('click', () => drawer.classList.add('hidden'));
+
+      // Category filter
+      for (const btn of document.querySelectorAll('.cat')) {
+        btn.addEventListener('click', () => {
+          activeCat = btn.dataset.cat;
+          for (const b of document.querySelectorAll('.cat')) {
+            const active = b.dataset.cat === activeCat;
+            b.className = 'cat px-3 py-1.5 rounded-md ' + (active ? 'font-medium bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800');
+          }
+          renderGrid();
+        });
+      }
+
+      // Checkout — POSTs to the Stripe checkout Edge Function deployed via /try
+      // (Phase 5a: + Add Stripe checkout). Falls back to a demo modal if not wired.
+      document.getElementById('checkout-btn').addEventListener('click', async () => {
+        const status = document.getElementById('checkout-status');
+        status.textContent = '';
+        const checkoutUrl = window.STRIPE_CHECKOUT_URL || (window.SUPABASE_URL ? `${window.SUPABASE_URL}/functions/v1/stripe-checkout` : null);
+        if (!checkoutUrl || !window.STRIPE_PRICE_ID) {
+          status.textContent = 'Demo mode — wire STRIPE_CHECKOUT_URL + STRIPE_PRICE_ID via /try → ⚡ Supabase → + Add Stripe checkout.';
+          return;
+        }
+        try {
+          const res = await fetch(checkoutUrl, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', authorization: `Bearer ${window.SUPABASE_ANON_KEY}` },
+            body: JSON.stringify({
+              price_id: window.STRIPE_PRICE_ID,
+              quantity: Object.values(cart).reduce((a, b) => a + b, 0),
+              success_url: window.location.href,
+              cancel_url: window.location.href,
+            }),
+          });
+          const j = await res.json();
+          if (j.url) { window.location.href = j.url; }
+          else { status.textContent = j.error || 'Checkout failed.'; }
+        } catch (err) { status.textContent = err.message; }
+      });
+
+      renderGrid();
+      renderCartCount();
+    </script>
+    <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

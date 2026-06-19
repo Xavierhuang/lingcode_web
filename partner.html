@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Partner dashboard · LingCode</title>
+<meta name="robots" content="noindex,nofollow"/>
+<style>
+  :root { --bg:#fafaff; --card:#fff; --text:#1b1b26; --muted:#6b6c7a; --border:#e6e6ee; --accent:#7c3aed; --signal:#00b073; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:48px 16px; }
+  .wrap { width:100%; max-width:560px; }
+  h1 { font-size:1.3rem; margin:0 0 2px; }
+  .sub { color:var(--muted); font-size:.9rem; margin:0 0 22px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px 22px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:4px 0 18px; }
+  .stat { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:16px 12px; text-align:center; }
+  .stat .n { font-size:2rem; font-weight:700; line-height:1.1; }
+  .stat.paid .n { color:var(--signal); }
+  .stat .l { font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:4px; }
+  .linkrow { display:flex; gap:8px; align-items:center; margin-top:6px; }
+  .linkrow code { flex:1; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:9px 11px; font-family:'Geist Mono',ui-monospace,monospace; font-size:.82rem; overflow:auto; white-space:nowrap; }
+  button { font-family:inherit; font-size:.82rem; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; padding:9px 14px; cursor:pointer; }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .label { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin:14px 0 4px; }
+  .err { color:#b42318; font-size:.9rem; }
+  .foot { color:var(--muted); font-size:.78rem; margin-top:16px; line-height:1.5; }
+  .refresh { float:right; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Partner dashboard <button class="refresh" id="refresh" type="button">↻ Refresh</button></h1>
+  <p class="sub" id="who">Loading…</p>
+  <div class="card" id="card" hidden>
+    <div class="stats">
+      <div class="stat"><div class="n" id="s-clicks">–</div><div class="l">Clicks</div></div>
+      <div class="stat"><div class="n" id="s-signups">–</div><div class="l">Signups</div></div>
+      <div class="stat paid"><div class="n" id="s-paid">–</div><div class="l">Paid</div></div>
+    </div>
+    <div class="label">Download link <span style="font-weight:400;opacity:.7">— straight to the app download</span></div>
+    <div class="linkrow"><code id="share">–</code><button id="copy" type="button">Copy</button></div>
+    <div class="label" style="margin-top:14px">Site link <span style="font-weight:400;opacity:.7">— opens the homepage first</span></div>
+    <div class="linkrow"><code id="share-site">–</code><button id="copy-site" type="button">Copy</button></div>
+    <p class="foot">Share either link — both count toward your stats. Use the <b>Download link</b> when people are ready to install, or the <b>Site link</b> to let them explore lingcode.dev first. <b>Clicks</b> = people who opened a link. <b>Signups</b> = accounts created after clicking. <b>Paid</b> = signups now on a paid plan.</p>
+  </div>
+  <div class="card" id="errcard" hidden><p class="err" id="errmsg"></p><p class="foot">Make sure you opened the full dashboard link your contact gave you (it includes a token).</p></div>
+</div>
+<script>
+(function () {
+  var p = new URLSearchParams(location.search);
+  var code = (p.get('code') || '').toLowerCase();
+  var token = p.get('token') || '';
+  var origin = location.origin;
+  function showErr(msg) {
+    document.getElementById('who').textContent = '';
+    document.getElementById('card').hidden = true;
+    var ec = document.getElementById('errcard'); ec.hidden = false;
+    document.getElementById('errmsg').textContent = msg;
+  }
+  async function load() {
+    if (!code || !token) { showErr('This dashboard link is missing its code or token.'); return; }
+    var r;
+    try {
+      r = await fetch('/api/ref/' + encodeURIComponent(code) + '?token=' + encodeURIComponent(token), { credentials: 'omit' });
+    } catch (e) { showErr('Network error — try again.'); return; }
+    var j = null; try { j = await r.json(); } catch (e) {}
+    if (!r.ok || !j || j.ok === false) {
+      showErr(r.status === 401 ? 'Invalid token for this link.' : (r.status === 404 ? 'Unknown referral code.' : 'Could not load your stats.'));
+      return;
+    }
+    var d = j.data;
+    document.getElementById('errcard').hidden = true;
+    document.getElementById('card').hidden = false;
+    document.getElementById('who').textContent = (d.label ? d.label + ' · ' : '') + 'code: ' + d.code;
+    document.getElementById('s-clicks').textContent = (d.clicks || 0).toLocaleString();
+    document.getElementById('s-signups').textContent = (d.signups || 0).toLocaleString();
+    document.getElementById('s-paid').textContent = (d.paid || 0).toLocaleString();
+    var share = origin + '/r/' + d.code;
+    var siteShare = share + '?site';
+    function wireCopy(linkId, btnId, value) {
+      document.getElementById(linkId).textContent = value;
+      document.getElementById(btnId).onclick = function () {
+        navigator.clipboard.writeText(value); this.textContent = 'Copied'; var b = this; setTimeout(function () { b.textContent = 'Copy'; }, 1500);
+      };
+    }
+    wireCopy('share', 'copy', share);
+    wireCopy('share-site', 'copy-site', siteShare);
+  }
+  document.getElementById('refresh').onclick = load;
+  load();
+})();
+</script>
+</body>
+</html>

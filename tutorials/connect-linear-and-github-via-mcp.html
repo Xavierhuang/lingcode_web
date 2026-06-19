@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I connect Linear and GitHub to LingCode via MCP? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Wire your Linear tickets and GitHub repos to the agent through MCP. End-to-end setup for two real servers — credentials, configs, first tool call.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-linear-and-github-via-mcp.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/connect-linear-and-github-via-mcp.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-linear-and-github-via-mcp.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/connect-linear-and-github-via-mcp.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Connect Linear and GitHub via MCP",
+  "description": "Two of the most useful real MCP servers for everyday engineering: GitHub and Linear. After this tutorial, \"find the ticket about the rate limiter,\" \"open a PR for these changes,\" and \"what's still in this sprint\" are one prompt each.",
+  "url": "https://lingcode.dev/tutorials/connect-linear-and-github-via-mcp.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/connect-linear-and-github-via-mcp.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Connect Linear and GitHub via MCP"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Connect Linear and GitHub via MCP",
+      "item": "https://lingcode.dev/tutorials/connect-linear-and-github-via-mcp.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/connect-linear-and-github-via-mcp.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Connect Linear and GitHub via MCP</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I connect Linear and GitHub to LingCode via MCP?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Both Linear and GitHub publish official MCP servers. Install via <code>npm i -g @linear/mcp-server</code> (and equivalent for GitHub), add an entry to <code>~/.lingcode/mcp.json</code> with your API token, and the agent can search issues, open PRs, and read ticket context directly.</p>
+      <p class="intro">Two of the most useful real MCP servers for everyday engineering: GitHub and Linear. After this tutorial, "find the ticket about the rate limiter," "open a PR for these changes," and "what's still in this sprint" are one prompt each.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The abstract <a href="/tutorials/connect-an-mcp-server.html">MCP tutorial</a> covers the protocol. This one is concrete. Most engineers' work is intertwined with two services LingCode doesn't natively know about: the issue tracker (Linear, in this example — the same shape applies to Jira/Asana/etc.) and the source forge (GitHub, equivalently for GitLab/Bitbucket). The agent can do good work without these — but with them, every "look at the ticket and decide what to build" turn becomes one prompt instead of three.</p>
+      <p>Both Linear and GitHub publish MCP servers as npm packages. They're the same shape: install the package, generate a personal API token, paste the token into <code>mcp.json</code>, restart your chat. The friction is in the credential setup more than in the MCP wiring; you do that part once per service and never again.</p>
+      <p>The reason this is worth doing as a single tutorial — rather than two separate ones — is that the workflows compose. The agent that can read a Linear ticket and open a GitHub PR is meaningfully different from one that can do either alone. "Implement what this ticket asks for, then open a PR linking back to the ticket" becomes one prompt. That's the payoff.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Generating a Linear personal API key (and what role it gets)</li>
+        <li>Generating a GitHub personal access token with the right scopes</li>
+        <li>Writing the <code>mcp.json</code> entries for both servers</li>
+        <li>First-call permission prompts and what to approve</li>
+        <li>Composing the two: ticket → PR in one prompt</li>
+      </ul>
+
+      <h2>Step 1: Generate a Linear API key</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Linear → Settings → API → Personal API keys</h3>
+          <p>Sign in to Linear. Click your avatar → <strong>Settings</strong> → <strong>API</strong> → <strong>Personal API keys</strong>. Click <strong>Create key</strong>, name it (e.g., "LingCode"), pick the scope.</p>
+          <p>The key inherits your user's permissions. If you're an admin, the key is admin. If you have read-only access to certain workspaces, the key respects that. Scope at the user level, not the key level.</p>
+          <p>Copy the key — it's shown once. <code>lin_api_…</code>.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Generate a GitHub personal access token</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Fine-grained tokens are better than classic ones</h3>
+          <p>Go to GitHub → Settings → Developer settings → Personal access tokens → <strong>Fine-grained tokens</strong>. Generate a new token. The important fields:</p>
+          <ul>
+            <li><strong>Expiration:</strong> 90 days is sensible. Long enough not to be annoying; short enough that an old, forgotten token isn't a permanent risk.</li>
+            <li><strong>Repository access:</strong> "Only select repositories" — pick the ones you actually want the agent to operate on. "All repositories" works but is a wider blast radius than necessary.</li>
+            <li><strong>Permissions:</strong> Repository → Contents (read+write), Pull requests (read+write), Issues (read+write), Metadata (read). Skip Actions, Secrets, Administration unless you specifically need them.</li>
+          </ul>
+          <p>Copy the token — <code>github_pat_…</code>.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Why fine-grained over classic:</strong> classic tokens grant access at the user scope across all your repos. Fine-grained tokens let you say "this token can only edit these three repos." For agent-driven tools, smaller scope is always the right answer.
+      </div>
+
+      <h2>Step 3: Add both servers to mcp.json</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Two entries in one file</h3>
+          <p>In <code>~/.claude/mcp.json</code> (user-wide is right here — these are personal-account tokens):</p>
+          <pre><code>{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "github_pat_..."
+      }
+    },
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-linear"],
+      "env": {
+        "LINEAR_API_KEY": "lin_api_..."
+      }
+    }
+  }
+}</code></pre>
+          <p>Both use stdio transport, both spawn via <code>npx</code> (so you don't have to install the packages globally — npx fetches and runs). Tokens go in the per-server <code>env</code>, never in shared shell config.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: First tool call — approve the prompt</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>What you'll see</h3>
+          <p>Open a chat and ask: "What Linear tickets are assigned to me?" The agent picks the tool, you get a permission prompt naming <code>mcp__linear__list_issues</code> with the arguments it's about to pass. Approve.</p>
+          <p>The first call per server warms up: <code>npx</code> downloads the package (one-time delay), the server starts, registers its tools, executes the call. Subsequent calls in the session are fast.</p>
+          <p>Do the same for GitHub: "List the open PRs on <code>org/repo</code>." Approve when prompted. From here, both servers are live.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Compose them — ticket to PR</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>One prompt, four tool calls</h3>
+          <p>The payoff for connecting both is composition. Try:</p>
+          <blockquote style="margin: 0; padding-left: 16px; border-left: 3px solid var(--signal, #00d084);"><em>"Read Linear ticket ACME-1234, then look at the code, implement what the ticket describes, open a draft PR linking back to the ticket."</em></blockquote>
+          <p>The agent calls Linear to read the ticket, the local file tools to look at and edit code, and GitHub to open the PR. Four tool families in one turn, all with structured arguments and structured results. The PR description references the Linear ticket; closing the PR can be configured to update the ticket status, depending on your Linear settings.</p>
+          <p>If you'd usually have spent ten minutes context-switching between three tools, you've spent zero.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Common gotchas</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Three things that catch first-timers</h3>
+          <ul>
+            <li><strong>Token scope too narrow.</strong> A GitHub token with only <em>Contents: read</em> can't open PRs. The agent's tool call fails with a 403; you re-issue a token with broader scopes.</li>
+            <li><strong>Linear workspace ID confusion.</strong> If you have multiple Linear workspaces, the key is scoped to one. Ask the agent which workspace it's reading from before assuming.</li>
+            <li><strong>Stale tool descriptions.</strong> If you update the MCP package and a tool's signature changes, your existing chat's tool list is stale. Start a new chat after updating servers.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't share these tokens.</strong> A Linear key with admin scope can delete issues. A GitHub token with write access can force-push. The blast radius of either, leaked, is large. Treat the file with the same care as an SSH private key.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/author-your-own-mcp-server.html" class="tutorial-next-card">
+            <h3>Author your own MCP server</h3>
+            <p>For the services that don't ship one — your internal admin, your custom queues</p>
+          </a>
+          <a href="/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>Connect an MCP server</h3>
+            <p>The abstract version; useful background once you've done the concrete one</p>
+          </a>
+          <a href="/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>Install and configure plugins</h3>
+            <p>Bundle a Linear+GitHub MCP setup as a plugin to share with your team</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

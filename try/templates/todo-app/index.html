@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Today — Todo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-stone-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased min-h-screen">
+    <div class="max-w-md mx-auto px-6 pt-16 pb-24">
+      <header class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">Today</h1>
+          <p id="meta" class="text-sm text-slate-500 mt-0.5"></p>
+        </div>
+        <button onclick="document.documentElement.classList.toggle('dark')" class="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-slate-100">Theme</button>
+      </header>
+
+      <form id="add-form" class="flex gap-2 mb-6">
+        <input id="add-input" type="text" placeholder="Add a task…" class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 placeholder:text-slate-400" />
+        <button type="submit" class="px-4 py-2.5 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium hover:bg-slate-700 dark:hover:bg-slate-200">Add</button>
+      </form>
+
+      <div id="filters" class="flex gap-1 mb-4 text-sm">
+        <button data-filter="all" class="filter px-3 py-1 rounded-md font-medium">All</button>
+        <button data-filter="active" class="filter px-3 py-1 rounded-md text-slate-500 hover:text-slate-900 dark:hover:text-slate-100">Active</button>
+        <button data-filter="done" class="filter px-3 py-1 rounded-md text-slate-500 hover:text-slate-900 dark:hover:text-slate-100">Done</button>
+        <div class="ml-auto"><button id="clear-done" class="text-xs text-slate-500 hover:text-rose-600">Clear done</button></div>
+      </div>
+
+      <ul id="list" class="space-y-1.5"></ul>
+
+      <p id="empty" class="text-center text-sm text-slate-400 mt-12 hidden">Nothing here. Add a task to get started.</p>
+    </div>
+
+    <script>
+      const STORAGE_KEY = 'today-todo-v1';
+      let state = { items: load(), filter: 'all' };
+
+      function load() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+      }
+      function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items)); }
+
+      function add(text) {
+        const t = text.trim();
+        if (!t) return;
+        state.items.push({ id: Date.now() + Math.random(), text: t, done: false });
+        save(); render();
+      }
+      function toggle(id) {
+        const it = state.items.find(i => i.id === id);
+        if (it) { it.done = !it.done; save(); render(); }
+      }
+      function remove(id) { state.items = state.items.filter(i => i.id !== id); save(); render(); }
+      function clearDone() { state.items = state.items.filter(i => !i.done); save(); render(); }
+
+      function visibleItems() {
+        if (state.filter === 'active') return state.items.filter(i => !i.done);
+        if (state.filter === 'done') return state.items.filter(i => i.done);
+        return state.items;
+      }
+
+      function render() {
+        const list = document.getElementById('list');
+        const items = visibleItems();
+        list.innerHTML = '';
+        for (const item of items) {
+          const li = document.createElement('li');
+          li.className = 'group flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800';
+          const checkbox = document.createElement('button');
+          checkbox.type = 'button';
+          checkbox.className = 'shrink-0 h-5 w-5 rounded-full border-2 ' + (item.done ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-slate-300 dark:border-slate-600');
+          checkbox.innerHTML = item.done ? '<svg viewBox="0 0 20 20" class="h-full w-full p-0.5"><path d="M5 10l3 3 7-7" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+          checkbox.addEventListener('click', () => toggle(item.id));
+          const text = document.createElement('span');
+          text.className = 'flex-1 ' + (item.done ? 'line-through text-slate-400' : '');
+          text.textContent = item.text;
+          const del = document.createElement('button');
+          del.type = 'button';
+          del.className = 'shrink-0 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-600';
+          del.textContent = '✕';
+          del.addEventListener('click', () => remove(item.id));
+          li.append(checkbox, text, del);
+          list.append(li);
+        }
+        document.getElementById('empty').classList.toggle('hidden', items.length > 0);
+        const remaining = state.items.filter(i => !i.done).length;
+        const total = state.items.length;
+        document.getElementById('meta').textContent = total === 0 ? 'No tasks yet.' : `${remaining} of ${total} remaining`;
+        for (const btn of document.querySelectorAll('.filter')) {
+          const active = btn.dataset.filter === state.filter;
+          btn.className = 'filter px-3 py-1 rounded-md ' + (active ? 'font-medium bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100');
+        }
+      }
+
+      document.getElementById('add-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('add-input');
+        add(input.value);
+        input.value = '';
+        input.focus();
+      });
+      document.getElementById('clear-done').addEventListener('click', clearDone);
+      document.getElementById('filters').addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter');
+        if (!btn) return;
+        state.filter = btn.dataset.filter;
+        render();
+      });
+
+      render();
+    </script>
+    <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

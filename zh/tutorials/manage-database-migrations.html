@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理数据库迁移 — LingCode 教程</title>
+  <meta name="description" content="版本化的 Schema 变更，可在任意环境中可预期地将数据库结构从一种状态迁移到另一种状态。Prisma、Drizzle、原生 SQL 搭配迁移工具——选定一种，不要修改已部署的迁移。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/manage-database-migrations.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/manage-database-migrations.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/manage-database-migrations.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/manage-database-migrations.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "管理数据库迁移",
+  "description": "迁移是一种版本化的 Schema 变更，可在任意环境中重放以将数据库带到特定状态。之所以重要，是因为直接在生产控制台执行临时 ALTER TABLE 会在一个月内让本地开发环境与生产环境的 Schema 产生偏差。迁移让 Schema 演进变得可预期、可审查。",
+  "url": "https://lingcode.dev/zh/tutorials/manage-database-migrations.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/manage-database-migrations.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "管理数据库迁移"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "管理数据库迁移",
+      "item": "https://lingcode.dev/zh/tutorials/manage-database-migrations.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/manage-database-migrations.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>管理数据库迁移</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>管理数据库迁移</h1>
+      <p class="intro">迁移是一种版本化的 Schema 变更，可在任意环境中重放，将数据库带到特定状态。之所以重要，是因为直接在生产控制台执行临时 <code>ALTER TABLE</code> 会在短短一个月内让本地开发环境与生产环境的 Schema 产生偏差。迁移让 Schema 演进变得可预期、可审查。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>迁移之所以作为独立概念存在——而不是"需要时直接 <code>ALTER TABLE</code>"——是因为 Schema 会发生漂移。开发数据库在功能开发过程中自由演进，测试数据库上个季度的演进路径又有所不同，生产数据库则按历史操作的顺序应用了各自的变更。没有统一的管理机制，"当前实际的 Schema 是什么"就只有拥有管理员权限的运维工程师才能回答，而在开发环境运行正常的变更在生产环境失败时往往原因不明。有了迁移，Schema 就是仓库中一系列版本化的文本文件；任何环境都可以通过重放对应文件升级到任意版本；只需查看迁移文件夹，就能回答"当前 Schema 是什么"这个问题。</p>
+      <p>核心概念很简单：<strong>迁移</strong>是一个文件（通常是两个——一个应用变更的 <em>up</em> 步骤和一个回滚变更的 <em>down</em> 步骤），绑定到唯一的版本号（时间戳或序列号）。<strong>迁移工具</strong>负责追踪每个数据库上已应用的迁移（通常通过 <code>schema_migrations</code> 表），并按顺序应用未执行的迁移。不同工具生成的文件格式各异——原生 SQL、ORM 专属 DSL、声明式 Schema 差异——但结构是一致的。选定一种工具，提交迁移文件，每次部署时运行该工具，绝不修改已发布的迁移。</p>
+      <p>本教程涵盖 2026 年值得考虑的三种工具——<strong>Prisma Migrate</strong>、<strong>Drizzle Kit</strong> 和<strong>原生 SQL 搭配小型迁移工具</strong>——解释各自的适用场景，演示每种工具的首次迁移流程，并以防范迁移灾难的操作规范作为收尾。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>"迁移"究竟是什么，迁移工具追踪什么</li>
+        <li>三种工具风格：ORM 耦合型（Prisma）、Schema 差异型（Drizzle）、工具无关型（原生 SQL）</li>
+        <li>在每种工具中生成、审查并应用第一个迁移</li>
+        <li>不可违背的原则：绝不修改已部署的迁移</li>
+        <li>生产环境注意事项：长时间迁移、表锁、在线 Schema 变更</li>
+        <li>何时以及如何回滚，以及何时无法回滚</li>
+        <li>如何填充测试数据而不污染迁移文件</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前提条件：</strong>一个应用连接的 Postgres 数据库（本地 Docker、<a href="/zh/tutorials/install-postgres-and-redis-on-your-server.html">自托管</a>，或 Supabase/Neon/RDS 托管服务），一个连接它的应用，以及一个明确要实施的 Schema 变更（例如，新增一列、新增一张表、新增一个索引）。你需要在下面三种工具风格中选择一种，它们不能混用。
+      </div>
+
+      <h2>第一步：选择工具风格</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>这个决定决定后续的一切</h3>
+          <ul>
+            <li><strong>Prisma Migrate</strong> — 在 <code>schema.prisma</code> 中描述 Schema，Prisma 对比数据库差异并生成 SQL 迁移文件。最适合已在使用 Prisma 作为 ORM 的项目。强大的类型生成能力；Schema、类型与数据库紧密耦合。</li>
+            <li><strong>Drizzle Kit</strong> — 以 TypeScript 代码（<code>.ts</code> 文件中的表定义）定义 Schema，Drizzle 生成 SQL 迁移文件。耦合度低于 Prisma——生成的迁移是可读、可编辑、可独立运行的纯 SQL。可与 Drizzle ORM 配合，也可单独使用。</li>
+            <li><strong>原生 SQL + 迁移工具</strong>（node-pg-migrate、knex、sqitch、Flyway）— 手写 SQL，由迁移工具追踪已应用的迁移。不依赖任何 ORM，移植性最强；Schema 只存在于 SQL 文件和数据库本身，没有其他来源。</li>
+          </ul>
+          <p>简单判断标准：<strong>已在使用 Prisma？</strong>选 Prisma Migrate。<strong>想要类型安全的数据库代码但迁移文件是纯 SQL？</strong>选 Drizzle Kit。<strong>追求最大移植性或技术栈不是 TypeScript？</strong>选原生 SQL。</p>
+          <p>后期切换代价较高，请慎重选择。</p>
+        </div>
+      </div>
+
+      <h2>第二步（Prisma）：编写 Schema，生成迁移</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>适用于已使用 Prisma 的项目</h3>
+          <p>编辑 <code>prisma/schema.prisma</code> 描述目标 Schema。新增一张表的示例：</p>
+          <pre><code>model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}</code></pre>
+          <p>生成并应用迁移：</p>
+          <pre><code>npx prisma migrate dev --name add_post_table</code></pre>
+          <p>此命令会创建 <code>prisma/migrations/&lt;timestamp&gt;_add_post_table/migration.sql</code>——Prisma 根据差异生成的可读 SQL——对开发数据库执行迁移，并重新生成 TypeScript 类型。打开该文件<strong>仔细阅读生成的内容</strong>。Prisma 的差异计算通常是正确的，但偶尔会有意外行为（将列删除后重建而不是重命名，生成你未预期的索引）——应在代码审查阶段发现，而不是等到生产环境。</p>
+          <p>将迁移文件夹提交到仓库。部署时：<code>npx prisma migrate deploy</code> 会对目标数据库应用所有未执行的迁移。切勿对生产环境运行 <code>migrate dev</code>——它可能触发数据库重置提示。</p>
+        </div>
+      </div>
+
+      <h2>第三步（Drizzle）：定义 Schema，生成迁移</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>从 TypeScript Schema 定义生成 SQL 迁移</h3>
+          <p>在 <code>db/schema.ts</code> 中以 TypeScript 定义 Schema：</p>
+          <pre><code>import { pgTable, serial, varchar, integer, timestamp } from "drizzle-orm/pg-core";
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const posts = pgTable("posts", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  body: varchar("body").notNull(),
+  authorId: integer("author_id").references(() =&gt; users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});</code></pre>
+          <p>在 <code>drizzle.config.ts</code> 中配置 Drizzle：</p>
+          <pre><code>import { defineConfig } from "drizzle-kit";
+export default defineConfig({
+  schema: "./db/schema.ts",
+  out: "./drizzle",
+  dialect: "postgresql",
+  dbCredentials: { url: process.env.DATABASE_URL! },
+});</code></pre>
+          <p>生成迁移 SQL：</p>
+          <pre><code>npx drizzle-kit generate
+# 创建 drizzle/0001_add_posts.sql，包含实际的 SQL 语句。
+# 打开它，阅读它，提交它。
+
+# 应用迁移：
+npx drizzle-kit migrate</code></pre>
+          <p>Drizzle 的优势在于：生成的 SQL 是纯粹的。如果你不满意生成的差异，可以在提交前手动编辑 <code>.sql</code> 文件。<code>migrate</code> 命令通过 <code>__drizzle_migrations</code> 表追踪已应用的迁移。</p>
+        </div>
+      </div>
+
+      <h2>第四步（原生 SQL）：node-pg-migrate 或同类工具</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>自己编写 SQL，由工具追踪执行记录</h3>
+          <p>对于 Node.js 项目，<code>node-pg-migrate</code> 是一个轻量且维护良好的迁移工具。其他技术栈也有对应工具：<code>knex</code> 迁移、Flyway（JVM 及独立版本）、<code>sqitch</code>（语言无关）、Django/Rails/Laravel 内置迁移。</p>
+          <pre><code>npm i node-pg-migrate
+npx node-pg-migrate create add-posts-table
+# 创建 migrations/&lt;timestamp&gt;_add-posts-table.js，包含 up() 和 down() 导出。</code></pre>
+          <p>编写 SQL：</p>
+          <pre><code>// migrations/1715000000000_add-posts-table.js
+exports.up = pgm =&gt; {
+  pgm.createTable("posts", {
+    id: "id",  // shorthand for serial primary key
+    title: { type: "varchar(255)", notNull: true },
+    body: { type: "text", notNull: true },
+    author_id: { type: "integer", notNull: true, references: "users" },
+    created_at: { type: "timestamp", default: pgm.func("now()") },
+  });
+};
+
+exports.down = pgm =&gt; {
+  pgm.dropTable("posts");
+};</code></pre>
+          <p>应用/回滚：</p>
+          <pre><code>npx node-pg-migrate up          # 应用所有未执行的迁移
+npx node-pg-migrate down        # 回滚最近一次迁移</code></pre>
+          <p>迁移记录存储在 <code>pgmigrations</code> 表中。对于更高级的需求（纯 SQL，不使用 DSL），可以在 <code>up()</code> 中使用 <code>pgm.sql("CREATE TABLE ...")</code>。工具不关心内容，只负责执行你写的 SQL。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>"Schema 即 TypeScript"的工具（Prisma、Drizzle）将 Schema 与特定语言栈绑定。</strong>如果你日后可能切换语言（比如 Node → Python），原生 SQL 方案是唯一能原封不动保留下来的。Schema 以纯粹的 <code>.sql</code> 文件形式存在，任何语言的任何工具都可以应用它们。如果你有任何理由认为技术栈可能迁移，原生 SQL 值得优先考虑。
+      </div>
+
+      <h2>第五步：防范迁移灾难的规则</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>三条不可违背的原则</h3>
+          <ul>
+            <li><strong>绝不修改已部署的迁移。</strong>一旦某个迁移在任何共享环境（测试环境、生产环境）执行过，它就已冻结。下一次变更必须是一个<em>新的</em>迁移。修改已部署的迁移意味着文件内容与已应用的状态不再一致——此后每个环境的 Schema 都会出现偏差，迁移工具无法协调。</li>
+            <li><strong>迁移应始终向前兼容。</strong>新增列时使用可空（nullable）列，新增表，新增索引。通过回滚迁移来撤销部署通常在生产环境行不通（新数据已依赖新 Schema 写入）。按只向前演进来规划。</li>
+            <li><strong>部署前进行端到端测试。</strong>启动一个干净的数据库，重放所有迁移，验证 Schema 符合预期。这正是 CI 为你做的事——参见<a href="/zh/tutorials/automate-deploys-with-github-actions.html">GitHub Actions CI/CD</a> 第六步，了解在 CI 中运行迁移的 service container 模式。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第六步：大数据量表的生产注意事项</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>在千行数据上能跑通的迁移，在亿行数据上可能崩溃</h3>
+          <p>大多数迁移在小表上是即时完成的，在大表上则可能很慢甚至造成锁表。以下是需要了解的关键模式：</p>
+          <ul>
+            <li><strong>新增带默认值的 NOT NULL 列</strong> — 在 Postgres 11+ 上速度很快（仅修改元数据）。在旧版本上会触发全表重写。务必确认你的 Postgres 版本。</li>
+            <li><strong>新增外键约束</strong> — 校验时会锁定两张表。大表处理方式：先以 <code>NOT VALID</code> 添加约束（快速，跳过校验），再在单独的迁移中执行 <code>VALIDATE CONSTRAINT</code>（耗时，但不阻塞写操作）。</li>
+            <li><strong>创建索引</strong> — 默认情况下会锁定表的写操作。在 Postgres 上使用 <code>CREATE INDEX CONCURRENTLY</code> 进行在线构建。<strong>不能在事务内运行</strong>——需要为该迁移禁用事务包装（各工具均有对应参数）。</li>
+            <li><strong>批量回填数据</strong> — 切勿在迁移中执行 "<code>UPDATE big_table SET col = ...</code>"，这会导致长达数小时的表锁。应通过应用代码或独立脚本分批回填；迁移只负责新增列。</li>
+          </ul>
+          <p>对于超大表（Postgres 上 5000 万行以上），可以研究 <strong>pg_repack</strong> 和在线 Schema 变更工具。迁移工具本身无法帮你规避锁问题，关键在于精心编写 SQL。</p>
+        </div>
+      </div>
+
+      <h2>第七步：回滚</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>何时可以回滚，何时不行，以及替代方案</h3>
+          <p><code>down</code> 迁移主要在开发阶段有用——应用迁移后发现有误，回滚，重新生成。在生产环境中，"回滚迁移"通常不是正确答案：</p>
+          <ul>
+            <li>新 Schema 下已写入了数据，回滚会丢失这些数据。</li>
+            <li>中途取消的长时间迁移可能使数据库处于部分变更状态，down 迁移并不知道哪些步骤已经完成。</li>
+            <li>回滚生产环境的已部署迁移会造成偏差：生产在 Schema 版本 N-1，而测试环境在版本 N。针对版本 N 编写的下一个迁移将无法在生产环境应用。</li>
+          </ul>
+          <p>生产环境的正确模式是：<strong>向前滚动，而非向后回滚。</strong>如果某个迁移部署后出现问题，就写一个新迁移来修正。删掉本不该添加的列，还原约束，诸如此类。这样可以保持迁移序列的线性，使所有环境收敛到同一个最终状态。</p>
+        </div>
+      </div>
+
+      <h2>第八步：填充测试数据</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>不要放进迁移文件</h3>
+          <p>"种子数据"——开发用的虚拟用户、查找表、演示内容——很容易被放进迁移文件，因为它离 Schema 很近。但请不要这样做。迁移应只包含 Schema；数据应放在单独的脚本中。</p>
+          <pre><code>// scripts/seed.ts
+import { db } from "./db";
+
+await db.users.create({ email: "admin@local", role: "admin" });
+await db.users.createMany([
+  { email: "alice@local" },
+  { email: "bob@local" },
+]);</code></pre>
+          <p>在全新数据库搭建完成后运行 <code>npm run seed</code>。种子脚本应是幂等的（使用 <code>upsert</code> 或先检查再插入），可以多次安全运行。这种分离让迁移文件保持纯 Schema，而种子数据与其代表的测试夹具放在一起。</p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/install-postgres-and-redis-on-your-server.html" class="tutorial-next-card">
+            <h3>在服务器上安装 Postgres 和 Redis</h3>
+            <p>迁移所针对的自托管 Postgres 数据库</p>
+          </a>
+          <a href="/zh/tutorials/automate-deploys-with-github-actions.html" class="tutorial-next-card">
+            <h3>GitHub Actions CI/CD</h3>
+            <p>在每个 PR 中针对临时数据库运行迁移，提前捕获失败</p>
+          </a>
+          <a href="/zh/tutorials/pick-a-baas-firebase-vs-supabase.html" class="tutorial-next-card">
+            <h3>选择 BaaS：Firebase 还是 Supabase</h3>
+            <p>Supabase 直接暴露 Postgres 迁移；Firebase 的无模式设计完全绕过了这个概念</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和追求真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · 为发布而生</span>
+    <span>原生 · 快速 · 诚实</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

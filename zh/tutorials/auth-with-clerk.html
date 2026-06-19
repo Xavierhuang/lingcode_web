@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何使用 Clerk 为应用添加身份验证？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="即插即用的身份验证：注册、登录、社交账号、组织管理、MFA。只需添加四个组件，即可拥有完整的认证界面。对初学者友好，每个步骤均附有链接。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/auth-with-clerk.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/auth-with-clerk.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/auth-with-clerk.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/auth-with-clerk.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Clerk 添加身份验证",
+  "description": "放入 <SignIn /> 即可获得一个可用的认证界面。Clerk 负责处理密码、OAuth、MFA、会话、组织——你无需编写任何相关代码。免费套餐支持每月 10,000 名活跃用户。",
+  "url": "https://lingcode.dev/zh/tutorials/auth-with-clerk.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/auth-with-clerk.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "注册并创建应用",
+      "url": "https://lingcode.dev/zh/tutorials/auth-with-clerk.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "安装并包裹应用",
+      "url": "https://lingcode.dev/zh/tutorials/auth-with-clerk.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "嵌入登录界面",
+      "url": "https://lingcode.dev/zh/tutorials/auth-with-clerk.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 Clerk 添加身份验证",
+      "item": "https://lingcode.dev/zh/tutorials/auth-with-clerk.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/auth-with-clerk.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">后端集成</a>
+      <span>/</span>
+      <span>使用 Clerk 添加身份验证</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何使用 Clerk 为应用添加身份验证？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>在 clerk.com 注册账号，创建应用，安装 <code>@clerk/nextjs</code>（或对应框架的包），用 <code>&lt;ClerkProvider&gt;</code> 包裹应用，再放入 <code>&lt;SignIn /&gt;</code> 和 <code>&lt;UserButton /&gt;</code>。免费套餐：10,000 月活用户。</p>
+      <p class="intro">放入 <code>&lt;SignIn /&gt;</code> 即可获得一个可用的认证界面。Clerk 负责处理密码、OAuth、MFA、会话、组织——你无需编写任何相关代码。免费套餐支持每月 10,000 名活跃用户。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>什么时候选 Clerk（与其他方案的对比）</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>选 Clerk 的场景</strong>——你希望认证界面开箱即用、外观精美，无需自行设计；需要原生支持组织/多租户；或者不想自己处理 session 刷新、CSRF 防护和 OAuth 流程。</li>
+            <li><strong>选 <a href="/zh/tutorials/set-up-supabase-database-and-auth.html">Supabase Auth</a></strong>——如果你已经在用 Supabase 作为数据库，一次注册即可搞定，免费。</li>
+            <li><strong>选<a href="/zh/tutorials/sign-in-with-google-oauth.html">手动接入 Google OAuth</a></strong>——如果你只需要一个登录渠道，不想依赖 UI 库，也没有月费预算上限的顾虑。</li>
+            <li><strong>选 <a href="https://auth0.com/" target="_blank" rel="noopener">Auth0 ↗</a></strong>——适合企业级 SAML/SSO 及高合规性需求。</li>
+          </ul>
+          <p>Clerk 的最佳场景：快速迭代的 SaaS 初创团队，想要做好认证但不想在上面花精力。</p>
+        </div>
+      </div>
+
+      <h2>注册并创建应用</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>前往 <a href="https://dashboard.clerk.com/sign-up" target="_blank" rel="noopener">dashboard.clerk.com ↗</a> 注册。免费套餐：每月 10,000 活跃用户，无需绑定信用卡。</p>
+          <p>创建一个应用，选择要开启的登录方式：</p>
+          <ul>
+            <li>邮箱 + 密码</li>
+            <li>魔法链接（无密码登录）</li>
+            <li>手机号（短信验证码）</li>
+            <li>Google、GitHub、Apple、Microsoft、Discord、Twitter、LinkedIn、Facebook 等——直接开关切换，Clerk 代为处理各社交平台的 OAuth 注册流程，你无需在对方平台配置 Client ID。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>获取密钥</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>进入 Dashboard → <strong>API Keys</strong>，复制以下两个值：</p>
+          <pre><code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
+CLERK_SECRET_KEY=sk_test_xxxxx</code></pre>
+          <p>Publishable Key 可以安全地暴露给浏览器；Secret Key 仅限后端使用。</p>
+        </div>
+      </div>
+
+      <h2>安装并包裹应用</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p><strong>Next.js App Router（最常见）：</strong></p>
+          <pre><code>npm install @clerk/nextjs</code></pre>
+          <p>在项目根目录的 <code>middleware.ts</code> 中：</p>
+          <pre><code>import { clerkMiddleware } from '@clerk/nextjs/server';
+
+export default clerkMiddleware();
+
+export const config = {
+  matcher: ['/((?!_next|.*\\..*).*)', '/api/(.*)'],
+};</code></pre>
+          <p>在 <code>app/layout.tsx</code> 中：</p>
+          <pre><code>import { ClerkProvider } from '@clerk/nextjs';
+
+export default function RootLayout({ children }) {
+  return (
+    &lt;ClerkProvider&gt;
+      &lt;html&gt;&lt;body&gt;{children}&lt;/body&gt;&lt;/html&gt;
+    &lt;/ClerkProvider&gt;
+  );
+}</code></pre>
+          <p>完成。认证功能已贯通整个应用。</p>
+        </div>
+      </div>
+
+      <h2>其他框架</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>以下框架同样遵循相同模式（Provider 组件 + middleware/服务端辅助函数）：</p>
+          <ul>
+            <li><a href="https://clerk.com/docs/quickstarts/react" target="_blank" rel="noopener">React（Vite/CRA）↗</a></li>
+            <li><a href="https://clerk.com/docs/quickstarts/remix" target="_blank" rel="noopener">Remix ↗</a></li>
+            <li><a href="https://clerk.com/docs/quickstarts/expo" target="_blank" rel="noopener">Expo / React Native ↗</a></li>
+            <li><a href="https://clerk.com/docs/quickstarts/express" target="_blank" rel="noopener">Express ↗</a></li>
+            <li><a href="https://clerk.com/docs/quickstarts/fastify" target="_blank" rel="noopener">Fastify ↗</a></li>
+            <li><a href="https://clerk.com/docs/quickstarts/javascript" target="_blank" rel="noopener">原生 JavaScript ↗</a></li>
+            <li><a href="https://clerk.com/docs/references/go/overview" target="_blank" rel="noopener">Go ↗</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>嵌入登录界面</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Clerk 提供开箱即用的预置组件。以 Next.js 为例：</p>
+          <pre><code>// app/sign-in/[[...sign-in]]/page.tsx
+import { SignIn } from '@clerk/nextjs';
+
+export default function Page() {
+  return &lt;SignIn /&gt;;
+}</code></pre>
+          <p>这就是完整的登录页面。界面精美，并自动包含你在第 1 步开启的所有登录方式。<code>&lt;SignUp /&gt;</code>、<code>&lt;UserButton /&gt;</code>（带账号管理的头像下拉菜单）和 <code>&lt;OrganizationSwitcher /&gt;</code> 的用法与此相同。</p>
+          <p><a href="https://clerk.com/docs/components/overview" target="_blank" rel="noopener">查看所有组件 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>保护页面</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <pre><code>// app/dashboard/page.tsx
+import { auth } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
+
+export default async function Dashboard() {
+  const { userId } = await auth();
+  if (!userId) redirect('/sign-in');
+
+  return &lt;div&gt;Welcome to your dashboard&lt;/div&gt;;
+}</code></pre>
+          <p>也可以在 middleware 中保护整组路由——匹配规则详见 <a href="https://clerk.com/docs/references/nextjs/clerk-middleware" target="_blank" rel="noopener">clerkMiddleware 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>在 API 中获取当前用户</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <pre><code>// app/api/me/route.ts
+import { auth, currentUser } from '@clerk/nextjs/server';
+
+export async function GET() {
+  const { userId } = await auth();
+  if (!userId) return new Response('Unauthorized', { status: 401 });
+
+  const user = await currentUser();
+  return Response.json({
+    email: user.emailAddresses[0].emailAddress,
+    name: user.firstName,
+  });
+}</code></pre>
+          <p>对于非 Next.js 框架：使用官方 Backend SDK 中的 <a href="https://clerk.com/docs/backend-requests/handling/manual-jwt" target="_blank" rel="noopener">JWT 验证 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>自定义界面样式</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Clerk 组件的默认样式简洁大方，但偏向通用风格。若要与你的品牌一致：</p>
+          <pre><code>&lt;ClerkProvider appearance={{
+  baseTheme: undefined,
+  variables: {
+    colorPrimary: '#6366f1',
+    colorBackground: '#ffffff',
+    borderRadius: '8px',
+    fontFamily: '"DM Sans", system-ui, sans-serif',
+  },
+}}&gt;
+  ...
+&lt;/ClerkProvider&gt;</code></pre>
+          <p>若需更深度定制（使用自己的组件），可采用 Clerk 的 <a href="https://clerk.com/docs/customization/elements/overview" target="_blank" rel="noopener">Elements 原语 ↗</a>——这是一套无样式的 headless 组件，你可以用自己的设计系统来包裹它。</p>
+        </div>
+      </div>
+
+      <h2>多租户：组织管理</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>如果你的产品面向 B2B（每个用户属于一个或多个公司），可在 Dashboard 中启用组织功能：</p>
+          <p><strong>Configure → Organizations → Enable</strong>。然后在界面中添加 <code>&lt;OrganizationSwitcher /&gt;</code>——它为用户提供一个下拉菜单，方便在所属组织之间切换。</p>
+          <p>在服务端，当前组织的上下文可通过 <code>auth()</code> 获取：</p>
+          <pre><code>const { userId, orgId, orgRole } = await auth();</code></pre>
+          <p>内置角色：<code>admin</code>、<code>basic_member</code>。可在 Dashboard 中添加自定义权限。<a href="https://clerk.com/docs/organizations/overview" target="_blank" rel="noopener">组织文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>Webhook：同步到你的数据库</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>Clerk 存储用户记录，你的数据库存储应用数据。要将两者关联，可监听 Clerk 的 webhook 事件：</p>
+          <p>Clerk Dashboard → <strong>Webhooks → New endpoint</strong>。选择要监听的事件（<code>user.created</code>、<code>user.updated</code>、<code>user.deleted</code>），获取签名密钥。</p>
+          <pre><code>// app/api/webhooks/clerk/route.ts
+import { Webhook } from 'svix';
+
+export async function POST(req) {
+  const payload = await req.text();
+  const headers = Object.fromEntries(req.headers);
+  const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
+  const event = wh.verify(payload, headers);
+
+  if (event.type === 'user.created') {
+    await db.users.insert({
+      clerk_id: event.data.id,
+      email: event.data.email_addresses[0].email_address,
+    });
+  }
+  return new Response('ok');
+}</code></pre>
+          <p>签名验证方式与 <a href="/zh/tutorials/set-up-stripe-webhooks.html">Stripe webhooks</a> 相同。<a href="https://clerk.com/docs/integrations/webhooks/overview" target="_blank" rel="noopener">Clerk webhooks 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>用户迁移：导入与导出</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p>如果你已有用户表并希望导入：请参考 <a href="https://clerk.com/docs/deployments/migrate-from-cognito" target="_blank" rel="noopener">迁移指南 ↗</a>。批量导入 API 支持常见格式的哈希密码（bcrypt、argon2、PBKDF2）。</p>
+          <p>如果你担心被供应商锁定：Clerk 支持随时导出全部用户和会话数据。迁移出去会有些麻烦，但完全可行。</p>
+        </div>
+      </div>
+
+      <h2>上线前检查清单</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>切换到生产实例</strong>——上线前在 Dashboard 中切换，开发环境与生产环境密钥分开管理。</li>
+            <li><strong>自定义域名</strong>——将认证页面托管在 <code>auth.yourdomain.com</code>，而非默认的 <code>your-app.clerk.accounts.dev</code>。免费，仅需一条 DNS 记录。</li>
+            <li><strong>启用 MFA</strong>——Configure → User &amp; Authentication → Multi-factor。支持 TOTP、短信和备用码。</li>
+            <li><strong>机器人防护</strong>——开启即可。默认使用免费的 Cloudflare Turnstile。</li>
+            <li><strong>会话有效期</strong>——默认 7 天。如果应用涉及敏感数据，建议缩短时长。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>超过 10K MAU 后费用会快速攀升。</strong>免费套餐限额为每月 10,000 名活跃用户。Pro 套餐起价 $25/月，超出部分按 MAU 计费。对于增长迅猛的 B2C 产品，账单会随之快速增长。请根据预计规模提前测算成本；<a href="https://clerk.com/pricing" target="_blank" rel="noopener">Clerk 定价 ↗</a>。
+      </div>
+
+      <h2>官方参考资料</h2>
+      <ul>
+        <li><a href="https://clerk.com/docs" target="_blank" rel="noopener">Clerk 文档 ↗</a></li>
+        <li><a href="https://clerk.com/docs/quickstarts/overview" target="_blank" rel="noopener">快速入门（所有框架）↗</a></li>
+        <li><a href="https://clerk.com/docs/components/overview" target="_blank" rel="noopener">组件参考 ↗</a></li>
+        <li><a href="https://clerk.com/docs/references/backend/overview" target="_blank" rel="noopener">Backend SDK ↗</a></li>
+        <li><a href="https://clerk.com/docs/integrations/webhooks/overview" target="_blank" rel="noopener">Webhooks ↗</a></li>
+      </ul>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>配置 Supabase（数据库 + 认证）</h3>
+            <p>更灵活的自托管方案；通过 webhook 同步可将 Clerk 与 Supabase 数据库结合使用</p>
+          </a>
+          <a href="/zh/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>Google 登录（OAuth）</h3>
+            <p>不想依赖托管认证服务时的手动 OAuth 方案</p>
+          </a>
+          <a href="/zh/tutorials/set-up-stripe-webhooks.html" class="tutorial-next-card">
+            <h3>配置 Stripe webhooks</h3>
+            <p>与 Clerk 相同的 webhook 模式；将两者结合，同步计费与认证状态</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速上线的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">融资展示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

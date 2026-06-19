@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何将托管后端连接到我的项目？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="在 Mac IDE 中将 LingCode Cloud 托管后端连接到您的项目。每个项目独享 Postgres + 身份验证 + 存储 + 实时 + 向量搜索，无需外部服务，无需额外凭证。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/connect-a-managed-backend.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-a-managed-backend.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-a-managed-backend.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-31T00:00:00Z">
+  <meta name="article:published_time" content="2026-05-31T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/connect-a-managed-backend.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "将托管后端连接到您的项目",
+  "description": "LingCode Cloud 为每个项目提供独立的托管 Postgres 后端——内置身份验证、文件存储、实时更新和向量搜索，无需任何外部服务或凭证。在 Mac IDE 中完成连接后，智能体即可自动完成数据库配置和代码编写。",
+  "url": "https://lingcode.dev/zh/tutorials/connect-a-managed-backend.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-05-31",
+  "dateModified": "2026-05-31",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/zh/tutorials/connect-a-managed-backend.html" },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "将托管后端连接到您的项目"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "教程", "item": "https://lingcode.dev/zh/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "搜索", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "后端集成", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "连接托管后端", "item": "https://lingcode.dev/zh/tutorials/connect-a-managed-backend.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/connect-a-managed-backend.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">后端集成</a>
+      <span>/</span>
+      <span>连接托管后端</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-31</span>
+      </div>
+      <h1>如何将托管后端连接到我的项目？</h1>
+      <p class="tldr"><strong>简而言之：</strong>在 Mac IDE 中打开项目文件夹，选择 <strong>Account → LingCode Cloud → Connect Backend to This Project</strong>。这会写入 <code>.mcp.json</code> 并为该项目创建一个私有的 Postgres 后端（包含身份验证、存储、实时更新和向量搜索）。开启一个新的 <strong>Claude (Native)</strong> 会话，向智能体描述需要数据或账号功能的需求——它会通过 <code>lingcode-cloud</code> 工具自动创建数据表并进行读写操作。在 <a href="/backends.html">lingcode.dev/backends</a> 管理后端。无需外部服务，无需额外凭证。</p>
+      <p class="intro">大多数应用一旦需要"记住"任何东西——保存的笔记、已登录的用户、上传的文件——就需要后端。传统的做法是注册 Supabase 或 Firebase，创建项目，复制 URL 和密钥，粘贴到某个地方，然后祈祷不会泄露。LingCode Cloud 省去了这一切：每个项目都有独属于它的托管后端，只需一条提示即可创建，无需管理任何凭证。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>想想后端对于一个典型应用意味着什么：一个存储数据行的数据库、用户登录的方式、存放文件的地方，以及最好能有实时更新让两个浏览器标签页保持同步。这些概念本身并不复杂——但传统接入方式意味着要搭建服务、管理凭证，还要确保这些凭证不出现在 git 历史或客户端代码包里。对于一个可能永远不会上线的原型来说，这些繁文缛节纯粹是摩擦。</p>
+      <p>LingCode Cloud 的解决方案是<strong>为每个项目配备一个托管后端</strong>。"托管"意味着 Postgres、身份验证、存储和邮件服务都由 LingCode 负责运行——你永远不需要在第三方服务上创建账号或复制密钥。"每个项目"意味着你连接的每个文件夹都有自己独立的数据库（一个带有行级安全的私有 Postgres schema），即使两个项目共享同一套基础设施，它们也无法互相访问对方的数据。</p>
+      <p>连接本身的设计非常精简：它告诉项目的智能体如何连接后端。之后，你用自然语言与智能体交流——"让用户能够注册并保存笔记"——它会自动创建数据表并编写代码。本教程将解释"连接"实际上做了什么、完整操作步骤，以及如何管理连接结果。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li><strong>Connect Backend</strong> 操作的实际作用（以及它不做什么）</li>
+        <li>后端如何绑定到项目——以及为什么重新打开同一文件夹会复用同一个后端</li>
+        <li>开箱即用的功能：数据库、身份验证、存储、实时更新、向量搜索</li>
+        <li>如何通过提示驱动它，以及如何在 Web 控制台中管理它</li>
+        <li>断开连接、重新连接，以及需要注意的一个陷阱</li>
+      </ul>
+
+      <h2>"Connect Backend" 真正做了什么</h2>
+      <p>连接项目时会发生两件事，了解它们的区别很重要，因为它们可以独立失败或成功：</p>
+      <ul>
+        <li><strong>在项目文件夹中写入 <code>.mcp.json</code>。</strong>该文件注册了一个 <code>lingcode-cloud</code> MCP 服务器——智能体与后端通信的桥梁。它包含你的账号令牌和一个<em>项目密钥</em>（文件夹路径的稳定哈希值），确保智能体的调用只作用于<em>这个</em>项目的后端。</li>
+        <li><strong>配置后端。</strong>连接操作会即时为项目创建托管 Postgres 后端，让它立即出现在控制台中。（如果这一步网络请求失败也没关系——智能体会在首次使用时自动完成配置。）</li>
+      </ul>
+      <p>项目密钥是关键所在。由于它是从文件夹路径派生的，<strong>重新打开同一文件夹并重新连接会复用同一个后端</strong>——你的数据还在。移动或重命名文件夹会改变密钥，LingCode 会将其视为新项目（旧后端不会被删除，只是这个项目不再指向它）。</p>
+
+      <div class="info-box">
+        <h3>两侧登录同一账号</h3>
+        <p>后端归属于 <em>IDE</em> 登录的 LingCode 账号。如果 IDE 使用一个账号，而你的浏览器（<a href="/backends.html">lingcode.dev/backends</a>）使用另一个账号，你就会在一个账号下创建后端，却在另一个账号下查看——然后疑惑后端去哪儿了。请在两端使用同一个账号。</p>
+      </div>
+
+      <h2>连接步骤</h2>
+      <ol>
+        <li>在 Mac IDE 中<strong>登录</strong>你的 LingCode 账号（活动栏中的账号菜单）。后端将在此账号下创建。</li>
+        <li><strong>打开项目文件夹</strong>——任何本地文件夹均可。后端会绑定到这个文件夹的路径。</li>
+        <li>选择 <strong>Account → LingCode Cloud → Connect Backend to This Project</strong>。你会收到确认提示，说明托管后端已创建且 <code>.mcp.json</code> 已写入。（稍后再次连接只会刷新令牌——操作是安全且幂等的。）</li>
+        <li>开启一个新的 <strong>Claude (Native)</strong> 会话（必须是新会话，这样它才能重新读取 <code>.mcp.json</code> 并加载 <code>lingcode-cloud</code> 工具）。</li>
+        <li>提出需要持久化或账号功能的需求，例如：
+          <br><em>"构建一个笔记应用，用户可以注册，每个人只能看到自己的笔记。使用 lingcode-cloud 作为后端。"</em></li>
+      </ol>
+      <p>随后，智能体会调用 <code>provision_backend</code>（确保后端存在）、<code>apply_migration</code>（创建应用所需的数据表），然后基于后端的数据 API 编写应用代码。你无需粘贴任何密钥——工具已通过连接完成了身份验证。</p>
+
+      <h2>开箱即用的功能</h2>
+      <p>连接的后端不只是一个数据库。每个项目后端都包含：</p>
+      <ul>
+        <li><strong>带行级安全的 Postgres</strong>——真正的 SQL 数据表，每位用户隔离，已登录用户只能读写自己的数据行。</li>
+        <li><strong>内置身份验证</strong>——邮箱/密码、无密码魔法链接、邮箱一次性验证码，以及社交登录（Google、GitHub，Apple 可选接入）。托管提供商无需任何配置。</li>
+        <li><strong>文件存储</strong>——上传并通过公开 URL 提供文件访问。</li>
+        <li><strong>实时更新</strong>——订阅数据表，获取经 RLS 过滤的 <code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code> 实时事件，让聊天、协作列表和仪表盘无需轮询即可实时更新。</li>
+        <li><strong>向量搜索（pgvector）</strong>——存储向量嵌入并按相似度排序，适用于"按语义搜索笔记"、RAG 和推荐等场景。</li>
+        <li><strong>事务性邮件</strong>——无需 API 密钥或发件人配置，直接发送邮件。</li>
+      </ul>
+      <p>智能体了解所有这些功能，并会自动选用合适的方案——在需要实时性时订阅实时事件而非轮询，在你要求语义搜索时添加向量列，等等。</p>
+
+      <h2>在控制台中管理</h2>
+      <p>智能体配置的所有内容都可以在 <a href="/backends.html">lingcode.dev/backends</a> 中查看和编辑，使用同一账号登录即可。控制台提供项目切换器，并针对每个后端提供以下功能：</p>
+      <ul>
+        <li><strong>数据库</strong>——浏览数据表，排序和翻页，直接插入/编辑/删除数据行（所有者视图绕过 RLS，类似表格编辑器）。</li>
+        <li><strong>身份验证</strong>——查看已注册用户；删除用户。</li>
+        <li><strong>SQL</strong>——执行只读查询，或通过迁移修改 schema。</li>
+        <li><strong>设置</strong>——重命名项目，复制连接详情，或删除后端。</li>
+      </ul>
+      <p>这里的连接详情（数据 URL 和 anon key）也可以粘贴到其他 MCP 客户端——如 Claude Desktop 或 Cursor——从 IDE 外部访问同一个后端。</p>
+
+      <h2>断开连接、重新连接和注意事项</h2>
+      <p><strong>Account → LingCode Cloud → Disconnect Backend</strong> 会从 <code>.mcp.json</code> 中移除 <code>lingcode-cloud</code> 条目。它<em>不会</em>删除后端或其数据——稍后重新连接同一文件夹会直接找回同一个后端（记住：项目密钥就是文件夹路径）。如需真正销毁后端及其数据，请在控制台的"设置"中使用 <strong>Delete backend</strong>。</p>
+      <p>值得再次强调的注意事项：后端归属于 IDE 登录的账号，以文件夹路径为标识符。如果项目后端"消失"了，请检查：（1）IDE 和 Web 控制台是否使用了同一个账号，（2）文件夹是否被移动过。这两点很容易核查，也能解释绝大多数"后端去哪儿了"的疑问。</p>
+
+      <div class="warn-box">
+        <strong>关于凭证：</strong>托管后端的意义在于<em>你</em>不持有任何后端凭证——LingCode 负责保管。整个流程中唯一的密钥是 <code>.mcp.json</code> 中你的 LingCode 账号令牌，该令牌是每台机器独有的。如果你将 <code>.mcp.json</code> 提交到共享仓库，请像对待任何令牌一样谨慎对待：最好将其排除在版本控制之外，因为持有它的人可以访问你项目的后端。</p>
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>连接 MCP 服务器</h3>
+            <p>lingcode-cloud 背后的传输层——工具如何与智能体通信</p>
+          </a>
+          <a href="/zh/tutorials/manage-database-migrations.html" class="tutorial-next-card">
+            <h3>管理数据库迁移</h3>
+            <p>schema 变更如何通过 apply_migration 安全执行</p>
+          </a>
+          <a href="/zh/tutorials/pick-a-baas-firebase-vs-supabase.html" class="tutorial-next-card">
+            <h3>Firebase 对比 Supabase</h3>
+            <p>托管 BaaS 的比较——以及何时还是需要自行接入</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速上线的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">大学合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

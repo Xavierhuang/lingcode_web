@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用 LingCode 进行测试驱动开发</title>
+  <meta name="description" content="与 AI 助手配合的 TDD 解决的是另一个问题——它能阻止 LingCode 写出看起来合理却根本不能正确运行的代码。测试即规格；LingCode 无法伪造通过。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/test-driven-development-with-lingcode.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/test-driven-development-with-lingcode.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/test-driven-development-with-lingcode.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/test-driven-development-with-lingcode.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "用 LingCode 进行测试驱动开发",
+  "description": "与人工编写者合作的 TDD 关注的是设计约束力。与 AI 助手配合的 TDD 则是另一回事：它是防范"看起来合理却根本不能正确运行的代码"的最低成本手段。先写测试，LingCode 就无法伪造通过。",
+  "url": "https://lingcode.dev/zh/tutorials/test-driven-development-with-lingcode.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/test-driven-development-with-lingcode.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "用 LingCode 进行测试驱动开发"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "技巧与窍门",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "测试驱动开发",
+      "item": "https://lingcode.dev/zh/tutorials/test-driven-development-with-lingcode.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/test-driven-development-with-lingcode.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">技巧与窍门</a>
+      <span>/</span>
+      <span>测试驱动开发</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>用 LingCode 进行测试驱动开发</h1>
+      <p class="intro">与人工编写者合作的 TDD 关注的是设计约束力。与 AI 助手配合的 TDD 则是另一回事：它是防范"看起来合理却根本不能正确运行的代码"的最低成本手段。先写测试，LingCode 就无法伪造通过。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么与 LingCode 配合的 TDD 解决的是另一个问题</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>经典 TDD 文献将红-绿-重构循环定位为一种设计规范——先写测试会迫使你在实现之前先思考接口。这一点依然成立。但当你与 LingCode 结对时，一个更尖锐的好处浮现出来：</p>
+          <ul>
+            <li><strong>LingCode 默认会写出<em>看起来</em>正确的代码。</strong>方法名吻合、类型对齐、结构与它见过的可运行示例如出一辙。但逻辑是否真的做了你要求的事，那是另一个问题。</li>
+            <li><strong>"看起来对"比"实际上对"更容易通过审查。</strong>如果你粗略扫了一眼看起来合理的函数就合并了，等于是在凭可信度而非正确性发货。</li>
+            <li><strong>在函数存在之前就让测试失败，是无法作假的。</strong>LingCode 无法靠写散文来让一个红色测试通过；它必须写出能让断言成立的逻辑。</li>
+          </ul>
+          <p>因此，与 LingCode 配合的 TDD 首先是一种反幻觉工具。本教程中的技能让 LingCode 始终保持在红-绿-重构循环中，这样你就可以通过运行代码来审核输出，而不是靠仔细阅读来发现隐秘的 bug。</p>
+        </div>
+      </div>
+
+      <h2>你需要什么</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong> — <a href="/LingCode-Installer.dmg" download>下载安装包</a>。</li>
+            <li><strong>一个已接入项目的测试运行器</strong>——pytest、jest、XCTest、go test、cargo test 等。不要在中途引入新的测试框架。</li>
+            <li><strong>一个足够小、可以用一两个测试用例表达的功能描述</strong>。如果做不到，就需要拆分任务，而不是跳过测试。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>RED——在任何实现之前先写一个失败的测试</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>第一步是向 LingCode 索要测试，而不是函数。明确表达你希望它失败：</p>
+          <pre><code>Write the first failing test for &lt;feature&gt;. Do NOT write the
+implementation. The test must:
+- Reference the public API by name (file, function, signature)
+  even if it doesn't exist yet.
+- Assert behavior the user actually cares about, not internal
+  structure.
+- Run and fail with a "no such symbol" / "not implemented" /
+  "expected X got Y" error — not a syntax error.
+
+Then run the test and paste the exact failure output.</code></pre>
+          <p>"粘贴确切的失败输出"这一步就是审计环节。如果 LingCode 只说"测试已写好，它会失败"而不展示失败信息，就自己运行一遍。一种常见的偏差是写出一个在到达任何断言之前就崩溃的测试——那不算真正的红色，也无法约束实现。</p>
+          <div class="warn-box">
+            <strong>如果 LingCode 写的测试直接通过了，说明测试有问题。</strong>要么它在测试一个已经存在的功能（你并没有在真正构建新东西），要么断言太弱。在继续之前停下来重写。
+          </div>
+        </div>
+      </div>
+
+      <h2>GREEN——最小化实现，不多做一行</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>一旦你确认了红色，就向 LingCode 索要让测试通过所需的最小改动：</p>
+          <pre><code>The test is red. Write the minimum implementation to make this
+ONE test pass. Constraints:
+- No code for behavior the test doesn't exercise yet.
+- No extra abstractions ("in case we need them later").
+- No error handling for cases this test doesn't cover.
+
+Run the test. Paste the exact output. Confirm green.</code></pre>
+          <p>"不为测试尚未覆盖的行为写代码"是防止 LingCode 热心添加未经测试边界情况的规则。如果测试只覆盖了正常路径的字符串输入，而 LingCode 添加了一个空值检查，那个检查就是未经测试的代码——要么删掉它，要么为它补一个测试。</p>
+        </div>
+      </div>
+
+      <h2>每次只添加一个测试</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>现在逐条断言地扩展覆盖率。规范是：<em>每一个新的红色</em>暴露一个缺失的行为；<em>每一个新的绿色</em>仅添加足以覆盖它的代码：</p>
+          <pre><code>Add ONE more test case. Pick the next unhandled behavior:
+- An edge case (empty input, boundary value, off-by-one).
+- A different equivalence class (negative number, unicode,
+  missing field).
+- An error path (invalid input, dependency failure).
+
+Confirm it fails. Then add minimum code to make it pass.
+Confirm everything is still green.
+
+Repeat until every behavior in &lt;feature spec&gt; has at least
+one test.</code></pre>
+          <p>诱惑是一次写五个测试，然后一起实现。要抵制这种冲动。一次写多个测试会退化回"写好函数，希望测试能通过"——这正是 TDD 要防范的工作方式。</p>
+        </div>
+      </div>
+
+      <h2>警惕"假绿"——最常见的失败模式</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>测试通过并不总意味着测试在做你以为它在做的事。假绿来自三个地方，而 LingCode 三种都会可靠地产出：</p>
+          <ul>
+            <li><strong>测试 mock 了被测对象本身。</strong>一个返回期望值的 mock 会让任何断言通过。如果被测函数本身就是 mock，你测试的只是那个 mock。</li>
+            <li><strong>断言太弱。</strong><code>assertTrue(result)</code> 对任何真值都会通过。正确的写法是 <code>assertEqual(result, expected)</code>，其中 expected 是手动计算好的值。</li>
+            <li><strong>setUp 与断言一致。</strong>如果测试插入了它随后断言存在的值，那么无论被测函数有没有真正运行，测试都会通过。</li>
+          </ul>
+          <p>发现假绿最简单的方法是故意破坏实现后重新运行：</p>
+          <pre><code>For each test that just turned green, mutate the implementation
+in one of these ways and confirm the test now fails:
+- Replace the return value with a hard-coded wrong value.
+- Comment out the body and return early.
+- Skip the side effect the function should produce.
+
+If the test still passes after a destructive mutation, the test
+is not actually exercising the behavior. Fix the test.</code></pre>
+          <p>这就是小型变异测试——在与 LingCode 结对时，这是单个收益最高的习惯。五秒钟的"破坏它、重新运行、确认红色"，能省下一个下午调查"经过完整测试"的函数为什么还是发布了 bug。</p>
+        </div>
+      </div>
+
+      <h2>REFACTOR——只在所有测试都绿色时重构</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>一旦测试套件覆盖了所有行为且全部绿色，重构才是安全的。请 LingCode 在不改变行为的前提下改善结构：</p>
+          <pre><code>All tests are green. Refactor the implementation for:
+- Name clarity.
+- Removing duplication (DRY only when names converge — don't
+  over-extract).
+- Extracting helper functions that have a single reason to
+  change.
+- Replacing conditional pyramids with early returns.
+
+After each refactor step, re-run the full suite. If a test
+goes red, the refactor changed behavior — revert and try
+again. Don't "fix" the test to match new behavior.</code></pre>
+          <p>"不要修改测试以匹配新行为"是核心规则。测试就是规格。如果重构破坏了规格，是重构出了问题，不是规格。</p>
+        </div>
+      </div>
+
+      <h2>何时跳过 TDD</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>TDD 是处理逻辑的默认方式。但在少数情况下它是过度设计——甚至适得其反：</p>
+          <ul>
+            <li><strong>探索性 spike。</strong>用来回答"这种方案可行吗"的一次性代码不需要测试；它需要在你得出结论后立即删除。</li>
+            <li><strong>UI 微调。</strong>在 SwiftUI / Compose / HTML 中调整像素是用眼睛验证的，不是用断言。如果有状态机就写测试；不要为"把内边距调大一点"写测试。</li>
+            <li><strong>配置变更。</strong>编辑 JSON、YAML 或构建脚本是靠运行构建来验证的，不是靠单元测试配置。</li>
+          </ul>
+          <p>让 LingCode 在开始前先分类：</p>
+          <pre><code>Before starting, classify the task:
+- LOGIC: anything with branches, state changes, or
+  computed return values. Use TDD.
+- EXPLORATION: throwaway code to learn. Skip TDD; delete after.
+- UI: pure presentation. Verify by eye.
+- CONFIG: build / env / data. Verify by running.
+
+For LOGIC, do not write implementation code without a failing
+test first.</code></pre>
+        </div>
+      </div>
+
+      <h2>与系统性调试的结合</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>当 bug 出现在非 TDD 编写的代码中时，最低成本的路径是补写一个测试：写一个能复现该 bug 的失败测试，然后修复直到绿色。这个失败测试同时也是调试协议要求的回归测试——同一个产物，一举两得。</p>
+          <p>TDD 编写的代码同样会有 bug，但它们出现得更早、规模更小——通常是某个没人想到要测试的等价类缺失。补上测试，看它失败，然后修复。这个循环和功能开发是一样的。</p>
+          <div class="tip-box">
+            <strong>完全由红-绿-重构写成的测试套件本身就是一份设计文档。</strong>新加入的贡献者阅读它就能知道哪些行为是承诺过的，哪些只是偶然的实现细节——因为未承诺的行为没有对应的测试。
+          </div>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>TDD 规范已打包为一个技能——将它放入你的 skills 文件夹后，LingCode 在编写逻辑之前会自动调用它：</p>
+          <pre><code>---
+name: test-driven-development
+description: Use when implementing any feature or bugfix, before writing implementation code. Triggers: 'write tests', 'add test coverage', 'TDD', new feature, new function, regression fix, 'verify it works', 'test first'. Actions: red (write failing test, paste output to verify real red), green-minimum (smallest code that passes), mutation-test each new green (catch false greens), refactor only while green. Reframes TDD as anti-hallucination tool — stops AI from writing plausible code that doesn't actually work. The test is the spec; AI can't fake passing.
+---
+
+Write logic via red-green-refactor. With an AI assistant, TDD's
+primary value is as an anti-hallucination tool — a failing test
+is the one constraint plausible-looking code can't fake.
+
+Classify first: LOGIC (use TDD), EXPLORATION / UI / CONFIG
+(skip, verify another way).
+
+For LOGIC:
+
+1. RED. Write the first failing test before any implementation.
+   Reference the public API by name. Assert user-visible
+   behavior, not internal structure. Run it. Paste the exact
+   failure output. If it already passes, the test is wrong —
+   rewrite.
+
+2. GREEN. Write the MINIMUM implementation to make this one
+   test pass. No code for untested behavior. No "in case"
+   abstractions. Run it. Paste the exact pass output.
+
+3. ONE-AT-A-TIME. Add the next failing test (edge case,
+   equivalence class, error path). Confirm red. Add minimum
+   code. Confirm green. Repeat until the spec is covered.
+
+4. WATCH FOR FALSE GREEN. For each new green test, mutate the
+   implementation destructively (wrong return value, no-op,
+   skipped side effect). If the test still passes, the test
+   isn't exercising the behavior. Fix the test.
+
+5. REFACTOR. Only with all tests green. Improve names, remove
+   real duplication, simplify control flow. Re-run after each
+   step. If a test goes red, REVERT the refactor — do not
+   "fix" the test.
+
+For bugs in pre-existing code: write a failing test that
+reproduces the bug, then fix until green. The test becomes
+the regression test.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/test-driven-development/SKILL.md</code>——详见<a href="/zh/tutorials/install-a-skill.html">安装技能</a>，了解确切位置以及技能的发现机制。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/debug-systematically-with-lingcode.html" class="tutorial-next-card">
+            <h3>系统性调试</h3>
+            <p>当 bug 出现时，你为复现它而写的失败测试同时就是 TDD 的红色起点——同一个循环，不同的起始位置</p>
+          </a>
+          <a href="/zh/tutorials/give-and-receive-code-review-with-lingcode.html" class="tutorial-next-card">
+            <h3>给出与接受代码审查</h3>
+            <p>经过 TDD 编写的代码审查更快——大多数"你确定它处理了 X 的情况吗"的问题，已经有一个测试在回答了</p>
+          </a>
+          <a href="/zh/tutorials/brainstorm-before-you-build.html" class="tutorial-next-card">
+            <h3>构建之前先头脑风暴</h3>
+            <p>TDD 回答"它能运行吗"——头脑风暴回答"我们是否在构建正确的东西"。两者都发生在绿色之前</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# prometheus.colocated.yml — scrape config for the single-VM (co-located) stack.
+# Exporters are on the same docker network, reached by service name. No remote
+# IPs and no API /metrics scrape (the API is on a different host; add that via
+# the separate-host prometheus.yml once it's reachable). Alert rules load but
+# only route once an Alertmanager + ALERT_WEBHOOK are added.
+
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: postgres
+    static_configs:
+      - targets: ['postgres_exporter:9187']
+  - job_name: node-dataplane
+    static_configs:
+      - targets: ['node_exporter:9100']
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>从 DigitalOcean 购买服务器 — LingCode 教程</title>
+  <meta name="description" content="搭建一个 DigitalOcean Droplet——这是开发者最爱的 VPS，定义了现代独立服务器市场。了解 SSH 密钥、镜像选择，以及登录后最初十分钟该做什么。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/buy-a-server-from-digitalocean.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/buy-a-server-from-digitalocean.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/buy-a-server-from-digitalocean.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/buy-a-server-from-digitalocean.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "从 DigitalOcean 购买服务器",
+  "description": "DigitalOcean Droplet 是"按小时租用的小型 Linux 服务器"中最受欢迎的选择——定价透明、上手简单、默认配置合理，非常适合只想在互联网上跑一台机器的人。每月五美元就能让你有一台真正可以做事的服务器。",
+  "url": "https://lingcode.dev/zh/tutorials/buy-a-server-from-digitalocean.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/buy-a-server-from-digitalocean.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "从 DigitalOcean 购买服务器"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "从 DigitalOcean 购买服务器",
+      "item": "https://lingcode.dev/zh/tutorials/buy-a-server-from-digitalocean.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/buy-a-server-from-digitalocean.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">发布与基础设施</a>
+      <span>/</span>
+      <span>从 DigitalOcean 购买服务器</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>从 DigitalOcean 购买服务器</h1>
+      <p class="intro">DigitalOcean Droplet 是"按小时租用的小型 Linux 服务器"中最受欢迎的选择——定价透明、上手简单、默认配置合理，非常适合只想在互联网上跑一台机器的人。每月五美元就能让你有一台真正可以做事的服务器。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>在决定购买哪种 VPS 之前，先想清楚自己是否真的需要 VPS。很多以前必须租 Linux 服务器才能做的事情，现在已经不需要了。静态网站放在 Vercel、Netlify 或 Cloudflare Pages 上——比跑 Nginx 的 $5 Droplet 更好、更便宜、更快。后端 API 放在托管运行时（Vercel Functions、Cloudflare Workers、Fly.io）上，可以省去 VPS 的大量运维工作。就连数据库，往往放在 Supabase、Neon 或 PlanetScale 上也比自己管理更合适。</p>
+      <p>当你需要完整的 root 权限、需要安装托管平台不支持的软件、对规模化成本敏感，或者想亲眼看看自己的软件在真实机器上是怎么运行的——这时候 VPS 才是正确答案。这些都是合理的理由，只是和"我需要一个地方放 Next.js 网站"不一样——后者用托管主机比用 Droplet 更合适。</p>
+      <p>如果你已经确定需要 VPS，DigitalOcean 是各个靠谱选择中最友好的一个。界面简洁，文档质量真的不错，最便宜的套餐（$5/月，1GB 内存、1 vCPU、25GB 磁盘）是真实可用的，而且这家公司存在已久，平台不会说消失就消失。唯一的取舍是，DigitalOcean 在同等价格下已不再是最便宜的 VPS——Hetzner 在欧洲提供了更高的性价比。DO 贵在它的打磨程度和文档质量。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>是否真的需要 VPS（还是托管主机更合适）</li>
+        <li>根据工作负载选择合适的 Droplet 套餐</li>
+        <li>在创建 Droplet 之前先将 SSH 密钥添加到账户</li>
+        <li>登录后的最初十分钟——防火墙、非 root 用户、系统更新</li>
+        <li>何时纵向扩容，何时横向扩展</li>
+      </ul>
+
+      <h2>第 1 步：确定套餐</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Basic Droplet 足以应对几乎所有场景</h3>
+          <p>DO 有很多 Droplet 系列，大多数可以忽略。你会用到的只有两种：</p>
+          <ul>
+            <li><strong>Basic。</strong>普通 Intel 或 AMD CPU，定价透明。<code>$5/月</code>含 1GB/1vCPU/25GB；<code>$12/月</code>含 2GB/1vCPU/50GB。适合小型应用、个人项目和学习环境。$5 的套餐是真实可用的——很多独立项目的生产环境就跑在上面。</li>
+            <li><strong>Premium AMD / Intel。</strong>规格相同，CPU 更快，每个档位贵约 $1–2。仅在 CPU 是瓶颈且已经实测过的情况下才值得升级。</li>
+          </ul>
+          <p>"CPU 优化"、"内存优化"、"GPU" Droplet 是针对特定场景的（高强度计算、内存缓存、ML 推理）。第一台服务器先跳过这些。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：先添加 SSH 密钥</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>在创建 Droplet 之前操作，而不是之后</h3>
+          <p>如果 Mac 上还没有 SSH 密钥对，先生成一个：</p>
+          <pre><code>ssh-keygen -t ed25519 -C "your-email@example.com"
+# 路径直接回车使用默认值；密码可以设也可以留空</code></pre>
+          <p>这会生成 <code>~/.ssh/id_ed25519</code>（私钥）和 <code>~/.ssh/id_ed25519.pub</code>（公钥）。复制公钥：</p>
+          <pre><code>pbcopy &lt; ~/.ssh/id_ed25519.pub</code></pre>
+          <p>在 DO 控制台中，进入 <strong>Settings → Security → SSH Keys → Add SSH Key</strong>，粘贴公钥，起个名字（比如 "my-mac"），保存。之后每次创建 Droplet 都可以选择这个密钥，实现无密码安全登录。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>为什么要用 SSH 密钥而不是密码：</strong>互联网上随时都有机器人扫描 SSH 服务器并尝试常见密码。SSH 密钥无法被猜出来，暴力破解的攻击面直接消失。用过一次密钥登录，你就再也不想回到密码登录了。
+      </div>
+
+      <h2>第 3 步：创建 Droplet</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>镜像、地区、规格、密钥、名称</h3>
+          <p>点击 <strong>Create → Droplets</strong>，做五个选择：</p>
+          <ul>
+            <li><strong>镜像：</strong>Ubuntu LTS（目前是 24.04）。熟悉度高、文档完善，大量社区教程拿来就能用。</li>
+            <li><strong>地区：</strong>离用户最近的节点。个人项目就选离自己最近的。NYC3、SFO3、AMS3、FRA1、SGP1 都是常见选择。</li>
+            <li><strong>规格：</strong>先从 Basic $5/月 开始。之后可以调整（注意：磁盘只能扩大，不能缩小）。</li>
+            <li><strong>认证方式：</strong>SSH Key（选第 2 步中添加的那个）。切记不要用密码。</li>
+            <li><strong>主机名：</strong>取一个好记的名字——<code>web-1</code>、<code>blog-prod</code> 都行。这个名字会出现在你的终端提示符中。</li>
+          </ul>
+          <p>点击 <strong>Create Droplet</strong>。约 60 秒后 Droplet 就上线了，控制台里会显示它的 IPv4 地址。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：SSH 登录</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>第一次连接</h3>
+          <p>在 Mac 终端中执行：</p>
+          <pre><code>ssh root@&lt;droplet-ip&gt;</code></pre>
+          <p>第一次连接时，SSH 会询问你是否信任该主机指纹——输入 yes。现在你已经进入 Droplet 的 root shell。运行 <code>uname -a</code> 应该能看到 Linux 和 Ubuntu 的版本号。这台服务器是你的了。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：登录后十分钟的安全加固</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>立即要做的三件事</h3>
+          <p>在安装任何其他软件之前：</p>
+          <pre><code># 更新软件包列表并升级已安装的软件
+apt update &amp;&amp; apt upgrade -y
+
+# 创建一个非 root 用户（将 'deploy' 替换为你喜欢的名字）
+adduser deploy
+usermod -aG sudo deploy
+
+# 将 SSH 密钥复制给新用户，以便直接登录
+rsync --archive --chown=deploy:deploy ~/.ssh /home/deploy
+
+# 启用防火墙，只允许 SSH
+ufw allow OpenSSH
+ufw enable</code></pre>
+          <p>打开第二个终端，运行 <code>ssh deploy@&lt;droplet-ip&gt;</code> 来测试新用户是否能正常登录。确认可以后，编辑 <code>/etc/ssh/sshd_config</code>，将 <code>PermitRootLogin</code> 设为 <code>no</code>，然后重启 sshd（<code>systemctl restart sshd</code>）。这样 root 就完全无法直接登录了，所有操作都通过你的 <code>deploy</code> 用户进行，需要 <code>sudo</code> 才能执行特权操作。</p>
+          <p>随着后续安装服务，你也可以添加相应的防火墙规则（<code>ufw allow http</code>、<code>ufw allow https</code>）。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>在确认非 root 用户可以正常登录之前，不要禁用 root 登录。</strong>如果配置有误把自己锁在外面了，只能通过 DO 的恢复控制台进入——麻烦但不是绝路。"同时开两个终端"这个小技巧可以完全避免这种情况。
+      </div>
+
+      <h2>第 6 步：绑定域名</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>在 DNS 服务商处添加 A 记录</h3>
+          <p>在你的域名注册商（或 DNS 服务商）处，添加一条 A 记录：</p>
+          <ul>
+            <li>名称：<code>@</code>（根域名）或子域名，例如 <code>app</code></li>
+            <li>值：你的 Droplet IPv4 地址</li>
+            <li>TTL：3600（默认值即可）</li>
+          </ul>
+          <p>完整的 DNS 配置流程请参阅 <a href="/zh/tutorials/connect-domain-to-server-with-dns.html">将域名连接到服务器</a>。DNS 生效后（通常只需几分钟），<code>yourdomain.com</code> 就会解析到你的 Droplet。</p>
+          <p>之后在 Droplet 上安装 Nginx 或 Caddy，配置 Let's Encrypt 启用 HTTPS，你就拥有了一台真正对外提供服务的 Web 服务器。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：何时纵向扩容，何时横向扩展</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>先纵向，再横向</h3>
+          <p>纵向扩容（换更大的 Droplet）只需一次点击——关机、调整规格、开机。存储可以增加但无法缩小。适用于某个进程受 CPU 或内存限制、只需要更多资源的情况。</p>
+          <p>横向扩展（多台 Droplet + 负载均衡器）工作量大得多，但在单台机器不够用或需要冗余时是正确的选择。DO 的托管负载均衡器是独立产品（$12/月），可以为多台 Droplet 提供流量分发。</p>
+          <p>对 95% 的个人项目来说，正确的策略是："先把单台 Droplet 升到不再划算为止，再考虑其他方案。"</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>快照是你的存档点。</strong>在做任何有风险的操作之前（升级主要软件包、更换内核等），从 Droplet 的 <strong>Snapshots</strong> 标签页创建一个快照。快照存在期间会产生少量月费，但一旦出问题你可以从中恢复，相当于给服务器上了保险。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/buy-a-server-from-hetzner.html" class="tutorial-next-card">
+            <h3>从 Hetzner 购买服务器</h3>
+            <p>更经济实惠的替代方案，同等规格搭配欧洲定价</p>
+          </a>
+          <a href="/zh/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>将域名连接到服务器</h3>
+            <p>为你崭新的 Droplet 绑定一个域名</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-domain-from-cloudflare.html" class="tutorial-next-card">
+            <h3>从 Cloudflare Registrar 购买域名</h3>
+            <p>或者任何注册商——你的 Droplet 需要一个名字</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">大学合作</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

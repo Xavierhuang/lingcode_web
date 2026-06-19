@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>lingcode CLI | LingCode</title>
+  <meta name="description" content="Drive LingCode from the terminal. Interactive REPL, one-shot ask, 13 providers (Claude, DeepSeek-V4, OpenAI, Gemini, Kimi, Qwen, Groq, Together, OpenRouter, Mistral, xAI, Fireworks, Ollama), Skills, subagents, hooks, MCP servers, custom slash commands.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/cli.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/cli.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/cli.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/cli.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="lingcode CLI">
+  <meta property="og:description" content="Interactive REPL + one-shot ask against 13 providers including DeepSeek-V4. Tools, Skills, subagents, hooks on every provider — not just Claude.">
+  <meta property="og:url" content="https://lingcode.dev/cli.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="lingcode CLI — drive LingCode from the terminal">
+  <meta name="twitter:description" content="Interactive REPL + one-shot ask against 13 providers (Claude, DeepSeek-V4, OpenAI, Gemini, Kimi, Qwen, Groq, Together, OpenRouter, Mistral, xAI, Fireworks, Ollama). macOS, Linux, Windows.">
+  <meta name="article:modified_time" content="2026-05-22T00:00:00Z">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "lingcode CLI",
+    "description": "Drive LingCode from the terminal. Interactive REPL, one-shot ask, 13 providers, Skills, subagents, hooks, MCP servers, custom slash commands. macOS, Linux, and Windows builds.",
+    "url": "https://lingcode.dev/cli.html",
+    "image": "https://lingcode.dev/og-image.png",
+    "datePublished": "2026-02-15",
+    "dateModified": "2026-05-22",
+    "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+    "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/cli.html" },
+    "about": { "@type": "SoftwareApplication", "name": "lingcode CLI", "operatingSystem": "macOS, Linux, Windows", "applicationCategory": "DeveloperApplication" },
+    "keywords": "lingcode CLI, AI CLI, Claude CLI, DeepSeek CLI, OpenAI CLI, MCP, agent terminal, Ollama CLI"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+      { "@type": "ListItem", "position": 2, "name": "CLI", "item": "https://lingcode.dev/cli.html" }
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 760px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.375rem; margin: 40px 0 16px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1rem; margin: 24px 0 8px; color: var(--text); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.75; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.75; }
+    .blog-content table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 0.9rem; }
+    .blog-content th, .blog-content td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-muted); vertical-align: top; }
+    .blog-content th { color: var(--text); font-weight: 600; background: var(--bg-card); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 16px 0 32px; font-size: 0.9rem; }
+    .toc ul { margin: 0; padding-left: 20px; }
+    .toc li { margin: 4px 0; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Reference · Terminal</p>
+        <h1>lingcode CLI</h1>
+        <p>Interactive REPL and one-shot <code>ask</code> in your terminal. Tool use across every provider — Claude (full Agent SDK with MCP + hooks) plus OpenAI, Groq, Together, OpenRouter, Mistral, xAI, Fireworks, Ollama, and any OpenAI-compatible endpoint.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+
+      <div class="toc">
+        <strong>Contents</strong>
+        <ul>
+          <li><a href="#install">Install</a></li>
+          <li><a href="#quickstart">Quickstart</a></li>
+          <li><a href="#repl">Interactive REPL</a></li>
+          <li><a href="#providers">Providers</a></li>
+          <li><a href="#productivity">Files, sessions &amp; output styles</a></li>
+          <li><a href="#ask">One-shot <code>ask</code></a></li>
+          <li><a href="#slash">Slash commands</a></li>
+          <li><a href="#auth">Auth &amp; API keys</a></li>
+          <li><a href="#skills-agents">Skills &amp; subagents</a></li>
+          <li><a href="#mcp">MCP, hooks, custom commands</a></li>
+          <li><a href="#permissions">Permissions, output styles, status line</a></li>
+          <li><a href="#app-ipc">Talking to the running app</a></li>
+          <li><a href="#serve">Expose as HTTP server</a></li>
+          <li><a href="#acp-serve">External agent clients (acp-serve)</a></li>
+          <li><a href="#reference">Subcommand reference</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+        </ul>
+      </div>
+
+      <h2 id="install">Install</h2>
+      <p>Pick the path that matches your OS — the native binaries are the default. Or skip install entirely and <a href="/try.html">try it in your browser first</a>: same prompt against Claude, DeepSeek, OpenAI, Gemini side-by-side, no setup.</p>
+
+      <h3>macOS &amp; Linux (native binary)</h3>
+      <pre><code>curl -fsSL https://lingcode.dev/install-cli.sh | sh</code></pre>
+      <p>Downloads a tarball to <code>~/.lingcode/cli/</code> and symlinks it to <code>~/.local/bin/lingcode</code>. macOS tarballs are signed + notarized; the Linux tarball is unsigned. The bundled Node bridge ships inside, so the Claude provider works without LingCode.app installed (you still need Node.js and an API key).</p>
+
+      <h3>Windows (native binary)</h3>
+      <pre><code>iwr -useb https://lingcode.dev/install-cli.ps1 | iex</code></pre>
+      <p>Downloads a Bun-compiled <code>lingcode.exe</code> to <code>%LOCALAPPDATA%\Programs\lingcode\</code> and adds it to your User PATH. PowerShell 5.1+ (ships with Windows 10/11); x64 and ARM64 both supported. The installer auto-detects AVX2 and falls back to a baseline build on older CPUs / VMs. The binary is unsigned in v0.9.x — Windows Defender SmartScreen will warn on first run; click <em>More info → Run anyway</em>. Authenticode signing is on the roadmap. After install, <code>lingcode upgrade</code> handles future versions in-place (the running .exe is renamed to <code>lingcode.exe.old</code> while the new binary takes its slot).</p>
+      <p><strong>After install</strong> — in the same PowerShell window:</p>
+      <pre><code># Free first chat — no signup needed, uses LingModel (free tier)
+lingcode run --provider lingmodel "hello"
+
+# For higher limits or other providers: grab a token at
+# https://lingcode.dev/cli-token.html and run
+lingcode providers login</code></pre>
+      <p>That's it. <code>lingcode run "&lt;prompt&gt;"</code> drops into a multi-turn <code>&gt;</code> REPL on the same session after each one-shot — type follow-ups, <code>/quit</code> to exit. If you closed the terminal before testing, just reopen any PowerShell window; the install added <code>lingcode</code> to your User PATH.</p>
+
+      <h3>From an installed LingCode.app</h3>
+      <pre><code>/Applications/LingCode.app/Contents/Resources/bin/lingcode install</code></pre>
+      <p>The <code>install</code> subcommand tries <code>/usr/local/bin</code> first, falls back to <code>~/.local/bin</code>, prints a PATH hint if needed.</p>
+
+      <h2 id="quickstart">Quickstart</h2>
+      <pre><code># One command to store a key in the Keychain (opens browser)
+lingcode auth login
+
+# Interactive session (Claude by default)
+lingcode
+
+# Interactive session with another provider
+lingcode --provider ollama --model llama3.2
+lingcode --provider groq --model llama-3.1-70b-versatile
+
+# One-shot
+lingcode ask "explain this error" < build.log
+echo "what's 2+2?" | lingcode ask -
+
+# Check your setup
+lingcode auth status
+lingcode --help</code></pre>
+
+      <h2 id="repl">Interactive REPL</h2>
+      <p><code>lingcode</code> with no arguments drops you into an interactive multi-turn session. It's the same as <code>lingcode repl</code>, just shorter to type.</p>
+      <p>The REPL has two flavors depending on provider:</p>
+      <ul>
+        <li><strong>Claude mode</strong> — full agentic loop: tool use, file edits, MCP servers, hooks, session resumption, permission prompts, colored diffs. Runs via the bundled Node bridge + <code>@anthropic-ai/claude-agent-sdk</code>.</li>
+        <li><strong>OpenAI-compatible mode</strong> — full agentic loop with tool dispatch, MCP servers, Skills, subagents, hooks, and custom slash commands on any OpenAI-compatible endpoint: OpenAI, Groq, Together, OpenRouter, Mistral, xAI, Fireworks, Ollama, DeepSeek, and custom proxies.</li>
+      </ul>
+
+      <h3>Input editor</h3>
+      <p>When stdin is a TTY, you get a proper line editor:</p>
+      <table>
+        <tbody>
+          <tr><td><code>↑</code> / <code>↓</code></td><td>Recall previous / next input</td></tr>
+          <tr><td><code>←</code> / <code>→</code> / <code>Home</code> / <code>End</code></td><td>Cursor movement</td></tr>
+          <tr><td><code>Tab</code></td><td>Complete slash commands (builtin + custom)</td></tr>
+          <tr><td>Trailing <code>\</code></td><td>Continue the input on the next line</td></tr>
+          <tr><td><code>Ctrl-C</code></td><td>Cancel running query (Claude) / abort line</td></tr>
+          <tr><td><code>Ctrl-D</code></td><td>Exit on empty line, otherwise delete character</td></tr>
+          <tr><td>Bracket-paste</td><td>Paste multi-line clipboard content as one input</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Prompt</h3>
+      <p>The REPL prompt shows turn count and cumulative cost once they're non-zero:</p>
+      <pre><code>lingcode> explain this repo
+…
+lingcode [1t $0.003]> now suggest a refactor
+…
+lingcode [2t $0.011]></code></pre>
+
+      <h2 id="providers">Providers</h2>
+      <p>Pick with <code>--provider</code>; override model, base URL, or API key env var as needed. Every provider runs the agent loop with tool calls by default.</p>
+      <table>
+        <thead><tr><th>Provider</th><th>Env var</th><th>Default model</th><th>Tools?</th></tr></thead>
+        <tbody>
+          <tr><td><code>claude</code> (default)</td><td><code>ANTHROPIC_API_KEY</code></td><td>SDK default (Sonnet)</td><td>✓</td></tr>
+          <tr><td><code>deepseek-claude</code></td><td><code>DEEPSEEK_API_KEY</code></td><td>deepseek-v4-pro[1m]</td><td>✓</td></tr>
+          <tr><td><code>deepseek-compat</code></td><td><code>DEEPSEEK_API_KEY</code></td><td>deepseek-v4-flash</td><td>✓</td></tr>
+          <tr><td><code>openai</code></td><td><code>OPENAI_API_KEY</code></td><td>gpt-4o-mini</td><td>✓</td></tr>
+          <tr><td><code>gemini</code></td><td><code>GEMINI_API_KEY</code></td><td>gemini-2.5-flash</td><td>✓</td></tr>
+          <tr><td><code>kimi</code></td><td><code>MOONSHOT_API_KEY</code></td><td>kimi-k2.6</td><td>✓</td></tr>
+          <tr><td><code>qwen</code></td><td><code>DASHSCOPE_API_KEY</code></td><td>(provider default)</td><td>✓</td></tr>
+          <tr><td><code>groq</code></td><td><code>GROQ_API_KEY</code></td><td>llama-3.1-70b-versatile</td><td>✓</td></tr>
+          <tr><td><code>together</code></td><td><code>TOGETHER_API_KEY</code></td><td>Llama-3.3-70B-Instruct-Turbo</td><td>✓</td></tr>
+          <tr><td><code>openrouter</code></td><td><code>OPENROUTER_API_KEY</code></td><td>anthropic/claude-sonnet-4</td><td>✓</td></tr>
+          <tr><td><code>mistral</code></td><td><code>MISTRAL_API_KEY</code></td><td>mistral-large-latest</td><td>✓</td></tr>
+          <tr><td><code>xai</code></td><td><code>XAI_API_KEY</code></td><td>grok-2-latest</td><td>✓</td></tr>
+          <tr><td><code>fireworks</code></td><td><code>FIREWORKS_API_KEY</code></td><td>llama-v3p1-70b-instruct</td><td>✓</td></tr>
+          <tr><td><code>ollama</code></td><td>— (none)</td><td>llama3.2</td><td>✓</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Two ways to use DeepSeek</h3>
+      <p><code>deepseek-compat</code> uses DeepSeek's OpenAI-compatible endpoint with lingcode's own agent loop. <code>deepseek-claude</code> uses DeepSeek's Anthropic-compatible endpoint, which lets the polished Claude path (full Agent SDK, sessions, hooks, Skills, subagents) drive DeepSeek-V4 — banner shows <code>(claude→deepseek)</code>. The <code>deepseek-claude</code> path is more featureful but skips MCP servers and image input (DeepSeek's compat layer ignores those fields).</p>
+      <pre><code>lingcode --provider deepseek-claude     # full Claude UX, deepseek-v4-pro[1m]
+lingcode --provider deepseek-compat     # OpenAI-format, deepseek-v4-flash by default
+lingcode --provider deepseek-compat --model deepseek-v4-pro</code></pre>
+
+      <h3>Any OpenAI-compatible endpoint</h3>
+      <pre><code>lingcode --provider openai \
+  --base-url https://my-proxy.example.com/v1 \
+  --api-key-env MY_KEY_VAR \
+  --model gpt-4o</code></pre>
+      <p>Tool use, MCP servers, hooks, Skills, subagents, custom slash commands, output styles, settings.json permission patterns, and the configurable status line all work on <strong>every</strong> provider. Session resumption and image attachments via <code>--file</code> are Claude-only (those depend on the Agent SDK); OpenAI-compatible providers get image input via <code>--image</code> in text-only mode.</p>
+
+      <h3>Linux &amp; Windows notes</h3>
+      <p>The native CLI builds and runs identically on Linux x86_64 / ARM64 and on Windows x64 / ARM64. Two differences vs. macOS:</p>
+      <ul>
+        <li><strong>App-IPC subcommands are absent.</strong> <code>lingcode ping / open / status / watch / install</code> only exist on macOS — they talk to LingCode.app's Unix socket. On Linux and Windows you run headless against your provider directly.</li>
+        <li><strong>Secret store is a JSON file</strong> at <code>$XDG_CONFIG_HOME/lingcode/keys.json</code> on Linux (defaulting to <code>~/.config/lingcode/keys.json</code>), <code>%LOCALAPPDATA%\lingcode\config\keys.json</code> on Windows, or <code>~/.lingcode/credentials.json</code> on the npm/Node fallback — all in place of the macOS Keychain. <code>lingcode auth login / set / status / delete</code> still work the same way; environment variables are honored on every platform.</li>
+      </ul>
+
+      <h2 id="productivity">Files, sessions &amp; output styles</h2>
+      <p>The CLI is the part of LingCode you'll script against, point at log files, and leave running in a tab next to your editor. A handful of features make that less awkward than just typing prompts into a black rectangle — most of them are in the npm-distributed Node version starting at v0.12; the Swift CLI has subsets of the same surface.</p>
+
+      <h3>Attach files inline with <code>@</code></h3>
+      <p>Type <code>@</code> followed by a path and the file's contents are read off disk and prepended to your prompt as a code block before the model sees it. Same pattern as Cursor, Codex, and Claude Code.</p>
+      <pre><code>&gt; summarize @README.md and explain what the build pipeline does in @scripts/ship.sh</code></pre>
+      <p>Repeated mentions of the same file get deduplicated. Files over 200 KB are skipped with a note suggesting the <code>Read</code> tool with <code>offset</code>/<code>limit</code> instead — the model still has a path to read them, just not all at once. Paths resolve against the current working directory; absolute paths also work.</p>
+
+      <h3>Fetch URLs with <code>WebFetch</code></h3>
+      <p>A built-in tool the model can call to grab an HTTP/HTTPS URL, strip the HTML to readable text, and reason about it. No MCP setup required — it's listed in the tool schema alongside <code>Read</code>/<code>Write</code>/<code>Bash</code>. Like other side-effectful tools it always prompts for permission in the TTY (talking to arbitrary servers can leak referrer info or IPs, so we don't auto-approve it).</p>
+      <pre><code>&gt; what does Anthropic say about prompt caching pricing? Check their docs.
+&lt;assistant calls WebFetch on docs.anthropic.com/...&gt;
+Allow WebFetch? [WebFetch] [y/N]</code></pre>
+
+      <h3>Export a conversation as markdown</h3>
+      <p>While you're in the REPL, <code>/export &lt;path&gt;</code> writes the current session to a markdown file — alternating <strong>## You</strong> / <strong>## Assistant</strong> sections with tool calls and results inlined as block quotes. Useful for handing off a working session to a teammate, pasting into a PR description, or just archiving an investigation.</p>
+      <pre><code>&gt; /export ~/Desktop/refactor-notes.md
+(wrote 4823 bytes to ~/Desktop/refactor-notes.md)</code></pre>
+
+      <h3>Persistent sessions</h3>
+      <p>Opt in once and every REPL run writes its transcript to <code>~/.lingcode/sessions/&lt;timestamp&gt;.json</code> as you chat:</p>
+      <pre><code>lingcode config set saveHistory true</code></pre>
+      <p>Then:</p>
+      <ul>
+        <li><code>lingcode history</code> — list saved sessions, newest first</li>
+        <li><code>lingcode --resume &lt;id&gt;</code> — pick up where you left off (the new REPL boots with the prior turns in context)</li>
+        <li><code>lingcode history show &lt;id&gt;</code> — print a saved session to stdout as markdown</li>
+        <li><code>lingcode history export &lt;id&gt; &lt;path&gt;</code> — write it to a file</li>
+      </ul>
+      <p>Persistence is off by default because most uses of the CLI are one-shot or transient; flipping it on is one config line when you change your mind.</p>
+
+      <h3>Output styles</h3>
+      <p>Three knobs for response shape, set as a config value the CLI reads on every call:</p>
+      <pre><code>lingcode config set output-style compact   # 1–3 sentences unless thoroughness is needed
+lingcode config set output-style verbose   # show reasoning + intermediate work
+lingcode config set output-style concise   # no preamble, no pleasantries
+lingcode config unset output-style          # back to model default</code></pre>
+      <p>It works by appending a system-prompt directive each turn, so the change takes effect immediately — no REPL restart needed. The model still chooses how to answer; this just nudges it toward your preferred shape.</p>
+
+      <h2 id="ask">One-shot <code>ask</code></h2>
+      <pre><code># Simple
+lingcode ask "summarise this repo's architecture"
+
+# Pipe content in
+cat error.log | lingcode ask "explain this"
+
+# Read the entire prompt from stdin
+echo "what is 2+2?" | lingcode ask -
+
+# Switch provider
+lingcode ask --provider groq "quick: what does this regex do? /\d{3}-\d{4}/"
+
+# Claude with full tool use, auto-approved
+lingcode ask --provider claude --yolo "add a .gitignore entry for .DS_Store"
+
+# Attach a file
+lingcode ask --provider claude --file screenshot.png "what's wrong in this UI?"
+
+# Structured output (good for scripts)
+lingcode ask --output-format stream-json "fix the failing test in main.swift"</code></pre>
+
+      <h3>Useful flags</h3>
+      <table>
+        <tbody>
+          <tr><td><code>--continue</code></td><td>Resume the most recent Claude session in this directory</td></tr>
+          <tr><td><code>--resume &lt;id&gt;</code></td><td>Resume a specific session by ID</td></tr>
+          <tr><td><code>--file &lt;path&gt;</code></td><td>Attach a file (image, PDF, text). Repeatable. Claude only.</td></tr>
+          <tr><td><code>--allowed-tools Read,Write</code></td><td>Allow only these tools (Claude only)</td></tr>
+          <tr><td><code>--disallowed-tools Bash</code></td><td>Disallow these tools</td></tr>
+          <tr><td><code>--add-dir ~/other</code></td><td>Extra directory the agent can touch. Repeatable.</td></tr>
+          <tr><td><code>--thinking</code></td><td>Enable Claude's extended thinking</td></tr>
+          <tr><td><code>--system-prompt "..."</code></td><td>Override the system prompt</td></tr>
+          <tr><td><code>--append-system-prompt "..."</code></td><td>Append to the system prompt</td></tr>
+          <tr><td><code>--output-format text|json|stream-json</code></td><td>Output shape</td></tr>
+          <tr><td><code>--output path/out.md</code></td><td>Write the response to a file</td></tr>
+          <tr><td><code>--verbose</code></td><td>Don't truncate tool input/output</td></tr>
+          <tr><td><code>--yolo</code></td><td>Auto-allow every tool call. Dangerous.</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="slash">Slash commands</h2>
+      <p>Type these at the REPL prompt.</p>
+      <h3>Every provider</h3>
+      <table>
+        <tbody>
+          <tr><td><code>/help</code></td><td>List commands</td></tr>
+          <tr><td><code>/model &lt;name&gt;</code></td><td>Switch model mid-session</td></tr>
+          <tr><td><code>/mode &lt;mode&gt;</code></td><td>Change permission mode (default / acceptEdits / plan / dontAsk / bypassPermissions)</td></tr>
+          <tr><td><code>/yolo</code></td><td>Bypass all permission prompts</td></tr>
+          <tr><td><code>/cost</code></td><td>Cumulative token usage + USD estimate (priced per model)</td></tr>
+          <tr><td><code>/tools</code></td><td>List available built-in tools</td></tr>
+          <tr><td><code>/commands</code></td><td>List custom slash commands from <code>.claude/commands/</code></td></tr>
+          <tr><td><code>/skills</code></td><td>List loaded Skills from <code>.claude/skills/</code></td></tr>
+          <tr><td><code>/agents</code></td><td>List subagents from <code>.claude/agents/</code> <span class="dim">(OpenAI-compat; on Claude, subagents come from the Agent SDK's built-in Task)</span></td></tr>
+          <tr><td><code>/output-styles</code></td><td>List loaded output styles</td></tr>
+          <tr><td><code>/session</code></td><td>Show current session id (use with <code>--resume</code>)</td></tr>
+          <tr><td><code>/reset</code></td><td>Clear conversation (Claude: also starts a fresh session)</td></tr>
+          <tr><td><code>/export [path]</code></td><td>Save transcript as markdown</td></tr>
+          <tr><td><code>/clear</code></td><td>Clear screen</td></tr>
+          <tr><td><code>/quit</code></td><td>Exit</td></tr>
+        </tbody>
+      </table>
+      <h3>Claude-only</h3>
+      <table>
+        <tbody>
+          <tr><td><code>/compact</code></td><td>Summarise and compress conversation history</td></tr>
+          <tr><td><code>/doctor</code></td><td>Diagnose environment (node, API key, bridge, MCP, hooks)</td></tr>
+          <tr><td><code>/init</code></td><td>Generate CLAUDE.md for the current project</td></tr>
+        </tbody>
+      </table>
+      <h3>OpenAI-compatible only</h3>
+      <table>
+        <tbody>
+          <tr><td><code>/system &lt;text&gt;</code></td><td>Replace the system prompt for this session</td></tr>
+          <tr><td><code>/image &lt;path&gt;</code></td><td>Attach a PNG/JPG/GIF/WEBP image to the next turn (OpenAI-compat mode)</td></tr>
+          <tr><td><code>/mcp</code></td><td>Show connected MCP servers and their tool inventory</td></tr>
+        </tbody>
+      </table>
+      <h3>Custom</h3>
+      <p>Put a Markdown file at <code>.claude/commands/&lt;name&gt;.md</code> and invoke it as <code>/project:&lt;name&gt;</code>. Files at <code>~/.claude/commands/</code> are invoked as <code>/user:&lt;name&gt;</code>. Bare <code>/&lt;name&gt;</code> checks project first, then user. Any text after the command name is appended to the body.</p>
+      <pre><code>$ echo "Explain the changes staged in git in plain English." > .claude/commands/explain-staged.md
+$ lingcode
+lingcode> /project:explain-staged</code></pre>
+
+      <h2 id="auth">Auth &amp; API keys</h2>
+      <p>Three sources, checked in this order: <strong>environment variable</strong>, <strong>OS secret store</strong> (macOS Keychain on Mac, chmod-600 <code>~/.config/lingcode/keys.json</code> on Linux), <strong>config file</strong>. Any one is enough.</p>
+      <pre><code># Browser-assisted: pick a provider with arrow keys (12 supported), opens its
+# console, prompts for the key, stores in the Keychain. Offers to set the
+# chosen provider as default.
+lingcode auth login
+
+# Skip the picker
+lingcode auth login --provider deepseek
+lingcode auth login --provider openai
+
+# Direct
+lingcode auth set anthropic sk-ant-...
+lingcode auth set deepseek sk-...
+
+# See what's configured (values masked)
+lingcode auth status
+
+# Remove a key
+lingcode auth delete anthropic</code></pre>
+      <p><strong>About OAuth:</strong> Anthropic does not issue OAuth client IDs to third-party CLIs, so a true <code>/login</code> OAuth flow is not possible. <code>lingcode auth login</code> is the practical replacement — it opens the console in your browser, waits for you to paste the key, and stores it.</p>
+      <p><strong>Other providers</strong> (openai, groq, together, openrouter, mistral, xai, fireworks, ollama) don't use the Keychain path — just set their environment variable in your shell:</p>
+      <pre><code>export OPENAI_API_KEY=sk-...
+export GROQ_API_KEY=gsk-...</code></pre>
+
+      <h2 id="skills-agents">Skills &amp; subagents</h2>
+      <p>Both load from the same paths Claude Code uses, so existing libraries work unchanged. Project files in <code>.claude/</code>, user-level files in <code>~/.claude/</code>, project wins on name clash.</p>
+
+      <h3>Skills</h3>
+      <p>An expertise packet the model can pull in when it's relevant. Put one at <code>.claude/skills/&lt;name&gt;/SKILL.md</code> with YAML frontmatter:</p>
+      <pre><code>---
+name: pr-reviewer
+description: Review a GitHub PR with focus on security, correctness, and style.
+---
+
+When asked to review a PR, fetch it via `gh pr view`, then check:
+1. Security issues (injection, auth bypass)
+2. Correctness (edge cases, error handling)
+3. Style (matches repo conventions)</code></pre>
+      <p>Loaded automatically into the system prompt on every provider. Disable with <code>--no-skills</code>; list with <code>/skills</code>.</p>
+
+      <h3>Subagents</h3>
+      <p>A focused agent the model can dispatch to via the <code>Task</code> tool — runs in a fresh context with its own system prompt and (optionally) its own model and tool subset. Put one at <code>.claude/agents/&lt;name&gt;.md</code>:</p>
+      <pre><code>---
+name: flake-hunter
+description: Diagnose intermittently-failing tests by rerunning and correlating with recent commits.
+model: deepseek-v4-pro
+tools: Read, Grep, Bash
+---
+
+Check git log for recent changes near the failing test. Run the test N times
+and look for non-determinism: time, network, randomness, parallel ordering.</code></pre>
+      <p>The model invokes a subagent with <code>Task(agent: "flake-hunter", prompt: "...")</code>. Subagents run sequentially, can't recursively spawn more subagents (no Task-in-Task), and inherit the parent's permission decider. List with <code>/agents</code>.</p>
+      <p>On the Claude provider, subagents come from the Agent SDK's built-in Task tool — works the same way to the model.</p>
+
+      <h2 id="mcp">MCP servers, hooks, custom commands</h2>
+      <p>Compatible with Claude Code's project conventions, on every provider.</p>
+
+      <h3>MCP servers</h3>
+      <p>Put a <code>.mcp.json</code> at the project root (or <code>~/.claude.json</code> globally):</p>
+      <pre><code>{
+  "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  }
+}</code></pre>
+      <p>Override with <code>--mcp-config &lt;path&gt;</code>. Disable with <code>--no-mcp</code>. <strong>Both Claude and OpenAI-compat providers</strong> consume MCP stdio servers — connected tools show up alongside built-ins in the model's tool list.</p>
+
+      <h3>Hooks</h3>
+      <p>Put hooks in <code>.claude/settings.json</code>. They run as shell commands with <code>CLAUDE_TOOL_NAME</code>, <code>CLAUDE_TOOL_INPUT</code>, <code>CLAUDE_TOOL_RESULT</code> (for <code>PostToolUse</code>), and <code>CLAUDE_USER_PROMPT</code> (for <code>UserPromptSubmit</code>) in the environment. <code>LINGCODE_*</code> mirrors are also set if you'd rather not depend on Claude-branded names. Hooks fire on <strong>every</strong> provider.</p>
+      <pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "echo about to edit: $CLAUDE_TOOL_INPUT" }] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "logger -t lingcode \"$CLAUDE_USER_PROMPT\"" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "say done" }] }
+    ]
+  }
+}</code></pre>
+
+      <h3>Custom slash commands</h3>
+      <p>Markdown files under <code>.claude/commands/</code> (project) or <code>~/.claude/commands/</code> (user). Same format as Claude Code — the file body is the prompt.</p>
+
+      <h2 id="permissions">Permissions, output styles, status line</h2>
+      <p>Three more <code>.claude/settings.json</code> blocks. All three apply on every provider.</p>
+
+      <h3>Permission patterns</h3>
+      <p>Fine-grained allow/deny/ask rules layered on top of the chosen permission mode. Glob syntax: <code>*</code> matches any run of non-slash characters, <code>**</code> matches a path. Precedence: <strong>deny &gt; ask &gt; allow</strong>. Ask forces an interactive prompt even under <code>--yolo</code>.</p>
+      <pre><code>{
+  "permissions": {
+    "allow": ["Bash(git *)", "Read(**/*.swift)"],
+    "deny":  ["Bash(rm *)", "Bash(curl *)"],
+    "ask":   ["Write(**)", "Edit(**)"]
+  }
+}</code></pre>
+      <h3>Hardcoded security rules</h3>
+      <p>A small set of destructive patterns are blocked unconditionally — your settings cannot override them. These compile once at startup and fire before any permission round-trip:</p>
+      <ul>
+        <li><code>rm -rf /</code> and recursive deletes of system root</li>
+        <li><code>mkfs</code> (format a filesystem)</li>
+        <li><code>dd</code> writing to raw disk devices</li>
+        <li>Writes to <code>/etc</code>, <code>/System</code></li>
+        <li>Tampering with <code>~/.ssh/authorized_keys</code></li>
+        <li>Fork bomb patterns</li>
+      </ul>
+      <p>These rules apply to every provider and every session — REPL, <code>ask</code>, <code>serve</code>, and <code>acp-serve</code>. They wrap the permission decider chain so the veto fires even when <code>--yolo</code> or an external ACP client would otherwise auto-approve.</p>
+
+      <h3>Output styles</h3>
+      <p>Append a custom voice / format to the system prompt. Save styles under <code>.claude/output-styles/&lt;name&gt;.md</code> (or <code>~/.claude/output-styles/</code>). Pick one with <code>--output-style &lt;name&gt;</code>; list with <code>/output-styles</code>. The built-in <code>engineer</code> style is the default.</p>
+
+      <h3>Status line</h3>
+      <p>Customize the prompt with a shell command. Runs once per turn (not per keystroke), 2-second timeout, falls back silently to the default prompt on failure.</p>
+      <pre><code>{
+  "statusLine": {
+    "type": "command",
+    "command": "printf '%s · %st · $%s' \"$LINGCODE_MODEL\" \"$LINGCODE_TURN\" \"$LINGCODE_COST_USD\""
+  }
+}</code></pre>
+      <p>Env vars passed in: <code>LINGCODE_SESSION</code>, <code>LINGCODE_MODEL</code>, <code>LINGCODE_TURN</code>, <code>LINGCODE_INPUT_TOKENS</code>, <code>LINGCODE_OUTPUT_TOKENS</code>, <code>LINGCODE_COST_USD</code>, <code>LINGCODE_CWD</code>. Claude Code's <code>CLAUDE_*</code> mirrors are set too.</p>
+
+      <h3>Background tasks</h3>
+      <p>Long-running shell processes (dev servers, watchers) start with <code>Bash(run_in_background: true)</code> and return a task id immediately. Poll with the <code>Monitor</code> tool — it returns only the new bytes since the last poll, plus whether the process is still running. <code>Monitor(action: "list")</code> shows everything; <code>Monitor(action: "kill", id: "bg_3")</code> stops one. Cap of 8 concurrent background tasks per session.</p>
+
+      <h2 id="app-ipc">Talking to the running app</h2>
+      <p>When LingCode.app is open, these commands drive it over a Unix socket at <code>~/Library/Application Support/LingCode/ipc.sock</code>:</p>
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>lingcode ping</code></td><td>Check whether the app is running and responsive.</td></tr>
+          <tr><td><code>lingcode open path/to/file.swift</code></td><td>Open a file or folder in the app (launches it if needed).</td></tr>
+          <tr><td><code>lingcode status</code></td><td>Focused project and any active agent runs.</td></tr>
+          <tr><td><code>lingcode ask "..."</code></td><td>Route the prompt through the app; stream its answer to stdout.</td></tr>
+          <tr><td><code>lingcode watch</code></td><td>Tail agent activity in real time. Ctrl-C to stop.</td></tr>
+        </tbody>
+      </table>
+      <p>Pass <code>--headless</code> to <code>ask</code> to force local execution even with the app open.</p>
+
+      <h2 id="serve">Expose as HTTP server</h2>
+      <p><code>lingcode serve</code> runs a long-lived HTTP server that exposes the agent over Server-Sent Events. Use it to drive LingCode from a VS Code extension, web UI, or scripts on another box — same agent core that powers the REPL and one-shot <code>ask</code>.</p>
+      <pre><code>lingcode serve                                   # bind 127.0.0.1:7878
+lingcode serve --port 8080
+lingcode serve --bind 0.0.0.0 --allow-remote     # opt in to non-loopback
+lingcode serve --new-token                       # rotate the bearer token
+lingcode serve --bridge-daemon auto              # reuse a running bridge daemon</code></pre>
+      <p>Auth: <code>Authorization: Bearer &lt;token&gt;</code>. The token is generated on first start, written to <code>~/.lingcode/server.token</code> (chmod 600), and printed to stderr. Bind defaults to loopback; non-loopback requires <code>--allow-remote</code>.</p>
+      <h3>Endpoints (v1)</h3>
+      <table>
+        <tbody>
+          <tr><td><code>GET /v1/ping</code></td><td>Liveness + version</td></tr>
+          <tr><td><code>POST /v1/agent/ask</code></td><td>SSE stream of agent events</td></tr>
+          <tr><td><code>POST /v1/agent/permission/{requestId}</code></td><td>Allow/deny a Claude tool call</td></tr>
+          <tr><td><code>POST /v1/agent/cancel/{queryId}</code></td><td>Cancel an in-flight query</td></tr>
+        </tbody>
+      </table>
+      <h3>Streaming an agent query</h3>
+      <pre><code>TOKEN=$(cat ~/.lingcode/server.token)
+
+# Liveness
+curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:7878/v1/ping
+
+# Streaming ask (-N disables curl buffering)
+curl -N -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"provider":"claude","prompt":"list files","cwd":"'"$PWD"'"}' \
+     http://127.0.0.1:7878/v1/agent/ask</code></pre>
+      <p>SSE frames carry one event per JSON object. Claude events: <code>query_started</code>, <code>assistant_text</code>, <code>tool_use</code>, <code>tool_result</code>, <code>permission_request</code>, <code>permission_resolved</code>, <code>token_usage</code>, <code>query_finished</code> (terminal), <code>query_failed</code> / <code>query_cancelled</code> / <code>error</code>. DeepSeek and OpenAI-compat providers emit a subset — they include <code>tool_use</code> but skip <code>permission_request</code> (tools execute without interactive approval).</p>
+      <h3>Tool-permission round-trip</h3>
+      <p>When Claude requests a tool that needs approval, you'll see a <code>permission_request</code> SSE event with a <code>requestId</code>. POST allow/deny back:</p>
+      <pre><code>curl -s -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"behavior":"allow"}' \
+     http://127.0.0.1:7878/v1/agent/permission/&lt;requestId&gt;</code></pre>
+      <p>Or <code>{"behavior":"deny","message":"…"}</code> to refuse with a hint shown back to the model. The SSE stream resumes when the decision arrives.</p>
+      <h3>Multi-account &amp; daemon reuse</h3>
+      <p>Pass <code>"account": "work"</code> in the ask body to select a per-request keychain slot (matches <code>lingcode auth login --account work</code>). Pass <code>--bridge-daemon auto</code> at startup to reuse a running <code>lingcode bridge daemon-start</code> instead of cold-spawning Node per Claude query — saves ~200–500ms per request.</p>
+      <p>CORS is deny-by-default and TLS is not implemented — front with caddy / nginx / cloudflared if you expose the server beyond the host.</p>
+
+      <h2 id="acp-serve">External agent clients (acp-serve)</h2>
+      <p><code>lingcode acp-serve</code> runs a stdio-based Agent Control Protocol (ACP) host. External editors and AI clients — such as Zed or gemini-cli — can drive the full LingCode agent loop without going through the HTTP server. Any provider works.</p>
+      <pre><code># Drive the Claude agent over stdio
+lingcode acp-serve --agent claude
+
+# Drive a DeepSeek agent
+lingcode acp-serve --agent deepseek
+
+# Drive any OpenAI-compatible provider
+lingcode acp-serve --agent openai-compat:groq
+lingcode acp-serve --agent openai-compat:openrouter
+
+# Set the working directory (defaults to cwd)
+lingcode acp-serve --agent claude --cwd ~/my-project</code></pre>
+      <p>The ACP protocol is a JSON-lines message exchange over stdin/stdout. Each agent session is multi-turn and stateful — the external client issues prompts and receives a structured stream of events (<code>assistant_text</code>, <code>tool_use</code>, <code>tool_result</code>, <code>permission_request</code>, and terminal frames like <code>session_finished</code>).</p>
+      <p>Security rules fire before every ACP round-trip: <code>HardcodedDenyDecider</code> blocks destructive patterns regardless of client instructions; <code>ACPClientPermissionDecider</code> then forwards remaining requests to the external client for allow/deny.</p>
+      <p>Credential resolution uses the same chain as the REPL: macOS Keychain → environment variable → config file. No extra auth configuration needed if you already have keys stored via <code>lingcode auth login</code>.</p>
+
+      <h2 id="reference">Subcommand reference</h2>
+      <table>
+        <thead><tr><th>Subcommand</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>repl</code> (default)</td><td>Interactive multi-turn session. <code>lingcode</code> with no args.</td></tr>
+          <tr><td><code>ask</code></td><td>One-shot prompt; supports streaming, JSON output, attachments, resume.</td></tr>
+          <tr><td><code>auth</code></td><td><code>login</code> / <code>set</code> / <code>get</code> / <code>delete</code> / <code>status</code> against the OS secret store.</td></tr>
+          <tr><td><code>config</code></td><td>Read or write <code>~/.lingcode/config.json</code> — defaults, stored keys.</td></tr>
+          <tr><td><code>init</code></td><td>Generate a <code>CLAUDE.md</code> for the current project by analysing the repo.</td></tr>
+          <tr><td><code>history</code></td><td>List past sessions from <code>~/.lingcode/history.jsonl</code>.</td></tr>
+          <tr><td><code>completion zsh|bash|fish</code></td><td>Print a shell completion script.</td></tr>
+          <tr><td><code>ping</code></td><td>IPC probe for the running app.</td></tr>
+          <tr><td><code>open</code></td><td>Open file or folder in the running app.</td></tr>
+          <tr><td><code>status</code></td><td>App focus / agent status.</td></tr>
+          <tr><td><code>watch</code></td><td>Stream live agent activity.</td></tr>
+          <tr><td><code>install</code></td><td>Symlink <code>lingcode</code> onto your PATH.</td></tr>
+          <tr><td><code>serve</code></td><td>Run an HTTP server (<code>/v1/agent/ask</code> SSE) so external clients can drive the agent. <a href="#serve">Details</a>.</td></tr>
+          <tr><td><code>acp-serve</code></td><td>Run a stdio-based ACP host for external editors (Zed, gemini-cli). <a href="#acp-serve">Details</a>.</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="troubleshooting">Troubleshooting</h2>
+
+      <h3><code>lingcode: ANTHROPIC_API_KEY is not set</code></h3>
+      <p>Fix with <code>lingcode auth login</code>, or export in your shell, or run <code>lingcode config set anthropic-api-key sk-ant-...</code>.</p>
+
+      <h3><code>lingcode: &lt;PROVIDER_API_KEY&gt; is not set</code></h3>
+      <p>OpenAI-compatible providers use plain env vars. For custom names: <code>lingcode --provider openai --api-key-env MY_KEY</code>.</p>
+
+      <h3><code>lingcode: couldn't find Claude agent bridge</code></h3>
+      <p>The Claude provider needs <code>bridge.mjs</code>, which ships inside LingCode.app or the standalone CLI tarball. Either install LingCode.app at <code>/Applications</code>, or point at a dev copy with <code>export LINGCODE_AGENT_BRIDGE_DIR=/path/to/agent-bridge</code>.</p>
+
+      <h3><code>lingcode: bundled Node.js runtime is missing</code></h3>
+      <p>The macOS CLI tarball ships its own Node — you shouldn't need to install one. If this error appears, the bundled binary went missing (corrupted install, manual deletion, or a Linux build): reinstall lingcode (<code>curl -fsSL https://lingcode.dev/install-cli.sh | sh</code>). As a fallback, install Node.js (<a href="https://nodejs.org/" rel="noopener">nodejs.org</a>) or set <code>NODE</code> to an explicit path. Only the Claude provider uses Node; OpenAI-compatible providers are pure Swift.</p>
+
+      <h3>Rate-limited / 429 / overloaded</h3>
+      <p>Both <code>ask</code> and <code>repl</code> retry automatically with exponential backoff (up to 5 attempts, up to 60s apart). You'll see <code>rate limited (attempt N/5) — retrying in Xs…</code> on stderr.</p>
+
+      <h3>The app responds, but I wanted headless</h3>
+      <p><code>lingcode ask</code> routes through the app by default when it's open. Pass <code>--headless</code> to force local execution.</p>
+
+      <h3>I pasted an API key into my terminal</h3>
+      <p>Rotate it at the provider's dashboard. Anything in your shell history or tmux scrollback should be treated as leaked. Prefer <code>lingcode auth login</code> (browser paste) or <code>lingcode auth set &lt;provider&gt; &lt;key&gt;</code> — neither writes the key to stdout.</p>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">More:</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;"><a href="/features.html">Full feature list</a> · <a href="/getting-started.html">App getting started</a> · <a href="/support.html">Support &amp; FAQ</a></p>
+        <a href="/">Download LingCode →</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

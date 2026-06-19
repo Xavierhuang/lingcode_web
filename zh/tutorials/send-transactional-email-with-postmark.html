@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 Postmark 发送事务性邮件 — LingCode 教程</title>
+  <meta name="description" content="Postmark 是以送达率为核心的邮件 API，专注于事务性邮件，严格防止进入垃圾箱。注册、验证 DNS、立即发送。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/send-transactional-email-with-postmark.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/send-transactional-email-with-postmark.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Postmark 发送事务性邮件",
+  "description": "Postmark 的核心卖点只有一个：送达率。他们主动审查发件方，拒绝营销邮件，并为事务性流量使用独立 IP。Postmark 发出的邮件比任何通用服务商都更可靠地落入收件箱——代价是略高的单封邮件费用。",
+  "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "注册账号",
+      "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "验证发件域名",
+      "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "安装 SDK",
+      "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "发送第一封邮件",
+      "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "使用模板",
+      "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html#step-5"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "name": "配置消息流（事务性 vs 广播）",
+      "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html#step-6"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 Postmark 发送事务性邮件",
+      "item": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-postmark.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/send-transactional-email-with-postmark.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">后端集成</a>
+      <span>/</span>
+      <span>使用 Postmark 发送事务性邮件</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 Postmark 发送事务性邮件</h1>
+      <p class="intro">Postmark 的核心卖点只有一个：送达率。他们主动审查发件方，拒绝营销邮件，并为事务性流量使用独立 IP。Postmark 发出的邮件比任何通用服务商都更可靠地落入收件箱——代价是略高的单封邮件费用。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>什么时候选 Postmark</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>选 Postmark 的场景</strong>——收件箱落地率是第一优先级时。密码重置、魔法链接、收据等任何落入垃圾箱都会造成真实损失的邮件。</li>
+            <li><strong>选 <a href="/zh/tutorials/send-transactional-email-with-resend.html">Resend</a></strong>——单封邮件价格更低，且支持 React Email 模板。</li>
+            <li><strong>选 <a href="/zh/tutorials/send-transactional-email-with-sendgrid.html">SendGrid</a></strong>——需要企业级发送量或子账号体系时。</li>
+            <li><strong>选 <a href="/zh/tutorials/send-transactional-email-with-aws-ses.html">AWS SES</a></strong>——已在使用 AWS，且每千封邮件只需 $0.10。</li>
+            <li>Postmark 明确禁止在其事务性服务器上发送营销邮件。如果同时需要发送简报，请使用独立的营销服务商（如 Loops、Customer.io），或将 Postmark 账号拆分为事务性流和广播流。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>注册账号</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>前往 <a href="https://account.postmarkapp.com/sign_up" target="_blank" rel="noopener">postmarkapp.com ↗</a> 注册。免费套餐：每月 100 封邮件，永久有效。试用版：每月 100 封，之后 $15/月可发 10K 封。</p>
+          <p>创建一个 <strong>Server</strong>——Postmark 对项目的称呼。每个 Server 有独立的 API 令牌。常见做法：每个环境（生产、预发布）各一个 Server。</p>
+        </div>
+      </div>
+
+      <h2>验证发件域名</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>在验证所有权之前，Postmark 不允许你从 <code>@yourdomain.com</code> 发送邮件。进入 Server → <strong>Sender Signatures → Add Domain</strong>。</p>
+          <p>在你的 <a href="/zh/tutorials/connect-domain-to-server-with-dns.html">DNS 服务商</a>添加三条记录：</p>
+          <ul>
+            <li><strong>DKIM</strong>（TXT 记录）——密码学签名，证明邮件来自授权服务器。</li>
+            <li><strong>Return-Path</strong>（CNAME）——退信的目的地，完整送达率必需。</li>
+            <li><strong>SPF</strong>（TXT 记录，通常已存在——Postmark 会给出需要添加的 include 指令）。</li>
+          </ul>
+          <p>Postmark 会自动验证，通常 30 分钟内变绿。</p>
+          <p>可选：同时添加 <strong>DMARC</strong>。Postmark 提供了一个很好用的<a href="https://dmarc.postmarkapp.com/" target="_blank" rel="noopener">免费 DMARC 分析工具 ↗</a>，每周会通过邮件发送报告。</p>
+        </div>
+      </div>
+
+      <h2>获取 API 令牌</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>进入 Server → <strong>API Tokens</strong>，复制 <strong>Server API token</strong>：</p>
+          <pre><code>POSTMARK_SERVER_TOKEN=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code></pre>
+          <p>注意区分 Account API token（用于管理 Server，不用于发送邮件）。你的应用使用的是 Server token。</p>
+        </div>
+      </div>
+
+      <h2>安装 SDK</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <pre><code>npm install postmark</code></pre>
+          <p>其他语言：<a href="https://postmarkapp.com/developer/api/server-api" target="_blank" rel="noopener">Python、Ruby、PHP、Java、Go、.NET ↗</a>。也可以直接使用纯 HTTP——API 接口面积很小，都是 JSON。</p>
+        </div>
+      </div>
+
+      <h2>发送第一封邮件</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <pre><code>import { ServerClient } from "postmark";
+
+const client = new ServerClient(process.env.POSTMARK_SERVER_TOKEN);
+
+await client.sendEmail({
+  From: "hello@yourdomain.com",
+  To: "recipient@example.com",
+  Subject: "Hello from Postmark",
+  TextBody: "Plain text version",
+  HtmlBody: "&lt;p&gt;HTML body&lt;/p&gt;",
+  MessageStream: "outbound",   // "outbound" = 事务性；默认值
+});</code></pre>
+          <p>检查收件人收件箱。如果收到了，就大功告成。如果没收到，Postmark 控制台 → <strong>Activity</strong> 会显示每次发送尝试的状态及收件服务器的响应。</p>
+        </div>
+      </div>
+
+      <h2>使用模板</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>对于需要反复发送的邮件（欢迎邮件、密码重置、收据），使用 Postmark Templates——无需重新部署应用，直接在控制台编辑。</p>
+          <p>进入 Server → <strong>Templates → Create template</strong>。Postmark 使用 <a href="https://mustache.github.io/" target="_blank" rel="noopener">Mustache ↗</a> 语法来插入变量：</p>
+          <pre><code>&lt;p&gt;Hi {{name}},&lt;/p&gt;
+&lt;p&gt;Click here to verify: {{verifyUrl}}&lt;/p&gt;</code></pre>
+          <p>通过 ID 或别名发送：</p>
+          <pre><code>await client.sendEmailWithTemplate({
+  From: "hello@yourdomain.com",
+  To: user.email,
+  TemplateAlias: "welcome",   // 或 TemplateId: 12345
+  TemplateModel: {
+    name: user.name,
+    verifyUrl: `https://yourapp.com/verify/${token}`,
+  },
+});</code></pre>
+          <p>如果想要更好的模板开发体验，开源的 <a href="https://mjml.io/" target="_blank" rel="noopener">MJML ↗</a> 语言可以编译为邮件安全的 HTML，并与 Postmark 模板完全兼容。Postmark 还提供了免费的<a href="https://postmarkapp.com/transactional-email-templates" target="_blank" rel="noopener">预设计模板 ↗</a>供直接导入使用。</p>
+        </div>
+      </div>
+
+      <h2>配置消息流（事务性 vs 广播）</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Postmark 将事务性邮件（一对一，响应用户操作）与广播邮件（一对多，如简报）区分开来。两者使用不同的 IP 池，确保一次糟糕的广播不会污染你的事务性声誉。</p>
+          <ul>
+            <li><strong>Outbound（默认）</strong>——事务性邮件，包括密码重置、收据、魔法链接。</li>
+            <li><strong>Broadcast</strong>——简报或"通知所有用户"的批量邮件。</li>
+          </ul>
+          <p>如果只发事务性邮件，无需配置此项。如果同时需要广播，创建第二个消息流，并在对应发送调用中传入 <code>MessageStream: "broadcast"</code>。</p>
+        </div>
+      </div>
+
+      <h2>追踪打开、点击与退信</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>进入 Server → <strong>Settings → Tracking</strong>，切换以下选项：</p>
+          <ul>
+            <li><strong>打开追踪</strong>——在邮件中嵌入 1×1 像素图片，邮件被打开时触发。对参与度指标有用；但许多用户（及部分邮件客户端）会屏蔽。</li>
+            <li><strong>点击追踪</strong>——通过 Postmark 重写所有 URL。对点击率统计有用；在某些特殊情况下可能导致 URL 失效。</li>
+          </ul>
+          <p>对于密码重置或魔法链接邮件，<strong>请关闭点击追踪</strong>——它会重写 URL，而部分邮件客户端会预取 URL，可能意外消耗掉一次性令牌。</p>
+        </div>
+      </div>
+
+      <h2>通过 Webhook 监听退信</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>进入 Server → <strong>Webhooks → Add webhook</strong>，选择事件类型：退信、垃圾投诉、打开、点击、送达。Postmark 会以 POST 请求将事件详情发送到你的 URL。</p>
+          <p>最重要的一点：<strong>对硬退信地址进行屏蔽处理</strong>。持续向无效地址发送邮件是损害发件声誉最快的方式。Postmark 客户端支持查询屏蔽列表，退信 Webhook 会提供结构化的事件数据供你处理。</p>
+          <p><a href="https://postmarkapp.com/developer/webhooks/webhooks-overview" target="_blank" rel="noopener">Webhooks 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>常见错误</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>"Sender signature not confirmed"</strong>——域名尚未完成验证。等待 DKIM/Return-Path 生效，或重新触发验证。</li>
+            <li><strong>"Inactive recipient"</strong>——该地址曾经退信或被标记为垃圾，Postmark 已将其屏蔽。如果确认该地址安全，可在控制台手动解除屏蔽。</li>
+            <li><strong>"Approval required"</strong>——Postmark 对新账号设有审核流程，在通过前会限制发送量。有时会就使用场景追加提问。</li>
+            <li><strong>"Account locked"</strong>——Postmark 检测到疑似营销邮件或垃圾发送行为，他们对此非常严格。请参阅<a href="https://postmarkapp.com/support/article/839-acceptable-use-policy" target="_blank" rel="noopener">可接受使用政策 ↗</a>。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Postmark 对可接受使用有严格规定。</strong>他们会人工审核账号，对任何在事务性流中发送营销邮件的账号，会毫不犹豫地暂停服务——这是维护他们声誉的必要手段。如果不确定自己的使用场景是否符合要求，请在注册前阅读<a href="https://postmarkapp.com/support/article/839-acceptable-use-policy" target="_blank" rel="noopener">使用政策 ↗</a>。
+      </div>
+
+      <h2>定价说明</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p>免费套餐：每月 100 封，永久有效。</p>
+          <p>付费套餐：从 $15/月起，包含 10K 封邮件，超出后按比例计费。<a href="https://postmarkapp.com/pricing" target="_blank" rel="noopener">Postmark 定价 ↗</a>。</p>
+          <p>单封邮件成本大约是 Resend 的 2–3 倍，AWS SES 的 10 倍。你为的是送达率——在独立的收件箱落地测试中，Postmark 的表现始终名列前茅。</p>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <ul>
+        <li><a href="https://postmarkapp.com/developer" target="_blank" rel="noopener">Postmark 开发者文档 ↗</a></li>
+        <li><a href="https://postmarkapp.com/developer/api/email-api" target="_blank" rel="noopener">Email API 参考 ↗</a></li>
+        <li><a href="https://postmarkapp.com/developer/webhooks/webhooks-overview" target="_blank" rel="noopener">Webhooks ↗</a></li>
+        <li><a href="https://postmarkapp.com/transactional-email-templates" target="_blank" rel="noopener">免费邮件模板 ↗</a></li>
+        <li><a href="https://dmarc.postmarkapp.com/" target="_blank" rel="noopener">免费 DMARC 分析工具 ↗</a></li>
+      </ul>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h3>使用 Resend 发送邮件</h3>
+            <p>价格更实惠；支持 React Email 模板；以开发者体验为核心</p>
+          </a>
+          <a href="/zh/tutorials/send-transactional-email-with-sendgrid.html" class="tutorial-next-card">
+            <h3>使用 SendGrid 发送邮件</h3>
+            <p>企业级替代方案；支持子账号、IP 预热和邮件列表</p>
+          </a>
+          <a href="/zh/tutorials/send-transactional-email-with-aws-ses.html" class="tutorial-next-card">
+            <h3>使用 AWS SES 发送邮件</h3>
+            <p>已在使用 AWS 的话，每千封邮件仅需 $0.10</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速上线的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

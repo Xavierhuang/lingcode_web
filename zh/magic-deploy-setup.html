@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magic Deploy 配置：App Store Connect API Key 指南（iOS + macOS）| LingCode</title>
+  <meta name="description" content="一步步教你为 LingCode Magic Deploy 填写 Key ID、Issuer ID、Team ID 和 .p8 文件。几分钟内把 iOS 或 Mac 应用上传到 App Store。">
+  <meta name="keywords" content="App Store Connect API Key, Magic Deploy, LingCode 发布 iOS, .p8 文件, Key ID, Issuer ID, Team ID, altool, xcodebuild">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/magic-deploy-setup.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/magic-deploy-setup.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/magic-deploy-setup.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/magic-deploy-setup.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/magic-deploy-setup.html">
+  <meta property="og:title" content="Magic Deploy 配置：App Store Connect API Key 指南">
+  <meta property="og:description" content="去哪找 Key ID、Issuer ID、Team ID 和 .p8 文件，让 LingCode 把你的 iOS 或 Mac 应用上传到 App Store。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Magic Deploy 配置——App Store Connect API Key 指南">
+  <meta name="twitter:description" content="填写 Key ID、Issuer ID、Team ID 和 .p8 文件。几分钟内用 LingCode 发布 iOS 或 Mac 应用。">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "inLanguage": "zh-CN",
+    "name": "为 LingCode Magic Deploy 配置 App Store Connect API Key",
+    "description": "如何获取 LingCode Magic Deploy 上传 iOS 或 Mac 应用到 App Store 所需的 Key ID、Issuer ID、Team ID 与 .p8 文件。",
+    "step": [
+      { "@type": "HowToStep", "name": "在 App Store Connect 创建 API Key", "text": "登录 appstoreconnect.apple.com，打开 Users and Access，切换到 Integrations 标签，创建一个 Admin 或 App Manager 权限的 App Store Connect API Key。" },
+      { "@type": "HowToStep", "name": "下载 .p8 文件", "text": "点击 Download API Key。.p8 文件只能下载一次。保存好并命名为 AuthKey_<KeyID>.p8。" },
+      { "@type": "HowToStep", "name": "复制 Key ID 与 Issuer ID", "text": "在同一个 Keys 页面，复制 10 位 Key ID 与表格上方的 UUID 形式的 Issuer ID。" },
+      { "@type": "HowToStep", "name": "找到你的 Team ID", "text": "登录 developer.apple.com/account，打开 Membership Details，复制 10 位 Team ID。" },
+      { "@type": "HowToStep", "name": "粘贴到 LingCode 并部署", "text": "打开 LingCode 中的 Magic Deploy，粘贴四个值，点击 Browse 附加 .p8，然后点击 Deploy to App Store。" }
+    ],
+    "publisher": { "@type": "Organization", "name": "LingCode" }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .blog-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.875rem; }
+    .blog-content pre code { background: none; padding: 0; }
+    .field-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .field-table th, .field-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .field-table th { color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field-table td { color: var(--text); }
+    .field-table { table-layout: fixed; }
+    .field-table td, .field-table th { word-break: break-word; overflow-wrap: anywhere; }
+    .field-table td:first-child { font-family: ui-monospace, monospace; color: var(--signal); }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .callout p { margin: 0; color: var(--text); }
+    .callout strong { color: var(--signal); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+    .sibling-nav { max-width: 800px; margin: 0 auto; padding: 20px 32px 0; }
+    .sibling-nav-inner { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .sibling-nav-label { font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px; }
+    .sibling-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 0.8125rem; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+    .sibling-pill:hover { color: var(--text); border-color: var(--signal); text-decoration: none; }
+    .sibling-pill.current { background: var(--signal); color: #fff; border-color: var(--signal); cursor: default; }
+    .sibling-pill.current:hover { color: #fff; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <header class="nav-bar">
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-hidden="true">
+    <div class="nav-inner">
+      <a href="/zh/" class="nav-logo">灵码</a>
+      <label for="nav-toggle" class="nav-burger" aria-label="切换菜单">
+        <span class="nav-burger-line" aria-hidden="true"></span>
+        <span class="nav-burger-line" aria-hidden="true"></span>
+        <span class="nav-burger-line" aria-hidden="true"></span>
+      </label>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="/zh/#demos">演示</a>
+        <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+        <a href="/zh/docs.html">文档</a>
+        <a href="/magic-deploy-setup.html" class="nav-cta">English</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <nav class="sibling-nav" aria-label="部署指南">
+      <div class="sibling-nav-inner">
+        <span class="sibling-nav-label">部署指南：</span>
+        <a href="/zh/magic-deploy-setup.html" class="sibling-pill current" aria-current="page">App Store</a>
+        <a href="/zh/google-play-deploy-setup.html" class="sibling-pill">Google Play</a>
+        <a href="/magic-deploy-web-platforms.html" class="sibling-pill">Web</a>
+        <a href="/magic-deploy-scripts.html" class="sibling-pill">脚本</a>
+      </div>
+    </nav>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">指南</p>
+        <h1>Magic Deploy 配置</h1>
+        <p>LingCode 把 iOS 或 Mac 应用上传到 App Store 所需的 Key ID、Issuer ID、Team ID 和 <code>.p8</code> 文件——都在哪里获取。平台会自动识别，无需手动选择。</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2>你在填什么</h2>
+      <p>在 LingCode 里点击 <strong>Magic Deploy</strong> 并选择 <strong>App Store Connect (API key)</strong> 时，你会看到四个字段。每一个都来自 Apple 开发者门户中不同的页面——本指南按 LingCode 展示它们的顺序逐一说明。</p>
+
+      <table class="field-table">
+        <thead>
+          <tr><th>字段</th><th>含义</th><th>去哪获取</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Key ID</td><td>API Key 的 10 位标识，如 <code>ABC123XYZ0</code>。</td><td>App Store Connect → Users and Access → Integrations → Keys</td></tr>
+          <tr><td>Issuer ID</td><td>团队 API 集成的 UUID。</td><td>同一个 Keys 页面（显示在表格上方）</td></tr>
+          <tr><td>Team ID</td><td>10 位 Apple Developer Team ID，如 <code>HPTTZS5J27</code>。</td><td>Apple Developer → Membership Details</td></tr>
+          <tr><td>.p8 文件</td><td>创建 API Key 时 Apple 只生成一次的私钥。</td><td>创建 Key 的瞬间下载——保存为 <code>AuthKey_&lt;KeyID&gt;.p8</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p><strong>两个应用内捷径能让这件事更轻松。</strong>Magic Deploy 会在任何 <code>xcodebuild</code> 调用之前先跑一次 <em>预检</em>：确认 Xcode（不是仅 Command Line Tools）处于选中状态，并确认 Keychain 里有与 Team ID 匹配的 <em>Apple Distribution</em> 证书——一秒钟内识别掉首次部署约 70% 的失败。字段旁的 <strong>Auto-bump build number</strong> 勾选框会在每次归档前跑 <code>agvtool next-version -all</code>，消灭第二常见的失败（"Redundant Binary Upload"）。自动递增默认关闭——首次部署时记得打勾。</p>
+      </div>
+
+      <div class="callout">
+        <p><strong>为什么这么多块？</strong>Apple 的部署流程很长，是因为它串起了一条 <em>信任链</em>：你的 Apple ID 证明你是你，你的 <a href="/glossary.html#team-id">Team ID</a> 证明是以哪个组织身份交付，你的 <a href="/glossary.html#apple-distribution">Apple Distribution 证书</a>证明团队持有私钥，<a href="/glossary.html#provisioning-profile">描述文件</a>证明该应用可用此证书与相应 Entitlements，签好的 <a href="/glossary.html#xcarchive">.xcarchive</a> 把这条链一路带到用户设备上，每次启动都会被验证。LingCode 要你填的每一个字段都接入这条链的一环——缺一不可。术语不熟？见 <a href="/glossary.html">术语表</a>。</p>
+      </div>
+
+      <h2>开始之前——一次性的 Apple 端准备</h2>
+      <p>Magic Deploy 的四个字段是<em>最后</em>一步。Apple 那边必须先就位几件事，否则上传会以 UI 不总能解释清楚的方式失败。把这份清单走一遍，项目生命周期里就不用再管了。</p>
+
+      <h3>1. 付费 Apple Developer Program 会员</h3>
+      <p>免费 Apple ID 可以在自己 Mac 上构建和运行，但<strong>无法</strong>上传到 App Store Connect。到 <a href="https://developer.apple.com/programs/enroll/" rel="noopener noreferrer">developer.apple.com/programs/enroll</a> 注册。个人 $99/年；组织账号需要 D-U-N-S 号，通常 3–10 个工作日审核。直到账号在 <a href="https://developer.apple.com/account" rel="noopener noreferrer">developer.apple.com/account</a> 上显示为 <em>Active</em>，<strong>下面所有</strong>步骤都不会起作用。</p>
+
+      <h3>2. 安装完整的 Xcode，不是只装 Command Line Tools</h3>
+      <p>LingCode Magic Deploy 调用 <code>xcodebuild</code>，它住在完整的 Xcode 应用里——单独的 Command Line Tools 不够。从 <a href="https://apps.apple.com/us/app/xcode/id497799835" rel="noopener noreferrer">Mac App Store</a> 或 <a href="https://developer.apple.com/download/all/" rel="noopener noreferrer">developer.apple.com/download</a> 安装 Xcode，打开一次接受许可，然后在终端确认：</p>
+      <pre><code>xcode-select -p
+# 应该输出：/Applications/Xcode.app/Contents/Developer</code></pre>
+      <p>如果它输出 <code>/Library/Developer/CommandLineTools</code>，把它指向 Xcode：</p>
+      <pre><code>sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -license accept</code></pre>
+
+      <h3>3. 在 Xcode 里用你的开发者账号登录</h3>
+      <p>打开 <strong>Xcode → Settings → Accounts</strong>。点 <strong>+</strong>，选 <strong>Apple ID</strong>，用持有开发者会员的账号登录。你要交付所用的团队应该出现在 Apple ID 下方；点击它，确认 Team ID 与你将粘贴到 LingCode 的那一个一致。</p>
+
+      <h3>4. 登录 Keychain 里有 Distribution 证书</h3>
+      <p><code>xcodebuild</code> 用 <strong>"Apple Distribution"</strong>（或旧称 <em>"Mac App Distribution"</em>）证书为归档签名。最简单的办法是在首次归档时让 Xcode 自动生成——也可以自己创建：</p>
+      <ul>
+        <li><strong>Xcode Settings → Accounts → Manage Certificates → + → Apple Distribution</strong>。Xcode 会创建证书并添加到登录 Keychain。</li>
+      </ul>
+      <p>在终端里做个快速检查：</p>
+      <pre><code>security find-identity -v -p codesigning | grep -i distribution</code></pre>
+      <p>应能看到一行 <code>1) 1A2B...  "Apple Distribution: Your Name (HPTTZS5J27)"</code>。括号里的 10 位就是你的 Team ID——必须与 LingCode 的 Team ID 字段匹配。</p>
+
+      <div class="callout">
+        <p><strong>证书是绑定本机的。</strong>如果你换机或重装 Mac，要么从旧机的 Keychain Access 导出/导入私钥，要么新建一张证书并从新机交付。Magic Deploy 无法从没有匹配私钥的机器上传。</p>
+      </div>
+
+      <h3>5. App Store Connect 上要有应用记录</h3>
+      <p>Apple 不会接受一个还不存在的 Bundle ID 的上传。先创建记录：</p>
+      <ol>
+        <li>登录 <a href="https://appstoreconnect.apple.com" rel="noopener noreferrer">appstoreconnect.apple.com</a>。</li>
+        <li><strong>My Apps → +</strong> → <strong>New App</strong>。</li>
+        <li><strong>Platforms：</strong>勾选 <strong>iOS</strong>、<strong>macOS</strong> 或二者——与你交付的 Xcode 目标对应。Magic Deploy 会从 Scheme 自动识别并选择正确的 <code>altool --type</code>。</li>
+        <li><strong>Bundle ID：</strong>选择与 Xcode 项目的 <em>Bundle Identifier</em>（见 target 的 <strong>General</strong> 页）完全一致的标识。下拉里没有？先到 <a href="https://developer.apple.com/account/resources/identifiers/list" rel="noopener noreferrer">developer.apple.com/account/resources/identifiers</a> 以 <strong>Mac App</strong> 类型（不是 iOS）注册。</li>
+        <li><strong>SKU：</strong>任意不再重用的内部字符串。创建后无法更改。<code>com-example-myapp</code> 是安全的默认值。</li>
+        <li><strong>User access：</strong>保持 <em>Full Access</em>，除非有理由限制。</li>
+      </ol>
+      <p>记录可以完全未填——没有截图、描述、定价——仍然无法提交审查，但<em>可以</em>往它上传 Build。这就是 Magic Deploy 干的事。</p>
+
+      <h2>你的 Xcode 项目必须有这些设置</h2>
+      <p>Apple 那边全准备好了，但如果 <code>.xcodeproj</code> 没为 Mac App Store 发布配好，上传照样会失败。打开目标的 <strong>Signing &amp; Capabilities</strong> 页逐项确认：</p>
+
+      <h3>Signing &amp; Capabilities</h3>
+      <ul>
+        <li><strong>Automatically manage signing</strong>——<strong>开启</strong>。Magic Deploy 生成的 <code>ExportOptions.plist</code> 把 <code>signingStyle</code> 设为 <code>automatic</code>，手动签名会冲突。</li>
+        <li><strong>Team</strong>——设为你将粘贴到 LingCode 的 Team ID 对应的同一个团队。这里有黄色警告三角，点一下解决（通常就是"添加账号"）。</li>
+        <li><strong>Bundle Identifier</strong>——与你在 App Store Connect 创建的应用记录匹配。拼写差异（<code>com.example.MyApp</code> vs <code>com.example.myapp</code>）会在上传时被拒。</li>
+        <li><strong>App Sandbox</strong>——<em>仅 Mac App Store 需要</em>。没有就点 <strong>+ Capability</strong> 加。只启用应用实际需要的 Entitlements（Network → Outgoing Connections、File Access 等）——不要"以防万一"全开，每项都会被审查。（iOS 目标跳过这一项——iOS 应用在 OS 层面默认沙盒。）</li>
+        <li><strong>Hardened Runtime</strong>——<em>仅 Mac App Store 需要</em>。Xcode 为新 macOS 目标自动加，老项目可能需要手动添加。（iOS 无此项。）</li>
+      </ul>
+
+      <h3>版本号与构建号</h3>
+      <p>在目标的 <strong>General</strong> 页下 <strong>Identity</strong> 区：</p>
+      <ul>
+        <li><strong>Version</strong>（<code>CFBundleShortVersionString</code>）——面向用户的版本号，如 <code>1.2.3</code>。App Store 审查看这个。</li>
+        <li><strong>Build</strong>（<code>CFBundleVersion</code>）——内部构建号。<strong>必须严格大于</strong>你此前为<em>相同 Version</em> 上传过的所有构建号。如果你上传了 <code>1.2.3 (42)</code>，下次 <code>1.2.3</code> 的上传至少得是 <code>43</code>。许多首次用 Magic Deploy 的失败就是"忘了往上加"。</li>
+      </ul>
+
+      <h3>Scheme</h3>
+      <p>LingCode 选择 <code>xcodebuild -list</code> 返回的 <strong>第一个 Scheme</strong>。如果你的项目有多个 Scheme（App + 测试 + 辅助目标），请确保构建可分发 App 的那个排在最前——在 <strong>Xcode → Product → Scheme → Manage Schemes</strong> 里重排。</p>
+      <p>在同一个对话框里确认 Scheme 是 <strong>Shared</strong>。非 Shared 的 Scheme 住在你个人的 <code>xcuserdata/</code> 里，<code>xcodebuild</code> 可能看不到。</p>
+
+      <h2>步骤 1 — 创建 App Store Connect API Key</h2>
+      <p>这一步一次拿下四个字段里的三个：<strong>Key ID</strong>、<strong>Issuer ID</strong> 和 <strong>.p8 文件</strong>。</p>
+      <ol>
+        <li>用持有开发者账号的 Apple ID 登录 <a href="https://appstoreconnect.apple.com" rel="noopener noreferrer">appstoreconnect.apple.com</a>。</li>
+        <li>顶部导航点 <strong>Users and Access</strong>。</li>
+        <li>切到 <strong>Integrations</strong> 标签，侧边栏选 <strong>App Store Connect API</strong>（有时只叫 <strong>Keys</strong>）。</li>
+        <li>点 <strong>+</strong> 生成新 Key。起名为 <em>"LingCode Magic Deploy"</em>，权限选——<strong>App Manager</strong> 足够上传 Build；若你还想让 LingCode 之后管理 App 元数据，用 <strong>Admin</strong>。</li>
+        <li>点 <strong>Generate</strong>。Apple 会显示一次性的 <strong>Download API Key</strong> 链接。</li>
+      </ol>
+
+      <div class="callout">
+        <p><strong>.p8 文件只能下载一次。</strong>Apple 不会让你重新下载。丢了就只能作废这把 Key 再新建一把。保存到你有备份的地方——文稿、iCloud 云盘，或支持文件附件的密码管理器。</p>
+      </div>
+
+      <p>下载的文件名通常是 <code>AuthKey_ABC123XYZ0.p8</code>。<code>AuthKey_</code> 和 <code>.p8</code> 之间那 10 个字符就是你的 <strong>Key ID</strong>。同一个 Key ID 出现在 Keys 页表格里；表格上方（<em>Issuer ID</em> 旁）那个长长的 UUID 就是你的 <strong>Issuer ID</strong>。</p>
+
+      <h3>复制到 LingCode</h3>
+      <ul>
+        <li><strong>Key ID</strong> → 粘贴到 Key ID 字段。</li>
+        <li><strong>Issuer ID</strong> → 粘贴到 Issuer ID 字段。</li>
+        <li><strong>.p8 文件</strong> → 在 LingCode 里点 <strong>Browse…</strong> 选刚下载的文件。</li>
+      </ul>
+
+      <h2>步骤 2 — 获取 Team ID</h2>
+      <p>Team ID 住在另一个站点——Apple Developer 门户，不是 App Store Connect。</p>
+      <ol>
+        <li>用同一个 Apple ID 登录 <a href="https://developer.apple.com/account" rel="noopener noreferrer">developer.apple.com/account</a>。</li>
+        <li>侧边栏点 <strong>Membership Details</strong>（老账号可能只显示 <strong>Membership</strong>）。</li>
+        <li>复制 10 位 <strong>Team ID</strong>。</li>
+      </ol>
+
+      <div class="callout">
+        <p>如果你属于多个团队（个人 + 组织等），确认选的团队就是你要交付应用在 App Store Connect 记录的那个团队。Team ID 与 API Key 必须对应同一个团队。</p>
+      </div>
+
+      <h2>步骤 3 — 点击 Deploy</h2>
+      <p>四个字段全填好、<code>.p8</code> 也选好后，<strong>Deploy to App Store</strong> 按钮就会变亮。在讲 LingCode 实际执行什么之前，先看看<em>手动</em>版是什么样——这有助于你理解自动化的意义。</p>
+
+      <h3>典型的手动归档 &amp; 上传流程</h3>
+      <p>没有 Magic Deploy 时，你大概会在 Xcode 和 App Store Connect 里走这串动作：</p>
+      <ol>
+        <li><strong>创建 App 记录。</strong>在 App Store Connect → <strong>My Apps</strong> → <strong>+</strong>，用与 Xcode 项目相同的 Bundle ID 新建 App。Bundle ID 还不存在就没法上传 Build。</li>
+        <li><strong>选择发布 Scheme。</strong>在 Xcode 的 Scheme 下拉里选能构建可分发目标的 Scheme（通常就是你的 App 的 Scheme，<strong>Release</strong> 配置——见 <strong>Product → Scheme → Edit Scheme → Archive</strong>）。</li>
+        <li><strong>归档。</strong><strong>Product → Archive</strong>。Xcode 构建 Release、用团队证书签名（自动签名会临时取回或创建 Distribution 描述文件），产出 <code>.xcarchive</code> 到 <code>~/Library/Developer/Xcode/Archives/</code>。</li>
+        <li><strong>打开 Organizer。</strong>归档完成后 Xcode 会自动跳到 <strong>Window → Organizer → Archives</strong>。选刚做好的那个。</li>
+        <li><strong>Validate（可选但推荐）。</strong>点 <strong>Validate App</strong>。Xcode 与 App Store Connect 交互检查归档——缺失图标、错误的 Info.plist 键、Entitlements 问题会在上传前暴露。</li>
+        <li><strong>Distribute App。</strong>点 <strong>Distribute App</strong> → <strong>App Store Connect</strong> → <strong>Upload</strong>。Xcode 会问签名方式（选 <em>Automatically manage signing</em>），然后上传到 App Store Connect。网络好时 1–5 分钟，视包大小而定。</li>
+        <li><strong>等待处理。</strong>Build 进入 App Store Connect 的 <strong>Processing</strong> 状态。Apple 的构建服务器会自行校验、符号化崩溃信息、提取元数据。耗时 2–30 分钟，不在你掌控之内。</li>
+        <li><strong>提交审查或分发到 TestFlight。</strong>处理完成后，Build 可挂到新 App 版本（用于 App Store 审查）或挂到 TestFlight 组（用于内测/外测）。</li>
+      </ol>
+      <p>最烦的是 3–6 步：在 Xcode 里来回点、每次答同样的签名问题、等 Organizer UI 响应。Magic Deploy 把这些全替换掉。</p>
+
+      <h3>LingCode Magic Deploy 实际执行什么</h3>
+      <p>在底层，<strong>Deploy to App Store</strong> 按钮调的是与 Xcode 相同的命令行工具。运行时你在项目的 <code>build/</code> 目录能看到。按顺序：</p>
+      <ol>
+        <li><strong>找到项目与 Scheme。</strong>LingCode 在已打开的项目目录里找 <code>.xcodeproj</code>，然后跑 <code>xcodebuild -list -project &lt;project&gt; -json</code> 枚举 Scheme，选第一个。<em>UI 里没有 Scheme 选项</em>——多 Scheme 项目里第一个不是你要的，请在 Xcode 的 <strong>Manage Schemes</strong> 重排，或暂时手动归档。</li>
+        <li><strong>归档。</strong>
+          <pre><code>xcodebuild archive \
+  -scheme &lt;scheme&gt; \
+  -configuration Release \
+  -archivePath build/&lt;scheme&gt;.xcarchive \
+  -destination "generic/platform=macOS"</code></pre>
+          Destination（<code>generic/platform=macOS</code> 或 <code>generic/platform=iOS</code>）和 <code>altool</code> 的 <code>--type</code> 参数会从 Scheme 的 <code>SUPPORTED_PLATFORMS</code> 自动选。你会在进度日志里看到 <code>[App Store] Detected platform: iOS</code> 或 <code>macOS</code>，构建前可以确认。
+        </li>
+        <li><strong>生成 <code>ExportOptions.plist</code>。</strong>LingCode 会向 <code>build/ExportOptions.plist</code> 写入三键 plist：
+          <pre><code>&lt;key&gt;method&lt;/key&gt;        &lt;string&gt;app-store&lt;/string&gt;
+&lt;key&gt;teamID&lt;/key&gt;        &lt;string&gt;&lt;your Team ID&gt;&lt;/string&gt;
+&lt;key&gt;signingStyle&lt;/key&gt;  &lt;string&gt;automatic&lt;/string&gt;</code></pre>
+          这就是 Team ID 字段为什么重要——它最终落到这里，必须与你 Keychain 里安装的签名证书所属团队一致。
+        </li>
+        <li><strong>Export。</strong>
+          <pre><code>xcodebuild -exportArchive \
+  -archivePath build/&lt;scheme&gt;.xcarchive \
+  -exportPath build/AppStoreExport \
+  -exportOptionsPlist build/ExportOptions.plist</code></pre>
+          产出 <code>build/AppStoreExport/&lt;scheme&gt;.app</code>，一个签好名、打包完毕、可上传的 App 包。
+        </li>
+        <li><strong>上传。</strong>
+          <pre><code>API_PRIVATE_KEYS_DIR=&lt;dir with .p8&gt; xcrun altool \
+  --upload-app \
+  -f build/AppStoreExport/&lt;scheme&gt;.app \
+  --type macos \
+  --apiKey &lt;Key ID&gt; \
+  --apiIssuer &lt;Issuer ID&gt;</code></pre>
+          就是 Xcode 的 <em>Distribute App → Upload</em> 内部用的那个 <code>altool</code>。你提供的 <code>.p8</code> 是它给 App Store Connect 签 JWT 的依据。
+        </li>
+      </ol>
+      <p>以上命令的每一行 <code>stdout</code> / <code>stderr</code> 都会实时流到进度面板，所以出问题时（坏证书、缺 Entitlement、App Store Connect 校验失败）你看到的就是 Xcode 本会告诉你的那条错误——不用点 Organizer 去翻。</p>
+      <p>成功后，Build 以 <strong>Processing</strong> 状态落到 App Store Connect。Apple 处理完（2–30 分钟，不在 LingCode 掌控之内）后，它会出现在 <strong>TestFlight → Builds</strong> 里，可提交审查或分发测试。</p>
+
+      <h2>读进度日志</h2>
+      <p>Magic Deploy 运行时，右侧面板会流式显示 <code>xcodebuild</code> 和 <code>xcrun altool</code> 的实时输出。所有以 <code>[App Store]</code> 开头的行是 LingCode 自己的状态标记；其他都是 Apple 工具的原样输出。</p>
+      <p>一次成功的跑大概长这样：</p>
+      <pre><code>[App Store] Archiving...
+Build settings from command line:
+    ...
+ArchiveSucceeded
+[App Store] Writing ExportOptions.plist...
+[App Store] Exporting...
+ExportArchive: signing
+ExportArchive: writing /…/build/AppStoreExport/MyApp.app
+[App Store] Uploading...
+*** Upload Progress: ...
+No errors uploading '…/MyApp.app'.
+[App Store] Upload complete. Check App Store Connect for the new build.</code></pre>
+      <p><strong>出问题时去哪看：</strong>滚到日志<em>最末端</em>。<code>xcodebuild</code> 在构建过程中会打印一堆警告——<em>真正</em>的错误几乎总在最后 20 行，通常在 <code>** ARCHIVE FAILED **</code>、<code>** EXPORT FAILED **</code> 或 <code>*** Error: ...</code> 开头那行之后。LingCode 的简短提示 "Archive failed. Check the log above." 只是指路牌；诊断细节在原始输出里。</p>
+
+      <h2>按阶段排错</h2>
+      <p>按失败发生的阶段分类——各自的修复路径不同。</p>
+
+      <h3>归档阶段（<code>xcodebuild archive</code>）</h3>
+      <p>大多数首次错误在这里——因为这是你的项目第一次真正为 Release 构建并做真实签名。</p>
+      <table class="field-table">
+        <thead><tr><th>日志包含</th><th>原因</th><th>修复</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>No signing certificate "Apple Distribution" found</td>
+            <td>Keychain 里没有 Distribution 证书，或有的那张属于别的团队。</td>
+            <td>Xcode → Settings → Accounts → Manage Certificates → + → <strong>Apple Distribution</strong>，再重新 Deploy。</td>
+          </tr>
+          <tr>
+            <td>No profiles for 'com.example.app' were found</td>
+            <td>自动签名无法为此 Bundle ID 创建或取回描述文件，通常是 Bundle ID 未在 developer.apple.com 注册。</td>
+            <td>到 <a href="https://developer.apple.com/account/resources/identifiers/list" rel="noopener noreferrer">developer.apple.com/account/resources/identifiers</a> 以 <strong>Mac App</strong> 类型注册 Bundle ID，再重试。</td>
+          </tr>
+          <tr>
+            <td>Provisioning profile doesn't include the current device</td>
+            <td>你开着手动签名用了错误的描述文件。</td>
+            <td>Signing &amp; Capabilities → 重开 <strong>Automatically manage signing</strong>。</td>
+          </tr>
+          <tr>
+            <td>Command PhaseScriptExecution failed with a nonzero exit code</td>
+            <td>某个 Run Script 构建阶段（CocoaPods、SwiftLint、SwiftGen 等）出错。</td>
+            <td>打开目标的 <strong>Build Phases</strong>，找到失败脚本，它实际的错误就在上面几行的日志里。</td>
+          </tr>
+          <tr>
+            <td>Swift 编译错误（<code>error: …</code>）</td>
+            <td>Release 构建编译不过——常见原因是 <code>#if DEBUG</code> 分支或条件 Import。</td>
+            <td>在 Xcode 里把 Scheme 的 Run 配置切到 <strong>Release</strong>，本地构建直到通过。</td>
+          </tr>
+          <tr>
+            <td>Missing required architecture x86_64</td>
+            <td>项目没构建 Universal 二进制。Mac App Store 接受 Apple Silicon-only，但混合配置常在这儿挂。</td>
+            <td>Target → Build Settings → <strong>Architectures</strong> → 设为 <code>$(ARCHS_STANDARD)</code>。移除任何硬编码的 <code>arm64</code>-only 覆盖。</td>
+          </tr>
+          <tr>
+            <td>The archive was not created</td>
+            <td>Scheme 未启用 Archive，或 Archive 的 Build Configuration 不是 Release。</td>
+            <td>Product → Scheme → Edit Scheme → <strong>Archive</strong> → <strong>Build Configuration: Release</strong>，并确保 App target 已勾选。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>导出阶段（<code>xcodebuild -exportArchive</code>）</h3>
+      <table class="field-table">
+        <thead><tr><th>日志包含</th><th>原因</th><th>修复</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>error: exportArchive: No "Apple Distribution" signing certificate matching team ID</td>
+            <td>生成的 ExportOptions.plist 里的 <code>teamID</code> 与 Keychain 里任何证书都不匹配。</td>
+            <td>修正 Magic Deploy 的 <strong>Team ID</strong>。跑 <code>security find-identity -v -p codesigning</code>——括号里的 10 位就是该粘的。</td>
+          </tr>
+          <tr>
+            <td>error: Provisioning profile "…" doesn't include the entitlement com.apple.security.app-sandbox</td>
+            <td>目标未启用 App Sandbox，但 Mac App Store 要求有。</td>
+            <td>Signing &amp; Capabilities → <strong>+ Capability → App Sandbox</strong>。</td>
+          </tr>
+          <tr>
+            <td>error: Provisioning profile "…" doesn't include the hardened runtime</td>
+            <td>Release 配置未启用 Hardened Runtime。</td>
+            <td>Signing &amp; Capabilities → <strong>+ Capability → Hardened Runtime</strong>，或 Build Settings 里设 <code>ENABLE_HARDENED_RUNTIME = YES</code>。</td>
+          </tr>
+          <tr>
+            <td>error: No matching profiles found for bundle identifier …</td>
+            <td>自动签名能生成 Development 描述文件但生成不了 Distribution——常见原因是 App Store Connect 的应用记录还不存在。</td>
+            <td>在 App Store Connect 创建应用记录（见"开始之前"第 5 步），再重新 Deploy。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>上传阶段（<code>xcrun altool --upload-app</code>）</h3>
+      <table class="field-table">
+        <thead><tr><th>日志包含</th><th>原因</th><th>修复</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Unable to find API key with Key ID …</td>
+            <td><code>altool</code> 在你选的目录里找不到 <code>AuthKey_&lt;KeyID&gt;.p8</code>。</td>
+            <td>在 Magic Deploy 里重新选 <code>.p8</code> 文件，并确保文件名精确为 <code>AuthKey_&lt;KeyID&gt;.p8</code>。改名会破坏 <code>altool</code>。</td>
+          </tr>
+          <tr>
+            <td>Authentication credentials are missing or invalid (HTTP 401)</td>
+            <td>Key ID、Issuer ID 或 <code>.p8</code> 对不上。</td>
+            <td>直接从 App Store Connect 的 <em>Keys</em> 页面复制，不要手打。Issuer ID 是 UUID（有短横）；Key ID 是 10 位字母数字。</td>
+          </tr>
+          <tr>
+            <td>Forbidden / ITMS-90166</td>
+            <td>API Key 没有上传权限。</td>
+            <td>App Store Connect → Users and Access → Integrations，编辑 Key，设为 <strong>App Manager</strong> 或 <strong>Admin</strong>。Developer 只读。</td>
+          </tr>
+          <tr>
+            <td>ERROR ITMS-90189: "Redundant Binary Upload"</td>
+            <td>你正在上传的 Build 号在 Apple 服务器上对此 Version 已经存在。</td>
+            <td>在 Xcode 提升 <strong>Build</strong> 号（target → General → Build）后重归档。</td>
+          </tr>
+          <tr>
+            <td>ERROR ITMS-90035: "Invalid Signature"</td>
+            <td>签名 App 未通过 Apple 的 codesign 校验——通常是嵌入框架用 Development 证书签了名，或某个 Helper 工具缺自身签名。</td>
+            <td>检查目标的 <strong>Signing &amp; Capabilities → Frameworks</strong>，确保每个嵌入框架写的是 <em>Embed &amp; Sign</em>。Helper 工具要加一个 <em>Embed &amp; Sign</em> 的 Copy Files 阶段。</td>
+          </tr>
+          <tr>
+            <td>ERROR ITMS-90338: "Non-public API usage"</td>
+            <td>某个框架（经常是分析 SDK）链接了 Apple 私有 API。</td>
+            <td>升级或移除该 SDK。Apple 的错误信息会指明具体符号。</td>
+          </tr>
+          <tr>
+            <td>ERROR ITMS-90713: "Missing Info.plist value"</td>
+            <td>缺少 <code>NSCameraUsageDescription</code>、<code>LSApplicationCategoryType</code> 等必要 Key。</td>
+            <td>把该 Key 加到目标的 <code>Info.plist</code>。错误信息里写了具体哪一个。</td>
+          </tr>
+          <tr>
+            <td>The network connection was lost / timed out</td>
+            <td>网络不稳。大包在慢速连接上会超 600 秒预算。</td>
+            <td>重试。若持续失败，把日志里的 <code>xcrun altool</code> 命令直接复制到终端跑——<code>altool</code> 会给更丰富的进度条，有时还能续传。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>上传成功后会发生什么</h2>
+      <p>Magic Deploy 完成时，Build 在 <strong>App Store Connect → 你的 App → TestFlight → macOS → Builds</strong>，初始状态是 <strong>Processing</strong>。Apple 的构建服务器会做它自己的上传后校验——符号化崩溃信息、扫描私有 API 使用、提取元数据。通常 5–30 分钟，高峰时可能拉长到一小时以上。处理完成（或以 <code>ITMS-</code> 错误失败）会发邮件。</p>
+      <p>处理完后，你有两条路：</p>
+      <ul>
+        <li><strong>TestFlight</strong>——把 Build 挂到内测或外测组分发给测试者。内测最多 100 位拥有 App Store Connect 访问权的用户，立即可拿到。外测要过一次简短的 Beta App Review（小更新通常 24h 内）。</li>
+        <li><strong>Submit for review</strong>——把 Build 挂到 <strong>macOS App</strong> 区下的新版本，填必要元数据（描述、截图、定价、隐私），点 <strong>Add for Review</strong>。macOS App 审查通常 24–72 小时。</li>
+      </ul>
+      <p>如果 Build 压根没出现——连 Processing 都看不到——查一下你 Apple ID 绑定的邮箱。Apple 会给服务端校验失败的二进制发拒稿邮件（<code>ITMS-90xxx</code> 代码），那些被拒的 Build 不会出现在 App Store Connect 里。</p>
+
+      <h2>速查：出问题去哪改</h2>
+      <table class="field-table">
+        <thead><tr><th>症状</th><th>在哪修</th></tr></thead>
+        <tbody>
+          <tr><td>Magic Deploy 按钮一直灰着</td><td>四个字段之一为空，或 <code>.p8</code> 未附加。LingCode 会在启用按钮前校验四项。</td></tr>
+          <tr><td>"No Xcode project found"</td><td>你打开的是一个不含 <code>.xcodeproj</code> 的文件夹。打开含 <code>.xcodeproj</code> 的文件夹，或直接打开 <code>.xcodeproj</code>。</td></tr>
+          <tr><td>"No schemes found"</td><td>Scheme 没设为 Shared。Xcode → Product → Scheme → Manage Schemes → 勾选目标 Scheme 的 <strong>Shared</strong>。</td></tr>
+          <tr><td>归档阶段失败</td><td>在 Xcode 里切 Release，自己跑 Product → Archive。修好 Xcode 抱怨的事，再回来重试 Magic Deploy。</td></tr>
+          <tr><td>导出阶段失败</td><td>99% 是 ExportOptions.plist 的 <code>teamID</code> 与 Keychain 对不上。跑 <code>security find-identity -v -p codesigning</code>，修正 LingCode 的 Team ID。</td></tr>
+          <tr><td>上传阶段 HTTP 401/403</td><td>问题在 API Key。重下 <code>.p8</code>，或新建一把 <strong>App Manager</strong> 权限的 Key 再试。</td></tr>
+          <tr><td>上传成功但 Build 没出现</td><td>查 Apple ID 邮箱里的 <code>ITMS-</code> 拒稿。如果没有，等 30 分钟——Apple 的处理队列时快时慢。</td></tr>
+          <tr><td>"Redundant binary upload"</td><td>在 Xcode 提升 Build 号。大于前值的任意整数即可。</td></tr>
+          <tr><td>还是卡住</td><td>把日志里精确的 <code>xcodebuild</code> 或 <code>xcrun altool</code> 命令复制到终端跑——错误信息一模一样但比 <em>"Archive failed. Check the log above."</em> 更好搜。</td></tr>
+        </tbody>
+      </table>
+
+      <h2>常见错误（速查清单）</h2>
+      <ul>
+        <li><strong>给 <code>.p8</code> 文件改名了。</strong>LingCode 找的是 <code>AuthKey_&lt;KeyID&gt;.p8</code>。改了就改回来，或确保 Key ID 字段与文件名中 <code>AuthKey_</code> 和 <code>.p8</code> 之间的内容一致。</li>
+        <li><strong>权限级别不对。</strong><em>Developer</em> 级别的 Key 可读不可上传。需要 <strong>App Manager</strong> 或 <strong>Admin</strong>。</li>
+        <li><strong>混淆 Issuer ID 与 Key ID。</strong>Key ID 是 10 个字符，每把 Key 在表格里单独显示。Issuer ID 是长 UUID（有短横），在 Keys 页顶部出现一次。</li>
+        <li><strong>Team ID 拿错团队。</strong>Apple ID 跨多团队时，先在开发者门户里切到正确的团队再复制。</li>
+        <li><strong>Bundle ID 未注册。</strong>应用的 Bundle Identifier 需要在 App Store Connect 有应用记录，并且该标识本身需要存在于 developer.apple.com 的 <strong>Certificates, IDs &amp; Profiles</strong>。先到 App Store Connect → My Apps → <strong>+</strong> 创建应用记录，用与 Xcode 项目相同的 Bundle ID。</li>
+        <li><strong>忘了提升 Build。</strong>同一 Version 下每次上传都要更高 Build 号。这是第二次上传失败的最常见原因——勾选面板里的 <strong>Auto-bump build number</strong> 让 LingCode 替你跑 <code>agvtool next-version -all</code>。</li>
+        <li><strong>开着手动签名。</strong>Magic Deploy 的 <code>ExportOptions.plist</code> 用 <code>signingStyle = automatic</code>。目标若开着手动签名，导出会失败或产出不可签名的二进制。</li>
+      </ul>
+
+      <h2>安全须知</h2>
+      <p><code>.p8</code> 私钥等同于你 App Store Connect 账号的密码。按密码待它：别提交到 Git，别发到 Slack，队友离开或电脑丢失就到 Keys 页面吊销。LingCode 从不把 <code>.p8</code> 上传到任何地方——它留在你的 Mac 上，只在上传时交给 Apple 的 <code>xcrun altool</code>。</p>
+
+      <h2>延伸阅读</h2>
+      <p>本页概念的一手资料，来自 Apple 与 IETF：</p>
+      <ul>
+        <li><a href="/glossary.html">LingCode 部署术语表</a>——本页每个术语的定义。</li>
+        <li><a href="https://developer.apple.com/documentation/appstoreconnectapi" rel="noopener noreferrer">App Store Connect API 参考</a>（Apple）——<code>altool</code> 与 LingCode 在底层打交道的对象。</li>
+        <li><a href="https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases" rel="noopener noreferrer">Distributing your app for beta testing and releases</a>（Apple）——官方 Xcode 分发指南。</li>
+        <li><a href="https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/Introduction/Introduction.html" rel="noopener noreferrer">Code Signing Guide</a>（Apple）——证书、描述文件、签名实际证明什么的深入介绍。</li>
+        <li><a href="https://datatracker.ietf.org/doc/html/rfc7519" rel="noopener noreferrer">RFC 7519 — JSON Web Token</a>——Apple API 认证用的 JWT 规范。</li>
+        <li><a href="https://developer.apple.com/testflight/" rel="noopener noreferrer">TestFlight</a>（Apple）——你的上传首先落到的 Beta 服务。</li>
+      </ul>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">准备好交付了吗？</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">看 <a href="/zh/features.html">完整的 Magic Deploy 功能</a>，或阅读 <a href="/zh/blog.html">斜杠命令</a> 与 <a href="/zh/claude-sessions.html">多会话 Claude 工作流</a>。</p>
+        <a href="/zh/">下载 LingCode Mac 版</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-logo">灵码</span>
+      <nav class="footer-links">
+        <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+        <a href="/zh/blog.html">技能参考</a>
+        <a href="/zh/magic-deploy-setup.html">Magic Deploy（App Store）</a>
+        <a href="/zh/google-play-deploy-setup.html">Magic Deploy（Android）</a>
+        <a href="/magic-deploy-web-platforms.html">Magic Deploy（Web）</a>
+        <a href="/magic-deploy-scripts.html">部署脚本</a>
+        <a href="/glossary.html">术语表</a>
+        <a href="/annotated-examples.html">注释示例</a>
+        <a href="/zh/claude-sessions.html">Claude 会话</a>
+        <a href="/zh/remote-control.html">远程控制</a>
+        <a href="/zh/support.html">支持</a>
+        <a href="/LingCode-v2.7.0-Installer.dmg" download>下载 Mac 版</a>
+        <a href="https://apps.apple.com/us/app/lingcode/id6757243830" rel="noopener noreferrer">App Store</a>
+      </nav>
+      <span class="footer-copy">100% Swift · 无 Electron · 为 Mac 打造</span>
+    </div>
+  </footer>
+
+  <script src="../nav.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

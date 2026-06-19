@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create an Android adaptive icon — LingCode Tutorials</title>
+  <meta name="description" content="Android adaptive icons are two layers, not one image. Learn the foreground/background model, the 66dp safe zone, the XML wiring, and how to preview your icon in the emulator launcher.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/create-an-android-adaptive-icon.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/create-an-android-adaptive-icon.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/create-an-android-adaptive-icon.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605171400">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-17T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/create-an-android-adaptive-icon.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Create an Android adaptive icon",
+  "description": "Android stopped shipping one icon image in 2017. Now your launcher icon is two layers — a foreground and a background — and the OS masks them into whatever shape the user's launcher prefers: circle, squircle, teardrop, square. Once you see the model, the XML and the safe-zone rul",
+  "url": "https://lingcode.dev/tutorials/create-an-android-adaptive-icon.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-17",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/create-an-android-adaptive-icon.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Create an Android adaptive icon"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Create an Android adaptive icon",
+      "item": "https://lingcode.dev/tutorials/create-an-android-adaptive-icon.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/create-an-android-adaptive-icon.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Create an Android adaptive icon</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-17</span>
+      </div>
+      <h1>Create an Android adaptive icon</h1>
+      <p class="intro">Android stopped shipping one icon image in 2017. Now your launcher icon is two layers — a foreground and a background — and the OS masks them into whatever shape the user's launcher prefers: circle, squircle, teardrop, square. Once you see the model, the XML and the safe-zone rule fall out of it.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>iOS makes you ship one perfectly square 1024×1024 PNG and the OS rounds the corners. Android does something stranger: it asks for two PNGs at 108×108dp each, treats the inner 66×66dp as the "live" area, and lets each device's launcher apply its own mask to the rest. The mental model is upside-down compared to iOS — you're not designing an icon, you're designing the raw material a launcher will compose into an icon.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Why Android icons are two layers, not one image</li>
+        <li>The 108dp / 66dp safe-zone rule and how it constrains your art</li>
+        <li>The XML and folder layout in <code>res/mipmap-anydpi-v26/</code></li>
+        <li>The fast path: LingCode's <strong>App Icon Generator</strong> sheet (covers iOS and Android in one pass)</li>
+        <li>The chat path: agent-generated foreground via Gemini, then adaptive-icon scaffold</li>
+        <li>Previewing the icon in your AVD via the Run Destination Picker</li>
+      </ul>
+
+      <h2>Step 1: The two-layer mental model</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Foreground plus background, masked by the launcher</h3>
+          <p>An adaptive icon is two square PNGs of identical size, layered like a sticker on a card:</p>
+          <ul>
+            <li><strong>Background layer</strong> (<code>ic_launcher_background</code>) — a flat color, gradient, or pattern. Fills the entire 108×108dp canvas. The launcher masks this layer into its preferred shape.</li>
+            <li><strong>Foreground layer</strong> (<code>ic_launcher_foreground</code>) — your logo or glyph. Sits on top, transparent everywhere except the artwork.</li>
+          </ul>
+          <p>The launcher then composes the two with its own mask: Pixel uses a circle, Samsung uses a squircle, Nothing uses a teardrop, the cheap-tablet stock launcher uses a square. Your icon has to look right under all four. That's what the safe-zone rule (Step 2) is protecting.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: The 108dp / 66dp safe zone</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Most of your canvas gets clipped — design accordingly</h3>
+          <p>Both layers are 108×108dp. But only the inner 66×66dp is guaranteed to be visible after the launcher's mask is applied. The outer 21dp ring on every side is "bleed" — it exists so parallax animations and motion effects have room to move without exposing the edge.</p>
+          <pre><code>┌──────────────────────────────┐
+│  bleed zone (gets clipped)   │  21dp
+│   ┌──────────────────────┐   │
+│   │                      │   │
+│   │   SAFE ZONE          │   │  66dp × 66dp
+│   │   (your art lives    │   │  guaranteed visible
+│   │    here)             │   │
+│   │                      │   │
+│   └──────────────────────┘   │
+│                              │  21dp
+└──────────────────────────────┘
+            108dp × 108dp</code></pre>
+          <p>The corollary: <strong>your logo's bounding box should never exceed 66×66dp</strong>. If it does, the Pixel launcher's circle mask will clip the corners. Keep critical elements (text, fine detail) well inside the safe zone. Decorative elements that you don't mind losing under aggressive masks can extend into the bleed.</p>
+          <p>For PNG export specifically: design at 432×432px (4× the dp for xxxhdpi density). The 66dp safe zone maps to a 264×264px square in the center.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't ship a one-layer icon for "older" Android compatibility and call it done.</strong> Devices on API 25 and below (pre-Android 8) still need the old single-image PNGs at five density buckets — but every device shipped since 2017 prefers the adaptive set. If you only ship the legacy PNG, your icon looks dated on a Pixel; if you only ship the adaptive set, you crash old launchers. The agent will scaffold both for you — don't skip the legacy fallback.
+      </div>
+
+      <h2>Step 3: The XML and folder layout</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Where everything lives in <code>res/</code></h3>
+          <p>A complete adaptive-icon set is six files spread across four folders:</p>
+          <pre><code>app/src/main/res/
+├── mipmap-anydpi-v26/
+│   ├── ic_launcher.xml              ← adaptive icon (foreground + background ref)
+│   └── ic_launcher_round.xml        ← same, for circle launchers
+├── drawable/
+│   └── ic_launcher_foreground.xml   ← vector drawable for foreground
+├── values/
+│   └── ic_launcher_background.xml   ← color resource for background
+└── mipmap-{m,h,xh,xxh,xxxh}dpi/
+    ├── ic_launcher.png              ← legacy fallback PNGs
+    └── ic_launcher_round.png        ← same, round variant</code></pre>
+          <p>The adaptive XML in <code>mipmap-anydpi-v26/ic_launcher.xml</code> is the entry point and looks like this:</p>
+          <pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+    &lt;background android:drawable="@color/ic_launcher_background" /&gt;
+    &lt;foreground android:drawable="@drawable/ic_launcher_foreground" /&gt;
+&lt;/adaptive-icon&gt;</code></pre>
+          <p>That's the whole interface: point at a background (color or drawable) and a foreground drawable. The <code>-v26</code> suffix on the folder name is what tells the build system "only use this on API 26+." Older devices fall back to the PNG in <code>mipmap-{density}/</code>.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: The fast path — App Icon Generator (covers Android too)</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Mobile menu → App Icon Generator… → Android target → Generate</h3>
+          <p>LingCode's <strong>App Icon Generator</strong> sheet — opened from the menu bar via <strong>Mobile → App Icon Generator…</strong> — handles Android adaptive icons in the same pass it does iOS. Toggle <em>iOS</em> off if you only want Android, point the Android target at <code>app/src/main/res/</code>, and either drop a 1024×1024 master or type a prompt and let the built-in image generator produce one.</p>
+          <p>The Android pass writes three files per density bucket — <code>ic_launcher.png</code> (the legacy square), <code>ic_launcher_round.png</code> (the legacy round fallback), and <code>ic_launcher_foreground.png</code> (the adaptive foreground) — across <code>mipmap-mdpi</code> through <code>mipmap-xxxhdpi</code>. The sheet lists every file written so you can verify before closing.</p>
+          <p>Two things the sheet does <strong>not</strong> do automatically: it doesn't write the adaptive XML (<code>mipmap-anydpi-v26/ic_launcher.xml</code>) or the background color resource. Those are tiny — a few lines each (see Step 3) — and the agent can scaffold them via a one-line chat prompt: "<em>add the adaptive-icon XML wrappers for ic_launcher and ic_launcher_round, background color #5B6CFF</em>." Together the two passes get you a complete adaptive icon set.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Or do it via chat</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>One prompt, the whole set</h3>
+          <p>Open a Claude chat in your Android project root and ask:</p>
+          <pre><code>Add an adaptive launcher icon to this Android project.
+- Foreground: ~/Desktop/logo.svg (already sized for the 66dp safe zone)
+- Background color: #5B6CFF
+Generate the adaptive XML, the foreground vector drawable, and PNG
+fallbacks for mdpi through xxxhdpi.</code></pre>
+          <p>The agent will produce roughly eight files: the two adaptive XML files (square and round), the foreground vector drawable, the background color resource, and ten PNG fallbacks (one round, one square, at five densities each). It'll also touch <code>AndroidManifest.xml</code> if needed — but the default <code>android:icon="@mipmap/ic_launcher"</code> is usually already in place from the project template.</p>
+          <p>Don't have a logo yet? Ask the chat's <code>generate_image</code> tool first — "<em>generate a 1024×1024 icon foreground: minimalist letter L glyph in white on transparent background, flat, no shadow, centered with 25% padding</em>" — and the agent saves it to <code>&lt;project&gt;/assets/</code> via Gemini. Once you like it, ask for the adaptive-icon scaffold pointing at that file. Two prompts, complete icon set.</p>
+          <p>Verify by opening <code>app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml</code> and confirming the <code>&lt;adaptive-icon&gt;</code> block references the resources you expect. Then build and install — see Step 6.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Don't have a vector logo?</strong> The agent can convert a PNG to a vector drawable using Android's <code>VectorDrawableCompat</code> format — paste the path to your PNG and ask. Vector is preferred because the foreground layer gets rendered at every density without re-rasterizing, so a tiny logo file ends up razor-sharp at xxxhdpi.
+      </div>
+
+      <h2>Step 6: Preview in the emulator</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Build, install, check the launcher</h3>
+          <p>Hit <kbd>⌘R</kbd> in your project. The <strong>Run Destination Picker</strong> opens with an <em>Android emulators</em> section listing every configured AVD — offline AVDs auto-boot when selected. Pick yours and LingCode builds, runs <code>adb install</code>, and launches the app.</p>
+          <p>Press the home button (or swipe up, depending on the AVD's launcher) and look at your app's launcher icon. You should see your foreground centered on the background, masked into whatever shape the AVD's launcher uses. If the icon looks clipped on the edges, your foreground extends into the bleed zone — pull it back into the 66×66dp safe area.</p>
+          <p>To see the icon under <em>multiple</em> launcher masks without rebuilding, install one of the "<a href="https://developer.android.com/develop/ui/views/launch/icon_design_adaptive#preview" target="_blank" rel="noopener noreferrer">launcher icon preview</a>" apps from the Play Store inside the AVD. Cheaper than maintaining four physical devices.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: Diagnose a failure</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Three things that go wrong</h3>
+          <table>
+            <thead>
+              <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Icon is the default Android green robot</td>
+                <td><code>AndroidManifest.xml</code> doesn't point at <code>@mipmap/ic_launcher</code>, or the file isn't in the right folder.</td>
+                <td>Open the manifest, confirm <code>&lt;application android:icon="@mipmap/ic_launcher"&gt;</code>. Confirm <code>res/mipmap-anydpi-v26/ic_launcher.xml</code> exists.</td>
+              </tr>
+              <tr>
+                <td>Icon shows but the foreground is clipped at the corners</td>
+                <td>Foreground art extends past the 66dp safe zone.</td>
+                <td>Rescale the foreground inside its 432×432 canvas so the artwork is within the central 264×264 region.</td>
+              </tr>
+              <tr>
+                <td>Old Android devices (API ≤ 25) show no icon or a fallback</td>
+                <td>Missing legacy PNG fallbacks in <code>mipmap-{density}/</code> folders.</td>
+                <td>Add 48/72/96/144/192px PNGs (one per density bucket). The agent will generate these from your foreground if asked.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/create-an-ios-or-mac-app-icon.html" class="tutorial-next-card">
+            <h3>Create an iOS or Mac app icon</h3>
+            <p>The Apple equivalent — one square PNG, sRGB, no alpha</p>
+          </a>
+          <a href="/tutorials/create-and-run-your-first-avd.html" class="tutorial-next-card">
+            <h3>Create and run your first Android emulator</h3>
+            <p>If you don't already have an AVD set up, start here</p>
+          </a>
+          <a href="/tutorials/upload-an-android-app-to-google-play.html" class="tutorial-next-card">
+            <h3>Upload an Android app to Google Play</h3>
+            <p>The submission flow once your icon and AAB are ready</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

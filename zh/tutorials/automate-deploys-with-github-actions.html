@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 GitHub Actions 自动化部署 — LingCode 教程</title>
+  <meta name="description" content="每次推送代码时自动运行测试并部署应用。在 .github/workflows/ 下放一个 YAML 文件，无需管理任何服务器。公开仓库免费，私有仓库也有充裕的免费额度。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/automate-deploys-with-github-actions.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/automate-deploys-with-github-actions.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/automate-deploys-with-github-actions.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="使用 GitHub Actions 自动化部署 — LingCode 教程">
+  <meta property="og:description" content="每次推送代码时自动运行测试并部署应用。在 .github/workflows/ 下放一个 YAML 文件，无需管理任何服务器。公开仓库免费，私有仓库也有充裕的免费额度。">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/automate-deploys-with-github-actions.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 GitHub Actions 自动化部署",
+  "description": "每次 PR 自动运行测试，每次推送到 main 自动部署。仓库里放一个 YAML 文件即可。公开仓库免费；私有仓库每月免费 2,000 分钟。从"推送到 GitHub"到"线上站点更新完毕"，全程二十分钟。",
+  "url": "https://lingcode.dev/zh/tutorials/automate-deploys-with-github-actions.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/automate-deploys-with-github-actions.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 GitHub Actions 自动化部署"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 GitHub Actions 自动化部署",
+      "item": "https://lingcode.dev/zh/tutorials/automate-deploys-with-github-actions.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/automate-deploys-with-github-actions.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">发布与基础设施</a>
+      <span>/</span>
+      <span>使用 GitHub Actions 自动化部署</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 GitHub Actions 自动化部署</h1>
+      <p class="intro">每次 PR 自动运行测试，每次推送到 main 自动部署。仓库里放一个 YAML 文件即可。公开仓库免费；私有仓库每月免费 2,000 分钟。从"推送到 GitHub"到"线上站点更新完毕"，全程二十分钟。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>所需准备</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>GitHub 账号 + 仓库</strong> — <a href="https://github.com/" target="_blank" rel="noopener">github.com ↗</a>。免费注册；若还没有仓库，可<a href="https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository" target="_blank" rel="noopener">新建一个 ↗</a>。</li>
+            <li><strong>仓库中有可运行测试或构建命令的代码</strong> — 只要能用 <code>npm test</code> / <code>pytest</code> / <code>cargo test</code> / <code>./gradlew test</code> 执行即可。</li>
+            <li><strong>（可选）部署目标的凭据</strong> — Vercel token、AWS 密钥、SSH 密钥等。这些都会存储为 <a href="https://docs.github.com/en/actions/security-guides/encrypted-secrets" target="_blank" rel="noopener">加密 Secrets ↗</a>。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>工作流文件存放在 .github/workflows/</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>在仓库中创建目录和工作流文件：</p>
+          <pre><code>mkdir -p .github/workflows
+touch .github/workflows/ci.yml</code></pre>
+          <p>此目录下每个以 <code>.yml</code> 结尾的文件都是一个独立的工作流，可以有多个（CI、部署、定时任务等）。</p>
+        </div>
+      </div>
+
+      <h2>最简 CI：每次 PR 时运行测试</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>将以下内容粘贴到 <code>.github/workflows/ci.yml</code>（根据你使用的语言做相应调整）：</p>
+          <pre><code>name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+      - run: npm test</code></pre>
+          <p>提交并推送后，前往 github.com 上仓库的 <strong>Actions</strong> 标签页，即可看到工作流运行情况及实时日志。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>其他语言，</strong>只需替换 setup 步骤：
+        <ul>
+          <li>Python: <a href="https://github.com/actions/setup-python" target="_blank" rel="noopener">actions/setup-python ↗</a></li>
+          <li>Go: <a href="https://github.com/actions/setup-go" target="_blank" rel="noopener">actions/setup-go ↗</a></li>
+          <li>Java/Android: <a href="https://github.com/actions/setup-java" target="_blank" rel="noopener">actions/setup-java ↗</a></li>
+          <li>Rust: <a href="https://github.com/dtolnay/rust-toolchain" target="_blank" rel="noopener">dtolnay/rust-toolchain ↗</a></li>
+          <li>Swift / iOS: <code>runs-on: macos-latest</code> + <code>xcodebuild test</code></li>
+        </ul>
+        完整市场：<a href="https://github.com/marketplace?type=actions" target="_blank" rel="noopener">github.com/marketplace ↗</a>。
+      </div>
+
+      <h2>在 README 中添加状态徽章</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>在 <code>README.md</code> 中添加：</p>
+          <pre><code>![CI](https://github.com/&lt;you&gt;/&lt;repo&gt;/actions/workflows/ci.yml/badge.svg)</code></pre>
+          <p>测试通过显示绿色，失败显示红色。徽章显示在仓库首页，方便贡献者了解项目状态。</p>
+        </div>
+      </div>
+
+      <h2>安全存储 Secrets</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>切勿将 API 密钥或 token 提交到代码库。请通过加密 Secrets 来存储：</p>
+          <p>仓库页面 → <strong>Settings → Secrets and variables → Actions → New repository secret</strong>。添加例如 <code>VERCEL_TOKEN</code>、<code>AWS_ACCESS_KEY_ID</code>、<code>SSH_PRIVATE_KEY</code> 等。</p>
+          <p>在工作流中通过 <code>${{ secrets.VERCEL_TOKEN }}</code> 引用：</p>
+          <pre><code>      - run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}</code></pre>
+          <p>Secrets 仅在 job 运行时解密，不会出现在日志中。<a href="https://docs.github.com/en/actions/security-guides/encrypted-secrets" target="_blank" rel="noopener">Secrets 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>推送到 main 时自动部署</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>新增一个仅在 main 分支触发的 job（或独立工作流）：</p>
+          <pre><code>name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+      - run: npm run build
+
+      # 根据你的部署目标选择其中一项：
+
+      # === 选项 A：Vercel ===
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--prod"
+
+      # === 选项 B：通过 SSH 部署到自托管 VPS ===
+      # - uses: appleboy/ssh-action@v1
+      #   with:
+      #     host: ${{ secrets.SERVER_HOST }}
+      #     username: deploy
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     script: cd /var/www/myapp &amp;&amp; ./deploy.sh
+
+      # === 选项 C：AWS S3 + CloudFront ===
+      # - uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-1
+      # - run: aws s3 sync ./dist s3://my-bucket --delete</code></pre>
+          <p>取消注释与你的配置匹配的目标选项。推送到 main → 工作流运行 → 站点更新。在 Actions 标签页中实时查看进度。</p>
+        </div>
+      </div>
+
+      <h2>移动端构建（iOS / Android）</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>移动端构建需要 Mac runner（iOS）或 Android SDK 环境（Android），GitHub 两者都提供。</p>
+          <p><strong>iOS / TestFlight</strong>（可结合<a href="/zh/tutorials/reupload-an-ios-build-to-testflight.html">iOS 重新上传教程</a>使用）：</p>
+          <pre><code>jobs:
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: xcodebuild -scheme MyApp -configuration Release archive \
+                -archivePath build/MyApp.xcarchive
+      - run: xcodebuild -exportArchive \
+                -archivePath build/MyApp.xcarchive \
+                -exportPath build \
+                -exportOptionsPlist export.plist
+      - run: xcrun altool --upload-app -f build/MyApp.ipa -t ios \
+                --apiKey ${{ secrets.ASC_KEY_ID }} \
+                --apiIssuer ${{ secrets.ASC_ISSUER_ID }}</code></pre>
+          <p><strong>Android / Play Store</strong> 通过 <a href="https://docs.fastlane.tools/" target="_blank" rel="noopener">fastlane ↗</a>：</p>
+          <pre><code>jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - run: ./gradlew bundleRelease
+      - uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.example.myapp
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: internal</code></pre>
+        </div>
+      </div>
+
+      <h2>缓存依赖以加速构建</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>上面 setup-node 中的 <code>cache: "npm"</code> 已经会在两次运行之间缓存 <code>~/.npm</code>，通常能将 CI 耗时减少一半。其他语言也有对应的缓存选项：<code>cache: "pip"</code>、<code>cache: "gradle"</code>、<code>cache: "cargo"</code>。</p>
+          <p>如需更精细的控制，可直接使用 <a href="https://github.com/actions/cache" target="_blank" rel="noopener">actions/cache ↗</a>。不过，各语言的内置缓存助手通常已经够用。</p>
+        </div>
+      </div>
+
+      <h2>按需触发，节省额度</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>通过路径过滤，跳过不必要的工作流运行，节省分钟数：</p>
+          <pre><code>on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"          # only when source changes
+      - "!docs/**"        # skip when only docs change
+      - ".github/**"</code></pre>
+          <p>当你有多个工作流（前端部署 + 后端部署 + 文档构建），而某次提交只涉及其中一个部分时，这一配置尤其有用。</p>
+        </div>
+      </div>
+
+      <h2>定时任务（cron）</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>按计划运行，无需推送代码触发：</p>
+          <pre><code>on:
+  schedule:
+    - cron: "0 6 * * *"   # daily at 06:00 UTC
+  workflow_dispatch:       # also lets you trigger manually from the UI</code></pre>
+          <p>适用场景：夜间备份、从外部 API 同步数据、清理过期记录。cron 语法参考：<a href="https://crontab.guru/" target="_blank" rel="noopener">crontab.guru ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>常见报错与解决方法</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>"Permission denied"</strong> 部署到服务器时 — SSH 私钥未添加到服务器的 <code>~/.ssh/authorized_keys</code>，或格式不正确。使用 <code>ssh-keygen -t ed25519</code> 生成密钥对，将公钥添加到服务器，私钥存入 GitHub Secrets。</li>
+            <li><strong>"npm: command not found"</strong> — 忘记添加 <code>setup-node</code> 步骤。每个 job 都从全新的 runner 开始运行。</li>
+            <li><strong>工作流运行但什么也没做</strong> — 检查 <code>on:</code> 触发器中的分支名是否与你的实际分支名匹配（main 还是 master）。</li>
+            <li><strong>免费分钟数用尽（私有仓库）</strong> — 使用情况可在 <a href="https://github.com/settings/billing" target="_blank" rel="noopener">github.com/settings/billing ↗</a> 查看。可通过缓存优化用量或升级套餐。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>不要打印 secrets。</strong> GitHub 会从日志中屏蔽已知的 secret 值，但如果你对 secret 做了变换（例如 base64 编码），变换后的值不会被屏蔽。避免在脚本中使用 <code>echo "$MY_SECRET"</code>。如果确实需要，请使用 <code>::add-mask::</code>。
+      </div>
+
+      <h2>官方参考资料</h2>
+      <ul>
+        <li><a href="https://docs.github.com/en/actions" target="_blank" rel="noopener">GitHub Actions 文档 ↗</a></li>
+        <li><a href="https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions" target="_blank" rel="noopener">工作流语法参考 ↗</a></li>
+        <li><a href="https://github.com/marketplace?type=actions" target="_blank" rel="noopener">Actions 市场 ↗</a></li>
+        <li><a href="https://docs.github.com/en/actions/security-guides/encrypted-secrets" target="_blank" rel="noopener">加密 Secrets ↗</a></li>
+        <li><a href="https://docs.github.com/en/actions/learn-github-actions/usage-limits-billing-and-administration" target="_blank" rel="noopener">用量限制与计费 ↗</a></li>
+      </ul>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/redeploy-a-website.html" class="tutorial-next-card">
+            <h3>重新部署网站</h3>
+            <p>Actions 所自动化的手动部署流程</p>
+          </a>
+          <a href="/zh/tutorials/reupload-an-ios-build-to-testflight.html" class="tutorial-next-card">
+            <h3>重新上传 iOS 构建到 TestFlight</h3>
+            <p>第 6 步所自动化的完整流程</p>
+          </a>
+          <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>配置 Sentry 错误追踪</h3>
+            <p>在部署工作流中触发 Sentry release 记录</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

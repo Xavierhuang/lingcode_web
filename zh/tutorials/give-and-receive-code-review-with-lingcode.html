@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用 LingCode 给出并处理代码审查</title>
+  <meta name="description" content="大多数审查失败表现为盲目认同或本能防御。使用 LingCode 以严谨的技术态度处理代码审查反馈——验证每一条意见，在对方有误时据理力争，在对方正确时及时落实。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/give-and-receive-code-review-with-lingcode.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/give-and-receive-code-review-with-lingcode.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/give-and-receive-code-review-with-lingcode.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "用 LingCode 给出并处理代码审查",
+  "description": "接受代码审查有两种失败模式——对所有意见照单全收（结果把错误建议也实现了）或对所有意见全面防御（结果把正确建议也忽视了）。LingCode 像一位严谨的工程师那样处理审查反馈：逐条核实每项意见、在审查者有误时据理力争、在审查者正确时及时落实。",
+  "url": "https://lingcode.dev/zh/tutorials/give-and-receive-code-review-with-lingcode.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/give-and-receive-code-review-with-lingcode.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "分类前先核实每条意见",
+      "url": "https://lingcode.dev/zh/tutorials/give-and-receive-code-review-with-lingcode.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "在自己的草稿 PR 上运行审查接收流程",
+      "url": "https://lingcode.dev/zh/tutorials/give-and-receive-code-review-with-lingcode.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "在 LingCode 中使用本技能",
+      "url": "https://lingcode.dev/zh/tutorials/give-and-receive-code-review-with-lingcode.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "给出并处理代码审查",
+      "item": "https://lingcode.dev/zh/tutorials/give-and-receive-code-review-with-lingcode.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/give-and-receive-code-review-with-lingcode.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">原生 Mac IDE</a>
+      <span>/</span>
+      <span>给出并处理代码审查</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>用 LingCode 给出并处理代码审查</h1>
+      <p class="intro">接受代码审查有两种失败模式——对所有意见照单全收（结果把错误建议也实现了），或对所有意见全面防御（结果把正确建议也忽视了）。LingCode 像一位严谨的工程师那样处理审查反馈：逐条核实每项意见，在审查者有误时据理力争，在审查者正确时及时落实。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么"审查者说什么就做什么"是错误的默认做法</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>当 PR 带着审查意见退回来时，最朴素的工作流是"审查者比我资深，照着改就行"。这会以两种可预见的方式出问题：</p>
+          <ul>
+            <li><strong>自信但错误的反馈被直接上船。</strong> 审查者可能误读了上下文、忽略了附近的辅助函数，或套用了并不适合当前场景的模式。盲目落实后，建议不仅没有改善行为，反而带来了退化或死代码。</li>
+            <li><strong>正确的反馈被辩解掉。</strong> 听到"这里有问题"时，第一反应往往是捍卫自己的设计决策，而不是用新鲜的眼光重新审视代码。真正的 bug 就这样存活下来了。</li>
+          </ul>
+          <p>本教程中的技能为 LingCode 提供了一套明确的协议：读取评论、对照代码核实意见、分类（同意 / 不同意 / 不明确），然后再采取行动。输出结果要么是一次精准的修复，要么是一份精准的回复，解释为何该建议并不适用。</p>
+        </div>
+      </div>
+
+      <h2>准备工作</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong> — <a href="/LingCode-Installer.dmg" download>下载安装程序</a>。</li>
+            <li><strong>一个带有审查意见的 PR。</strong> 适用于 GitHub、GitLab，以及任何审查者粘贴到聊天中的工作流。<code>gh pr view --comments</code> 是最简便的拉取方式。</li>
+            <li><strong>在本地检出对应分支</strong>，这样 LingCode 才能读取审查者当时看到的代码——而不仅仅是 diff。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>将审查内容拉入 LingCode</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>在对应分支上打开聊天面板，让 LingCode 获取完整的审查线程，而不是仅对 diff 做摘要：</p>
+          <pre><code>Fetch review comments on this PR (use `gh pr view --comments` or
+`gh api`). For each comment, capture: file, line, reviewer's claim,
+and any suggested code. Don't act on anything yet — list them.</code></pre>
+          <p>你需要的是带有行锚点的原始线程。如果先让另一个模型把五条评论合并成"处理反馈"再交给你，那就是会产生糟糕修复的版本。</p>
+        </div>
+      </div>
+
+      <h2>分类前先核实每条意见</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>这是本技能存在的核心步骤。让 LingCode 读取被引用的文件，然后验证审查者的说法是否成立：</p>
+          <pre><code>For each comment, open the referenced file and verify the claim:
+- Quote the actual code at that line.
+- State whether the reviewer's description of it is accurate.
+- Note any context they may have missed (helpers, callers, tests).
+- Only then classify: AGREE, DISAGREE, or UNCLEAR.
+
+Do not classify a comment AGREE without first reading the code.
+"Looks reasonable" is not verification.</code></pre>
+          <p>"先核实再分类"是消灭盲目认同失败模式的关键规则。如果 LingCode 无法引用审查者所指的代码，它就没有资格同意对方。</p>
+          <div class="tip-box">
+            <strong>提示：</strong> 如果某条评论引用的行已不存在（经过了 rebase 或格式化），将其标记为 UNCLEAR 并请审查者重新定位。不要猜测。
+          </div>
+        </div>
+      </div>
+
+      <h2>将"不同意"视为正当结果</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>防御性失败模式是把每条审查意见都视为必须满足的要求。高效的做法是把"我不同意，原因如下"视为一种正常回复。让 LingCode 像撰写修复方案一样认真地撰写反驳意见：</p>
+          <pre><code>For every DISAGREE classification, write a short reply (3-6 lines)
+that:
+1. Restates the reviewer's concern in your own words so they know
+   you read it.
+2. Quotes the code that actually addresses the concern, OR
+   explains the constraint they may have missed.
+3. Proposes a path forward — "leave as-is," "rename for clarity,"
+   "add a comment explaining the constraint."
+
+Don't be defensive. Don't be apologetic. Just be precise.</code></pre>
+          <p>目标是让审查者能够接受这个回复，或者在下一轮提出进一步反驳。含糊的"好的，我会看一下"是最糟糕的结果——它让线程悬而未决，分歧也依然存在。</p>
+        </div>
+      </div>
+
+      <h2>在审查者技术上有误时据理力争</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>有些审查意见在技术上纯属错误——对语言特性、框架行为或约束条件的误解。本技能教 LingCode 直接说出来，并提供证据：</p>
+          <pre><code>If a reviewer claim is technically incorrect (wrong about an API,
+a language behavior, a framework lifecycle, etc.), reply with:
+- The specific incorrect claim.
+- The actual behavior, with a link to docs or a small repro
+  snippet.
+- Why this matters for the PR — does it change the suggested fix?
+
+Be willing to write "this is not how X works" with evidence. That
+is not rude. Implementing wrong feedback to be polite is rude to
+the next maintainer.</code></pre>
+          <div class="warn-box">
+            <strong>审查者职级比你高并不改变技术事实。</strong> 如果 LingCode 能引用权威文档或最小化复现步骤，礼貌的回复就是正确的回复。含糊地表示认同才是不诚实的做法。
+          </div>
+        </div>
+      </div>
+
+      <h2>批量落实"同意"清单</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>核实和分类完成后，"同意"清单的处理就是机械性工作了。让 LingCode 一次性完成应用，然后重新跑测试：</p>
+          <pre><code>For every AGREE classification:
+1. Apply the suggested change (or a close variant if the suggestion
+   has a small flaw you noticed during verification).
+2. Run the affected tests.
+3. If anything fails, stop and surface the failure — don't paper
+   over it with a follow-up tweak.
+
+Then write one commit per logical group of related changes —
+not one commit per comment.</code></pre>
+          <p>每条评论一个 commit 看起来整齐，但会让 diff 难以审查。按意图分组：比如"统一命名反馈"、"收紧 X 处的错误处理"、"为 Y 补充缺失的测试"。</p>
+        </div>
+      </div>
+
+      <h2>遇到"不明确"时，提问而非猜测</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>"不明确"清单是大多数意外范围蔓延的源头——LingCode 猜测审查者的意思，实现了某些东西，然后引发新一轮评论。正确的协议是主动提问：</p>
+          <pre><code>For every UNCLEAR classification, write a reply that:
+- Quotes the comment.
+- States the two or three interpretations you considered.
+- Asks the reviewer which one they meant.
+
+Do not guess and implement. A clarifying question is cheap;
+re-reviewing a wrong implementation is not.</code></pre>
+          <p>这也是推回超出范围的反馈的好时机——"好主意，我们把它记录为后续 issue，而不是在这个 PR 里扩展范围"。审查者通常会同意；如果不同意，你已经揭示了一个真正值得在更多代码落地之前解决的分歧。</p>
+        </div>
+      </div>
+
+      <h2>在自己的草稿 PR 上运行审查接收流程</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>在将 PR 提交给人工审查之前，先对自己的分支运行 LingCode 的 <code>/review</code>，并将输出结果通过同样的协议处理一遍。你可以在人工审查者花费时间之前，自己捕获所有"同意，修复"的反馈，最终提交给人工审查时只剩下真正有争议的内容。</p>
+          <p>这种效果会叠加。在 <code>/review</code> 之上再用审查接收技能做自我审查，意味着人工审查者收到的 PR 质量更高，合并速度更快，下次的 PR 也会更小。</p>
+          <div class="tip-box">
+            <strong>两个技能可以组合使用。</strong> <code>/review</code> 生成反馈，本技能处理反馈。两者结合，可以把一次 60 条评论的初轮审查变成 5 条评论的二轮讨论。
+          </div>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用本技能</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>完整的协议已打包为一个技能——将其放入 LingCode 的技能文件夹，然后让 LingCode"处理这个 PR 的审查评论"即可调用：</p>
+          <pre><code>---
+name: receiving-code-review
+description: Use when receiving code review feedback, before implementing suggestions — especially if feedback seems unclear or technically questionable. Triggers: 'fix the review comments', 'address feedback', 'apply review', 'reviewer said X', PR comments fetched, code review thread, 'agree with the review and apply'. Actions: verify each claim against the actual code (quote the line), classify AGREE/DISAGREE/UNCLEAR, push back when wrong (write rebuttal with evidence), implement when right, ask reviewer when ambiguous. Anti-patterns: blind agreement, reflexive defense, summarizing reviews into 'address feedback' before reading line-by-line.
+---
+
+Process incoming code review feedback with technical rigor. The
+two failure modes are blind agreement (implement bad suggestions)
+and reflexive defense (ignore good ones). Avoid both.
+
+For each review comment:
+
+1. Fetch the raw thread (gh pr view --comments or equivalent).
+   Preserve file + line anchors. Do not summarize away detail.
+
+2. Verify the claim. Open the cited file. Quote the actual code.
+   State whether the reviewer's description is accurate. Note
+   missed context (helpers, callers, tests).
+
+3. Classify only after verification: AGREE, DISAGREE, UNCLEAR.
+   "Looks reasonable" is not verification.
+
+4. For AGREE: apply the change, run tests, group commits by
+   intent (not one per comment).
+
+5. For DISAGREE: write a short reply that restates the concern,
+   quotes the code that addresses it (or names the missed
+   constraint), and proposes a path forward. Not defensive,
+   not apologetic — precise.
+
+6. For technically-incorrect feedback: say so with evidence
+   (docs link or minimal repro). Politely implementing wrong
+   feedback is rude to the next maintainer.
+
+7. For UNCLEAR: ask the reviewer which interpretation they
+   meant. Do not guess and implement.
+
+Compose with /review on your own draft before posting for
+human review.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/receiving-code-review/SKILL.md</code>——参见<a href="/zh/tutorials/install-a-skill.html">安装技能</a>了解确切位置及技能的发现方式。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/finish-a-development-branch.html" class="tutorial-next-card">
+            <h3>完成一个开发分支</h3>
+            <p>审查结束后，走完收尾清单——合并、PR 或废弃——不留尾巴</p>
+          </a>
+          <a href="/zh/tutorials/write-an-implementation-plan-with-lingcode.html" class="tutorial-next-card">
+            <h3>撰写实现计划</h3>
+            <p>有了计划可供对照，审查者的问题质量更高——在 diff 存在之前就写好计划</p>
+          </a>
+          <a href="/zh/tutorials/test-driven-development-with-lingcode.html" class="tutorial-next-card">
+            <h3>测试驱动开发</h3>
+            <p>阻止 LingCode 写出看似合理但实际不工作的代码——让测试成为规格说明</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

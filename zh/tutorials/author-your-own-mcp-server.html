@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何编写自己的 MCP 服务器？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="编写一个自定义 MCP 服务器，向 LingCode 暴露带类型的工具。只需一个小型 TypeScript 或 Python 程序、几个 JSON Schema 定义的工具，以及一个 Agent 永远看不到的凭证。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/author-your-own-mcp-server.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/author-your-own-mcp-server.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/author-your-own-mcp-server.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/author-your-own-mcp-server.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "编写自己的 MCP 服务器",
+  "description": "当你希望"Agent 能直接与我们内部的 X 通信"的那一天，就是你该编写 MCP 服务器的时候了。不过几百行代码，作为你已有服务的前端，将"Agent 不了解那个"变成"Agent 有一个带类型的工具"。",
+  "url": "https://lingcode.dev/zh/tutorials/author-your-own-mcp-server.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/author-your-own-mcp-server.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "编写自己的 MCP 服务器"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "编写自己的 MCP 服务器",
+      "item": "https://lingcode.dev/zh/tutorials/author-your-own-mcp-server.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/author-your-own-mcp-server.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">原生 Mac IDE</a>
+      <span>/</span>
+      <span>编写自己的 MCP 服务器</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-advanced">● 高级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何编写自己的 MCP 服务器？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>编写一个实现 MCP 协议的 Node 或 Python 程序（使用官方 SDK，不过几百行代码），暴露封装了你服务 API 的带类型工具，然后在 mcp.json 中通过 <code>command</code> + <code>args</code> 将 LingCode 指向它。Agent 便能以类型安全的方式访问你的服务所提供的一切功能。</p>
+      <p class="intro">当你希望"Agent 能直接与我们内部的 X 通信"的那一天，就是你该编写 MCP 服务器的时候了。不过几百行代码，作为你已有服务的前端，将"Agent 不了解那个"变成"Agent 有一个带类型的工具"。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p><a href="/zh/tutorials/connect-an-mcp-server.html">接入已有的 MCP 服务器</a>讲的是使用别人构建的服务器。编写则是反过来：你有一个 Agent 不了解的服务——内部管理 API、只有你团队才懂 Schema 的数据库、CI 系统、功能开关平台——你希望 Agent 能够使用它，而不是给它一个 Shell 然后寄望于最好的结果。</p>
+      <p>工作量其实很小。MCP 服务器是一个通过 stdio 或 HTTP 遵循特定 JSON-RPC 协议通信的进程。它暴露一组工具，每个工具有名称、描述，以及参数和返回值的 JSON Schema。当 Agent 调用某个工具时，你的代码运行，与你想暴露的底层服务通信，并返回结果。就这么简单。Agent 看不到凭证，不需要推断端点，也不会凭空捏造参数——它看到的是命名合理的带类型工具。</p>
+      <p>你的付出能换来什么：一个 Agent 每次都能正确使用的工具。不会再出现"我让它查一个 Linear 工单，它却试图 <code>curl</code> 错误的 URL"。语义定义在服务器里，你可以对其进行测试；Agent 只管调用。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>MCP 服务器的最小接口（list_tools、call_tool）</li>
+        <li>官方 SDK（TypeScript 和 Python）——如何选择</li>
+        <li>编写让 Agent 能正确使用的工具描述</li>
+        <li>用于参数校验的 JSON Schema</li>
+        <li>鉴权：秘密由服务器持有，而非 Agent</li>
+        <li>在接入 LingCode 之前测试你的服务器</li>
+      </ul>
+
+      <h2>第一步：选择运行时</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>TypeScript 或 Python——两者都是一等公民</h3>
+          <p>MCP 规范与语言无关；两个参考 SDK 分别是：</p>
+          <ul>
+            <li><strong>TypeScript：</strong><code>@modelcontextprotocol/sdk</code>。依赖极少，运行于 Node，易于以 <code>npx</code> 命令分发。最适合包装 JavaScript 友好的服务（Node API、JSON 服务）。</li>
+            <li><strong>Python：</strong>PyPI 上的 <code>mcp</code>。最适合包装 Python 友好的服务（Django 后台、pandas 流水线、机器学习工具链）。</li>
+          </ul>
+          <p>选你们团队更熟悉的那个；协议是完全相同的。以下示例使用 TypeScript。</p>
+        </div>
+      </div>
+
+      <h2>第二步：初始化项目</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>最简可用的服务器</h3>
+          <pre><code>mkdir my-mcp-server &amp;&amp; cd my-mcp-server
+npm init -y
+npm i @modelcontextprotocol/sdk zod</code></pre>
+          <p>然后创建 <code>server.ts</code>：</p>
+          <pre><code>import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
+
+const server = new Server(
+  { name: "my-internal-tools", version: "0.1.0" },
+  { capabilities: { tools: {} } }
+);
+
+// Define your tools' input schemas
+const LookupUserArgs = z.object({
+  email: z.string().email(),
+});
+
+server.setRequestHandler(ListToolsRequestSchema, async () =&gt; ({
+  tools: [
+    {
+      name: "lookup_user",
+      description: "Look up a user by email in the internal database. Returns the user's id, name, plan, and signup date.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          email: { type: "string", format: "email", description: "The user's email address" },
+        },
+        required: ["email"],
+      },
+    },
+  ],
+}));
+
+server.setRequestHandler(CallToolRequestSchema, async (req) =&gt; {
+  if (req.params.name === "lookup_user") {
+    const { email } = LookupUserArgs.parse(req.params.arguments);
+    const user = await fetchUserFromOurDB(email);
+    return { content: [{ type: "text", text: JSON.stringify(user) }] };
+  }
+  throw new Error(`Unknown tool: ${req.params.name}`);
+});
+
+const transport = new StdioServerTransport();
+await server.connect(transport);</code></pre>
+          <p>这就是一个可以运行的 MCP 服务器。它暴露了一个工具，校验参数，调用底层函数，并返回结构化结果。</p>
+        </div>
+      </div>
+
+      <h2>第三步：认真撰写工具描述</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>描述就是你给模型的提示</h3>
+          <p>当 Agent 读取工具列表时，它依靠描述来决定何时调用你的工具。模糊的描述（"用户查询"）会导致错误调用；具体的描述（"通过邮箱查询用户；返回 id、名称、套餐和注册日期"）则能让调用准确无误。</p>
+          <p>使用祈使句，明确列出输入，说明返回内容。如果有限制或注意事项，写进描述里——不要等 Agent 真的调用失败后才从运行时错误中得知。例如："如果用户不存在则返回 404；请先通过 list_users 进行模糊匹配确认。"</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>每个参数的描述同样重要。</strong>JSON Schema 中每个属性的 <code>description</code> 字段也会展示给 Agent。为每个参数花一句话说清楚："用户的邮箱，小写形式；请传入规范化的格式。"参数越清晰，浪费的工具调用就越少。
+      </div>
+
+      <h2>第四步：将凭证保存在服务器端</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Agent 永远不应看到密钥</h3>
+          <p>MCP 相比"让 Agent 去 curl 一个 API"的核心优势，就在于凭证始终留在服务器端。当你调用内部数据库时，连接字符串存放在 <code>process.env.INTERNAL_DB_URL</code> 中，设置在 MCP 服务器的环境变量里，而不是出现在任何 Agent 看得到的提示词中。</p>
+          <p>这也是你控制访问权限的方式：一个持有只读数据库角色的服务器可以暴露 <code>lookup_user</code>，但不能暴露 <code>delete_user</code>。Agent 无法提权；凭证本身就不具备那个权限。</p>
+        </div>
+      </div>
+
+      <h2>第五步：接入前先测试服务器</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>stdio 很容易用脚本驱动</h3>
+          <p>基于 stdio 的 MCP 服务器从 stdin 读取 JSON-RPC 消息，并将结果写入 stdout。你可以用任何测试工具来驱动它：</p>
+          <pre><code># A tiny smoke test
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node server.js</code></pre>
+          <p>如果服务器能正确列出工具，说明 Schema 没有问题。使用官方 MCP Inspector（<code>npx @modelcontextprotocol/inspector</code>）可以获得更完整的开发体验——它提供 UI 界面，让你逐一调用工具、查看响应，并实时监视 JSON-RPC 流量。</p>
+        </div>
+      </div>
+
+      <h2>第六步：接入 LingCode</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>配置方式与其他 MCP 服务器完全相同</h3>
+          <p>在 <code>.claude/mcp.json</code>（项目级）或 <code>~/.claude/mcp.json</code>（用户级）中：</p>
+          <pre><code>{
+  "mcpServers": {
+    "internal": {
+      "command": "node",
+      "args": ["/Users/you/code/my-mcp-server/server.js"],
+      "env": {
+        "INTERNAL_DB_URL": "postgres://..."
+      }
+    }
+  }
+}</code></pre>
+          <p>工具会以 <code>mcp__internal__lookup_user</code> 的形式出现。每次会话第一次调用时会提示确认权限。之后，Agent 就能像使用内置工具一样使用它。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>日志：</strong>你的服务器可以自由使用 stderr 输出日志。stdout 专门用于协议消息——不要在那里调用 <code>console.log()</code>，否则 Agent 会收到格式错误的 JSON-RPC 并断开连接。这是 TypeScript 服务器中常见的陷阱，知道之后很容易避免。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>接入 MCP 服务器</h3>
+            <p>消费端的视角——相同的协议，反向的流程</p>
+          </a>
+          <a href="/zh/tutorials/connect-linear-and-github-via-mcp.html" class="tutorial-next-card">
+            <h3>通过 MCP 接入 Linear 和 GitHub</h3>
+            <p>两个具体的真实 MCP 服务器，端到端全流程</p>
+          </a>
+          <a href="/zh/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>安装与配置插件</h3>
+            <p>想与团队共享 MCP 服务器时的正确打包方式</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速交付的创始人和追求真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project — LingCode Cloud</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"></noscript>
+  <link rel="stylesheet" href="/style.css?v=20260531a" />
+  <style>
+    :root {
+      --c-bg: #f6f7f9; --c-panel: #ffffff; --c-panel-2: #f4f5f8;
+      --c-border: #ecedf1; --c-border-2: #e0e2e8;
+      --c-text: #15171c; --c-muted: #5f6470; --c-faint: #9aa0ab;
+      --c-accent: #5b5bf6; --c-accent-soft: #eef0fe;
+      --c-live: #11885a; --c-danger: #e5484d;
+      --c-shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.05);
+    }
+    body { background: var(--c-bg) !important; background-image: none !important; padding-top: 64px; font-family: 'Geist', system-ui, sans-serif; color: var(--c-text); }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 26px 22px 80px; }
+    .ph { display: flex; align-items: center; gap: 12px; margin: 8px 0 22px; }
+    .ph h1 { font-size: 1.5rem; font-weight: 650; letter-spacing: -.025em; margin: 0; }
+    .back { font-size: .82rem; color: var(--c-muted); text-decoration: none; }
+    .back:hover { color: var(--c-text); }
+    .pill { font-size: .64rem; padding: 3px 9px; border-radius: 99px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .pill.owner { background: #fdeede; color: #b06b0a; box-shadow: inset 0 0 0 1px #f4d6a8; }
+    .pill.editor { background: var(--c-accent-soft); color: var(--c-accent); box-shadow: inset 0 0 0 1px #e2e3fb; }
+    .pill.viewer { background: #eef1f4; color: #5f6470; box-shadow: inset 0 0 0 1px #e0e2e8; }
+    .pill.live { background: #e9f9f0; color: var(--c-live); box-shadow: inset 0 0 0 1px #c8eed8; }
+    .pill.other { background: #eee; color: #888; }
+    .card { background: var(--c-panel); border: 1px solid var(--c-border); border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; box-shadow: var(--c-shadow); }
+    .card h2 { font-size: .95rem; font-weight: 650; letter-spacing: -.01em; margin: 0 0 4px; }
+    .card .sub { color: var(--c-muted); font-size: .82rem; margin: 0 0 14px; line-height: 1.5; }
+    .kv { display: flex; gap: 10px; align-items: center; font-size: .85rem; margin: 9px 0; flex-wrap: wrap; }
+    .kv .k { color: var(--c-muted); min-width: 110px; }
+    code.mono { background: var(--c-panel-2); padding: 3px 8px; border-radius: 6px; font-family: 'Geist Mono', monospace; font-size: .76rem; word-break: break-all; }
+    a.link { color: var(--c-accent); text-decoration: none; } a.link:hover { text-decoration: underline; }
+    .btn { background: var(--c-panel); border: 1px solid var(--c-border-2); color: var(--c-text); border-radius: 9px; padding: 7px 13px; font-size: .82rem; font-weight: 500; cursor: pointer; font-family: inherit; box-shadow: 0 1px 1px rgba(16,24,40,.03); }
+    .btn:hover { background: var(--c-panel-2); }
+    .btn.primary { background: var(--c-accent); border-color: var(--c-accent); color: #fff; box-shadow: 0 1px 3px rgba(91,91,246,.38); }
+    .btn.primary:hover { filter: brightness(1.06); }
+    .btn.danger { color: var(--c-danger); border-color: #f3c9ca; }
+    .btn.sm { padding: 4px 10px; font-size: .74rem; }
+    .fld { background: var(--c-panel-2); border: 1px solid var(--c-border-2); border-radius: 8px; padding: 8px 11px; font-family: inherit; font-size: .82rem; color: var(--c-text); }
+    table.mt { border-collapse: collapse; width: 100%; font-size: .84rem; margin-top: 6px; }
+    table.mt th, table.mt td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--c-border); }
+    table.mt th { color: var(--c-muted); font-weight: 600; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; }
+    .row-actions { text-align: right; white-space: nowrap; }
+    .invite-row { display: flex; gap: 8px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+    .invite-row .fld.email { flex: 1; min-width: 200px; }
+    .danger-card { border-color: #f3c9ca; }
+    .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: #15171c; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: .82rem; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; }
+    .toast.show { opacity: 1; }
+    .muted { color: var(--c-muted); font-size: .85rem; line-height: 1.6; }
+    .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .pcard { background: var(--c-panel); border: 1px solid var(--c-border); border-radius: 14px; padding: 18px; box-shadow: var(--c-shadow); cursor: pointer; text-decoration: none; color: inherit; display: block; }
+    .pcard:hover { border-color: var(--c-border-2); }
+    .pcard .nm { font-weight: 650; font-size: 1rem; margin-bottom: 8px; }
+    .pcard .meta { color: var(--c-faint); font-size: .76rem; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="/account.html">Account</a>
+      <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    </div>
+  </nav>
+
+  <div class="wrap" id="root"><p class="muted" id="loading">Loading…</p></div>
+  <div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.getElementById('root');
+  var toastEl = document.getElementById('toast');
+  function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(function(){ toastEl.classList.remove('show'); }, 2200); }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function api(path, opts) {
+    opts = opts || {};
+    opts.credentials = 'include';
+    opts.headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+    if (opts.body && typeof opts.body !== 'string') opts.body = JSON.stringify(opts.body);
+    return fetch(path, opts).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; }).catch(function(){ return { ok: r.ok, status: r.status, j: {} }; }); });
+  }
+  function qs(k) { return new URLSearchParams(location.search).get(k); }
+  function fmtBytes(n) { n = Number(n) || 0; if (n < 1024) return n + ' B'; if (n < 1048576) return (n / 1024).toFixed(1) + ' KB'; return (n / 1048576).toFixed(1) + ' MB'; }
+  function fmtDate(ms) { try { return new Date(Number(ms)).toLocaleDateString(); } catch (_) { return ''; } }
+
+  var projectId = qs('id');
+
+  if (!projectId) { renderList(); } else { renderProject(projectId); }
+
+  // ── Project list ──────────────────────────────────────────────────────────
+  function renderList() {
+    api('/api/projects').then(function (r) {
+      if (r.status === 401) { root.innerHTML = guest(); return; }
+      var projects = (r.j && r.j.projects) || [];
+      var cards = projects.map(function (p) {
+        var role = '<span class="pill ' + esc(p.role) + '">' + esc(p.role) + '</span>';
+        var bits = [];
+        if (p.backend) bits.push('Backend');
+        if (p.app) bits.push('App');
+        if (p.worker) bits.push('Worker');
+        return '<a class="pcard" href="/project.html?id=' + encodeURIComponent(p.id) + '">' +
+          '<div class="nm">' + esc(p.name) + '</div>' + role +
+          '<div class="meta">' + (bits.length ? esc(bits.join(' · ')) : 'No resources yet') +
+          (p.is_owner ? '' : ' · shared by ' + esc(p.owner_email || 'owner')) + '</div></a>';
+      }).join('');
+      root.innerHTML =
+        '<div class="ph"><h1>Projects</h1></div>' +
+        (projects.length ? '<div class="grid-cards">' + cards + '</div>'
+          : '<div class="card"><p class="muted">No projects yet. Connect a folder to LingCode Cloud from the Mac app, or deploy a project — it will appear here.</p></div>');
+    });
+  }
+
+  function guest() {
+    return '<div class="card"><h2>Sign in required</h2><p class="muted">Sign in to view and manage your projects.</p>' +
+      '<p style="margin-top:14px"><a class="btn primary" href="/signin.html?next=' + encodeURIComponent(location.pathname + location.search) + '">Sign in</a></p></div>';
+  }
+
+  // ── Single project control panel ────────────────────────────────────────────
+  function renderProject(id) {
+    Promise.all([ api('/api/projects/' + encodeURIComponent(id)), api('/api/projects/' + encodeURIComponent(id) + '/members') ])
+      .then(function (res) {
+        var pr = res[0], mr = res[1];
+        if (pr.status === 401) { root.innerHTML = guest(); return; }
+        if (!pr.ok || !pr.j.project) { root.innerHTML = '<div class="card"><h2>Not found</h2><p class="muted">This project does not exist or you don\'t have access.</p><p style="margin-top:12px"><a class="link" href="/project.html">← All projects</a></p></div>'; return; }
+        var p = pr.j.project;
+        var members = (mr.j && mr.j.members) || [];
+        var pending = (mr.j && mr.j.pending) || [];
+        var isOwner = p.role === 'owner';
+
+        root.innerHTML =
+          '<a class="back" href="/project.html">← All projects</a>' +
+          '<div class="ph"><h1>' + esc(p.name) + '</h1><span class="pill ' + esc(p.role) + '">' + esc(p.role) + '</span></div>' +
+          liveUrlSub(p) +
+          acceptBanner(p) +
+          overviewCard(p) +
+          sourceCard(p) +
+          collaboratorsCard(p, members, pending, isOwner) +
+          transferCard(p, members, isOwner) +
+          (isOwner ? settingsCard(p) : '') +
+          dangerCard(p, isOwner);
+
+        wire(p, isOwner);
+      });
+  }
+
+  // Lead the panel with the deployed app's live URL so a user arriving from the
+  // account page's "Share / Transfer" button recognizes this as the thing they
+  // deployed — not an abstract "project". Falls back to nothing if unlinked.
+  function liveUrlSub(p) {
+    var href = null, label = null;
+    if (p.worker && p.worker.hostname) { href = 'https://' + p.worker.hostname; label = p.worker.hostname; }
+    else if (p.app && p.app.id) { href = p.app.url || ('/apps/' + encodeURIComponent(p.app.id) + '/'); label = p.app.hostname || p.app.id; }
+    if (!href) return '';
+    return '<p class="sub" style="margin:-6px 0 18px">Sharing & ownership for your deployed app · ' +
+      '<a class="link" href="' + esc(href) + '" target="_blank">' + esc(label) + ' ↗</a></p>';
+  }
+
+  function overviewCard(p) {
+    var rows = '';
+    rows += kv('Owner', esc(p.owner_email || '—'));
+    if (p.backend) {
+      var st = p.backend.status === 'live' ? '<span class="pill live">live</span>' : '<span class="pill other">' + esc(p.backend.status) + '</span>';
+      rows += kv('Backend', st + ' &nbsp; <a class="link" href="/backends.html?backend=' + encodeURIComponent(p.backend.id) + '">Open console →</a>');
+    } else { rows += kv('Backend', '<span class="muted">Not provisioned</span>'); }
+    if (p.app) rows += kv('App', '<a class="link" href="' + esc(p.app.url || ('/apps/' + encodeURIComponent(p.app.id) + '/')) + '" target="_blank">' + esc(p.app.hostname || p.app.id) + ' ↗</a>');
+    if (p.worker) rows += kv('Worker', '<a class="link" href="https://' + esc(p.worker.hostname) + '" target="_blank">' + esc(p.worker.hostname) + ' ↗</a>');
+    if (p.git_remote) rows += kv('Source', '<code class="mono">' + esc(p.git_remote) + '</code>');
+    return '<div class="card"><h2>Overview</h2><p class="sub">The resources this project ties together.</p>' + rows + '</div>';
+  }
+  function kv(k, v) { return '<div class="kv"><span class="k">' + k + '</span><span>' + v + '</span></div>'; }
+
+  // Source the collaborators can clone to keep building. Populated either by
+  // ticking "Upload source" on a Mac-app deploy, or a manual upload here. A Git
+  // remote (Settings) is the always-current alternative.
+  function sourceCard(p) {
+    var canEdit = p.role === 'owner' || p.role === 'editor';
+    return '<div class="card"><h2>Source</h2>' +
+      '<p class="sub">What collaborators download to keep building this project. Tick <b>“Upload source”</b> when you deploy from the Mac app, or upload an archive here. A Git remote (Settings) stays current automatically.</p>' +
+      (p.git_remote ? '<div class="kv"><span class="k">Git remote</span><span><code class="mono">' + esc(p.git_remote) + '</code> <span class="faint">— preferred, always current</span></span></div>' : '') +
+      '<div class="kv"><span class="k">Snapshot</span><span id="src-state" class="muted">Loading…</span></div>' +
+      '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+        '<a class="btn primary" id="src-edit" href="/try.html?edit=' + encodeURIComponent(p.id) + '" style="display:none">Open in editor</a>' +
+        '<a class="btn" id="src-dl" href="/api/projects/' + encodeURIComponent(p.id) + '/source" style="display:none">Download source (.tgz)</a>' +
+        (canEdit ? '<button class="btn primary" id="src-up-btn">Upload source…</button>' +
+          '<input type="file" id="src-up" accept=".zip,.tgz,.tar.gz,.gz,application/zip,application/gzip" style="display:none" />' : '') +
+      '</div>' +
+      (canEdit ? '<p class="sub" style="margin-top:10px">Upload a <b>.zip</b> or <b>.tar.gz</b>. We drop <code class="mono">node_modules</code>, <code class="mono">.git</code> and <code class="mono">.env*</code>, and flag anything that looks like a key — rotate secrets to be safe.</p>' : '') +
+      '<div id="src-msg" class="sub" style="min-height:1em"></div>' +
+    '</div>';
+  }
+
+  function collaboratorsCard(p, members, pending, isOwner) {
+    var rolesOpts = function (cur) { return ['editor','viewer'].map(function(r){ return '<option value="'+r+'"'+(r===cur?' selected':'')+'>'+r+'</option>'; }).join(''); };
+    var rows = members.map(function (m) {
+      var roleCell = (isOwner && m.role !== 'owner')
+        ? '<select class="fld role-sel" data-uid="' + esc(m.id) + '">' + rolesOpts(m.role) + '</select>'
+        : '<span class="pill ' + esc(m.role) + '">' + esc(m.role) + '</span>';
+      var action = (isOwner && m.role !== 'owner')
+        ? '<button class="btn sm danger rm-btn" data-uid="' + esc(m.id) + '" data-email="' + esc(m.email) + '">Remove</button>' : '';
+      return '<tr><td>' + esc(m.email) + '</td><td>' + roleCell + '</td><td class="row-actions">' + action + '</td></tr>';
+    }).join('');
+    var pendRows = pending.map(function (pi) {
+      var action = isOwner ? '<button class="btn sm danger revoke-btn" data-email="' + esc(pi.email) + '">Revoke</button>' : '';
+      return '<tr><td>' + esc(pi.email) + ' <span class="faint">(pending)</span></td><td><span class="pill ' + esc(pi.role) + '">' + esc(pi.role) + '</span></td><td class="row-actions">' + action + '</td></tr>';
+    }).join('');
+    var inviteUI = isOwner ? (
+      '<div class="invite-row">' +
+        '<input class="fld email" id="inv-email" type="email" placeholder="teammate@example.com" />' +
+        '<select class="fld" id="inv-role"><option value="editor">editor</option><option value="viewer" selected>viewer</option></select>' +
+        '<button class="btn primary" id="inv-btn">Invite</button>' +
+        '<button class="btn" id="link-btn">Copy share link</button>' +
+      '</div>') : '<p class="muted" style="margin-top:10px">Only the owner can manage collaborators.</p>';
+    return '<div class="card"><h2>Collaborators</h2><p class="sub">People with access to this project\'s backend, deployment, and source.</p>' +
+      '<table class="mt"><thead><tr><th>Member</th><th>Role</th><th></th></tr></thead><tbody>' + rows + pendRows + '</tbody></table>' +
+      inviteUI + '</div>';
+  }
+
+  function acceptBanner(p) {
+    if (!(p.pending_transfer && p.pending_transfer.is_me)) return '';
+    return '<div class="card" style="box-shadow:inset 0 0 0 1px #7c3aed">' +
+      '<h2>Ownership offered to you</h2>' +
+      '<p class="sub">The current owner wants to make you owner of <strong>' + esc(p.name) + '</strong> — you take over its backend (data, auth, storage, secrets), live deployment, and billing. Source stored in LingCode comes too; an external Git repo isn\'t included — ask for repo access separately. The owner becomes an editor.</p>' +
+      '<div class="invite-row"><button class="btn primary" id="xfer-accept">Accept ownership</button>' +
+      '<button class="btn" id="xfer-decline">Decline</button></div></div>';
+  }
+
+  function transferCard(p, members, isOwner) {
+    if (!isOwner) return '';
+    if (p.pending_transfer) {
+      var exp = new Date(p.pending_transfer.expires_at).toLocaleDateString();
+      return '<div class="card"><h2>Ownership transfer</h2>' +
+        '<p class="sub">Pending — waiting for <strong>' + esc(p.pending_transfer.to_email) + '</strong> to accept (expires ' + esc(exp) + ').</p>' +
+        '<button class="btn danger" id="xfer-cancel">Cancel transfer</button></div>';
+    }
+    var opts = members.filter(function (m) { return m.role !== 'owner'; })
+      .map(function (m) { return '<option value="' + esc(m.email) + '">' + esc(m.email) + ' (' + esc(m.role) + ')</option>'; }).join('');
+    if (!opts) return '<div class="card"><h2>Ownership transfer</h2><p class="sub">Invite a collaborator first, then you can hand ownership to them.</p></div>';
+    return '<div class="card"><h2>Ownership transfer</h2>' +
+      '<p class="sub">Hand this project to a collaborator: its backend (data, auth, storage, <strong>secrets</strong>), live deployment, and billing transfer to them. Source stored in LingCode moves too; code in an external Git repo is not moved — grant repo access separately. They must accept; you become an editor. Rotate any personal API keys afterward.</p>' +
+      '<div class="invite-row"><select class="fld" id="xfer-to" style="flex:1;min-width:220px">' + opts + '</select>' +
+      '<button class="btn danger" id="xfer-btn">Transfer ownership</button></div></div>';
+  }
+
+  function settingsCard(p) {
+    return '<div class="card"><h2>Settings</h2><p class="sub">Project name and source repository.</p>' +
+      '<div class="kv"><span class="k">Name</span><input class="fld" id="set-name" value="' + esc(p.name) + '" style="flex:1;min-width:200px" /></div>' +
+      '<div class="kv"><span class="k">Git remote</span><input class="fld" id="set-git" placeholder="git@github.com:you/repo.git" value="' + esc(p.git_remote || '') + '" style="flex:1;min-width:240px" /></div>' +
+      '<div style="margin-top:12px"><button class="btn primary" id="save-btn">Save changes</button></div></div>';
+  }
+
+  function dangerCard(p, isOwner) {
+    if (isOwner) {
+      return '<div class="card danger-card"><h2>Danger zone</h2><p class="sub">Deleting dissolves the project and removes everyone\'s access. You can also take the deployed site offline and delete the managed backend in the next step.</p>' +
+        '<button class="btn danger" id="del-btn">Delete project</button></div>';
+    }
+    return '<div class="card danger-card"><h2>Leave project</h2><p class="sub">You\'ll lose access until the owner re-invites you.</p>' +
+      '<button class="btn danger" id="leave-btn">Leave project</button></div>';
+  }
+
+  // ── Delete modal: choose teardown scope, gated by typing the project name ────
+  function showDeleteModal(p) {
+    var hasSite = !!(p.worker || p.app);
+    var hasBackend = !!p.backend;
+    var rows = '';
+    if (p.worker && p.worker.url) rows += '<div class="kv"><span class="k">Live site</span><a href="' + esc(p.worker.url) + '" target="_blank" rel="noopener">' + esc(p.worker.url) + '</a></div>';
+    else if (p.app) rows += '<div class="kv"><span class="k">Deployed app</span><span>' + esc((p.app && (p.app.title || p.app.slug)) || 'app') + '</span></div>';
+    if (hasBackend) rows += '<div class="kv"><span class="k">Backend</span><span>' + esc(p.backend.label || p.backend.id) + '</span></div>';
+
+    var siteRow = hasSite
+      ? '<label style="display:flex;gap:8px;align-items:flex-start;margin-top:10px"><input type="checkbox" id="del-site" checked /><span>Take the deployed site offline <span style="opacity:.65">— deletes the Worker/app; the URL stops working.</span></span></label>'
+      : '';
+    var backendRow = hasBackend
+      ? '<label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px"><input type="checkbox" id="del-backend" /><span style="color:var(--c-danger)">Also delete the managed backend and all its data — irreversible.</span></label>'
+      : '';
+
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px';
+    ov.innerHTML =
+      '<div class="card" style="max-width:480px;width:100%">' +
+        '<h2>Delete ' + esc(p.name) + '</h2>' +
+        '<p class="sub">This permanently deletes the project and removes everyone\'s access.</p>' +
+        (rows ? '<div style="margin:8px 0">' + rows + '</div>' : '') +
+        siteRow + backendRow +
+        '<div style="margin-top:14px"><label class="k" style="display:block;margin-bottom:6px">Type the project name to confirm</label>' +
+        '<input class="fld" id="del-confirm" placeholder="' + esc(p.name) + '" autocomplete="off" style="width:100%" /></div>' +
+        '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">' +
+          '<button class="btn" id="del-cancel">Cancel</button>' +
+          '<button class="btn danger" id="del-go" disabled>Delete project</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+
+    function close() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    var input = ov.querySelector('#del-confirm');
+    var go = ov.querySelector('#del-go');
+    input.focus();
+    input.oninput = function () { go.disabled = input.value.trim() !== p.name; };
+    ov.querySelector('#del-cancel').onclick = close;
+    go.onclick = function () {
+      if (input.value.trim() !== p.name) return;
+      var siteEl = ov.querySelector('#del-site');
+      var beEl = ov.querySelector('#del-backend');
+      var site = (siteEl && siteEl.checked) ? 1 : 0;
+      var backend = (beEl && beEl.checked) ? 1 : 0;
+      go.disabled = true; go.textContent = 'Deleting…';
+      api('/api/projects/' + p.id + '?site=' + site + '&backend=' + backend, { method: 'DELETE' }).then(function (r) {
+        if (!r.ok) { go.disabled = false; go.textContent = 'Delete project'; return toast((r.j && (r.j.message || r.j.error)) || 'Failed'); }
+        var fails = (r.j && r.j.failures) || [];
+        close();
+        if (fails.length) toast('Deleted — but ' + fails.length + ' resource(s) may still be live; check your consoles.');
+        setTimeout(function () { location.href = '/project.html'; }, fails.length ? 1400 : 0);
+      });
+    };
+  }
+
+  // ── Wiring ──────────────────────────────────────────────────────────────────
+  function wire(p, isOwner) {
+    var id = p.id;
+    var inv = document.getElementById('inv-btn');
+    if (inv) inv.onclick = function () {
+      var email = (document.getElementById('inv-email').value || '').trim();
+      var role = document.getElementById('inv-role').value;
+      if (!email) return toast('Enter an email');
+      inv.disabled = true;
+      api('/api/projects/' + id + '/members', { method: 'POST', body: { email: email, role: role } }).then(function (r) {
+        inv.disabled = false;
+        if (!r.ok) return toast(r.j.error || 'Invite failed');
+        toast(r.j.action === 'pending' ? 'Invite emailed' : 'Added ' + email);
+        renderProject(id);
+      });
+    };
+    var linkBtn = document.getElementById('link-btn');
+    if (linkBtn) linkBtn.onclick = function () {
+      api('/api/projects/' + id + '/share-link').then(function (r) {
+        if (!r.ok) return toast('Could not create link');
+        var url = r.j.url;
+        if (navigator.clipboard) navigator.clipboard.writeText(url).then(function(){ toast('Share link copied'); }, function(){ prompt('Share link:', url); });
+        else prompt('Share link:', url);
+      });
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('.role-sel'), function (sel) {
+      sel.onchange = function () {
+        api('/api/projects/' + id + '/members/' + sel.getAttribute('data-uid'), { method: 'PATCH', body: { role: sel.value } })
+          .then(function (r) { toast(r.ok ? 'Role updated' : (r.j.error || 'Failed')); });
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.rm-btn'), function (b) {
+      b.onclick = function () {
+        if (!confirm('Remove ' + b.getAttribute('data-email') + '?')) return;
+        api('/api/projects/' + id + '/members/' + b.getAttribute('data-uid'), { method: 'DELETE' })
+          .then(function (r) { if (r.ok) { toast('Removed'); renderProject(id); } else toast(r.j.error || 'Failed'); });
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.revoke-btn'), function (b) {
+      b.onclick = function () {
+        if (!confirm('Revoke the invite to ' + b.getAttribute('data-email') + '?')) return;
+        api('/api/projects/' + id + '/revoke-invite', { method: 'POST', body: { email: b.getAttribute('data-email') } })
+          .then(function (r) { if (r.ok) { toast('Invite revoked'); renderProject(id); } else toast(r.j.error || 'Failed'); });
+      };
+    });
+    var save = document.getElementById('save-btn');
+    if (save) save.onclick = function () {
+      var body = { name: document.getElementById('set-name').value, git_remote: document.getElementById('set-git').value || null };
+      api('/api/projects/' + id, { method: 'PATCH', body: body }).then(function (r) { if (r.ok) { toast('Saved'); renderProject(id); } else toast(r.j.error || 'Failed'); });
+    };
+    var del = document.getElementById('del-btn');
+    if (del) del.onclick = function () { showDeleteModal(p); };
+    var leave = document.getElementById('leave-btn');
+    if (leave) leave.onclick = function () {
+      if (!confirm('Leave this project?')) return;
+      api('/api/projects/' + id + '/leave', { method: 'POST', body: {} }).then(function (r) { if (r.ok) { location.href = '/project.html'; } else toast(r.j.error || 'Failed'); });
+    };
+    // ── Source snapshot: state + download + upload ──
+    var srcDl = document.getElementById('src-dl');
+    var srcEdit = document.getElementById('src-edit');
+    function loadSnapshots() {
+      var st = document.getElementById('src-state'); if (!st) return;
+      api('/api/projects/' + id + '/source/versions').then(function (r) {
+        var snaps = (r.j && r.j.snapshots) || [];
+        if (!snaps.length) {
+          st.innerHTML = '<span class="muted">None uploaded yet' + (p.git_remote ? ' — collaborators clone the Git remote' : '') + '</span>';
+          if (srcDl) srcDl.style.display = 'none';
+          if (srcEdit) srcEdit.style.display = 'none';
+          return;
+        }
+        var latest = snaps[0];
+        st.innerHTML = 'v' + latest.version + ' · ' + fmtBytes(latest.total_bytes) + ' · ' + fmtDate(latest.created_at) +
+          ' <span class="faint">(' + snaps.length + ' version' + (snaps.length > 1 ? 's' : '') + ')</span>';
+        if (srcDl) srcDl.style.display = '';
+        if (srcEdit) srcEdit.style.display = '';
+      });
+    }
+    var upBtn = document.getElementById('src-up-btn');
+    var upInput = document.getElementById('src-up');
+    if (upBtn && upInput) {
+      upBtn.onclick = function () { upInput.click(); };
+      upInput.onchange = function () {
+        var f = upInput.files && upInput.files[0]; if (!f) return;
+        var msg = document.getElementById('src-msg');
+        if (f.size > 50 * 1024 * 1024) { msg.textContent = 'That archive is over 50MB.'; upInput.value = ''; return; }
+        msg.textContent = 'Uploading ' + f.name + '…'; upBtn.disabled = true;
+        fetch('/api/projects/' + id + '/source', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/octet-stream' }, body: f })
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }).catch(function () { return { ok: r.ok, j: {} }; }); })
+          .then(function (res) {
+            upBtn.disabled = false; upInput.value = '';
+            if (!res.ok) { msg.textContent = (res.j && (res.j.message || res.j.error)) || 'Upload failed'; return; }
+            var w = (res.j.warnings) || [];
+            msg.innerHTML = 'Uploaded v' + res.j.version + ' (' + fmtBytes(res.j.bytes) + ').' +
+              (w.length ? ' <span style="color:#b45309">⚠ Possible secrets in: ' + w.map(esc).join(', ') + ' — rotate those keys.</span>' : '');
+            loadSnapshots();
+          })
+          .catch(function () { upBtn.disabled = false; msg.textContent = 'Upload failed'; });
+      };
+    }
+    loadSnapshots();
+
+    var xferBtn = document.getElementById('xfer-btn');
+    if (xferBtn) xferBtn.onclick = function () {
+      var email = document.getElementById('xfer-to').value;
+      if (!email) return toast('Pick a collaborator');
+      if (!confirm('Transfer ownership to ' + email + '? Its backend, secrets, and deployment move to them (an external Git repo\'s access is separate). They must accept; you become an editor.')) return;
+      xferBtn.disabled = true;
+      api('/api/projects/' + id + '/transfer', { method: 'POST', body: { email: email } }).then(function (r) {
+        xferBtn.disabled = false;
+        if (!r.ok) return toast(r.j.message || r.j.error || 'Transfer failed');
+        toast('Transfer offer sent to ' + email);
+        renderProject(id);
+      });
+    };
+    var xferCancel = document.getElementById('xfer-cancel');
+    if (xferCancel) xferCancel.onclick = function () {
+      if (!confirm('Cancel the pending ownership transfer?')) return;
+      api('/api/projects/' + id + '/transfer', { method: 'DELETE' }).then(function (r) { if (r.ok) { toast('Transfer cancelled'); renderProject(id); } else toast(r.j.error || 'Failed'); });
+    };
+    var xferAccept = document.getElementById('xfer-accept');
+    if (xferAccept) xferAccept.onclick = function () {
+      if (!confirm('Accept ownership? You take over the backend, secrets, deployment, and billing (an external Git repo\'s access is separate). The current owner becomes an editor.')) return;
+      xferAccept.disabled = true;
+      api('/api/projects/' + id + '/transfer/accept', { method: 'POST', body: {} }).then(function (r) {
+        xferAccept.disabled = false;
+        if (r.ok) { toast('You are now the owner'); renderProject(id); } else toast(r.j.message || r.j.error || 'Failed');
+      });
+    };
+    var xferDecline = document.getElementById('xfer-decline');
+    if (xferDecline) xferDecline.onclick = function () {
+      if (!confirm('Decline ownership of this project?')) return;
+      api('/api/projects/' + id + '/transfer', { method: 'DELETE' }).then(function (r) { if (r.ok) { toast('Declined'); renderProject(id); } else toast(r.j.error || 'Failed'); });
+    };
+  }
+})();
+</script>
+</body>
+</html>

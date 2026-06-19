@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用 Claude Code Native + LingModel 双模型审计 Solidity 合约 — LingCode 教程</title>
+  <meta name="description" content="一套双模型协作流程，让你的 Solidity 合约在送交真正审计之前达到应有的质量水平。用 Claude Code Native 起草，用 LingModel 审计，汇总发现，反复迭代。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/pair-audit-solidity.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/pair-audit-solidity.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/pair-audit-solidity.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-21T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/pair-audit-solidity.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "用 Claude Code Native + LingModel 双模型审计 Solidity 合约",
+  "description": "一套双模型协作流程，让你的 Solidity 合约在送交真正审计之前达到应有的质量水平。用一个模型起草，用另一个审计，汇总发现，反复迭代。",
+  "url": "https://lingcode.dev/zh/tutorials/pair-audit-solidity.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-21",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/pair-audit-solidity.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "用 Claude Code Native + LingModel 双模型审计 Solidity 合约"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "构建项目",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "用 Claude Code Native + LingModel 双模型审计 Solidity 合约",
+      "item": "https://lingcode.dev/zh/tutorials/pair-audit-solidity.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/pair-audit-solidity.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <!-- Breadcrumb -->
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">构建项目</a>
+      <span>/</span>
+      <span>用 Claude Code Native + LingModel 双模型审计 Solidity 合约</span>
+    </div>
+
+    <!-- Header -->
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-21</span>
+      </div>
+      <h1>用 Claude Code Native + LingModel 双模型审计 Solidity 合约</h1>
+      <p class="intro">一套双模型协作流程，让你的 Solidity 合约在送交真正审计之前达到应有的质量水平。用一个模型起草，用另一个审计，汇总发现，反复迭代。</p>
+    </div>
+
+    <!-- Content -->
+    <div class="tutorial-body">
+      <h2>为什么要双模型交叉审计</h2>
+      <p>智能合约漏洞的代价格外惨重。Curve 因 Vyper 编译器未强化的只读重入漏洞损失 7300 万美元；Euler 因一种在该漏洞被利用之前甚至没有名字的捐款攻击模式损失 2 亿美元；Mango 因预言机操纵损失 1.14 亿美元——任何资深审计员看五分钟就能发现，但没人做过一次像样的审查。这个模式一再重演：漏洞在审查阶段本可发现，只是没人认真去找。</p>
+      <p>在 Spearbit、Trail of Bits、OpenZeppelin 或 Code4rena 竞赛中进行专业审计，费用在 2 万至 20 万美元之间，还要排队 2 到 6 周。你不应该带着明显的重入漏洞或缺失访问修饰符的代码去参加审计——竞赛中这会消耗你的保证金，私下委托则意味着你在花钱让资深审计员写你本该自己发现的问题报告。</p>
+      <p>本教程的工作流是在那次审计<em>之前</em>该做什么：把代码调整到让审计员专注于发现深层系统性风险的状态，而不是在修 <code>onlyOwner</code> 这类低级错误。</p>
+
+      <div class="tip-box">
+        <strong>这不能替代真正的审计。</strong> 两个 AI 模型共享大部分训练数据，也共享大部分盲区。把它当作 CI 门控使用，而不是上主网前的最后一道防线。对于持有可观 TVL 的合约，你仍然需要花钱做人工审计。
+      </div>
+
+      <h2>为什么要用两个不同的模型</h2>
+      <p>单个模型有盲区。训练数据不同的第二个模型有不同的盲区。两者交集——即两个模型都漏掉的 bug——比任何一个单独漏掉的要少得多。这就是整个方法的核心逻辑。</p>
+      <p>实践中每个模型各自的偏重：</p>
+      <ul>
+        <li><strong>Claude Code Native</strong> — 跨多合约系统的长上下文推理、代理升级安全（UUPS / Transparent / Beacon）、存储布局不变量、EIP-712 签名方案、ERC-4626 份额通胀、访问控制建模。在被追问时，擅长分析"威胁模型是什么"。</li>
+        <li><strong>LingModel</strong> — 规范的现代 Solidity 写法、节省 gas 的重构、识别 OpenZeppelin 模式、近期 EIP。倾向于默认威胁模型而不是明确说明——需要你主动追问。</li>
+        <li><strong>两者的共同弱点</strong> — 训练截止日期后出现的新型攻击向量、链下竞态条件、预言机<em>假设</em>失效（相对于预言机代码本身的 bug）、经济/治理攻击，以及 MEV。不要指望任何一个模型主动发明你没有问到的威胁模型。</li>
+      </ul>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>在 LingCode 中并排配置 Claude Code Native 和 LingModel</li>
+        <li>起草—审计循环的运作方式，以及为何全新上下文至关重要</li>
+        <li>一份审计师级别的检查清单，可直接粘贴进审计阶段的提示词</li>
+        <li>如何调和两个模型之间的分歧</li>
+        <li>何时停止循环、转而预约真正的审计</li>
+      </ul>
+
+      <h2>第一步：选择接入 Claude 的方式</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>三种有效路径——选你已有的那种</h3>
+          <p>无论 Claude 以哪种方式完成身份验证，LingCode 的 Claude 标签页都会给你相同的智能体循环：</p>
+          <ul>
+            <li><strong>自带 Anthropic API Key（BYOK）</strong> — 在 Settings → Providers → Anthropic 中粘贴你的密钥，按用量付费。</li>
+            <li><strong>Claude Pro / Max OAuth</strong> — 用现有的 Claude.ai 订阅登录，适合已经按月向 Anthropic 付费的用户。</li>
+            <li><strong>LingModel Pro 套餐</strong> — 由 LingCode 统一管理，无需管理密钥，一个订阅搞定一切。</li>
+          </ul>
+          <p>三种方式都驱动同一套基于 Node 的智能体桥接，支持完整工具调用、MCP 以及权限管控。从审计的角度来看，选哪种都无所谓——挑最省事的那条路即可。</p>
+        </div>
+      </div>
+
+      <h2>第二步：将 LingModel 设为审计侧的提供商</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>登录即完成</h3>
+          <p>如果你使用的是 LingModel Pro 套餐，它会自动出现在对话输入框的提供商切换器中，紧挨你的 Claude 选项。无需额外配置密钥。在 Settings（<code>⌘,</code>）→ <strong>Account</strong> 中可以确认套餐是否已激活。</p>
+          <p>LingModel 运行与 Claude Code Native 不同的模型系列，这正是审计阶段所需要的——以全新的先验知识阅读同一份合约。对一份 300 行合约做一次审计，LingModel 的费用远低于 0.1 美元。</p>
+        </div>
+      </div>
+
+      <h2>第三步：起草合约</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>打开 Claude 对话，正常起草</h3>
+          <p>两个不那么直观的习惯，能让审计步骤真正发挥作用：</p>
+          <ul>
+            <li><strong>随合约一起编写 Foundry 测试文件。</strong> 如果测试明确表达了不变量，两个模型对不变量的推理都会更准确。用 <code>forge init</code> 初始化项目，合约放 <code>src/</code>，测试放 <code>test/</code>。</li>
+            <li><strong>在合约顶部写一段威胁模型注释。</strong> 三行就够了："本合约持有 X。威胁行为者是 Y。信任假设是 Z。"这样两个模型都有了可以攻击的目标。</li>
+          </ul>
+          <p>一个 vault 合约的威胁模型注释示例：</p>
+          <pre><code>// THREAT MODEL
+// Holds: depositor USDC, up to ~$50M assumed TVL.
+// Trust: governance multisig (5/9) can pause and rotate strategist;
+//        no other admin path. Strategist is trusted to not collude.
+// Adversaries: depositors trying to mint excess shares (4626 inflation);
+//              MEV bots front-running deposit/withdraw; oracle griefers.</code></pre>
+        </div>
+      </div>
+
+      <h2>第四步：切换到 LingModel 进行审计</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>新对话、新提供商、零上下文共享</h3>
+          <p>在对话输入框中点击提供商切换器，选择 LingModel。<strong>打开一个新对话</strong>——不要延续起草合约时的那个对话。与写代码的同一个模型共享上下文会让整个流程失去意义。审计阶段需要像审计员一样，冷眼阅读合约全文。</p>
+          <p>粘贴合约（以及 Foundry 测试，如果有的话），使用结构化提示词，而不是含糊地说"审计一下这个"。模糊的审计提示只会产生模糊的发现。</p>
+          <pre><code>Audit this Solidity contract assuming it controls $10M on mainnet.
+Check every item below. For each finding, give:
+  - Severity (Critical / High / Medium / Low / Info)
+  - File:line
+  - One-paragraph explanation
+  - Concrete fix or mitigation
+
+CHECKLIST
+1.  Reentrancy — including read-only reentrancy and cross-function
+2.  Access control — modifier coverage, owner-can-rug surface area
+3.  Integer arithmetic — even on 0.8.x, unchecked blocks and casting
+4.  Oracle dependency — staleness checks, manipulation, fallback path
+5.  Front-running — does any path need commit-reveal?
+6.  Signature replay — chainId, nonce, deadline, domain separator
+7.  Upgrade safety (if proxy) — initializer guards, storage gaps, __gap
+8.  ERC-4626 share inflation — first-depositor griefing, virtual shares
+9.  Gas griefing — unbounded loops over user-controlled input
+10. Checks-Effects-Interactions discipline — order of state updates
+11. External call return values — silent failure modes
+12. Token assumptions — fee-on-transfer, rebasing, blocklist, ERC-777 hooks
+13. Block.timestamp / block.number assumptions
+14. tx.origin usage
+15. Self-destruct / selfdestruct in dependencies
+
+Output: a numbered findings list. Don't editorialize.</code></pre>
+          <p>保存 LingModel 的发现。然后在 Claude 中开一个新对话，用<em>相同的检查清单提示词</em>和同一份合约再做一次。现在你有了两份独立的发现清单。</p>
+        </div>
+      </div>
+
+      <h2>第五步：汇总与调和发现</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>两者都标记的 → 修复；只有一个标记的 → 认真思考；两者都没标记的 → 依然可能存在。</h3>
+          <ul>
+            <li><strong>两个模型都标记了同一发现。</strong> 修复它。在继续之前，先写一个 Foundry 测试——在未修复的版本上失败，在修复后通过。这个测试是你在未来重构时的保障。</li>
+            <li><strong>只有一个模型标记了某个发现。</strong> 这正是本流程体现价值的地方。单独标记的那个往往是对的——不同的先验知识能发现另一个遗漏的问题。仔细阅读该发现，写一个 Foundry 测试尝试复现，根据测试结果而非解释文字来做判断。</li>
+            <li><strong>检查清单中某个类别两者都没有标记。</strong> 这不代表你是安全的——只意味着两个模型共享同一个盲区。对于严重性为 Critical 的类别（重入、访问控制、预言机），无论如何都要自己针对未修复的假设写 Foundry 测试。</li>
+          </ul>
+          <p>持续循环，直到两个模型在最新版本上只产生 Info 级别的发现。那就是你交付给真正审计员的状态——足够干净，让他们把时间花在系统性风险上，而不是在做分类整理。</p>
+        </div>
+      </div>
+
+      <h2>第六步：将 writing-smart-contracts 技能作为第三轮扫描</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Skill Gallery → 安装 <code>writing-smart-contracts</code></h3>
+          <p>社区技能 <code>writing-smart-contracts</code> 内置了审计师级别的 Solidity 启发式规则——重入模式、代理存储冲突、预言机/MEV 暴露面、ERC-20/721/1155/4626 代币、部署脚本常见坑——并推行 Foundry 测试优先的工作流。从 Skill Gallery 安装一次后，只要你在对话中提到 Solidity、Forge、Hardhat 或某个 EIP，它就会自动激活。</p>
+          <p>在完成 Claude / LingModel 调和之后，将它作为第三轮扫描运行。使用相同的检查清单提示词，但这次技能的启发式规则会引导模型关注那些裸模型容易略过的类别。这确实有增量价值——它不是第四个模型，而是为你当前使用的任何模型提供一个更锐利的系统提示。</p>
+        </div>
+      </div>
+
+      <h2>本流程无法发现的问题</h2>
+      <p>在上线之前，要对自己诚实地评估这些局限性。</p>
+      <ul>
+        <li><strong>新型攻击向量。</strong> 两个模型的训练数据都滞后数月至一年。如果某种攻击模式在训练截止日期之后才被命名，两者都不知道它的存在。在提交代码之前，先阅读目标审计方 GitHub 上的近期审计报告。</li>
+        <li><strong>链下竞态条件。</strong> 排序器宕机、RPC 重组、预言机更新时序、跨链桥最终性——这些需要在真实测试网上进行压力测试，而非静态审查。</li>
+        <li><strong>经济/治理攻击。</strong> 代码可以完美无缺，而代币经济模型依然可能被利用。除非你非常具体地追问，否则模型不会发现"你的 veToken 治理可以被闪电贷操控"这类问题。</li>
+        <li><strong>幻觉发现。</strong> 模型会捏造不存在的问题。每一个发现在"修复"之前都要写 Foundry 测试加以验证。如果测试无法复现该 bug，说明这个发现是幻觉——直接丢弃。</li>
+        <li><strong>任何系统性问题。</strong> 两个模型各自孤立地读同一份文件，会遗漏那些由你的合约与链上其他协议交互时涌现出的 bug。这正是审计员存在的意义。</li>
+      </ul>
+
+      <h2>之后：部署到 Sepolia，停止反复纠结</h2>
+      <p>调和循环收敛之后，把合约部署到测试网，让它在那里运行一周。<code>forge script ... --rpc-url $SEPOLIA_RPC --broadcast --verify</code>，在 Tenderly 中检查存储布局，观察事件日志。真实的链上测试能发现静态审查无法发现的 gas griefing、MEV 暴露和集成失效问题。然后再预约审计。</p>
+
+      <div class="tip-box">
+        <strong>一句话总结。</strong> 用 Claude 起草，用结构化检查清单在 LingModel 中审计，将发现与 Foundry 测试比对调和，用 <code>writing-smart-contracts</code> 技能做最终扫描，部署到 Sepolia 跑一周，再花钱做真正的审计。这套流程不能替代其中任何一个环节——它让每个环节都变得更省钱。
+      </div>
+
+      <h2>下一步去哪</h2>
+      <ul>
+        <li><a href="/zh/tutorials/understanding-providers.html">了解提供商</a> — Claude Code Native 和 BYOK 背后的智能体循环</li>
+        <li><a href="/zh/tutorials/switch-providers-mid-conversation.html">在对话中切换提供商</a> — 同一个对话，不同的模型</li>
+        <li><a href="/zh/tutorials/running-across-all-providers.html">跨所有提供商运行</a> — 把同一个提示词发给你拥有的每个模型</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

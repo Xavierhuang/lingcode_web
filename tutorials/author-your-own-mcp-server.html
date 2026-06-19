@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I author my own MCP server? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Write a custom MCP server that exposes typed tools to LingCode. A small TypeScript or Python process; a few JSON-schema'd tool definitions; a credential the agent never sees.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/author-your-own-mcp-server.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/author-your-own-mcp-server.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/author-your-own-mcp-server.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/author-your-own-mcp-server.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Author your own MCP server",
+  "description": "The day you wish \"the agent could just talk to our internal X\" is the day you should write an MCP server. It's a few hundred lines, fronts a service you already have, and turns \"the agent doesn't know about that\" into \"the agent has a typed tool for it.\"",
+  "url": "https://lingcode.dev/tutorials/author-your-own-mcp-server.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/author-your-own-mcp-server.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Author your own MCP server"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Author your own MCP server",
+      "item": "https://lingcode.dev/tutorials/author-your-own-mcp-server.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/author-your-own-mcp-server.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">Native Mac IDE</a>
+      <span>/</span>
+      <span>Author your own MCP server</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-advanced">● Advanced</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I author my own MCP server?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Write a Node or Python program that implements the MCP protocol (a few hundred lines using the official SDK), expose typed tools that wrap your service's API, point LingCode at it with <code>command</code> + <code>args</code> in mcp.json. The agent now has typed access to whatever your service does.</p>
+      <p class="intro">The day you wish "the agent could just talk to our internal X" is the day you should write an MCP server. It's a few hundred lines, fronts a service you already have, and turns "the agent doesn't know about that" into "the agent has a typed tool for it."</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p><a href="/tutorials/connect-an-mcp-server.html">Connecting an existing MCP server</a> covers consuming what someone else built. Authoring is the inverse: you have a service the agent doesn't know about — an internal admin API, a database with a schema only your team understands, a CI system, a feature-flag platform — and you want the agent to be able to use it without giving it a shell and hoping for the best.</p>
+      <p>The shape of the work is small. An MCP server is a process that speaks a defined JSON-RPC protocol over stdio or HTTP. It exposes a list of tools, each with a name, description, and JSON schema for arguments and return values. When the agent calls a tool, your code runs, you talk to whatever underlying service you wanted to expose, and you return a result. That's it. The agent doesn't see credentials, doesn't reason about endpoints, doesn't make up arguments — it sees typed tools with sensible names.</p>
+      <p>What you get for the effort: a tool the agent uses correctly the first time, every time. No more "I asked it to look up a Linear ticket and it tried to <code>curl</code> the wrong URL." The semantics live in the server, where you can test them; the agent just calls them.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The minimum surface of an MCP server (list_tools, call_tool)</li>
+        <li>The official SDKs (TypeScript and Python) — which to pick</li>
+        <li>Writing a tool description that the agent will use correctly</li>
+        <li>JSON Schema for argument validation</li>
+        <li>Auth: the server holds the secret, not the agent</li>
+        <li>Testing your server before pointing LingCode at it</li>
+      </ul>
+
+      <h2>Step 1: Pick a runtime</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>TypeScript or Python — both are first-class</h3>
+          <p>The MCP spec is language-neutral; the two reference SDKs are:</p>
+          <ul>
+            <li><strong>TypeScript:</strong> <code>@modelcontextprotocol/sdk</code>. Tiny dependency footprint, runs under Node, easy to ship as an <code>npx</code> command. Best when the service you're wrapping is JavaScript-friendly (a Node API, a JSON service).</li>
+            <li><strong>Python:</strong> <code>mcp</code> on PyPI. Best when the service is Python-friendly (a Django admin, a pandas pipeline, ML tooling).</li>
+          </ul>
+          <p>Pick whichever your team writes more comfortably; the protocol is identical. The examples below use TypeScript.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Scaffold the project</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Minimum viable server</h3>
+          <pre><code>mkdir my-mcp-server &amp;&amp; cd my-mcp-server
+npm init -y
+npm i @modelcontextprotocol/sdk zod</code></pre>
+          <p>Then create <code>server.ts</code>:</p>
+          <pre><code>import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
+
+const server = new Server(
+  { name: "my-internal-tools", version: "0.1.0" },
+  { capabilities: { tools: {} } }
+);
+
+// Define your tools' input schemas
+const LookupUserArgs = z.object({
+  email: z.string().email(),
+});
+
+server.setRequestHandler(ListToolsRequestSchema, async () =&gt; ({
+  tools: [
+    {
+      name: "lookup_user",
+      description: "Look up a user by email in the internal database. Returns the user's id, name, plan, and signup date.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          email: { type: "string", format: "email", description: "The user's email address" },
+        },
+        required: ["email"],
+      },
+    },
+  ],
+}));
+
+server.setRequestHandler(CallToolRequestSchema, async (req) =&gt; {
+  if (req.params.name === "lookup_user") {
+    const { email } = LookupUserArgs.parse(req.params.arguments);
+    const user = await fetchUserFromOurDB(email);
+    return { content: [{ type: "text", text: JSON.stringify(user) }] };
+  }
+  throw new Error(`Unknown tool: ${req.params.name}`);
+});
+
+const transport = new StdioServerTransport();
+await server.connect(transport);</code></pre>
+          <p>That's a working MCP server. It exposes one tool, validates its arguments, calls an underlying function, returns a structured result.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Write the description carefully</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>The description is your prompt to the model</h3>
+          <p>When the agent reads its tool list, the description is what it uses to decide when to call your tool. A vague description ("user lookup") gets called wrong; a specific one ("Look up a user by email; returns id, name, plan, and signup date") gets called correctly.</p>
+          <p>Imperative voice, name the exact inputs, mention what's returned. If there are restrictions or gotchas, put them in the description — not in a runtime error that the agent will see only after it's already tried wrong. "Returns 404 if the user doesn't exist; check first by calling list_users with a partial match."</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Per-argument descriptions matter too.</strong> JSON Schema's <code>description</code> on each property is also surfaced to the agent. Spend a sentence on each: "the user's email, lowercased; pass the canonical form." Better arguments mean fewer wasted tool calls.
+      </div>
+
+      <h2>Step 4: Hold the credential server-side</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The agent should never see the secret</h3>
+          <p>The whole point of MCP versus "ask the agent to curl an API" is that the credential stays in the server. When you call your internal DB, the connection string lives in <code>process.env.INTERNAL_DB_URL</code>, set in the MCP server's environment, not in any prompt the agent sees.</p>
+          <p>This is also how you scope access: a server that holds a read-only DB role can expose <code>lookup_user</code> but not <code>delete_user</code>. The agent has no way to escalate; the credential simply doesn't grant it.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Test the server before integrating</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Stdio is easy to drive from a script</h3>
+          <p>An MCP server over stdio reads JSON-RPC from stdin and writes to stdout. You can drive it from any test harness:</p>
+          <pre><code># A tiny smoke test
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node server.js</code></pre>
+          <p>If the server lists its tools correctly, the schema is right. Wire up the official MCP inspector (<code>npx @modelcontextprotocol/inspector</code>) for a richer dev loop — it gives you a UI for calling each tool, inspecting responses, and watching the JSON-RPC traffic.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Wire it into LingCode</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Same config as any other MCP server</h3>
+          <p>In <code>.claude/mcp.json</code> (project) or <code>~/.claude/mcp.json</code> (user):</p>
+          <pre><code>{
+  "mcpServers": {
+    "internal": {
+      "command": "node",
+      "args": ["/Users/you/code/my-mcp-server/server.js"],
+      "env": {
+        "INTERNAL_DB_URL": "postgres://..."
+      }
+    }
+  }
+}</code></pre>
+          <p>Tools appear as <code>mcp__internal__lookup_user</code>. First call per session prompts for permission. From there, the agent uses it like any built-in tool.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Logging:</strong> stderr is fair game for your server's own logs. stdout is reserved for protocol messages — don't <code>console.log()</code> there, or the agent will receive malformed JSON-RPC and disconnect. Common foot-gun in TypeScript servers; trivial to avoid once you know.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>Connect an MCP server</h3>
+            <p>The consume side, for context — same protocol, opposite direction</p>
+          </a>
+          <a href="/tutorials/connect-linear-and-github-via-mcp.html" class="tutorial-next-card">
+            <h3>Connect Linear and GitHub via MCP</h3>
+            <p>Two concrete real-world MCP servers, end-to-end</p>
+          </a>
+          <a href="/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>Install and configure plugins</h3>
+            <p>The right packaging for an MCP server you want to share with a team</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redeploy a self-hosted VPS — LingCode Tutorials</title>
+  <meta name="description" content="Push updates to your DigitalOcean / Hetzner / Linode server. SSH, pull, restart — manually or via a tiny deploy script. Zero-downtime patterns.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/redeploy-a-vps.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/redeploy-a-vps.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/redeploy-a-vps.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/redeploy-a-vps.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Redeploy a self-hosted VPS",
+  "description": "Push code updates to your own server. SSH in, pull, restart the service. Or wrap it in a one-line deploy script. Time: 10–30 seconds for a typical app.",
+  "url": "https://lingcode.dev/tutorials/redeploy-a-vps.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/redeploy-a-vps.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Redeploy a self-hosted VPS"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Redeploy a self-hosted VPS",
+      "item": "https://lingcode.dev/tutorials/redeploy-a-vps.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/redeploy-a-vps.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Redeploy a self-hosted VPS</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Redeploy a self-hosted VPS</h1>
+      <p class="intro">Push code updates to your own server. SSH in, pull, restart the service. Or wrap it in a one-line deploy script. Time: 10–30 seconds for a typical app.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>The manual flow (one-time understanding)</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>SSH to the server:</p>
+          <pre><code>ssh deploy@your-server-ip</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Go to your project directory and pull:</p>
+          <pre><code>cd /var/www/myapp
+git pull origin main</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Install new dependencies (only if <code>package.json</code> / <code>requirements.txt</code> changed):</p>
+          <pre><code>npm install --production
+# or: pip install -r requirements.txt
+# or: bundle install --deployment</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Build (if needed):</p>
+          <pre><code>npm run build</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Restart the service:</p>
+          <pre><code># If using systemd:
+sudo systemctl restart myapp
+
+# If using pm2:
+pm2 reload myapp
+
+# If using Docker:
+docker compose pull &amp;&amp; docker compose up -d</code></pre>
+          <p>That's it — the new code is live.</p>
+        </div>
+      </div>
+
+      <h2>Wrap it in a deploy script</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>You'll do this often enough that a script saves real time. <code>deploy.sh</code> on the server:</p>
+          <pre><code>#!/usr/bin/env bash
+set -euo pipefail
+
+cd /var/www/myapp
+git pull origin main
+npm install --production
+npm run build
+sudo systemctl restart myapp
+echo "✓ Deployed at $(date)"</code></pre>
+          <p>Make it executable: <code>chmod +x deploy.sh</code>. Now redeploy is one command (after SSHing in):</p>
+          <pre><code>./deploy.sh</code></pre>
+        </div>
+      </div>
+
+      <h2>From your laptop, in one command</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Don't even SSH manually — script it from your Mac:</p>
+          <pre><code># deploy.sh on your laptop
+#!/usr/bin/env bash
+ssh deploy@your-server-ip '/var/www/myapp/deploy.sh'</code></pre>
+          <p>Or directly inline:</p>
+          <pre><code>ssh deploy@your-server-ip 'cd /var/www/myapp &amp;&amp; git pull &amp;&amp; npm install --production &amp;&amp; npm run build &amp;&amp; sudo systemctl restart myapp'</code></pre>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Use a passwordless sudo entry just for the restart.</strong> If <code>sudo systemctl restart myapp</code> prompts for a password, your script breaks. Add an <code>/etc/sudoers.d/myapp-restart</code> entry allowing your deploy user to run that one command without a password.
+      </div>
+
+      <h2>Zero-downtime patterns</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>The naive restart drops in-flight requests. For real production:</p>
+          <ul>
+            <li><strong>pm2 reload</strong> — restarts Node.js workers one at a time; new ones come up before old ones go down. Built-in to <a href="https://pm2.keymetrics.io/" target="_blank" rel="noopener">pm2 ↗</a>.</li>
+            <li><strong>systemd <code>Type=notify</code></strong> — your service signals "ready" before systemd kills the old one. Smaller downtime window than a default restart.</li>
+            <li><strong>Two instances behind Nginx</strong> — run two copies on different ports, switch Nginx upstream, restart the other. Manual but cheap; no extra tooling.</li>
+            <li><strong>Docker Compose <code>up -d</code></strong> — for Compose-managed services, Docker handles rolling replacement of one container at a time if you set <code>deploy.update_config</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Auto-deploy on git push</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>For an automatic deploy on every push to <code>main</code>, the cheapest patterns:</p>
+          <ul>
+            <li><strong>GitHub Action that SSHes in.</strong> <code>workflow_dispatch</code> or <code>on: push: main</code> → action runs <code>ssh ... 'deploy.sh'</code>. Needs an SSH deploy key stored as a GitHub Secret.</li>
+            <li><strong>Webhook + a tiny listener.</strong> GitHub fires a webhook on push; a small Node/Python service on your server runs <code>deploy.sh</code>. Beware: public webhook endpoints need signature verification (similar to <a href="/tutorials/set-up-stripe-webhooks.html">Stripe webhooks</a>).</li>
+            <li><strong>Pull mode (cron).</strong> Server polls git every 60 seconds; runs deploy if there's a new commit. Simplest, slightly delayed.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Rollback</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>If the new deploy is broken:</p>
+          <pre><code>cd /var/www/myapp
+git reset --hard HEAD~1   # back to the previous commit
+npm install --production
+npm run build
+sudo systemctl restart myapp</code></pre>
+          <p>This rolls forward to the previous commit. Better long-term: keep last N releases in numbered directories and symlink <code>current</code> at one — that gives instant rollback without rebuilding.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Database migrations need extra care.</strong> If your deploy includes schema changes, run them <em>before</em> restarting the service (so the new code matches the new schema) and design migrations to be backward-compatible (new code can read old schema, old code can read new schema) so an emergency rollback doesn't blow up.
+      </div>
+
+      <h2>Useful references</h2>
+      <ul>
+        <li><a href="https://www.digitalocean.com/community/tutorials/how-to-deploy-a-node-js-application-to-digitalocean-app-platform" target="_blank" rel="noopener">DigitalOcean: deploy a Node.js app ↗</a></li>
+        <li><a href="https://pm2.keymetrics.io/docs/usage/quick-start/" target="_blank" rel="noopener">pm2 quick start ↗</a></li>
+        <li><a href="https://docs.docker.com/compose/" target="_blank" rel="noopener">Docker Compose docs ↗</a></li>
+        <li><a href="https://www.freedesktop.org/software/systemd/man/systemd.service.html" target="_blank" rel="noopener">systemd service unit reference ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/redeploy-a-website.html" class="tutorial-next-card">
+            <h3>Redeploy a managed website</h3>
+            <p>The PaaS version — usually just <code>git push</code></p>
+          </a>
+          <a href="/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-next-card">
+            <h3>Buy a server from DigitalOcean</h3>
+            <p>If you don't have a VPS yet</p>
+          </a>
+          <a href="/tutorials/set-up-https-with-lets-encrypt.html" class="tutorial-next-card">
+            <h3>Set up HTTPS with Let's Encrypt</h3>
+            <p>Add TLS to your self-hosted server</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

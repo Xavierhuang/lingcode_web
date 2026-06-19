@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I set up HTTPS with Let's Encrypt? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="HTTPS is the layer above DNS. Let's Encrypt + certbot gets you a real TLS certificate in two commands, free, with automatic renewal forever.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-https-with-lets-encrypt.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-https-with-lets-encrypt.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-https-with-lets-encrypt.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/set-up-https-with-lets-encrypt.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Set up HTTPS with Let's Encrypt",
+  "description": "DNS routes traffic; HTTPS encrypts it. Let's Encrypt is a free, automated certificate authority that's been the default answer for \"TLS on a Linux server\" for nearly a decade. Two commands gets you a real cert; one cron job keeps it valid forever.",
+  "url": "https://lingcode.dev/tutorials/set-up-https-with-lets-encrypt.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/set-up-https-with-lets-encrypt.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Set up HTTPS with Let's Encrypt"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Set up HTTPS with Let's Encrypt",
+      "item": "https://lingcode.dev/tutorials/set-up-https-with-lets-encrypt.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/set-up-https-with-lets-encrypt.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Set up HTTPS with Let's Encrypt</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I set up HTTPS with Let's Encrypt?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> On Ubuntu: <code>sudo apt install certbot python3-certbot-nginx</code>, then <code>sudo certbot --nginx -d yourdomain.com</code>. Certbot edits your nginx config and renews automatically every 60 days. Free certs, full TLS, 5 minutes total.</p>
+      <p class="intro">DNS routes traffic; HTTPS encrypts it. Let's Encrypt is a free, automated certificate authority that's been the default answer for "TLS on a Linux server" for nearly a decade. Two commands gets you a real cert; one cron job keeps it valid forever.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>HTTPS is the bare minimum table stake for any site that lives on the open web. Browsers warn loudly when it's missing — a giant "Not Secure" badge in the address bar that destroys whatever trust your design earned. Users have learned to read this signal correctly: an HTTP-only site in 2026 looks broken, abandoned, or sketchy. There's no good reason to ship one and many reasons not to.</p>
+      <p>What makes HTTPS feel like a chore is that historically you bought a TLS certificate from a vendor (Comodo, DigiCert, Let's Encrypt's predecessors) for $50–500/year, validated your ownership through a manual email-and-DNS dance, and installed the cert in your web server by hand. Renewals were a calendar event you sometimes forgot. The whole flow was a small but real ongoing cost.</p>
+      <p>Let's Encrypt eliminated all of that. It's a free, automated, browser-trusted CA run by the Internet Security Research Group (Mozilla, EFF, Cisco, and others fund it). Their ACME protocol lets a script on your server prove ownership of a domain in seconds and receive a 90-day certificate. The tooling — usually <code>certbot</code> — automates issuance, installation, and renewal. The end result is HTTPS that just works, costs nothing, and renews itself.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The two validation methods (HTTP-01 vs. DNS-01) and when each works</li>
+        <li>Installing certbot on a server (Nginx or Caddy)</li>
+        <li>The single command that gets you a real cert</li>
+        <li>How automatic renewal works (and what to check)</li>
+        <li>When NOT to use Let's Encrypt</li>
+      </ul>
+
+      <h2>Step 1: Prerequisites</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>What has to be in place before TLS</h3>
+          <p>HTTPS depends on three things being already true:</p>
+          <ul>
+            <li><strong>Your domain points at your server.</strong> A and/or AAAA records in DNS, resolving to the server's IP. See <a href="/tutorials/connect-domain-to-server-with-dns.html">Connect your domain to a server</a>.</li>
+            <li><strong>The server is reachable on port 80</strong> from the public internet (for the most common validation method). If you have a firewall, allow port 80. Cloud VPSs usually require this in the cloud-provider firewall (Security Group on AWS, Cloud Firewall on Hetzner, etc.).</li>
+            <li><strong>You have a web server installed</strong> (Nginx, Caddy, Apache). For pure-API servers behind a load balancer the situation is different; for an indie VPS, Nginx or Caddy is the path.</li>
+          </ul>
+          <p>If any of these isn't true, fix that first. Let's Encrypt will fail in confusing ways otherwise.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Pick a tool</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Caddy is one command; certbot+Nginx is two</h3>
+          <p>Two reasonable paths:</p>
+          <ul>
+            <li><strong>Caddy.</strong> Modern web server that includes Let's Encrypt support natively — no separate tool, no separate config. You write <code>example.com { ... }</code> in your Caddyfile and Caddy figures out the cert. Right when you're starting fresh.</li>
+            <li><strong>Nginx + certbot.</strong> The classic combination. Two pieces but very well-documented; every guide on the internet assumes you have these. Right when you already have an Nginx config or want fine control.</li>
+          </ul>
+          <p>For a brand new server with no Nginx baggage, Caddy is easier. For "I already have Nginx running and just want HTTPS added," certbot is right.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: The Caddy path (zero-config)</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Install, configure, done</h3>
+          <pre><code># Install Caddy on Ubuntu
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | \
+    sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | \
+    sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update &amp;&amp; sudo apt install caddy
+
+# Configure: edit /etc/caddy/Caddyfile
+sudo nano /etc/caddy/Caddyfile</code></pre>
+          <p>Replace the file's contents with:</p>
+          <pre><code>example.com {
+    reverse_proxy localhost:3000
+    # Or root * /var/www/html ; file_server for static files
+}</code></pre>
+          <p>Restart Caddy: <code>sudo systemctl restart caddy</code>. On first request, Caddy contacts Let's Encrypt, validates your domain (your DNS must already resolve to this server), gets a cert, and serves HTTPS. It also renews automatically.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: The Nginx + certbot path</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>If Nginx is already installed</h3>
+          <p>Assuming Nginx already runs and you have a server block for <code>example.com</code>:</p>
+          <pre><code># Install certbot and the Nginx plugin
+sudo apt install -y certbot python3-certbot-nginx
+
+# Issue a cert and edit your Nginx config to use it
+sudo certbot --nginx -d example.com -d www.example.com</code></pre>
+          <p>certbot prompts for your email (used for renewal-failure notifications, won't be otherwise spammed) and agreement to the Let's Encrypt terms. It then talks to Let's Encrypt, validates your domain over HTTP-01 (a temporary file at <code>/.well-known/acme-challenge/...</code> that the LE server fetches), gets the cert, and rewrites your Nginx config to use it.</p>
+          <p>Test the HTTPS site: <code>curl -I https://example.com</code> should return 200 (or whatever your app returns). The "Not Secure" badge in browsers is gone.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>HTTP-01 vs. DNS-01 validation.</strong> HTTP-01 (the default) needs port 80 reachable from the internet. DNS-01 instead asks you to add a TXT record to your DNS — useful when port 80 is blocked, when you're issuing certs for hosts not yet reachable, or when you want a wildcard cert (<code>*.example.com</code> requires DNS-01). For DNS-01 with certbot, add <code>--manual --preferred-challenges dns</code> or use a DNS-provider-specific plugin (<code>python3-certbot-dns-cloudflare</code>, etc.).
+      </div>
+
+      <h2>Step 5: Renewal — already set up</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Verify the timer is running</h3>
+          <p>Both Caddy and certbot ship with automatic renewal. Certs are good for 90 days; renewal runs daily and renews any cert within 30 days of expiring. You don't need to set up a cron job; the package's systemd timer is already installed.</p>
+          <p>Check it's working:</p>
+          <pre><code># For certbot:
+sudo systemctl list-timers | grep certbot
+sudo certbot renew --dry-run  # simulates a renewal without changing anything
+
+# For Caddy: there's nothing to check — Caddy logs renewals to journalctl
+journalctl -u caddy | grep -i renew</code></pre>
+          <p>Set up an email-on-failure notification if you care about being paged: certbot already emails the address you gave it when issuance fails on its own. For Caddy, configure email-on-failure in your monitoring stack.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Test the cert</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>One curl, one online checker</h3>
+          <pre><code># From your Mac:
+curl -I https://example.com
+# Expected: 200 OK (or whatever your app returns), with no SSL errors
+
+# Show the cert details:
+echo | openssl s_client -showcerts -servername example.com -connect example.com:443 2>/dev/null \
+  | openssl x509 -inform pem -noout -text \
+  | grep -E "Subject:|Issuer:|Not After"</code></pre>
+          <p>The Issuer should be "Let's Encrypt" or "ISRG"; the Subject should match your domain; Not After should be 90 days in the future.</p>
+          <p>For a thorough audit, run your domain through <code>https://www.ssllabs.com/ssltest/</code>. The grade should be A or A+. If it's lower, the report explains what to fix (usually old TLS versions still enabled or weak ciphers).</p>
+        </div>
+      </div>
+
+      <h2>Step 7: When Let's Encrypt isn't the right answer</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Three cases</h3>
+          <ul>
+            <li><strong>You're behind a managed host that does TLS for you.</strong> Vercel, Netlify, Cloudflare Pages, every modern PaaS already issues and renews certs automatically. Don't run your own Let's Encrypt; their CDN handles it better than you would.</li>
+            <li><strong>You need extended validation (EV) certs.</strong> Some enterprise contexts require EV certs with the legal-entity verification ($200–500/year from commercial CAs). Let's Encrypt is domain-validation only.</li>
+            <li><strong>You're on an internal-only domain.</strong> Let's Encrypt needs to verify domain ownership; if your domain is internal (not in public DNS), use a private CA instead. mkcert is a good local-dev choice.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Rate limits exist.</strong> Let's Encrypt limits you to 50 certs per registered domain per week, and 5 duplicate certs per week. For normal use this is plenty; for a runaway script that re-issues constantly, you'll hit the limit and get locked out for a week. Use the staging environment (<code>--staging</code> with certbot) when testing.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/put-cloudflare-in-front-of-any-host.html" class="tutorial-next-card">
+            <h3>Put Cloudflare in front of any host</h3>
+            <p>The alternative to "run Let's Encrypt yourself" — Cloudflare's proxy issues TLS for you</p>
+          </a>
+          <a href="/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>Connect your domain to a server</h3>
+            <p>The DNS layer below HTTPS</p>
+          </a>
+          <a href="/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-next-card">
+            <h3>Buy a server from DigitalOcean</h3>
+            <p>If you don't have a server yet, here's where to start</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

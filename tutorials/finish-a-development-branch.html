@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finish a development branch — merge, PR, or scrap</title>
+  <meta name="description" content="Green tests aren't done. Use LingCode to walk the closing checklist of a development branch — choose merge strategy, push or PR, or bail out cleanly if the work isn't worth keeping.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/finish-a-development-branch.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/finish-a-development-branch.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/finish-a-development-branch.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/finish-a-development-branch.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Finish a development branch — merge, PR, or scrap",
+  "description": "\"All tests pass\" isn't done. A branch lands cleanly only if the diff is the diff you meant, main hasn't drifted under you, and the integration path matches the project's conventions. LingCode walks the closing checklist — and tells you when the right answer is \"throw this away.\"",
+  "url": "https://lingcode.dev/tutorials/finish-a-development-branch.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/finish-a-development-branch.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Verify the closing checklist before pushing",
+      "url": "https://lingcode.dev/tutorials/finish-a-development-branch.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Pick the integration path",
+      "url": "https://lingcode.dev/tutorials/finish-a-development-branch.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Open the PR with a description that matches the diff",
+      "url": "https://lingcode.dev/tutorials/finish-a-development-branch.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Delete the branch after merge",
+      "url": "https://lingcode.dev/tutorials/finish-a-development-branch.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Use this in LingCode",
+      "url": "https://lingcode.dev/tutorials/finish-a-development-branch.html#step-5"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Finish a development branch",
+      "item": "https://lingcode.dev/tutorials/finish-a-development-branch.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/finish-a-development-branch.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Native Mac IDE</a>
+      <span>/</span>
+      <span>Finish a development branch</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Finish a development branch — merge, PR, or scrap</h1>
+      <p class="intro">"All tests pass" isn't done. A branch lands cleanly only if the diff is the diff you meant, main hasn't drifted under you, and the integration path matches the project's conventions. LingCode walks the closing checklist — and tells you when the right answer is "throw this away."</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why "tests green, push it" loses branches</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>The naïve finish is: tests pass locally, push, open PR, done. Four things commonly go wrong between green tests and a clean merge:</p>
+          <ul>
+            <li><strong>Main has moved.</strong> Your branch is now behind by N commits, and one of those commits conflicts with yours in a way local tests can't reveal.</li>
+            <li><strong>The diff is bigger than the intent.</strong> Stray prints, commented-out code, a refactor that grew an unrelated cleanup. The PR description doesn't match the patch.</li>
+            <li><strong>The merge strategy is wrong for this repo.</strong> Squash-only repos getting a 12-commit feature branch, or rebase-only repos getting a merge commit. The team finds out at merge time.</li>
+            <li><strong>The work shouldn't ship at all.</strong> Sometimes the right answer is "this approach didn't pan out, salvage the test, drop the branch." That decision is harder to make once a PR is open and people have commented.</li>
+          </ul>
+          <p>The skill in this tutorial gives LingCode an explicit closing protocol: audit the diff, sync with main, choose the integration path, and bail cleanly if the work doesn't deserve to ship.</p>
+        </div>
+      </div>
+
+      <h2>What you need</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong> — <a href="/LingCode-Installer.dmg" download>download the installer</a>.</li>
+            <li><strong>A feature branch with passing tests</strong> ready to integrate.</li>
+            <li><strong>Knowledge of your repo's merge convention</strong> — squash, rebase, or merge commit. If you don't know, LingCode will infer from <code>git log main</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Audit the diff against the intent</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Before doing anything else, have LingCode compare what's in the branch against what the branch was supposed to do:</p>
+          <pre><code>Compare the branch diff against the original task. Run:
+- git diff main...HEAD
+- git log main..HEAD --oneline
+
+For each change, classify:
+- IN-SCOPE: matches the stated task.
+- DRIVE-BY: small unrelated fix or cleanup.
+- ACCIDENTAL: stray prints, commented-out code, dead imports,
+  unrelated formatting churn.
+
+Flag anything ACCIDENTAL for removal. Flag DRIVE-BY for a
+decision — keep, split into a separate branch, or revert.</code></pre>
+          <p>Accidental changes are the cheapest review comments to avoid. Drive-by fixes are a judgment call — small ones ride along, real refactors deserve their own PR so the next person reading <code>git log</code> understands why.</p>
+        </div>
+      </div>
+
+      <h2>Sync with main and re-run tests</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Local green doesn't mean integrated green. Have LingCode bring main into the branch — whichever way your repo prefers — and re-run the suite:</p>
+          <pre><code>1. git fetch origin
+2. If the repo rebases: git rebase origin/main
+   If the repo merges:  git merge origin/main
+   (Infer from `git log --merges main | head` — if main has merge
+    commits, this repo merges; if it's a flat line, it rebases.)
+3. Resolve conflicts. For each conflict, explain in 1-2 lines what
+   the conflict is and how you resolved it.
+4. Re-run the full test suite — not just the affected file.</code></pre>
+          <div class="warn-box">
+            <strong>If conflicts touched logic, not just imports or formatting, stop and ask.</strong> Logic conflicts are where silent bugs land. A human eye on the resolved hunk is worth more than a green re-test.
+          </div>
+        </div>
+      </div>
+
+      <h2>Verify the closing checklist before pushing</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>This is where the "I'm done" claim becomes verifiable. Ask LingCode to run a fixed checklist and report PASS/FAIL on each item:</p>
+          <pre><code>Run the closing checklist. For each item, report PASS / FAIL /
+N/A with one-line evidence:
+
+- Tests pass: full suite, post-rebase.
+- Linter clean: project's linter, not just LingCode's opinion.
+- Type-check clean: tsc / mypy / xcodebuild / etc.
+- No console.log / dbg! / print() debug noise.
+- No commented-out code.
+- No TODO that should have been done in this branch.
+- Diff matches the intent — re-run the IN-SCOPE / ACCIDENTAL
+  classification on the post-rebase diff.
+- Commit messages are imperative ("Add X", "Fix Y"), no WIP,
+  no fixup commits.
+- If the repo squashes: the PR title will be the merge commit
+  message — does it say what changed?
+
+Stop on first FAIL. Don't proceed to merge with anything red.</code></pre>
+          <p>"Stop on first FAIL" is the rule. The temptation to merge with a warning suppressed is how broken branches land.</p>
+        </div>
+      </div>
+
+      <h2>Pick the integration path</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Three sensible paths out of a finished branch. Pick deliberately:</p>
+          <ul>
+            <li><strong>Open a PR.</strong> Default for team repos. Even a solo project benefits from the PR view as a final self-review surface. <code>gh pr create</code>.</li>
+            <li><strong>Push direct to main.</strong> Solo project, small change, you've already self-reviewed. Reasonable for typo fixes, doc tweaks, and emergency hotfixes — not for features.</li>
+            <li><strong>Cleanup-only — no merge.</strong> The work informed a decision but the code itself doesn't need to ship. Salvage tests or notes into main, drop the branch.</li>
+          </ul>
+          <p>Ask LingCode to recommend one based on the repo's history:</p>
+          <pre><code>Recommend the integration path. Consider:
+- Does main accept direct pushes from this user / role?
+- Does the repo require PRs (branch protection)?
+- Is this a single-author repo or a team?
+- Is the change risky (logic) or trivial (typo)?
+
+Then propose one path with a one-line justification.</code></pre>
+        </div>
+      </div>
+
+      <h2>Open the PR with a description that matches the diff</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>If the path is PR, the description should match what the patch actually does — not what you set out to do at the start of the branch. Have LingCode draft from the final diff, not the original task:</p>
+          <pre><code>Draft the PR body from the post-rebase diff, not from the
+original task description. Structure:
+
+## Summary
+1-3 bullets of what changed in the codebase, in plain language.
+
+## Why
+The user-visible reason or the problem this fixes. One paragraph.
+
+## Test plan
+Bulleted checklist of how to verify. Include the exact commands
+you ran locally.
+
+## Risk
+What could go wrong, if anything? Migration steps? Config flags?
+"N/A" if genuinely none.
+
+Title: imperative, under 70 characters, no trailing punctuation.</code></pre>
+          <p>The "Why" section is the one people skip and the one reviewers actually need. Why now, why this approach, why not the obvious alternative.</p>
+        </div>
+      </div>
+
+      <h2>The "scrap it" path</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Sometimes the right answer is throwing the branch away. The skill teaches LingCode to recognize the signals and propose it explicitly rather than push through:</p>
+          <pre><code>Recommend SCRAP if any of these hold:
+- The branch tried an approach the codebase clearly resists
+  (the diff fights existing abstractions in &gt;3 files).
+- A simpler approach became obvious mid-way and the branch
+  is now legacy thinking.
+- The feature was speculatively built and product changed
+  direction.
+- Tests pass but the code is structurally bad and rewriting
+  is cheaper than refactoring.
+
+If recommending SCRAP, identify what's worth salvaging:
+- Any tests written? They probably encode useful behavior.
+- Any docstrings or comments capturing decisions?
+- Any small utility extractions?
+
+Land the salvage as a tiny PR. Then delete the branch.</code></pre>
+          <p>Scrapping a branch with a clean salvage PR is not failure — it's the cheapest way to capture what the branch learned without inheriting its mistakes.</p>
+          <div class="tip-box">
+            <strong>Don't scrap silently.</strong> If the branch came from a ticket, leave a comment on the ticket: "tried this approach, scrapped because X, here's the salvage PR." Future-you will look for it.
+          </div>
+        </div>
+      </div>
+
+      <h2>Delete the branch after merge</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>The closing checklist isn't complete until the branch is gone. Ask LingCode to clean up:</p>
+          <pre><code>After merge:
+- git checkout main
+- git pull origin main
+- git branch -d &lt;branch-name&gt;       # local
+- git push origin --delete &lt;branch&gt;  # remote, if not auto-deleted
+
+If `git branch -d` refuses because the branch isn't merged
+(common with squash-merge), verify the squashed commit is in
+main, then use `-D`. Don't `-D` without verification.</code></pre>
+          <p>Stale branches are how the next "where did that experiment go?" investigation starts six months later.</p>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>The closing protocol is packaged as a skill — drop it into your skills folder and ask LingCode to "finish this branch" once tests are green:</p>
+          <pre><code>---
+name: finishing-a-development-branch
+description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work. Triggers: 'tests pass, what now', 'wrap up this branch', 'merge vs PR', 'finish up', 'close this out', 'I'm done coding', 'ship it'. Actions: diff audit (IN-SCOPE/DRIVE-BY/ACCIDENTAL), sync with main, run closing checklist, choose integration path (PR / direct push / scrap), post-merge branch cleanup. Output: clean commit history + clear next step (PR opened, merge done, or branch deleted).
+---
+
+Walk a finished feature branch to a clean integration. Green
+tests are not done; the branch still needs to land.
+
+1. Audit the diff against intent. Classify each change as
+   IN-SCOPE / DRIVE-BY / ACCIDENTAL. Strip ACCIDENTAL.
+
+2. Sync with main. Rebase or merge based on the repo's
+   convention (infer from git log). Resolve conflicts and
+   re-run the full test suite.
+
+3. Run the closing checklist: tests, lint, type-check, no
+   debug noise, no commented-out code, commit messages clean,
+   diff matches intent. Stop on first FAIL.
+
+4. Pick an integration path: PR, direct push, or SCRAP. Justify
+   in one line based on repo history and risk.
+
+5. If PR: draft the body from the post-rebase diff (not the
+   original task). Summary + Why + Test plan + Risk.
+   Imperative title under 70 chars.
+
+6. If SCRAP: identify salvage (tests, decisions, utilities),
+   land them as a tiny PR, then delete the branch.
+
+7. Post-merge cleanup: pull main, delete local + remote
+   branches. Verify squash-merge before -D.
+
+Bail at any step rather than ship a broken branch.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/finishing-a-development-branch/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/give-and-receive-code-review-with-lingcode.html" class="tutorial-next-card">
+            <h3>Give and receive code review</h3>
+            <p>Once the PR is open, handle reviewer feedback with rigor — verify, classify, push back when wrong</p>
+          </a>
+          <a href="/tutorials/debug-systematically-with-lingcode.html" class="tutorial-next-card">
+            <h3>Debug systematically</h3>
+            <p>When the closing checklist surfaces a test failure, debug it instead of papering over</p>
+          </a>
+          <a href="/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html" class="tutorial-next-card">
+            <h3>Flutter to native migration</h3>
+            <p>A multi-phase example of using LingCode for large refactors that end with the same closing protocol</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

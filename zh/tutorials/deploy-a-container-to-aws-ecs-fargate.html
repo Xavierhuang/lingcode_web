@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>将容器部署到 ECS Fargate — LingCode 教程</title>
+  <meta name="description" content="在 AWS 上实现生产级容器部署。ECR 存储镜像，ECS 负责编排，Fargate 提供无服务器计算，ALB 分发流量，Route 53 管理 DNS。完整流水线，深入浅出。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-a-container-to-aws-ecs-fargate.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-a-container-to-aws-ecs-fargate.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "将容器部署到 ECS Fargate",
+  "description": "五项 AWS 服务协同运行一个容器：ECR 存储镜像，ECS 调度任务，Fargate 无需管理服务器即可运行，ALB 路由流量，Route 53 + ACM 提供自定义域名和 HTTPS。生产级、可自动扩缩、原生 AWS，值得投入的完整方案。",
+  "url": "https://lingcode.dev/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "将容器部署到 ECS Fargate"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "将容器部署到 ECS Fargate",
+      "item": "https://lingcode.dev/zh/tutorials/deploy-a-container-to-aws-ecs-fargate.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/deploy-a-container-to-aws-ecs-fargate.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">发布与基础设施</a>
+      <span>/</span>
+      <span>将容器部署到 ECS Fargate</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-advanced">● 高级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>将容器部署到 ECS Fargate</h1>
+      <p class="intro">五项 AWS 服务协同运行一个容器：ECR 存储镜像，ECS 调度任务，Fargate 无需管理服务器即可运行，ALB 分发流量，Route 53 + ACM 提供自定义域名和 HTTPS。生产级、可自动扩缩、原生 AWS——值得投入，前提是你打算长期使用；否则就是过度设计。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>"为什么选 Fargate 而不是 Lightsail？"这是第一个值得追问的问题，因为如果你没有明确答案，那答案就是<em>别用</em>。Fargate 存在的意义在于：无需管理 EC2 即可自动扩缩、容器原生部署天然适配 CI 流水线，以及与 AWS 其他服务深度集成（IAM 任务角色、VPC 网络、ALB 健康检查、CloudWatch）。对于一个小型 Node API 加单个域名的场景，一台 $5 的 <a href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html">Lightsail 实例</a>才是真正正确的答案，Fargate 纯属大材小用。但如果你的服务需要根据流量从 1 个实例弹性扩展到 100 个、并行运行多个版本、访问私有 VPC 资源，并在基础设施滚动更新时保持可用——Fargate 就是为此而生的。</p>
+      <p>让 AWS 文档变得可读的心智模型是：<strong>ECR</strong>（Elastic Container Registry）是容器镜像的存放地，类似私有的 Docker Hub，位于你的 AWS 账户内部。<strong>ECS</strong>（Elastic Container Service）是编排器——负责下达指令："我需要 3 个这个容器的实例持续运行，任何宕掉的都要替换，流量只路由到健康实例上。"<strong>Fargate</strong> 是计算模式——不同于在你自己管理的 EC2 上运行 ECS，Fargate 意味着"AWS 负责在某处运行这些容器，你看不到底层服务器。"<strong>任务定义</strong>是规格说明书（"用这些环境变量在这些端口上运行镜像 X"）。<strong>服务</strong>表示"根据这个任务定义，在这个负载均衡器后面持续运行 N 个任务。"<strong>ALB</strong>（Application Load Balancer）是公共入口点，将流量分发到各个运行中的任务。<strong>ACM + Route 53</strong> 负责 TLS 和 DNS，与其他教程中一样。</p>
+      <p>本教程演示端到端的首次部署：将应用容器化、推送到 ECR、编写任务定义、在 ALB 后创建 Fargate 服务、配置 DNS 和证书、完成部署。每个步骤做过一次之后都是机械操作；第一次有很多活动部件需要应对。为首次部署预留两小时；后续部署（步骤 9）只需一条命令。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>ECR、ECS、Fargate、ALB 以及围绕它们的 IAM 角色各自的职责</li>
+        <li>将容器镜像推送到你自己的 ECR 仓库</li>
+        <li>编写 Fargate 任务定义（最精简可用版本）</li>
+        <li>创建带有 ALB 目标组的服务</li>
+        <li>在 ALB 使用 ACM 证书完成 HTTPS 终止</li>
+        <li>ECS 中"滚动部署"的实际表现以及如何回滚</li>
+        <li>与 EC2 / Lightsail 相比，实际费用是多少</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前置条件：</strong>本地已安装 Docker、已配置 AWS CLI、有一个可容器化的 Web 应用（Node、Python、Go 等，任何监听端口的应用都可以）、域名的 DNS 托管在 <a href="/zh/tutorials/use-route-53-for-your-domain.html">Route 53</a>（强烈推荐——非 Route 53 也可以，但操作更繁琐），以及项目中已有可用的 <code>Dockerfile</code>。
+      </div>
+
+      <h2>步骤 1：容器化应用</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>先构建一个小而可用的镜像</h3>
+          <p>如果你还没有 <code>Dockerfile</code>，这是一个合理的 Node 起点：</p>
+          <pre><code># Dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+ENV PORT=8080
+EXPOSE 8080
+CMD ["node", "server.js"]</code></pre>
+          <p>在本地构建并测试：</p>
+          <pre><code>docker build -t mybrand-api:latest .
+docker run -p 8080:8080 mybrand-api:latest
+curl http://localhost:8080/health</code></pre>
+          <p>如果本地跑不通，放到 Fargate 上也不会通。在往 AWS 走之前，先确保本地镜像健康。</p>
+        </div>
+      </div>
+
+      <h2>步骤 2：创建 ECR 仓库并推送镜像</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>每个镜像对应一个仓库；默认私有</h3>
+          <pre><code># Create the repo
+aws ecr create-repository --repository-name mybrand-api --region us-east-1
+
+# Authenticate Docker to ECR
+aws ecr get-login-password --region us-east-1 \
+  | docker login --username AWS --password-stdin \
+    &lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com
+
+# Tag the local image with the ECR URL
+docker tag mybrand-api:latest \
+  &lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com/mybrand-api:latest
+
+# Push
+docker push &lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com/mybrand-api:latest</code></pre>
+          <p>完整的镜像 URI——<code>&lt;ACCOUNT_ID&gt;.dkr.ecr.&lt;REGION&gt;.amazonaws.com/&lt;REPO&gt;:&lt;TAG&gt;</code>——将被任务定义引用。记下账户 ID 和区域，后面会频繁用到。</p>
+        </div>
+      </div>
+
+      <h2>步骤 3：创建 ECS 所需的 IAM 角色</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>两个角色：执行角色与任务角色</h3>
+          <p>ECS 需要两个不同的 IAM 角色，混淆它们是首次部署失败的头号原因：</p>
+          <ul>
+            <li><strong>任务执行角色</strong>（<code>ecsTaskExecutionRole</code>）——由 ECS/Fargate 本身使用，用于从 ECR 拉取镜像并将日志写入 CloudWatch。AWS 提供了一个托管策略（<code>AmazonECSTaskExecutionRolePolicy</code>），正好满足需求。</li>
+            <li><strong>任务角色</strong>——由你的<em>应用代码</em>在调用 AWS API 时使用（例如从 S3 读取数据）。默认为空；按需为你的应用添加策略。</li>
+          </ul>
+          <p>每个账户只需创建一次执行角色：</p>
+          <pre><code>aws iam create-role --role-name ecsTaskExecutionRole \
+  --assume-role-policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [{"Effect":"Allow","Principal":{"Service":"ecs-tasks.amazonaws.com"},"Action":"sts:AssumeRole"}]
+  }'
+aws iam attach-role-policy --role-name ecsTaskExecutionRole \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy</code></pre>
+          <p>任务角色因项目而异；如果你的服务不调用 AWS API，可以省略。</p>
+        </div>
+      </div>
+
+      <h2>步骤 4：编写任务定义</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>描述单个运行实例的 JSON</h3>
+          <p>保存为 <code>task-definition.json</code>：</p>
+          <pre><code>{
+  "family": "mybrand-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::&lt;ACCOUNT_ID&gt;:role/ecsTaskExecutionRole",
+  "containerDefinitions": [{
+    "name": "api",
+    "image": "&lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com/mybrand-api:latest",
+    "portMappings": [{"containerPort": 8080, "protocol": "tcp"}],
+    "essential": true,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/mybrand-api",
+        "awslogs-region": "us-east-1",
+        "awslogs-stream-prefix": "ecs",
+        "awslogs-create-group": "true"
+      }
+    }
+  }]
+}</code></pre>
+          <p>Fargate 最小任务规格为 256 CPU 单元（¼ vCPU）+ 512 MB 内存。大多数 API 在这个配置下运行良好。注册任务定义：</p>
+          <pre><code>aws ecs register-task-definition --cli-input-json file://task-definition.json</code></pre>
+        </div>
+      </div>
+
+      <h2>步骤 5：创建集群、目标组和 ALB</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>将流量引入任务的网络层</h3>
+          <p>这部分在控制台操作确实更快。AWS 控制台 → ECS → <strong>创建集群</strong> → 命名为 <code>mybrand-prod</code> → 基础设施选择 <em>AWS Fargate（无服务器）</em> → 创建。</p>
+          <p>然后单独创建 Application Load Balancer：EC2 → 负载均衡器 → <strong>创建负载均衡器</strong> → <em>Application Load Balancer</em>：</p>
+          <ul>
+            <li>方案：面向互联网。IP 地址类型：IPv4。</li>
+            <li>VPC：使用默认 VPC。映射：至少选择两个不同可用区的子网（Fargate 强制要求）。</li>
+            <li>安全组：新建一个，允许来自任意来源的入站 80 + 443 端口。</li>
+            <li>监听器：HTTP:80，转发到新建的目标组 <code>mybrand-api-tg</code>，目标类型为 <strong>IP</strong>，协议 <strong>HTTP</strong>，端口 <strong>8080</strong>，健康检查路径 <code>/health</code>（或你的应用返回 200 的任意路径）。</li>
+          </ul>
+          <p>创建完成后，ALB 会有类似 <code>mybrand-prod-12345.us-east-1.elb.amazonaws.com</code> 的 DNS 名称。记下它；步骤 8 会将你的域名指向它。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>健康检查路径至关重要。</strong>如果你的应用没有一个返回 200 的 <code>/health</code> 端点，ALB 会将每个任务标记为不健康，Fargate 会循环地将其杀死。在部署<em>之前</em>先为你的应用添加一行健康端点。<code>app.get('/health', (req, res) =&gt; res.send('ok'))</code> 就足够了。
+      </div>
+
+      <h2>步骤 6：创建 ECS 服务</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>"在这个 ALB 后面持续运行 N 个任务"</h3>
+          <p>ECS 控制台 → 你的集群 → <strong>创建服务</strong>：</p>
+          <ul>
+            <li><strong>启动类型：</strong>FARGATE。</li>
+            <li><strong>任务定义：</strong><code>mybrand-api</code>（最新修订版）。</li>
+            <li><strong>服务名称：</strong><code>mybrand-api</code>。</li>
+            <li><strong>所需任务数：</strong>冗余部署填 2，测试填 1。</li>
+            <li><strong>网络：</strong>默认 VPC，与 ALB 相同的两个子网，步骤 5 中创建的安全组。</li>
+            <li><strong>负载均衡：</strong>关联到 ALB。目标组：<code>mybrand-api-tg</code>。负载均衡的容器：<code>api:8080</code>。</li>
+          </ul>
+          <p>创建。Fargate 拉取镜像、启动任务，并将其注册到目标组。2–3 分钟后，服务显示"ACTIVE"，目标组显示健康目标。测试：</p>
+          <pre><code>curl http://&lt;ALB_DNS_NAME&gt;/health
+# Expected: ok</code></pre>
+        </div>
+      </div>
+
+      <h2>步骤 7：申请 ACM 证书</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>与 CloudFront 不同：ALB 使用所在区域的证书</h3>
+          <p>与 <a href="/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">CloudFront</a> 不同（CloudFront 只读取 <code>us-east-1</code> 的证书），ALB 使用与自身同区域的证书。如果你的 ALB 在 <code>us-east-1</code>，证书需要在 <code>us-east-1</code>；如果在 <code>eu-west-2</code>，证书就需要在那里。</p>
+          <pre><code>aws acm request-certificate \
+  --domain-name api.mybrand.com \
+  --validation-method DNS \
+  --region &lt;SAME_REGION_AS_ALB&gt;</code></pre>
+          <p>如果 DNS 在同账户的 Route 53 中，控制台会提供"在 Route 53 中创建记录"来完成验证 CNAME。否则在你的 DNS 提供商处手动添加 CNAME。等待 ACM 显示"已颁发"——通常需要 5–15 分钟。</p>
+        </div>
+      </div>
+
+      <h2>步骤 8：添加 HTTPS 监听器并配置 DNS</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>一个 HTTPS 监听器；一条 Route 53 别名记录</h3>
+          <p>EC2 → 负载均衡器 → 你的 ALB → <strong>监听器</strong>标签页 → <strong>添加监听器</strong>：</p>
+          <ul>
+            <li>协议：HTTPS。端口：443。</li>
+            <li>默认操作：转发到同一目标组（<code>mybrand-api-tg</code>）。</li>
+            <li>SSL/TLS 证书：步骤 7 中申请的 ACM 证书。</li>
+          </ul>
+          <p>可选：编辑 HTTP:80 监听器，将其重定向到 HTTPS:443。保存。</p>
+          <p>现在将 DNS 指向 ALB。在 Route 53 → 你的托管区 → <strong>创建记录</strong>：</p>
+          <ul>
+            <li>名称：<code>api</code>。</li>
+            <li>类型：A。别名：开启。流量路由到：<em>Application 和 Classic Load Balancer 的别名</em> → 区域 → 你的 ALB。</li>
+          </ul>
+          <p>保存。测试：<code>curl -I https://api.mybrand.com/health</code>。你应该看到 <code>HTTP/2 200</code>。</p>
+        </div>
+      </div>
+
+      <h2>步骤 9：部署循环</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <h3>构建、推送、强制新部署</h3>
+          <p>完成所有初始配置后，每次后续部署只需三条命令：</p>
+          <pre><code># Build the new image
+docker build -t mybrand-api:latest .
+
+# Push to ECR (auth refresh might be needed first)
+docker tag mybrand-api:latest \
+  &lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com/mybrand-api:latest
+docker push &lt;ACCOUNT_ID&gt;.dkr.ecr.us-east-1.amazonaws.com/mybrand-api:latest
+
+# Tell ECS to roll out new tasks with the same task definition (which references :latest)
+aws ecs update-service \
+  --cluster mybrand-prod \
+  --service mybrand-api \
+  --force-new-deployment</code></pre>
+          <p>ECS 执行滚动部署：启动新任务，等待它们通过 ALB 健康检查，排空旧任务的连接，然后终止它们。默认零停机。在 ECS 控制台你的服务的<strong>部署</strong>标签页下可以观察部署进度。</p>
+          <p><strong>回滚方法：</strong>ECS 永久保留历史任务定义修订版本。将服务更新为使用上一个修订版：<code>aws ecs update-service --cluster mybrand-prod --service mybrand-api --task-definition mybrand-api:&lt;PREVIOUS_REVISION&gt;</code>。滚动部署机制相同，只是方向反过来了。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>正式工作负载中，生产任务定义避免使用 <code>:latest</code>。</strong>如果推送尚未完成时滚动部署就已启动，可能会拉取到旧的或不完整的镜像。建议使用不可变标签（<code>mybrand-api:&lt;git-sha&gt;</code>），并在每次推送时更新任务定义。多一点工作量，少很多潜在事故。
+      </div>
+
+      <h2>实际费用</h2>
+      <p>2 个最小规格（0.25 vCPU + 0.5 GB 内存）的 Fargate 任务全天候运行的费用：</p>
+      <ul>
+        <li><strong>Fargate 计算费用</strong>：$0.04048/vCPU 小时 + $0.004445/GB 小时。2 × 0.25 vCPU = 0.5 vCPU 小时，加上 2 × 0.5 GB = 1 GB 小时，合计约 $0.024/小时 = <strong>约 $17/月</strong>。</li>
+        <li><strong>ALB</strong>：$0.0225/小时（约 $16/月）+ 约 $0.008/LCU 小时（小流量下可忽略）。</li>
+        <li><strong>ECR 存储</strong>：$0.10/GB/月——小镜像通常不超过 $0.05。</li>
+        <li><strong>NAT Gateway</strong>：仅当任务位于需要访问互联网的私有子网时才产生。如果按上述使用默认公有子网方案，费用为 $0。若使用私有子网，<strong>$32/月 + $0.045/GB</strong>——这是让账单翻倍的隐藏惊喜。</li>
+        <li><strong>出站数据传输</strong>：免费额度以外 $0.09/GB。</li>
+      </ul>
+      <p>一个小型 API 带 2 个常驻任务的现实月费：<strong>约 $35–40/月</strong>。同等配置的 <a href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html">Lightsail 实例</a>是 $5–10/月。4–8 倍的成本差价，换来的是自动扩缩、滚动部署、ALB 健康检查和其余生产级基础设施。需要时物有所值，不需要时就是冤枉钱。</p>
+
+      <h2>Fargate 不适用的场景</h2>
+      <p><strong>单实例、无扩缩需求。</strong>Lightsail 在成本和复杂度上完胜。只有在流量真正倒逼时才升级。</p>
+      <p><strong>突发型工作负载、大量空闲时段。</strong>Fargate 按秒计费，但常驻任务一直在计费。如果你的服务大部分时间处于空闲，可以考虑 Lambda（仅按调用次数收费）或 App Runner（Fargate 加上更简洁的操作体验以及空闲时缩容至零）。</p>
+      <p><strong>你不想运维 AWS 网络。</strong>ECS Fargate 屏蔽了 Fargate 的计算层，但仍然把 VPC、子网、安全组、目标组、监听器暴露给你。如果这些太繁琐，AWS App Runner 是对同一底层机制更薄的抽象——旋钮更少、能力相近、控制力略低。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>在 Lightsail 上运行 Node API</h3>
+            <p>如果 Fargate 太复杂，退一步看 Lightsail——它的扩展能力比大多数人想象的要强</p>
+          </a>
+          <a href="/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html" class="tutorial-next-card">
+            <h3>将静态站点部署到 S3 + CloudFront</h3>
+            <p>典型 Fargate 后端全栈部署的前端部分</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-server-from-aws-ec2.html" class="tutorial-next-card">
+            <h3>从 EC2 购买服务器</h3>
+            <p>ECS 的另一种启动类型——在持续高负载下更便宜，但需要管理更多配置</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速交付的创始人和需要专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

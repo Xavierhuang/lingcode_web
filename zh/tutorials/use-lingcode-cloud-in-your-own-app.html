@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何在我自己的应用中使用 LingCode Cloud？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="将 LingCode Cloud 接入任意 Web 应用——加载 SDK，设置后端 URL 和匿名密钥，然后调用 from('table').select()。了解认证、存储和实时调用，以及表级 CRUD 模式（不支持 JOIN、不支持 upsert），让你的集成不再遭遇 400 错误。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/use-lingcode-cloud-in-your-own-app.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/use-lingcode-cloud-in-your-own-app.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/use-lingcode-cloud-in-your-own-app.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-10T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-10T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/use-lingcode-cloud-in-your-own-app.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "在你自己的应用中使用 LingCode Cloud",
+  "description": "将 LingCode Cloud 托管后端集成到任意 Web 应用：加载官方 SDK，指向你的后端 URL 和匿名密钥，然后使用数据、认证、存储、实时和向量搜索。包含表级 CRUD 模式（不支持 JOIN、不支持 upsert，每页 200 行），让你的代码一次就能跑通。",
+  "url": "https://lingcode.dev/zh/tutorials/use-lingcode-cloud-in-your-own-app.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-10",
+  "dateModified": "2026-06-10",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/zh/tutorials/use-lingcode-cloud-in-your-own-app.html" },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "在你自己的应用中使用 LingCode Cloud"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "教程", "item": "https://lingcode.dev/zh/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "搜索", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "后端集成", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "在你自己的应用中使用 LingCode Cloud", "item": "https://lingcode.dev/zh/tutorials/use-lingcode-cloud-in-your-own-app.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/use-lingcode-cloud-in-your-own-app.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html">后端集成</a>
+      <span>/</span>
+      <span>在你自己的应用中使用 LingCode Cloud</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-06-10</span>
+      </div>
+      <h1>如何在我自己的应用中使用 LingCode Cloud？</h1>
+      <p class="tldr"><strong>一句话：</strong>用 <code>&lt;script src="https://lingcode.dev/sdk/lingcode-v1.js"&gt;&lt;/script&gt;</code> 加载 SDK，用后端的<strong>数据 URL</strong> 和<strong>匿名密钥</strong>创建一个客户端（两者都可从 <a href="/backends.html">lingcode.dev/backends</a> → 你的后端 → <em>设置 / 连接详情</em> 复制），然后调用 <code>lingcode.from('todos').select()</code>、<code>.auth.signIn(...)</code>、<code>.storage</code> 和实时功能。在 <a href="/try.html">/try</a> 里，客户端已经以 <code>window.lingcode</code> 的形式预注入；在你自己的应用中，则需要你亲手接好这两个值。要记住一条规则：数据 API 是<strong>表级 CRUD，不是原始 SQL</strong>——不支持 JOIN、不支持 upsert，每页 200 行。</p>
+      <p class="intro">如果你在 <a href="/try.html">/try</a> 或 Mac IDE 里构建了应用，后端客户端是直接递给你的——<code>window.lingcode</code> 就那么存在着。可一旦你把这个应用搬到别处——你自己的 Next.js 项目、一个纯 HTML 页面、一个 Vite 构建——你就得亲手把后端接起来。它只是两个值加一个 script 标签，本教程会把整个流程走一遍，包括那条会绊倒从原始 SQL 过来的人的设计约束。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>一个 LingCode Cloud 后端就是一个私有 Postgres 数据库（外加认证、存储、实时和向量搜索），你通过 HTTPS 访问它。你不会从浏览器打开数据库连接或运行 SQL——你通过官方客户端 SDK 与一个小型数据网关对话，这个 SDK 的形态类似 Supabase 或 Firebase，所以调用方式让人感到熟悉。下面所有内容都是这个 SDK。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>你需要的两个值（以及为什么匿名密钥可以安全地发送到浏览器）</li>
+        <li>如何在 <code>/try</code> 之外加载 SDK 并创建客户端</li>
+        <li>核心调用：数据、认证、存储、实时、向量</li>
+        <li>需要围绕设计的那一条约束——它是表级 CRUD，不是原始 SQL</li>
+      </ul>
+
+      <h2>你需要的两个值</h2>
+      <p>每个后端都正好有两样客户端需要的东西：</p>
+      <ul>
+        <li><strong>数据 URL</strong>——例如 <code>https://lingcode.dev/api/cloud/be/&lt;your-backend-id&gt;</code>。这是<em>这个</em>后端的网关。</li>
+        <li><strong>匿名密钥</strong>——一个公开令牌，用于标识后端并授予匿名角色。它<em>本来就</em>应该出现在你的客户端打包产物里。它读不到、也写不了任何未登录访客不该看到的内容，因为访问控制是由服务器端的行级安全（RLS）来强制执行的，而不是靠把密钥藏起来。</li>
+      </ul>
+      <p>两者都能在 <a href="/backends.html">lingcode.dev/backends</a> 找到——打开你的后端，从设置里复制连接详情（和你粘贴到其他 MCP 客户端里的是同一对）。在框架中，把它们存为公开配置——对于 Next.js，是 <code>NEXT_PUBLIC_LINGCODE_BACKEND_URL</code> 和 <code>NEXT_PUBLIC_LINGCODE_BACKEND_ANON_KEY</code>；对于打包工具，就按你的 <code>import.meta.env</code> / <code>process.env</code> 约定来。它们是公开的，所以应该放在客户端配置里，而不是只在服务端可见的密钥里。</p>
+
+      <div class="warn-box">
+        <strong>匿名密钥 vs. 私密密钥：</strong>匿名密钥按设计就是公开的。你的<em>私密</em>密钥（Stripe 私密密钥、第三方 API 密钥）绝不能进浏览器——把它们放进后端的 <strong>Secrets</strong>，并通过<strong>函数</strong>（<code>lingcode.functions.invoke(...)</code>）来使用，函数在服务端运行。任何客户端能看到的东西，都当作公开内容来对待。
+      </div>
+
+      <h2>加载 SDK 并创建客户端</h2>
+      <p>SDK 是从 CDN 提供的单个零依赖文件。纯 HTML 版本：</p>
+      <pre><code>&lt;script src="https://lingcode.dev/sdk/lingcode-v1.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const lingcode = LingCode.createClient(
+    'https://lingcode.dev/api/cloud/be/&lt;your-backend-id&gt;',
+    '&lt;your-anon-key&gt;'
+  );
+&lt;/script&gt;</code></pre>
+      <p>在模块/打包工具的应用中，加载同一个文件，并用你的环境变量值调用 <code>LingCode.createClient(url, key)</code>。（在 <code>/try</code> 和 Mac 预览里你完全跳过这一步——客户端已经以 <code>window.lingcode</code> 的形式存在，预先接好了那个项目的后端。绝不要在那里重新创建它或硬编码密钥。）</p>
+      <p>在读取认证状态之前，先等客户端在加载时稳定一次——它会先把任何登录重定向处理完：</p>
+      <pre><code>await lingcode.ready;
+const user = lingcode.auth.getUser(); // { id, email } | null</code></pre>
+
+      <h2>读写数据</h2>
+      <p>每次调用都返回 <code>{ data, error }</code>——使用 <code>data</code> 之前先检查 <code>error</code>。过滤器链接在动词之前：</p>
+      <pre><code>// 读取
+const { data, error } = await lingcode
+  .from('todos')
+  .eq('done', false)
+  .order('created_at', { ascending: false })
+  .limit(50)
+  .select();
+
+// 写入
+await lingcode.from('todos').insert({ title: 'Buy milk' });
+await lingcode.from('todos').eq('id', 1).update({ done: true });  // 必须有过滤器
+await lingcode.from('todos').eq('id', 1).delete();                // 必须有过滤器</code></pre>
+      <p>过滤运算符：<code>.eq .neq .gt .gte .lt .lte .like .ilike .in(col,[…]) .is(col,null)</code>，以及一次性多个等值匹配的 <code>.match({a:1,b:2})</code>。多个过滤器以 AND 连接。<code>update</code> 和 <code>delete</code> 在没有过滤器时拒绝执行，所以你不会意外清空一张表。</p>
+
+      <h2>认证、存储、实时、向量</h2>
+      <ul>
+        <li><strong>认证</strong>——<code>lingcode.auth.signUp({email,password})</code> / <code>signIn(...)</code>；免密码 <code>sendMagicLink({email})</code>（SDK 会自动完成返回的链接）；邮箱验证码 <code>sendOtp</code> + <code>verifyOtp</code>；社交登录先 <code>getProviders()</code> 再 <code>signInWithOAuth('google')</code>。SDK 会存储会话并附加到之后的调用上，因此后续的 <code>.from()</code> 读取会以登录用户的身份运行，RLS 也据其 id 生效。</li>
+        <li><strong>存储</strong>——<code>await lingcode.storage.from('public').upload('avatars/me.png', file)</code> → <code>data.url</code>；<code>getPublicUrl(path)</code>；<code>download(path)</code>。</li>
+        <li><strong>实时</strong>——<code>const off = lingcode.from('todos').subscribe(({type,row}) =&gt; { /* INSERT|UPDATE|DELETE */ })</code>；在销毁时调用 <code>off()</code>。事件经过 RLS 过滤，所以登录用户只会收到属于自己的行。用它来取代轮询。</li>
+        <li><strong>向量</strong>——存一个 <code>embedding</code> 列，用 <code>lingcode.vector.search({ table, column, embedding, limit, metric:'cosine' })</code> 按相似度排序，用于语义搜索 / RAG。</li>
+      </ul>
+
+      <h2>必须知道的一件事：它是表级 CRUD，不是原始 SQL</h2>
+      <p>这是会让从 SQL 客户端或 PostgREST 过来的人意外的约束，也是"代码一次就跑通"和"代码报 400"之间的分水岭。运行时数据 API 一次只操作<strong>一张表</strong>。所以：</p>
+      <ul>
+        <li><strong>不支持 JOIN。</strong>分别取每张表，然后在你的代码里做联接（或者把 schema 反规范化，这样就不需要联接）。想要一条带作者的待办？读取 todos，收集这些 <code>user_id</code>，再读取那些 users，最后在客户端拼起来。</li>
+        <li><strong>不支持 upsert / <code>ON CONFLICT</code>。</strong>先 insert，如果遇到重复键错误，就取出那一行改用 <code>update</code>。</li>
+        <li><strong>每页 200 行。</strong><code>.select()</code> 最多返回 200 行——用 <code>.limit()</code> / <code>.offset()</code> 分页，并在你的代码里计算计数和求和。</li>
+      </ul>
+      <p>任何真正涉及关系或较重的操作——跨表报表、索引、约束、生成列、种子数据——都属于 <strong>schema</strong>，而不是运行时调用。创建一个 <code>VIEW</code>（然后像查表一样从中 <code>select()</code>）、添加索引，或者从控制台的 <strong>SQL</strong> 标签页或 <code>apply_migration</code> 工具运行迁移。网关被有意保持为一个轻薄、安全的 CRUD 层；Postgres 的全部能力就在下面一层，在你的迁移里。</p>
+
+      <div class="info-box">
+        <h3>从 Supabase 迁移？</h3>
+        <p>SDK 有意做成形态类似 Supabase，所以大多数调用点都能一一对应。对不上的只有上面那两条规则：把 <code>.select('*, author(*)')</code> 的 JOIN 改写为分别取数据，把 <code>.upsert()</code> 改写为先 insert 再 update。在 Mac IDE 或 <code>/try</code> 里，只需让 agent "把我的 Supabase 项目迁移到 LingCode 并部署"——迁移技能会替你处理 schema、数据以及这些改写。</p>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>连接托管后端</h3>
+            <p>在 Mac IDE 中一键为每个项目配置后端</p>
+          </a>
+          <a href="/zh/tutorials/scan-your-backend-with-advisors.html" class="tutorial-next-card">
+            <h3>用 Advisors 扫描你的后端</h3>
+            <p>在发布前发现缺失的 RLS 和 schema 问题</p>
+          </a>
+          <a href="/zh/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>Supabase 数据库与认证</h3>
+            <p>可选路径——当你想自带 Supabase 时</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

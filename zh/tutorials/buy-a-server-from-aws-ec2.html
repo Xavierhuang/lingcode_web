@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在 AWS EC2 购买服务器 — LingCode 教程</title>
+  <meta name="description" content="EC2 是 AWS 的虚拟服务器产品——所有 VPS 中功能最强大、最灵活、也最复杂的一种。什么时候该用 EC2，什么时候不需要，以及如何在不被账单吓到的前提下成功启动一台实例。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/buy-a-server-from-aws-ec2.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/buy-a-server-from-aws-ec2.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/buy-a-server-from-aws-ec2.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/buy-a-server-from-aws-ec2.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "在 AWS EC2 购买服务器",
+  "description": "EC2 是租用 Linux 服务器中功能最强大、最灵活、最昂贵、也最复杂的方式。如果你使用 AWS 的理由本身还不够清晰，那就不必选 EC2。如果你的需求是 IAM、VPC、ALB、S3 以及整个 AWS 生态，那么 EC2 正是你在这些服务旁边运行计算的方式。",
+  "url": "https://lingcode.dev/zh/tutorials/buy-a-server-from-aws-ec2.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/buy-a-server-from-aws-ec2.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "在 AWS EC2 购买服务器"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "在 AWS EC2 购买服务器",
+      "item": "https://lingcode.dev/zh/tutorials/buy-a-server-from-aws-ec2.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/buy-a-server-from-aws-ec2.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>在 AWS EC2 购买服务器</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>在 AWS EC2 购买服务器</h1>
+      <p class="intro">EC2 是租用 Linux 服务器中功能最强大、最灵活、最昂贵、也最复杂的方式。如果你使用 AWS 的理由本身还不够清晰，那就不必选 EC2。如果你的需求确实在这里——IAM、VPC、ALB、S3，以及整个 AWS 生态——EC2 就是你在这一切旁边运行计算的正确方式。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>几乎每个第一次购买 AWS 服务器的开发者，最终都会发现账单比预期高出不少，有时甚至高出很多。原因在于：EC2 的定价并不等于账单——账单是 EC2 实例费用，加上 EBS 卷费用，加上挂载的 EIP 费用，加上数据传输费，加上 CloudWatch 监控费，再加上任何经过 NAT Gateway 的流量费。每一项单独看都合理，合在一起却让 AWS 看起来比同等规格的 DigitalOcean Droplet 贵两到四倍。那种"$5 Droplet vs. $4 t3.micro"的对比根本站不住脚——t3.micro 不含公网 IP，存储空间不足，还会产生带宽费用，而 DigitalOcean 则提供了相当慷慨的免费流量额度。</p>
+      <p>使用 EC2 的真实理由，是你已经深度绑定在 AWS 上了。你的代码需要通过 IAM 角色访问 S3 或 DynamoDB，你在 Application Load Balancer 后面运行，你使用的是 AWS 原生托管数据库，你的 CloudFormation、CDK 或 Terraform 栈本来就期望使用 EC2。这些都没有问题——在这些场景下，EC2 确实出色。但如果你只是一个不需要这些的小项目，DigitalOcean 或 Hetzner 会更便宜、更简单、上手更快。</p>
+      <p>本教程将带你走完启动流程，指出那些会悄悄垫高账单的计费项，并解释 AMI、安全组、密钥对、EBS 等 AWS 专有概念——正是这些让 EC2 区别于本指南中的其他所有 VPS。我们不会粉饰其复杂性，只是给你一条清晰的路径。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>AWS 专有术语：AMI、实例类型、安全组、EBS、EIP</li>
+        <li>免费套餐 vs. 实际计费——各自给你什么、能用多久</li>
+        <li>正确启动一台 t3.micro 的方法</li>
+        <li>你实际会支付的账单组成项</li>
+        <li>何时完全跳过 EC2</li>
+      </ul>
+
+      <h2>第一步：确认 EC2 是否是正确的选择</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>三个合理理由；否则请选别处</h3>
+          <p>如果以下任一条成立，你可能确实需要 EC2：</p>
+          <ul>
+            <li><strong>你需要在实例上使用 IAM 角色</strong>来与其他 AWS 服务通信。在开发环境中把 AWS 密钥放进环境变量没问题；生产环境下，将角色附加到实例才是正确做法。</li>
+            <li><strong>你出于其他原因已经在用 AWS</strong>——比如 S3、RDS、SQS 等。当 EC2 与同区域的 AWS 服务通信时，数据传输的费用账就划算得多。</li>
+            <li><strong>你需要非常特定的计算资源</strong>（GPU、大规模 ARM Graviton、大内存、EBS 优化 I/O）。AWS 的实例类型目录拥有独立 VPS 提供商没有的机型。</li>
+          </ul>
+          <p>如果以上都不适用，<a href="/zh/tutorials/buy-a-server-from-digitalocean.html">DigitalOcean</a> 或 <a href="/zh/tutorials/buy-a-server-from-hetzner.html">Hetzner</a> 更便宜、更简单、上手更快。</p>
+        </div>
+      </div>
+
+      <h2>第二步：了解基本术语</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>每个 AWS 术语的含义</h3>
+          <ul>
+            <li><strong>AMI（Amazon Machine Image）。</strong>操作系统镜像。"Ubuntu 24.04 LTS"就是一个 AMI；AWS 会为每个区域发布对应版本，你也可以自己制作。</li>
+            <li><strong>实例类型。</strong>虚拟机的规格——<code>t3.micro</code>（1 vCPU / 1 GB，可突发）、<code>t3.small</code>（1 vCPU / 2 GB），一直到大型企业级规格。<code>t</code> 系列是通用可突发型；<code>m</code> 是均衡型；<code>c</code> 是计算优化型；<code>r</code> 是内存优化型。</li>
+            <li><strong>安全组。</strong>附加到实例的虚拟防火墙。你定义允许的入站/出站规则，默认拒绝所有入站流量。</li>
+            <li><strong>密钥对。</strong>由 AWS 管理的 SSH 密钥。你在启动实例前生成或上传，启动时会自动安装到实例上。</li>
+            <li><strong>EBS 卷。</strong>持久化磁盘。默认会挂载一个较小的根卷，也可以追加更多。EBS 按 GB/月独立计费，与实例无关。</li>
+            <li><strong>EIP（弹性 IP）。</strong>静态公网 IPv4，在实例停止/启动后保持不变。挂载到运行中的实例时免费；<strong>未挂载或未关联时计费</strong>——这是最常见的"我忘了这一项"计费条目。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第三步：启动一台 t3.micro</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>在 EC2 控制台操作</h3>
+          <p>在 AWS 控制台中，打开 EC2，点击 <strong>Launch instances</strong>，然后进行如下配置：</p>
+          <ul>
+            <li><strong>Name（名称）：</strong>起一个便于记忆的名字。</li>
+            <li><strong>AMI：</strong>选择"Ubuntu Server 24.04 LTS"。如果需要，可以筛选"Free Tier eligible"。</li>
+            <li><strong>Instance type（实例类型）：</strong>一般用途选 <code>t3.micro</code>，或选 <code>t4g.micro</code>（ARM/Graviton，略便宜，规格相同）。</li>
+            <li><strong>Key pair（密钥对）：</strong>新建一个或选择已有的。如果新建，务必下载 .pem 文件——只有这一次机会。</li>
+            <li><strong>Network settings（网络设置）：</strong>使用默认 VPC，选择"Allow SSH from anywhere"（或更好的做法："Allow SSH from My IP"）。如果是 HTTP/HTTPS Web 服务器，还需要开放 80/443 端口。</li>
+            <li><strong>Configure storage（存储配置）：</strong>默认 8 GB；如有需要可调整为 20 GB。在 AWS 免费套餐生效的前 12 个月内，前 30 GB 免费。</li>
+          </ul>
+          <p>点击 <strong>Launch instance</strong>，等待约一分钟，实例进入"running"状态并获得公网 IPv4。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>默认公网 IPv4 在停止/启动后会改变。</strong>如果你停止实例（不只是重启）再重新启动，IP 地址会变。凡是被 DNS 指向的服务，都应挂载一个弹性 IP——但只在实例运行时挂载，否则会为未挂载的 EIP 付费。
+      </div>
+
+      <h2>第四步：SSH 登录</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>使用你下载的密钥对</h3>
+          <pre><code># If you downloaded the .pem file, chmod it
+chmod 600 ~/Downloads/my-key.pem
+
+# Connect (default user for Ubuntu AMIs is 'ubuntu')
+ssh -i ~/Downloads/my-key.pem ubuntu@&lt;public-ip&gt;</code></pre>
+          <p>现在你已以 <code>ubuntu</code> 用户身份登录到实例，该用户拥有 sudo 权限。不同 AMI 的默认用户不同：Amazon Linux 是 <code>ec2-user</code>，Debian 是 <code>admin</code>，旧版 CentOS 是 <code>centos</code>，等等。</p>
+        </div>
+      </div>
+
+      <h2>第五步：安全加固——大部分与其他 VPS 相同</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>标准 Ubuntu 安全卫生</h3>
+          <pre><code>sudo apt update &amp;&amp; sudo apt upgrade -y
+
+# Optional: create a non-default user (the 'ubuntu' user is fine for most projects)
+sudo adduser deploy
+sudo usermod -aG sudo deploy
+sudo rsync --archive --chown=deploy:deploy /home/ubuntu/.ssh /home/deploy</code></pre>
+          <p>防火墙已通过 EC2 安全组（网络层）就位；在此之上再加 <code>ufw</code> 是双重保险——有用，但并非严格必要，因为安全组已经阻挡了不需要的入站流量。大多数 AWS 原生用户会关闭主机级防火墙，改为全部在安全组中统一管理。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>完整的安全加固清单在单独的教程中。</strong>EC2 安全组覆盖网络层；操作系统层仍需其余步骤——仅限 SSH 密钥登录、禁止 root 登录、fail2ban、swap、日志轮转、无人值守安全更新。在把域名指向这台服务器之前，请先走一遍 <a href="/zh/tutorials/prepare-a-fresh-linux-server-for-production.html">为生产环境准备一台全新 Linux 服务器</a>。二十分钟，第一次遇到问题时就值回来了。
+      </div>
+
+      <h2>第六步：账单组成项</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>你实际在为什么付费</h3>
+          <p>一台运行中的 t3.micro，配默认存储和公网 IPv4（已挂载），大约的费用如下：</p>
+          <ul>
+            <li><strong>t3.micro 计算：</strong>$0.0104/小时 ≈ $7.50/月。</li>
+            <li><strong>EBS 根卷（8 GB gp3）：</strong>约 $0.65/月。</li>
+            <li><strong>公网 IPv4（已挂载，自 2024 年 2 月起 AWS 对此收费）：</strong>$3.65/月。</li>
+            <li><strong>出站数据传输：</strong>前 100 GB/月免费，超出后 $0.09/GB，难以预测。</li>
+          </ul>
+          <p>合计：基准约 $12/月。AWS 账户开通后的前 12 个月，免费套餐覆盖了<em>大部分</em>费用；之后你就要为在其他地方只需 $5–7 的服务支付真实的费用了。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>设置账单提醒。</strong>进入 AWS 账单控制台 → Budgets → 创建预算，配置金额为 $5、$10、$20 的邮件提醒——只要足够有参考价值又不会频繁骚扰即可。那些账单惊吓的故事，不是系统的恶意，而是"我忘了我有两台实例和一个 NAT Gateway 还在跑"。
+      </div>
+
+      <h2>第七步：绑定你的域名</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>使用 EIP 或主机名，通过 Route 53 或任意 DNS 服务</h3>
+          <p>如需稳定的公网 IP，请挂载一个弹性 IP，然后在你的 DNS 提供商处创建一条 A 记录，指向该 EIP。</p>
+          <p>如果你在用 <a href="/zh/tutorials/buy-a-domain-from-aws-route53.html">Route 53</a>，可以在顶级域名处使用 Alias 记录直接指向 ALB 或 CloudFront——但对于单台 EC2 而言，在任意 DNS 提供商创建普通 A 记录就完全够用了。</p>
+        </div>
+      </div>
+
+      <h2>第八步：何时跳过 EC2</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>三种具体情况</h3>
+          <ul>
+            <li><strong>你正在学习 Linux 服务器管理。</strong>AWS 概念（VPC、安全组、IAM、ENI）的认知负担会分散你的注意力。<a href="/zh/tutorials/buy-a-server-from-digitalocean.html">DigitalOcean</a> 更友好，而学到的 Linux 技能同样适用于其他平台。</li>
+            <li><strong>你想要可预测的月度费用。</strong>EC2 的账单有太多独立计费项。DigitalOcean 和 Hetzner 都是固定费率。</li>
+            <li><strong>你不需要任何 AWS 特有的服务。</strong>单独使用 EC2 性价比偏低。选它是因为整个生态，而不是尽管如此还要用它。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>终止实例并不会默认删除其 EBS 卷</strong>（行为取决于一个标志位，不同 AMI 不同）。如果你终止了实例，但存储费用仍未消失，请在 EC2 控制台的 Volumes 页面检查——遗留的 EBS 卷是经典的隐性费用。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/buy-a-domain-from-aws-route53.html" class="tutorial-next-card">
+            <h3>在 AWS Route 53 购买域名</h3>
+            <p>如果你已经在 AWS 上运行计算，把 DNS 也放在这里——Alias 记录能省去不少麻烦</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-next-card">
+            <h3>在 DigitalOcean 购买服务器</h3>
+            <p>如果 EC2 让你觉得太重，这里有一个替代方案：规格相同，概念更少</p>
+          </a>
+          <a href="/zh/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>通过 DNS 将域名连接到服务器</h3>
+            <p>DNS 配置步骤——无论你用哪家云都一样</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速交付的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">大学合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

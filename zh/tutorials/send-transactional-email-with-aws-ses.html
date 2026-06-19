@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 AWS SES 发送事务邮件 — LingCode 教程</title>
+  <meta name="description" content="AWS SES 是规模化场景下最便宜的邮件服务：每千封仅 $0.10。配置比 Resend 或 Postmark 复杂，但已在 AWS 上且对发送成本敏感时，它是最优选择。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/send-transactional-email-with-aws-ses.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/send-transactional-email-with-aws-ses.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 AWS SES 发送事务邮件",
+  "description": "每千封邮件仅需 $0.10 — 迄今最具性价比的正规邮件 API。代价是更多 AWS 风格的配置（IAM、沙盒模式退出申请、按区域 DNS 验证），以及相比开发者优先服务略显粗糙的体验。适合在 AWS 生态内、对单封邮件成本极度敏感的场景。",
+  "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-aws-ses.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-aws-ses.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "验证发送域名",
+      "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-aws-ses.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "为 SES 创建 IAM 凭证",
+      "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-aws-ses.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "安装 SDK",
+      "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-aws-ses.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "发送第一封邮件",
+      "url": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-aws-ses.html#step-4"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 AWS SES 发送事务邮件",
+      "item": "https://lingcode.dev/zh/tutorials/send-transactional-email-with-aws-ses.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/send-transactional-email-with-aws-ses.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>使用 AWS SES 发送事务邮件</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 AWS SES 发送事务邮件</h1>
+      <p class="intro">每千封邮件仅需 $0.10 — 迄今最具性价比的正规邮件 API。代价是更多 AWS 风格的配置（IAM、沙盒模式退出申请、按区域 DNS 验证），以及相比开发者优先服务略显粗糙的体验。适合在 AWS 生态内、对规模化单封邮件成本极度敏感的场景。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>何时选择 SES</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>选择 SES 的时机</strong> — 发送量大（每月 10 万封以上）、已在 AWS 生态内，或成本是首要因素。</li>
+            <li><strong>选择 <a href="/zh/tutorials/send-transactional-email-with-resend.html">Resend</a></strong> — 中小规模下配置最快、开发体验最好。</li>
+            <li><strong>选择 <a href="/zh/tutorials/send-transactional-email-with-postmark.html">Postmark</a></strong> — 最看重收件箱到达率时。</li>
+            <li><strong>选择 <a href="/zh/tutorials/send-transactional-email-with-sendgrid.html">SendGrid</a></strong> — 需要大型企业功能集时。</li>
+          </ul>
+          <p>成本对比：SES 发送 1,000 封邮件收费 $0.10；Resend 收费 $1.00（贵 10 倍）；Postmark 收费 $10（贵 100 倍）。每月发送 10 万封时，差距是 $10 对 $100 对 $1,000。SES 在成本上完胜，其他服务的优势在于节省开发时间。</p>
+        </div>
+      </div>
+
+      <h2>在 AWS 账户中启用 SES</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>登录 AWS 控制台，搜索 <strong>SES</strong>，选择离用户最近的区域（如 <code>us-east-1</code>）。<a href="https://console.aws.amazon.com/ses/" target="_blank" rel="noopener">SES 控制台 ↗</a>。</p>
+          <p>SES 是按区域隔离的 — 验证信息和发送统计不跨区域共享。选定一个区域后请保持一致。</p>
+        </div>
+      </div>
+
+      <h2>验证发送域名</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>SES → <strong>已验证身份 → 创建身份 → 域</strong>。输入你的域名，选择 <strong>Easy DKIM</strong>（RSA-2048）。</p>
+          <p>SES 会生成 3 条 CNAME 记录，将它们添加到你的 <a href="/zh/tutorials/connect-domain-to-server-with-dns.html">DNS 服务商</a>处。SES 每 24 小时自动检测一次，通常在一小时内完成验证。</p>
+          <p>你也可以验证单个邮件地址（用于测试）：<strong>创建身份 → 电子邮件地址</strong> → AWS 发送确认链接。操作简便但有限制；生产环境应使用域名验证。</p>
+        </div>
+      </div>
+
+      <h2>退出沙盒模式</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>新 SES 账户默认处于<strong>沙盒模式</strong>：</p>
+          <ul>
+            <li>只能向<em>已验证</em>的邮件地址发送邮件。</li>
+            <li>每天上限 200 封。</li>
+            <li>发送速率上限 1 封/秒。</li>
+          </ul>
+          <p>这是 AWS 在你向陌生人发送邮件之前对你进行审核的机制。要退出沙盒，点击 <strong>账户面板 → 申请生产访问权限</strong>，填写表单：</p>
+          <ul>
+            <li><strong>邮件类型</strong> — 选择"事务性"。</li>
+            <li><strong>网站 URL</strong> — 填写你的产品网址。</li>
+            <li><strong>使用场景描述</strong> — 务必具体。例如："向 yourapp.com 用户发送密码重置邮件和收据。"描述模糊会被拒绝。</li>
+            <li><strong>退信/投诉处理方案</strong> — 描述你的处理计划（见第 7 步）。</li>
+          </ul>
+          <p>AWS 通常在 24 小时内响应，有时仅需几分钟。审批通过后初始上限为每天 5 万封，随声誉积累自动提升。</p>
+        </div>
+      </div>
+
+      <h2>为 SES 创建 IAM 凭证</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>不要使用 AWS 根凭证。创建一个拥有最小权限策略的 IAM 用户：</p>
+          <ol>
+            <li><a href="https://console.aws.amazon.com/iam/" target="_blank" rel="noopener">IAM 控制台 ↗</a> → <strong>用户 → 创建用户</strong>。</li>
+            <li>用户名：<code>ses-sender-prod</code>（或类似名称）。</li>
+            <li>直接附加策略 → 选择 <strong>AmazonSESFullAccess</strong>（或用仅含 <code>ses:SendEmail</code> + <code>ses:SendRawEmail</code> 的内联策略进一步收紧权限）。</li>
+            <li>创建用户 → <strong>安全凭证</strong>标签页 → <strong>创建访问密钥</strong> → 选择"在 AWS 外部运行的应用程序"。</li>
+          </ol>
+          <p>将访问密钥和私密密钥保存到环境变量：</p>
+          <pre><code>AWS_ACCESS_KEY_ID=AKIAxxxxxxxxxxxxxxxx
+AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+AWS_REGION=us-east-1</code></pre>
+          <p>如果你的应用已在 AWS 上运行（EC2、Lambda 等），请使用 IAM 角色替代长期凭证，这是 AWS 标准实践。</p>
+        </div>
+      </div>
+
+      <h2>安装 SDK</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <pre><code>npm install @aws-sdk/client-sesv2</code></pre>
+          <p>SES 有 v1 和 v2 两套 API，请使用 v2 — 更新、默认值更合理、支持所有当前功能。其他语言：<a href="https://docs.aws.amazon.com/ses/latest/dg/send-email.html#send-email-libraries" target="_blank" rel="noopener">boto3、AWS SDK for Java、Go、.NET ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>发送第一封邮件</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <pre><code>import {
+  SESv2Client,
+  SendEmailCommand,
+} from "@aws-sdk/client-sesv2";
+
+const ses = new SESv2Client({ region: process.env.AWS_REGION });
+
+await ses.send(new SendEmailCommand({
+  FromEmailAddress: "hello@yourdomain.com",
+  Destination: { ToAddresses: ["recipient@example.com"] },
+  Content: {
+    Simple: {
+      Subject: { Data: "Hello from AWS SES" },
+      Body: {
+        Text: { Data: "Plain text version" },
+        Html: { Data: "&lt;p&gt;HTML body&lt;/p&gt;" },
+      },
+    },
+  },
+}));</code></pre>
+          <p>AWS SDK 会自动从环境变量或 IAM 角色读取凭证。可在 SES 控制台 → <strong>声誉指标</strong>中查看发送统计。</p>
+        </div>
+      </div>
+
+      <h2>处理退信与投诉（必须）</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p><strong>AWS 会暂停你的 SES 账户</strong>，若退信率超过 5% 或投诉率超过 0.1%。你必须处理这些信号。</p>
+          <p>标准配置：</p>
+          <ol>
+            <li><strong>SES → 配置集</strong> → 创建一个配置集，例如命名为 <code>default-prod</code>。</li>
+            <li>配置<strong>事件目标</strong> → 为退信和投诉事件创建 SNS 主题。</li>
+            <li>在你的应用中，为 SNS 主题订阅一个 HTTP 端点。<a href="https://docs.aws.amazon.com/sns/latest/dg/sns-http-https-endpoint-as-subscriber.html" target="_blank" rel="noopener">SNS HTTP 订阅者文档 ↗</a>。</li>
+            <li>收到退信/投诉事件后，在数据库中将该收件人标记为不可发送，停止向其发送邮件。</li>
+          </ol>
+          <p>每次发送时传入配置集名称：</p>
+          <pre><code>await ses.send(new SendEmailCommand({
+  FromEmailAddress: "hello@yourdomain.com",
+  Destination: { ToAddresses: ["..."] },
+  Content: { /* ... */ },
+  ConfigurationSetName: "default-prod",
+}));</code></pre>
+          <p>不配置此项，账户迟早会被暂停。这一步不可省略。</p>
+        </div>
+      </div>
+
+      <h2>模板（按需使用）</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>SES 支持类 Mustache 语法的服务端模板。创建模板：</p>
+          <pre><code>import { CreateEmailTemplateCommand } from "@aws-sdk/client-sesv2";
+
+await ses.send(new CreateEmailTemplateCommand({
+  TemplateName: "welcome",
+  TemplateContent: {
+    Subject: "Welcome to {{appName}}",
+    Html: "&lt;p&gt;Hi {{name}}, welcome!&lt;/p&gt;",
+    Text: "Hi {{name}}, welcome!",
+  },
+}));</code></pre>
+          <p>使用模板发送：</p>
+          <pre><code>import { SendEmailCommand } from "@aws-sdk/client-sesv2";
+
+await ses.send(new SendEmailCommand({
+  FromEmailAddress: "hello@yourdomain.com",
+  Destination: { ToAddresses: [user.email] },
+  Content: {
+    Template: {
+      TemplateName: "welcome",
+      TemplateData: JSON.stringify({ name: user.name, appName: "MyApp" }),
+    },
+  },
+}));</code></pre>
+          <p>SES 模板功能可用，但编辑体验较为简陋。许多团队选择在应用内渲染 HTML（用 React Email、MJML 或类似工具），再将渲染结果作为字符串传给 <code>Simple.Body.Html</code>。</p>
+        </div>
+      </div>
+
+      <h2>SMTP 接口（SDK 不可用时）</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>SES 也提供 SMTP 凭证，适用于只支持 SMTP 协议的软件（如 WordPress、Postfix 中继、老旧系统）。</p>
+          <p>SES 控制台 → <strong>SMTP 设置 → 创建 SMTP 凭证</strong>。系统会生成专用于 SMTP 的用户名和密码。连接信息：</p>
+          <pre><code>Host: email-smtp.us-east-1.amazonaws.com
+Port: 587 (STARTTLS) or 465 (SSL)
+Auth: the username/password just generated</code></pre>
+          <p><a href="https://docs.aws.amazon.com/ses/latest/dg/smtp-connect.html" target="_blank" rel="noopener">SMTP 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>监控声誉</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>SES 控制台 → <strong>声誉指标</strong>：</p>
+          <ul>
+            <li><strong>退信率</strong> — 保持在 5% 以下，超过 10% 会被暂停。</li>
+            <li><strong>投诉率</strong> — 保持在 0.1% 以下，超过 0.5% 会被暂停。</li>
+            <li><strong>垃圾邮件投诉</strong> — 用户在邮件客户端将你的邮件标记为垃圾邮件的次数。</li>
+          </ul>
+          <p>为这些指标设置 <strong>CloudWatch 告警</strong>。配置得当后，AWS 会在暂停前提前通知你。若不设告警，你只会在发送中断时才发现问题。</p>
+        </div>
+      </div>
+
+      <h2>常见故障</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>"Email address not verified"</strong> — 仍处于沙盒模式，或从未验证的地址发送。验证域名（第 2 步）或退出沙盒（第 3 步）。</li>
+            <li><strong>"AccessDenied"</strong> — IAM 用户缺少 <code>ses:SendEmail</code> 权限，更新策略即可。</li>
+            <li><strong>"MessageRejected"</strong> — 邮件体过大（上限 10 MB）、不支持的字符编码，或配置集不存在。</li>
+            <li><strong>"Throttling"</strong> — 超过账户发送速率上限。在<strong>账户面板</strong>查看当前限制，声誉积累后会自动提升。</li>
+            <li><strong>沙盒模式邮件正常但生产模式邮件丢失</strong> — 区域不匹配。SES 按区域隔离，客户端必须与验证时使用的区域一致。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>SES 是所有邮件 API 中最"AWS 味"的一个。</strong>学习过程中你需要了解一些 IAM、CloudWatch 和 SNS 的知识。如果你还不熟悉 AWS，Resend 或 Postmark 可以让你在 5 分钟内开始发送；SES 可能需要 2 小时。但换来的回报是规模化场景下 10 至 100 倍的成本优势。
+      </div>
+
+      <h2>定价实况</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <p>每 1,000 封外发邮件收费 $0.10；每 1,000 封接收邮件收费 $0.10（如启用接收）；附件每 GB 收费 $0.12。</p>
+          <p>免费额度：<em>从 EC2 实例发送</em>时，每月可免费发送 62,000 封邮件。其他情况从第 1 封起计费（但 $0.10/千封已经足够便宜，差异几乎可以忽略）。</p>
+          <p><a href="https://aws.amazon.com/ses/pricing/" target="_blank" rel="noopener">SES 定价 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <ul>
+        <li><a href="https://docs.aws.amazon.com/ses/" target="_blank" rel="noopener">AWS SES 文档 ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/sesv2/latest/APIReference/" target="_blank" rel="noopener">SES v2 API 参考 ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html" target="_blank" rel="noopener">申请生产访问权限 ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/ses/latest/dg/configuration-sets.html" target="_blank" rel="noopener">配置集文档 ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/ses-examples.html" target="_blank" rel="noopener">JS SDK 示例 ↗</a></li>
+      </ul>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h3>使用 Resend 发送邮件</h3>
+            <p>中小规模下配置最快；支持 React Email 模板</p>
+          </a>
+          <a href="/zh/tutorials/send-transactional-email-with-postmark.html" class="tutorial-next-card">
+            <h3>使用 Postmark 发送邮件</h3>
+            <p>中小规模下收件箱到达率更好</p>
+          </a>
+          <a href="/zh/tutorials/send-transactional-email-with-sendgrid.html" class="tutorial-next-card">
+            <h3>使用 SendGrid 发送邮件</h3>
+            <p>定价档位相近的企业级替代方案</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和追求真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

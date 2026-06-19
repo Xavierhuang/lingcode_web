@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Annotated File Examples: .p8, service-account JSON, ExportOptions.plist | LingCode</title>
+  <meta name="description" content="Every field in the three files LingCode hands to Apple and Google during deploy — with inline callouts explaining what each one does and why it's there.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/annotated-examples.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Annotated Deploy File Examples">
+  <meta property="og:description" content="The .p8, service-account JSON, and ExportOptions.plist — every field explained.">
+  <meta property="og:url" content="https://lingcode.dev/annotated-examples.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 820px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.0625rem; margin: 24px 0 10px; color: var(--text); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content ul { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.75; }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; color: var(--text); }
+    .annotated { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr); gap: 0; margin: 20px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .annotated-file { background: var(--bg-card); padding: 18px 22px; font-family: ui-monospace, monospace; font-size: 0.82rem; line-height: 1.65; color: var(--text); white-space: pre-wrap; word-break: break-all; border-right: 1px solid var(--border); }
+    .annotated-notes { padding: 14px 18px; display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; line-height: 1.6; background: #0a0a0c; }
+    .note { background: rgba(255,255,255,0.02); border-left: 2px solid var(--signal); padding: 8px 12px; border-radius: 4px; color: var(--text-muted); }
+    .note strong { color: var(--text); }
+    .hl { background: rgba(99, 102, 241, 0.15); border-radius: 3px; padding: 1px 2px; color: var(--signal); }
+    @media (max-width: 720px) {
+      .annotated { grid-template-columns: 1fr; }
+      .annotated-file { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Reference</p>
+        <h1>Annotated deploy files</h1>
+        <p>The three files LingCode hands to Apple and Google during a deploy, side-by-side with an explanation of every field.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <div class="callout">
+        <p><strong>All examples below are synthetic.</strong> Real key material is randomized and the emails / IDs are made up. Never paste your actual private keys into any third-party site, including this one.</p>
+      </div>
+
+      <h2>1. AuthKey_ABC123XYZ0.p8</h2>
+      <p>The private key Apple hands you once when you create an <a href="/glossary.html#app-store-connect">App Store Connect</a> API key. Used to sign <a href="/glossary.html#jwt">JWTs</a> that authenticate against the App Store Connect API. Apple's side stores only the matching public key.</p>
+
+      <div class="annotated">
+        <div class="annotated-file"><span class="hl">-----BEGIN PRIVATE KEY-----</span>
+MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg8fHp0xqV9o9q+nY
++VN+G9UpW3jc4/0EzA0Ot4PvMrC2gCgYIKoZIzj0DAQehRANCAAT0Qm8pJ7sW
+qZb7xMxBq3zP5mH6dN1Y0m9xQvZ3X2Y6LwvHx1+4n4pK3wqR6YN9kL8vP8z
+eV4sHQmKq6PL5qM1
+<span class="hl">-----END PRIVATE KEY-----</span></div>
+        <div class="annotated-notes">
+          <div class="note"><strong>PEM framing.</strong> The <code>-----BEGIN PRIVATE KEY-----</code> / <code>-----END PRIVATE KEY-----</code> lines mark this as a PEM-encoded key file. Everything in between is one big base64 blob.</div>
+          <div class="note"><strong>Algorithm.</strong> App Store Connect API keys are <a href="/glossary.html#es256-rs256">ES256</a> — ECDSA on the P-256 curve. The encoded bytes include an <code>OID</code> that identifies this, so the library reading the file doesn't have to guess.</div>
+          <div class="note"><strong>Filename carries the Key ID.</strong> The 10 characters between <code>AuthKey_</code> and <code>.p8</code> are your <a href="/glossary.html#key-id">Key ID</a>. <code>xcrun altool</code> relies on this convention to find the right file when you pass <code>--apiKey &lt;KeyID&gt;</code>.</div>
+          <div class="note"><strong>Downloadable once.</strong> Apple only serves the <code>.p8</code> at creation time. Lose it → revoke the key and generate a new one. This is on purpose: if Apple kept a copy, its servers would be a tempting target.</div>
+        </div>
+      </div>
+
+      <h2>2. service-account.json</h2>
+      <p>What Google Cloud hands you when you generate a key for a <a href="/glossary.html#service-account">service account</a>. Used to sign <a href="/glossary.html#jwt">JWTs</a> that you exchange for OAuth 2.0 access tokens against the Play Developer API.</p>
+
+      <div class="annotated">
+        <div class="annotated-file">{
+  <span class="hl">"type"</span>: "service_account",
+  <span class="hl">"project_id"</span>: "my-company-deploy",
+  <span class="hl">"private_key_id"</span>: "a1b2c3d4e5f6...",
+  <span class="hl">"private_key"</span>: "-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n",
+  <span class="hl">"client_email"</span>: "lingcode-deploy@my-company-deploy.iam.gserviceaccount.com",
+  <span class="hl">"client_id"</span>: "102938475610293847561",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/lingcode-deploy%40..."
+}</div>
+        <div class="annotated-notes">
+          <div class="note"><strong><code>type</code></strong> Always <code>"service_account"</code> for this flow. Google also issues user-account keys in a similar JSON format; the type string is how LingCode distinguishes them.</div>
+          <div class="note"><strong><code>private_key</code></strong> An <a href="/glossary.html#es256-rs256">RS256</a> (RSA-2048) private key, inline as an escaped PEM string. LingCode strips the header/footer lines and decodes the base64 body to pull out the raw RSA key material.</div>
+          <div class="note"><strong><code>private_key_id</code></strong> Identifies this specific key within the service account (the account can have multiple). Rotating? Create a new key, deploy the new JSON, then delete the old <code>private_key_id</code> in Cloud Console.</div>
+          <div class="note"><strong><code>client_email</code></strong> The service account's identity. LingCode puts this in the JWT's <code>iss</code> (issuer) claim so Google's token server knows who's asking. Also the email address you paste into Play Console → API access → App permissions to grant upload rights.</div>
+          <div class="note"><strong><code>token_uri</code></strong> The OAuth 2.0 endpoint LingCode POSTs the signed JWT to, receiving a 1-hour access token in return.</div>
+          <div class="note"><strong>Other fields</strong> are metadata Google Cloud uses for its own reference. LingCode only needs <code>client_email</code> + <code>private_key</code> + (indirectly) <code>token_uri</code>.</div>
+        </div>
+      </div>
+
+      <h2>3. ExportOptions.plist</h2>
+      <p>LingCode writes this file to <code>build/ExportOptions.plist</code> on the fly, then hands it to <code>xcodebuild -exportArchive</code>. It's what tells Xcode how to turn an <a href="/glossary.html#xcarchive">.xcarchive</a> into a distributable <a href="/glossary.html#ipa">.ipa</a> or <a href="/glossary.html#app-bundle">.app</a>.</p>
+
+      <div class="annotated">
+        <div class="annotated-file">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+  &lt;key&gt;<span class="hl">method</span>&lt;/key&gt;
+  &lt;string&gt;app-store&lt;/string&gt;
+  &lt;key&gt;<span class="hl">teamID</span>&lt;/key&gt;
+  &lt;string&gt;HPTTZS5J27&lt;/string&gt;
+  &lt;key&gt;<span class="hl">signingStyle</span>&lt;/key&gt;
+  &lt;string&gt;automatic&lt;/string&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;</div>
+        <div class="annotated-notes">
+          <div class="note"><strong><code>method = app-store</code></strong> Tells Xcode which of its four distribution modes to use. Others: <code>ad-hoc</code> (limited device list), <code>enterprise</code> (internal distribution), <code>development</code> (dev builds). LingCode only ships App Store uploads, so this is always <code>app-store</code>.</div>
+          <div class="note"><strong><code>teamID = HPTTZS5J27</code></strong> Your <a href="/glossary.html#team-id">Team ID</a>, copied from the App Store pane in Magic Deploy. Must match the team that owns the <a href="/glossary.html#apple-distribution">Apple Distribution certificate</a> in your keychain — if it doesn't, <code>exportArchive</code> fails with "no signing certificate matching team ID."</div>
+          <div class="note"><strong><code>signingStyle = automatic</code></strong> Tells Xcode to auto-generate / refresh the provisioning profile using the team's cert. The alternative, <code>manual</code>, requires you to specify profile UUIDs and signing identities explicitly. LingCode assumes automatic — don't flip your Xcode target to manual signing or this export will fail.</div>
+          <div class="note"><strong>Missing keys.</strong> No bundle ID, no profile UUID, no provisioning-profile specifier dictionary. Those are all Xcode's job to figure out at export time from your project's settings. LingCode keeps the plist minimal on purpose — simpler plists fail in more predictable ways.</div>
+        </div>
+      </div>
+
+      <h2>How these three files talk to each other</h2>
+      <p>Worth seeing the chain end-to-end, for iOS/macOS:</p>
+      <ul>
+        <li>You configure your <strong>Apple Developer team</strong> → this gets you a <strong>Team ID</strong>.</li>
+        <li>The <strong>Team ID</strong> lands in <strong>ExportOptions.plist</strong>, which <code>xcodebuild</code> uses to find your signing cert and create/refresh a profile.</li>
+        <li>Your API key's <strong>Key ID</strong>, <strong>Issuer ID</strong>, and <strong>.p8</strong> authenticate the <em>upload</em> call to App Store Connect — separate from the signing that happened during export.</li>
+      </ul>
+      <p>For Android, the service-account JSON is the <em>only</em> credential you need: it authenticates the entire flow (OAuth token fetch → edit creation → AAB upload → commit).</p>
+
+      <h2>Where to see the real files on your machine</h2>
+      <ul>
+        <li><strong>Your .p8</strong> — wherever you saved it when Apple offered the one-time download (<code>~/Downloads/AuthKey_ABC123XYZ0.p8</code> by default).</li>
+        <li><strong>Your service-account JSON</strong> — wherever you saved it from Cloud Console → IAM → Service accounts → Keys → Create new key.</li>
+        <li><strong>The generated ExportOptions.plist</strong> — at <code>&lt;your project&gt;/build/ExportOptions.plist</code> after a LingCode deploy attempt. Open it in a text editor to confirm the Team ID matches what you typed in.</li>
+      </ul>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">More reference material:</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;"><a href="/glossary.html">Glossary</a> · <a href="/learn-code-signing.html">How code signing works</a> · <a href="/learn-jwt-auth.html">JWT auth</a> · <a href="/learn-service-accounts.html">Service accounts</a></p>
+        <a href="/deploy.html">Pick a deploy target →</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 Better Stack 进行可用性监控 — LingCode 教程</title>
+  <meta name="description" content="从外部监控你的网站，宕机时第一时间收到告警。注册账号、添加监控项、接入 Slack/SMS/邮件通知。免费套餐支持 10 个监控项，每 3 分钟检测一次。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/uptime-monitoring-with-better-stack.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Better Stack 进行可用性监控",
+  "description": "在你的客户之前发现网站宕机。注册账号、填入 URL、选择通知方式即可上手。免费套餐支持 10 个监控项，每 3 分钟检测一次。",
+  "url": "https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "注册账号",
+      "url": "https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "添加第一个监控项",
+      "url": "https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "为应用添加健康检查接口",
+      "url": "https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "配置通知渠道",
+      "url": "https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "设置升级策略",
+      "url": "https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html#step-5"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "name": "发布状态页面",
+      "url": "https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html#step-6"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 Better Stack 进行可用性监控",
+      "item": "https://lingcode.dev/zh/tutorials/uptime-monitoring-with-better-stack.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/uptime-monitoring-with-better-stack.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">后端集成</a>
+      <span>/</span>
+      <span>使用 Better Stack 进行可用性监控</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 Better Stack 进行可用性监控</h1>
+      <p class="intro">在你的客户之前发现网站宕机。注册账号、填入 URL、选择通知方式即可上手。免费套餐支持 10 个监控项，每 3 分钟检测一次。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>可用性监控与错误追踪有何不同</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>你已经用 <a href="/zh/tutorials/set-up-sentry-error-tracking.html">Sentry</a> 来追踪应用内部的错误了。它能告诉你应用代码在哪里崩溃，但它<em>无法</em>告诉你：</p>
+          <ul>
+            <li>服务器宕机了（根本没有应用在运行）。</li>
+            <li>DNS 配置错误（请求根本没到达应用）。</li>
+            <li>TLS 证书过期（浏览器拒绝连接）。</li>
+            <li>CDN 服务商出现故障。</li>
+            <li>托管账户被暂停。</li>
+          </ul>
+          <p>以上这些都需要外部监控——从外部定期轮询你的网站，当无法访问时立即通知你。成本极低，但物超所值。</p>
+        </div>
+      </div>
+
+      <h2>何时选择 Better Stack（以及备选方案）</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>选择 Better Stack 的场景</strong> — 你希望一个产品同时覆盖监控、值班排班、状态页面和日志管理。界面现代，免费套餐慷慨。</li>
+            <li><strong>选择 <a href="https://uptimerobot.com/" target="_blank" rel="noopener">UptimeRobot ↗</a></strong>——最物美价廉的选项（免费套餐支持 50 个监控项）。</li>
+            <li><strong>选择 <a href="https://www.pingdom.com/" target="_blank" rel="noopener">Pingdom ↗</a></strong>——历史最悠久、企业最信赖的品牌。</li>
+            <li><strong>选择 <a href="https://www.datadoghq.com/product/synthetic-monitoring/" target="_blank" rel="noopener">Datadog Synthetics ↗</a></strong>——如果你已经在使用 Datadog 进行应用监控。</li>
+            <li><strong>选择状态页面服务</strong>（<a href="https://www.atlassian.com/software/statuspage" target="_blank" rel="noopener">Statuspage ↗</a>、<a href="https://instatus.com/" target="_blank" rel="noopener">Instatus ↗</a>）——仅用于对外沟通时。</li>
+          </ul>
+          <p>Better Stack 用一个工具涵盖了大部分需求，适合还不需要为每个功能单独引入供应商的阶段。</p>
+        </div>
+      </div>
+
+      <h2>注册账号</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>前往 <a href="https://betterstack.com/users/sign-up" target="_blank" rel="noopener">betterstack.com ↗</a> 注册。免费套餐：10 个监控项、3 分钟检测间隔、每月 30 条 SMS 额度、1 个状态页面、1 GB 日志存储。</p>
+          <p>如果只需要可用性监控，选择 <strong>Uptime</strong> 产品即可。Better Stack 还提供 Logs（日志管理）和 Telemetry（APM）两个独立产品，初期可以忽略。</p>
+        </div>
+      </div>
+
+      <h2>添加第一个监控项</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>进入控制台 → <strong>Monitors → Create monitor</strong>，配置以下参数：</p>
+          <ul>
+            <li><strong>URL</strong> — 要检测的地址，填写真实的生产环境 URL。</li>
+            <li><strong>检测频率</strong> — 每 30 秒（付费）或每 3 分钟（免费）。检测越频繁，告警越及时。</li>
+            <li><strong>HTTP 方法</strong> — 默认 GET。健康检查接口也可以用 POST 或 HEAD。</li>
+            <li><strong>检测区域</strong> — Better Stack 从多个地理位置同时发起检测，只有多个区域都报告不可达时才触发告警，避免单个节点误报。</li>
+            <li><strong>预期状态码</strong> — 通常是 200。如果你的健康接口返回 204，相应修改即可。</li>
+            <li><strong>预期响应内容</strong>（可选）— 用于内容校验。"如果响应中不包含 'OK' 则告警。"</li>
+            <li><strong>SSL/TLS 检查</strong> — 证书在距离过期 N 天时发出告警，默认 14 天。<strong>建议始终开启。</strong></li>
+          </ul>
+          <p>保存后，Better Stack 立即开始检测。</p>
+        </div>
+      </div>
+
+      <h2>为应用添加健康检查接口</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>直接监控主页也行，但专用的健康检查接口更好——它能验证应用本身和关键依赖是否正常运行，而不只是某个页面能返回 HTML。</p>
+          <pre><code>// Node + Express
+app.get("/api/health", async (req, res) =&gt; {
+  try {
+    // Check DB
+    await db.raw("SELECT 1");
+    // Check Redis / queue / etc.
+    // await redis.ping();
+    res.status(200).json({ status: "ok" });
+  } catch (err) {
+    res.status(503).json({ status: "degraded", error: err.message });
+  }
+});</code></pre>
+          <p>将 Better Stack 指向 <code>https://yourdomain.com/api/health</code>。这样，当应用或其依赖出现问题时就会触发告警，而不只是前端页面加载失败时。</p>
+        </div>
+      </div>
+
+      <h2>配置通知渠道</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>默认情况下，Better Stack 会通过邮件通知你。对于真正的值班体系，还需要接入更多渠道：</p>
+          <p>控制台 → <strong>On-call → Integrations</strong>，可接入：</p>
+          <ul>
+            <li><strong>Slack / Microsoft Teams</strong> — 告警触发时，机器人在频道里发消息。</li>
+            <li><strong>电话呼叫</strong> — Better Stack 直接打电话给你（消耗 SMS 额度）。</li>
+            <li><strong>SMS</strong> — 短信通知。</li>
+            <li><strong>推送通知</strong> — 通过 Better Stack 移动端 App 接收。</li>
+            <li><strong>PagerDuty / Opsgenie</strong> — 如果你已有自己的值班编排工具。</li>
+            <li><strong>Discord</strong> — Webhook 集成。</li>
+            <li><strong>Webhook</strong> — 用于任何自定义场景。</li>
+          </ul>
+          <p>个人项目用推送通知 + Slack 就够了。面向真实用户的生产环境，建议再加上 SMS 或电话作为升级通知手段。</p>
+        </div>
+      </div>
+
+      <h2>设置升级策略</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>如果你没有立即收到告警，或者收到后没有确认，接下来会发生什么？</p>
+          <p>控制台 → <strong>On-call → Escalation policies</strong>，定义一条升级链：</p>
+          <ol>
+            <li>立即 — 推送通知 + Slack。</li>
+            <li>5 分钟后未确认 — SMS。</li>
+            <li>10 分钟后 — 电话呼叫。</li>
+            <li>15 分钟后 — 升级给团队成员。</li>
+          </ol>
+          <p>初期不必配置这些。随着业务增长、宕机代价越来越高时再逐步完善。</p>
+        </div>
+      </div>
+
+      <h2>确认并解决告警</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>告警触发后，你会通过所有已配置的渠道收到通知。打开 Better Stack，点击 <strong>Acknowledge</strong>，停止后续通知，表示你已在处理。</p>
+          <p>网站恢复后：Better Stack 在下一次成功检测时自动标记告警为已解决。你还可以在告警详情页添加事后复盘备注。</p>
+          <p>免费套餐（3 分钟检测间隔）平均检测延迟约 3 分钟；付费套餐（30 秒间隔）约 30 秒。</p>
+        </div>
+      </div>
+
+      <h2>发布状态页面</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>故障期间对外沟通同样重要。Better Stack 提供免费状态页面，可根据监控数据自动更新。</p>
+          <p>控制台 → <strong>Status pages → Create status page</strong>：</p>
+          <ul>
+            <li>选择要公开展示的监控项，隐藏内部监控。</li>
+            <li>按服务对监控项分组（"API"、"Web"、"CDN"）。</li>
+            <li>自定义域名：在你的 <a href="/zh/tutorials/connect-domain-to-server-with-dns.html">DNS 服务商</a> 处添加 CNAME，指向 <code>status.yourdomain.com</code>。</li>
+            <li>自定义颜色、Logo 和页面标题。</li>
+            <li>订阅功能：访客可订阅邮件、SMS 或 RSS 更新。</li>
+          </ul>
+          <p>手动发布故障更新（"结账服务出现异常，正在排查"），这些内容会同步显示在状态页面并推送给订阅者。</p>
+        </div>
+      </div>
+
+      <h2>心跳监控 — 用于定时任务和异步作业</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>"我的每日备份脚本有没有跑？"可用性监控检测的是入站 HTTP；心跳监控检测的是出站 Ping 是否缺失。</p>
+          <p>控制台 → <strong>Heartbeats → Create heartbeat</strong>，配置预期间隔（例如每 24 小时 ± 1 小时）。Better Stack 会给你一个唯一 URL。</p>
+          <p>在定时任务或脚本中，每次成功执行后 Ping 该 URL：</p>
+          <pre><code>#!/usr/bin/env bash
+./run-backup.sh &amp;&amp; curl -s https://uptime.betterstack.com/api/v1/heartbeat/xxxxxxxx</code></pre>
+          <p>如果 Better Stack 在预期时间内没有收到 Ping，就会触发告警。非常适合捕捉那些悄悄失败的定时任务。</p>
+        </div>
+      </div>
+
+      <h2>带响应校验的 API 监控</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>对于 API 而言，"返回 200" 还不够——你还需要验证响应结构没有被破坏。</p>
+          <p>监控配置 → <strong>Advanced → Expected response body</strong>，填入要匹配的字符串或正则表达式，例如：</p>
+          <pre><code>Expected response body: "\"status\":\"ok\""</code></pre>
+          <p>也可以使用 JSON 断言：验证 <code>$.user.id</code> 存在、<code>$.health</code> 等于 <code>"ok"</code> 等。即使状态码是 200，只要响应结构被破坏就会触发告警。</p>
+        </div>
+      </div>
+
+      <h2>常见陷阱</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>部署期间触发告警</strong> — 部署时网站会短暂中断。解决方案：（1）在部署脚本中通过 API 临时暂停 Better Stack 监控；（2）采用零停机部署策略。</li>
+            <li><strong>任务失败时心跳仍在 Ping</strong> — 确保脚本只在成功时发送 Ping（用 <code>&amp;&amp;</code> 而不是 <code>;</code>）。否则备份实际失败，但心跳仍显示"正常"。</li>
+            <li><strong>告警疲劳</strong> — 如果你有 20 个监控项，其中 5 个频繁抖动，真正的故障就会被忽视。修复抖动的监控（调整检测频率、阈值或底层问题），否则你会慢慢习惯无视告警。</li>
+            <li><strong>单个区域误报</strong> — Better Stack 默认在 2 个以上区域都报告宕机时才告警，但这个阈值可以调整。如果某个区域持续误报，可以将其从该监控项中移除。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>最快不代表最好。</strong>30 秒检测能更快发现故障，但会消耗更多月度检测配额。对于大多数个人或小型项目，3 分钟间隔完全够用——无论如何，你都会在 5 分钟内得知宕机情况。
+      </div>
+
+      <h2>定价说明</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <p>免费版：10 个监控项、3 分钟间隔、每月 30 条 SMS、状态页面。团队版：$25/月 — 50 个监控项、30 秒间隔、100 条 SMS。专业版：$80/月 — 全面升级。<a href="https://betterstack.com/uptime#pricing" target="_blank" rel="noopener">Better Stack 定价 ↗</a>。</p>
+          <p>免费套餐足以应对大多数独立项目。当告警量达到需要升级的规模时再考虑付费。</p>
+        </div>
+      </div>
+
+      <h2>官方参考文档</h2>
+      <ul>
+        <li><a href="https://betterstack.com/docs/uptime/" target="_blank" rel="noopener">Better Stack Uptime 文档 ↗</a></li>
+        <li><a href="https://betterstack.com/docs/uptime/api/" target="_blank" rel="noopener">Uptime API ↗</a></li>
+        <li><a href="https://betterstack.com/docs/uptime/status-pages/" target="_blank" rel="noopener">状态页面 ↗</a></li>
+        <li><a href="https://betterstack.com/docs/uptime/heartbeats/" target="_blank" rel="noopener">心跳监控 ↗</a></li>
+        <li><a href="https://betterstack.com/docs/uptime/on-call/" target="_blank" rel="noopener">值班排班 ↗</a></li>
+      </ul>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>配置 Sentry 错误追踪</h3>
+            <p>"及时发现问题"的另一半 — 追踪应用内部的错误</p>
+          </a>
+          <a href="/zh/tutorials/product-analytics-with-posthog.html" class="tutorial-next-card">
+            <h3>使用 PostHog 进行产品分析</h3>
+            <p>行为监控，与基础设施监控相辅相成</p>
+          </a>
+          <a href="/zh/tutorials/redeploy-a-website.html" class="tutorial-next-card">
+            <h3>重新部署网站</h3>
+            <p>确保部署操作不会误触监控告警</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速上线的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

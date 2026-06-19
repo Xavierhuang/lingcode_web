@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>lingcode 命令行 | LingCode</title>
+  <meta name="description" content="在终端里驱动 LingCode。交互式 REPL、一次性 ask；Claude Agent SDK 与全部 OpenAI 兼容提供方均可走完整工具循环与 MCP。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/cli.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/cli.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/cli.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/cli.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="lingcode 命令行">
+  <meta property="og:description" content="交互式 REPL 与 lingcode ask；全部提供方可走完整工具循环、MCP、Skills、Hooks 与 lingcode serve / acp-serve。">
+  <meta property="og:url" content="https://lingcode.dev/zh/cli.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 760px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.375rem; margin: 40px 0 16px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1rem; margin: 24px 0 8px; color: var(--text); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.75; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.75; }
+    .blog-content table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 0.9rem; }
+    .blog-content th, .blog-content td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-muted); vertical-align: top; }
+    .blog-content th { color: var(--text); font-weight: 600; background: var(--bg-card); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 16px 0 32px; font-size: 0.9rem; }
+    .toc ul { margin: 0; padding-left: 20px; }
+    .toc li { margin: 4px 0; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <header class="nav-bar">
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-hidden="true">
+    <div class="nav-inner">
+      <a href="/zh/" class="nav-logo">灵码</a>
+      <label for="nav-toggle" class="nav-burger" aria-label="切换菜单"><span class="nav-burger-line" aria-hidden="true"></span><span class="nav-burger-line" aria-hidden="true"></span><span class="nav-burger-line" aria-hidden="true"></span></label>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="/zh/#demos">演示</a>
+        <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+        <a href="/zh/docs.html">文档</a>
+        <a href="/cli.html" class="nav-cta">English</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">参考 · 终端</p>
+        <h1>lingcode 命令行</h1>
+        <p>交互式 REPL 与一次性 <code>ask</code>。<strong>所有提供方默认都跑带工具调用的 Agent 循环</strong>——Claude 走完整 Agent SDK（含 MCP、Hooks、会话续接）；OpenAI / Groq / Together / OpenRouter / Mistral / xAI / Fireworks / Ollama / DeepSeek 等任意兼容端点同样具备工具派发、MCP、Skills、子代理与 Hooks。</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+
+      <div class="toc">
+        <strong>目录</strong>
+        <ul>
+          <li><a href="#install">安装</a></li>
+          <li><a href="#quickstart">快速开始</a></li>
+          <li><a href="#repl">交互式 REPL</a></li>
+          <li><a href="#providers">提供方</a></li>
+          <li><a href="#ask">一次性 <code>ask</code></a></li>
+          <li><a href="#slash">斜杠命令</a></li>
+          <li><a href="#auth">鉴权与 API 密钥</a></li>
+          <li><a href="#skills-agents">Skills 与子代理</a></li>
+          <li><a href="#mcp">MCP、Hooks、自定义命令</a></li>
+          <li><a href="#permissions">权限模板、输出样式与状态行</a></li>
+          <li><a href="#app-ipc">与运行中的 App 通信</a></li>
+          <li><a href="#serve">HTTP 服务模式（serve）</a></li>
+          <li><a href="#acp-serve">ACP 宿主（acp-serve）</a></li>
+          <li><a href="#reference">子命令参考</a></li>
+          <li><a href="#troubleshooting">故障排查</a></li>
+        </ul>
+      </div>
+
+      <h2 id="install">安装</h2>
+      <p>支持 macOS（Apple Silicon 与 Intel）与 Linux x86_64；也可先在<a href="/zh/try.html" class="inline">浏览器演示</a>里试用 Claude、DeepSeek、OpenAI、Gemini 等对拍，无需安装。</p>
+      <p>两种方式，挑你已经有的。</p>
+
+      <h3>独立安装 — 不需要 App</h3>
+      <pre><code>curl -fsSL https://lingcode.dev/install-cli.sh | sh</code></pre>
+      <p>下载已签名、已公证的压缩包（macOS）或未签名的 tarball（Linux）到 <code>~/.lingcode/cli/</code>，并在 <code>~/.local/bin/lingcode</code> 建立符号链接。压缩包内含 Node 桥接，Claude 提供方无需 LingCode.app 也能用（仍需 Node.js 与 API 密钥）。</p>
+
+      <h3>从已安装的 LingCode.app</h3>
+      <pre><code>/Applications/LingCode.app/Contents/Resources/bin/lingcode install</code></pre>
+      <p><code>install</code> 子命令会优先尝试 <code>/usr/local/bin</code>,失败回退到 <code>~/.local/bin</code>,必要时输出 PATH 提示。</p>
+
+      <h2 id="quickstart">快速开始</h2>
+      <pre><code># 一条命令把密钥存入钥匙串(会打开浏览器)
+lingcode auth login
+
+# 交互式会话(默认 Claude)
+lingcode
+
+# 用其他提供方启动交互式会话
+lingcode --provider ollama --model llama3.2
+lingcode --provider groq --model llama-3.1-70b-versatile
+
+# 一次性问答
+lingcode ask "解释这个报错" < build.log
+echo "2+2 等于几?" | lingcode ask -
+
+# 检查配置
+lingcode auth status
+lingcode --help</code></pre>
+
+      <h2 id="repl">交互式 REPL</h2>
+      <p><code>lingcode</code> 不带参数即进入交互式多轮会话，等价于 <code>lingcode repl</code>，只是输入更短。</p>
+      <p>依据提供方，REPL 有两种形态：</p>
+      <ul>
+        <li><strong>Claude 模式</strong> —— 完整 Agent 循环：工具调用、文件编辑、MCP 服务器、Hooks、会话续接、权限询问、彩色 diff。经由内置 Node 桥接加载 <code>@anthropic-ai/claude-agent-sdk</code>。</li>
+        <li><strong>OpenAI 兼容模式</strong> —— 在任意 OpenAI 兼容端点上同样具备<strong>完整</strong> Agent 循环（工具派发、MCP、Skills、子代理、Hooks、自定义斜杠命令），覆盖 OpenAI、Groq、Together、OpenRouter、Mistral、xAI、Fireworks、Ollama、DeepSeek 及自建代理等。</li>
+      </ul>
+
+      <h3>行编辑器</h3>
+      <p>当 stdin 是终端时,你有一个完整的行编辑器:</p>
+      <table>
+        <tbody>
+          <tr><td><code>↑</code> / <code>↓</code></td><td>历史输入前翻 / 后翻</td></tr>
+          <tr><td><code>←</code> / <code>→</code> / <code>Home</code> / <code>End</code></td><td>光标移动</td></tr>
+          <tr><td><code>Tab</code></td><td>补全斜杠命令(内置+自定义)</td></tr>
+          <tr><td>行尾 <code>\</code></td><td>继续在下一行输入</td></tr>
+          <tr><td><code>Ctrl-C</code></td><td>取消正在执行的请求(Claude)/ 放弃当前行</td></tr>
+          <tr><td><code>Ctrl-D</code></td><td>空行退出,否则删除光标字符</td></tr>
+          <tr><td>括号粘贴</td><td>多行剪贴板内容作为一次输入粘贴</td></tr>
+        </tbody>
+      </table>
+
+      <h3>提示符</h3>
+      <p>REPL 在非零时显示轮次与累计费用:</p>
+      <pre><code>lingcode> 解释这个仓库
+…
+lingcode [1t $0.003]> 建议一种重构方式
+…
+lingcode [2t $0.011]></code></pre>
+
+      <h2 id="providers">提供方</h2>
+      <p>用 <code>--provider</code> 选择；可按需覆盖 model、base URL、API key 环境变量。<strong>默认情况下，每个提供方都会启用带工具调用的 Agent 循环。</strong></p>
+      <table>
+        <thead><tr><th>提供方</th><th>环境变量</th><th>默认模型</th><th>工具?</th></tr></thead>
+        <tbody>
+          <tr><td><code>claude</code>（默认）</td><td><code>ANTHROPIC_API_KEY</code></td><td>SDK 默认（Sonnet）</td><td>✓</td></tr>
+          <tr><td><code>deepseek-claude</code></td><td><code>DEEPSEEK_API_KEY</code></td><td>deepseek-v4-pro[1m]</td><td>✓</td></tr>
+          <tr><td><code>deepseek-compat</code></td><td><code>DEEPSEEK_API_KEY</code></td><td>deepseek-v4-flash</td><td>✓</td></tr>
+          <tr><td><code>openai</code></td><td><code>OPENAI_API_KEY</code></td><td>gpt-4o-mini</td><td>✓</td></tr>
+          <tr><td><code>gemini</code></td><td><code>GEMINI_API_KEY</code></td><td>gemini-2.5-flash</td><td>✓</td></tr>
+          <tr><td><code>kimi</code></td><td><code>MOONSHOT_API_KEY</code></td><td>kimi-k2.6</td><td>✓</td></tr>
+          <tr><td><code>qwen</code></td><td><code>DASHSCOPE_API_KEY</code></td><td>（提供方默认）</td><td>✓</td></tr>
+          <tr><td><code>groq</code></td><td><code>GROQ_API_KEY</code></td><td>llama-3.1-70b-versatile</td><td>✓</td></tr>
+          <tr><td><code>together</code></td><td><code>TOGETHER_API_KEY</code></td><td>Llama-3.3-70B-Instruct-Turbo</td><td>✓</td></tr>
+          <tr><td><code>openrouter</code></td><td><code>OPENROUTER_API_KEY</code></td><td>anthropic/claude-sonnet-4</td><td>✓</td></tr>
+          <tr><td><code>mistral</code></td><td><code>MISTRAL_API_KEY</code></td><td>mistral-large-latest</td><td>✓</td></tr>
+          <tr><td><code>xai</code></td><td><code>XAI_API_KEY</code></td><td>grok-2-latest</td><td>✓</td></tr>
+          <tr><td><code>fireworks</code></td><td><code>FIREWORKS_API_KEY</code></td><td>llama-v3p1-70b-instruct</td><td>✓</td></tr>
+          <tr><td><code>ollama</code></td><td>—（无）</td><td>llama3.2</td><td>✓</td></tr>
+        </tbody>
+      </table>
+
+      <h3>两种 DeepSeek 用法</h3>
+      <p><code>deepseek-compat</code> 使用 DeepSeek 的 OpenAI 兼容端点，由 lingcode 自有的 Agent 循环驱动。<code>deepseek-claude</code> 使用 DeepSeek 的 Anthropic 兼容端点，让完整的 Claude/SDK 通路（会话、Hooks、Skills、子代理）驱动 DeepSeek‑V4，横幅会显示 <code>(claude→deepseek)</code>。<code>deepseek-claude</code> 功能更齐全，但通过兼容层<strong>不包含</strong> MCP 服务端与经由 <code>--file</code> 的图片输入（对端字段会被忽略）。</p>
+      <pre><code>lingcode --provider deepseek-claude     # Claude 全流程体验，deepseek-v4-pro[1m]
+lingcode --provider deepseek-compat     # OpenAI 格式，默认 deepseek-v4-flash
+lingcode --provider deepseek-compat --model deepseek-v4-pro</code></pre>
+
+      <h3>任意 OpenAI 兼容端点</h3>
+      <pre><code>lingcode --provider openai \
+  --base-url https://my-proxy.example.com/v1 \
+  --api-key-env MY_KEY_VAR \
+  --model gpt-4o</code></pre>
+      <p>工具调用、MCP 服务器、Hooks、Skills、子代理、自定义斜杠命令、输出样式、<code>settings.json</code> 里的权限模板，以及可配置的状态行<strong>在每个提供方上均可用</strong>。会话续接与使用 <code>--file</code>（走 Agent SDK）的图片输入<strong>仅限 Claude</strong>——依赖自带 SDK；OpenAI 兼容提供方请参阅 <code>lingcode ask --help</code> 中的 <code>--image</code> 等附件选项。</p>
+
+      <h3>Linux 要点</h3>
+      <p>CLI 在 Linux x86_64 上均可构建运行。与 macOS 相比：<strong>没有</strong>对接 LingCode.app 的 IPC 子命令（<code>ping</code>、<code>open</code>、<code>status</code>、<code>watch</code>、<code>install</code> 仅 macOS）；密钥写入 <code>$XDG_CONFIG_HOME/lingcode/keys.json</code>（默认为 <code>~/.config/lingcode/keys.json</code>），chmod 600，代替钥匙串。<code>lingcode auth login / set / status / delete</code> 与环境变量在两个平台上行为一致。</p>
+
+      <h2 id="ask">一次性 <code>ask</code></h2>
+      <pre><code># 基本用法
+lingcode ask "总结这个仓库的架构"
+
+# 把内容 pipe 进去
+cat error.log | lingcode ask "解释一下"
+
+# 整段 prompt 从 stdin 读入
+echo "2+2 等于几?" | lingcode ask -
+
+# 切换提供方
+lingcode ask --provider groq "一行话解释这个正则:/\d{3}-\d{4}/"
+
+# Claude 全工具模式,自动批准
+lingcode ask --provider claude --yolo "给 .gitignore 加一条 .DS_Store"
+
+# 附加文件
+lingcode ask --provider claude --file screenshot.png "这个界面哪里不对?"
+
+# 结构化输出(适合脚本)
+lingcode ask --output-format stream-json "修复 main.swift 里失败的测试"</code></pre>
+
+      <h3>常用 flag</h3>
+      <table>
+        <tbody>
+          <tr><td><code>--continue</code></td><td>续接当前目录下最近一次 Claude 会话</td></tr>
+          <tr><td><code>--resume &lt;id&gt;</code></td><td>按 ID 续接指定会话</td></tr>
+          <tr><td><code>--file &lt;path&gt;</code></td><td>附加文件(图片、PDF、文本),可重复,仅 Claude</td></tr>
+          <tr><td><code>--allowed-tools Read,Write</code></td><td>只允许这些工具(仅 Claude)</td></tr>
+          <tr><td><code>--disallowed-tools Bash</code></td><td>禁用这些工具</td></tr>
+          <tr><td><code>--add-dir ~/other</code></td><td>Agent 可访问的额外目录,可重复</td></tr>
+          <tr><td><code>--thinking</code></td><td>启用 Claude 的扩展思考</td></tr>
+          <tr><td><code>--system-prompt "..."</code></td><td>覆盖系统提示</td></tr>
+          <tr><td><code>--append-system-prompt "..."</code></td><td>追加到系统提示</td></tr>
+          <tr><td><code>--output-format text|json|stream-json</code></td><td>输出格式</td></tr>
+          <tr><td><code>--output path/out.md</code></td><td>把回复写入文件</td></tr>
+          <tr><td><code>--verbose</code></td><td>不截断工具输入/输出</td></tr>
+          <tr><td><code>--yolo</code></td><td>自动批准每次工具调用。危险。</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="slash">斜杠命令</h2>
+      <p>在 REPL 提示符下输入。</p>
+      <h3>全部提供方</h3>
+      <table>
+        <tbody>
+          <tr><td><code>/help</code></td><td>列出命令</td></tr>
+          <tr><td><code>/model &lt;name&gt;</code></td><td>中途切换模型</td></tr>
+          <tr><td><code>/mode &lt;mode&gt;</code></td><td>切换权限模式（default / acceptEdits / plan / dontAsk / bypassPermissions）</td></tr>
+          <tr><td><code>/yolo</code></td><td>绕过所有权限询问</td></tr>
+          <tr><td><code>/cost</code></td><td>累计 token 用量 + 按模型的美元估价</td></tr>
+          <tr><td><code>/tools</code></td><td>列出可用内置工具</td></tr>
+          <tr><td><code>/commands</code></td><td>列出 <code>.claude/commands/</code> 中的自定义斜杠命令</td></tr>
+          <tr><td><code>/skills</code></td><td>列出从 <code>.claude/skills/</code> 加载的 Skill</td></tr>
+          <tr><td><code>/agents</code></td><td>列出 <code>.claude/agents/</code> 中的子代理 <span style="opacity:0.75">（OpenAI 兼容；Claude 上子代理亦可来自 Agent SDK 内置 Task）</span></td></tr>
+          <tr><td><code>/output-styles</code></td><td>列出已加载的输出样式</td></tr>
+          <tr><td><code>/session</code></td><td>显示当前会话 ID（配合 <code>--resume</code>）</td></tr>
+          <tr><td><code>/reset</code></td><td>清空对话（Claude 会同时新开会话）</td></tr>
+          <tr><td><code>/export [path]</code></td><td>将 transcript 保存为 Markdown</td></tr>
+          <tr><td><code>/clear</code></td><td>清屏</td></tr>
+          <tr><td><code>/quit</code></td><td>退出</td></tr>
+        </tbody>
+      </table>
+      <h3>仅 Claude</h3>
+      <table>
+        <tbody>
+          <tr><td><code>/compact</code></td><td>总结并压缩对话历史</td></tr>
+          <tr><td><code>/doctor</code></td><td>诊断环境（node、API key、bridge、MCP、hooks）</td></tr>
+          <tr><td><code>/init</code></td><td>为当前项目生成 <code>CLAUDE.md</code></td></tr>
+        </tbody>
+      </table>
+      <h3>仅 OpenAI 兼容</h3>
+      <table>
+        <tbody>
+          <tr><td><code>/system &lt;text&gt;</code></td><td>替换本会话的系统提示</td></tr>
+          <tr><td><code>/image &lt;path&gt;</code></td><td>为下一轮对话附加 PNG/JPG/GIF/WEBP（OpenAI 兼容模式）</td></tr>
+          <tr><td><code>/mcp</code></td><td>显示已连接的 MCP 服务器及其工具列表</td></tr>
+        </tbody>
+      </table>
+      <h3>自定义</h3>
+      <p>把一个 Markdown 文件放到 <code>.claude/commands/&lt;name&gt;.md</code>,就能用 <code>/project:&lt;name&gt;</code> 调用。放到 <code>~/.claude/commands/</code> 下用 <code>/user:&lt;name&gt;</code>。纯 <code>/&lt;name&gt;</code> 先查 project,再查 user。命令名后的任何文字会追加到正文之后。</p>
+      <pre><code>$ echo "用中文解释一下当前 git 暂存区的变更。" > .claude/commands/explain-staged.md
+$ lingcode
+lingcode> /project:explain-staged</code></pre>
+
+      <h2 id="auth">鉴权与 API 密钥</h2>
+      <p>三类来源，按顺序检查：<strong>环境变量</strong>、<strong>操作系统密钥库</strong>（macOS 为钥匙串，Linux 为 chmod 600 的 <code>~/.config/lingcode/keys.json</code>）、<strong>配置文件</strong>。任一生效即可。</p>
+      <pre><code># 浏览器辅助:打开提供方控制台,粘贴密钥,存入钥匙串
+lingcode auth login
+lingcode auth login --provider deepseek
+
+# 直接写入
+lingcode auth set anthropic sk-ant-...
+lingcode auth set deepseek sk-...
+
+# 查看已配置项(值已脱敏)
+lingcode auth status
+
+# 删除密钥
+lingcode auth delete anthropic</code></pre>
+      <p><strong>关于 OAuth:</strong>Anthropic 不向第三方 CLI 发放 OAuth client ID,因此无法做真正的 <code>/login</code> OAuth 流程。<code>lingcode auth login</code> 是实际可行的替代方案 —— 打开浏览器,等你粘贴密钥,然后写入钥匙串。</p>
+      <p><strong>其他提供方</strong>（openai、groq、together、openrouter、mistral、xai、fireworks、gemini、kimi、qwen、ollama 等）若未走浏览器登录路径，通常在 shell 中设置对应环境变量即可：</p>
+      <pre><code>export OPENAI_API_KEY=sk-...
+export GROQ_API_KEY=gsk-...</code></pre>
+
+      <h2 id="skills-agents">Skills 与子代理</h2>
+      <p>与 Claude Code 使用相同加载路径，已有技能库可直接复用。项目在 <code>.claude/</code>，用户在 <code>~/.claude/</code>；同名时项目优先。</p>
+
+      <h3>Skills</h3>
+      <p>在相关时能拉取的一包「专长说明」。放在 <code>.claude/skills/&lt;name&gt;/SKILL.md</code>，带 YAML front matter：</p>
+      <pre><code>---
+name: pr-reviewer
+description: Review a GitHub PR with focus on security, correctness, and style.
+---
+
+When asked to review a PR, fetch it via `gh pr view`, then check:
+1. Security issues (injection, auth bypass)
+2. Correctness (edge cases, error handling)
+3. Style (matches repo conventions)</code></pre>
+      <p>所有提供方下都会自动合并进系统提示。可用 <code>--no-skills</code> 关闭；在 REPL 用 <code>/skills</code> 查看已加载列表。</p>
+
+      <h3>子代理</h3>
+      <p>模型可通过 <code>Task</code> 工具下发给专注子会话的代理——独立上下文、自有系统提示，并可按需指定模型与工具子集。放在 <code>.claude/agents/&lt;name&gt;.md</code>：</p>
+      <pre><code>---
+name: flake-hunter
+description: Diagnose intermittently-failing tests by rerunning and correlating with recent commits.
+model: deepseek-v4-pro
+tools: Read, Grep, Bash
+---
+
+Check git log for recent changes near the failing test. Run the test N times
+and look for non-determinism: time, network, randomness, parallel ordering.</code></pre>
+      <p>模型以 <code>Task(agent: "flake-hunter", prompt: "...")</code> 调用。子代理串行运行，不能再嵌套派发 Task（无 Task-in-Task），并与父会话共用同一权限判决链。<code>/agents</code> 列出配置。选用 Claude 提供方时，子代理亦可由 Agent SDK 内置 Task 提供，对模型的交互方式一致。</p>
+
+      <h2 id="mcp">MCP 服务器、Hooks、自定义命令</h2>
+      <p>与各提供方上的 Claude Code 项目约定兼容。</p>
+
+      <h3>MCP 服务器</h3>
+      <p>项目根放一个 <code>.mcp.json</code>(全局放 <code>~/.claude.json</code>):</p>
+      <pre><code>{
+  "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  }
+}</code></pre>
+      <p>用 <code>--mcp-config &lt;path&gt;</code> 覆盖，用 <code>--no-mcp</code> 关闭。<strong>Claude 与 OpenAI 兼容提供方均可连接 MCP（stdio）</strong>——接入的工具会像内置工具一样出现在模型工具清单中。<code>deepseek-claude</code> 因对端兼容性限制不包含 MCP。</p>
+
+      <h3>Hooks</h3>
+      <p>在 <code>.claude/settings.json</code> 中配置，以 shell 命令执行；环境变量含 <code>CLAUDE_TOOL_NAME</code>、<code>CLAUDE_TOOL_INPUT</code>；对 <code>PostToolUse</code> 还有 <code>CLAUDE_TOOL_RESULT</code>；对 <code>UserPromptSubmit</code> 含有 <code>CLAUDE_USER_PROMPT</code>。若不希望依赖 Claude 前缀名，亦可使用并行的 <code>LINGCODE_*</code>。**所有提供方**都会触发这些 Hooks。</p>
+      <pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "echo 即将编辑: $CLAUDE_TOOL_INPUT" }] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "logger -t lingcode \"$CLAUDE_USER_PROMPT\"" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "say 完成" }] }
+    ]
+  }
+}</code></pre>
+
+      <h3>自定义斜杠命令</h3>
+      <p>放在项目 <code>.claude/commands/</code> 或用户 <code>~/.claude/commands/</code> 下的 Markdown；格式与 Claude Code 相同——文件正文即 prompt。</p>
+
+      <h2 id="permissions">权限模板、输出样式与状态行</h2>
+      <p>以下三组配置同样在 <code>.claude/settings.json</code> 中，且对<strong>每一个</strong>提供方生效。</p>
+
+      <h3>权限模式模板（permission patterns）</h3>
+      <p>细粒度允许 / 拒绝 / 询问规则，叠加在全局权限模式之上。Glob：<code>*</code> 匹配不含斜杠的一段，<code>**</code> 匹配路径。**优先级：<strong>deny &gt; ask &gt; allow</strong>。** <code>ask</code> 会强制弹出交互询问，即使在 <code>--yolo</code> 下也不例外。</p>
+      <pre><code>{
+  "permissions": {
+    "allow": ["Bash(git *)", "Read(**/*.swift)"],
+    "deny":  ["Bash(rm *)", "Bash(curl *)"],
+    "ask":   ["Write(**)", "Edit(**)"]
+  }
+}</code></pre>
+
+      <h3>硬性安全拦截</h3>
+      <p>一组破坏性极强的模式会被<strong>无条件</strong>拦截，无法用设置覆盖；在启动时编译进判决链，先于普通权限问询：</p>
+      <ul>
+        <li><code>rm -rf /</code> 及对系统根路径的递归删除</li>
+        <li><code>mkfs</code>（格式化文件系统）</li>
+        <li>向裸盘设备写入的 <code>dd</code></li>
+        <li>对 <code>/etc</code>、<code>/System</code> 等的篡改</li>
+        <li>篡改 <code>~/.ssh/authorized_keys</code></li>
+        <li>Fork bomb 一类模式</li>
+      </ul>
+      <p>上述规则覆盖 REPL、<code>ask</code>、<code>serve</code> 与 <code>acp-serve</code> 的每一轮权限路径；即使你或外部客户端倾向自动放行，仍会先命中硬拦截。</p>
+
+      <h3>输出样式（output styles）</h3>
+      <p>在系统提示后追加的语气 / 体裁。文件放在 <code>.claude/output-styles/&lt;name&gt;.md</code> 或 <code>~/.claude/output-styles/</code>。命令行用 <code>--output-style &lt;name&gt;</code>；REPL 用 <code>/output-styles</code>。内置默认样式为 <code>engineer</code>。</p>
+
+      <h3>状态行（status line）</h3>
+      <p>用 shell 自定义提示符后缀。每轮执行一次（不是每个按键）；约 2 秒超时；失败则静默回退内置提示。</p>
+      <pre><code>{
+  "statusLine": {
+    "type": "command",
+    "command": "printf '%s · %st · $%s' \"$LINGCODE_MODEL\" \"$LINGCODE_TURN\" \"$LINGCODE_COST_USD\""
+  }
+}</code></pre>
+      <p>可用的环境变量包括 <code>LINGCODE_SESSION</code>、<code>LINGCODE_MODEL</code>、<code>LINGCODE_TURN</code>、<code>LINGCODE_INPUT_TOKENS</code>、<code>LINGCODE_OUTPUT_TOKENS</code>、<code>LINGCODE_COST_USD</code>、<code>LINGCODE_CWD</code>；亦会设置 Claude Code 风格的 <code>CLAUDE_*</code> 镜像变量。</p>
+
+      <h3>后台任务</h3>
+      <p>长时间运行的 Shell（例如 dev server、监听进程）应以 <code>Bash(run_in_background: true)</code> 拉起，随即返回任务 id。用 <code>Monitor</code> 工具轮询增量输出并查看是否仍在运行；<code>Monitor(action: "list")</code> 列出全部；<code>Monitor(action: "kill", id: "bg_3")</code> 终止一条。默认每会话至多 8 个并发后台任务。</p>
+
+      <h2 id="app-ipc">与运行中的 App 通信</h2>
+      <p>当 LingCode.app 打开时,以下命令通过 <code>~/Library/Application Support/LingCode/ipc.sock</code> 的 Unix socket 驱动它:</p>
+      <table>
+        <thead><tr><th>命令</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td><code>lingcode ping</code></td><td>检查 App 是否在运行并响应。</td></tr>
+          <tr><td><code>lingcode open path/to/file.swift</code></td><td>在 App 里打开文件或文件夹(必要时启动 App)。</td></tr>
+          <tr><td><code>lingcode status</code></td><td>显示聚焦项目与正在运行的 Agent。</td></tr>
+          <tr><td><code>lingcode ask "..."</code></td><td>把 prompt 路由到 App,结果流式输出到 stdout。</td></tr>
+          <tr><td><code>lingcode watch</code></td><td>实时 tail Agent 活动。Ctrl-C 停止。</td></tr>
+        </tbody>
+      </table>
+      <p>给 <code>ask</code> 加 <code>--headless</code> 可强制本地执行，即使 App 开着。</p>
+
+      <h2 id="serve">HTTP 服务模式（serve）</h2>
+      <p><code>lingcode serve</code> 启动常驻 HTTP 服务，通过 <strong>Server-Sent Events (SSE)</strong> 向外暴露与本机 REPL、<code>ask</code> 相同的 Agent 核心。可把 VS Code 扩展、Web UI、另一台机器上的脚本都对接到这一套接口。</p>
+      <pre><code>lingcode serve                                   # 绑定 127.0.0.1:7878
+lingcode serve --port 8080
+lingcode serve --bind 0.0.0.0 --allow-remote     # 显式允许监听非 loopback
+lingcode serve --new-token                       # 轮换 Bearer 令牌
+lingcode serve --bridge-daemon auto              # 复用已运行的 bridge 守护进程（省冷启动）</code></pre>
+      <p>鉴权：<code>Authorization: Bearer &lt;token&gt;</code>。首次启动生成令牌，写入 <code>~/.lingcode/server.token</code>（chmod 600），并在 stderr 打印。默认仅 <code>127.0.0.1</code>；若要对外网卡监听须加 <code>--allow-remote</code>。</p>
+      <h3>路由（v1）</h3>
+      <table>
+        <thead><tr><th>方法与路径</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td><code>GET /v1/ping</code></td><td>存活检测 + 版本信息</td></tr>
+          <tr><td><code>POST /v1/agent/ask</code></td><td>流式 SSE：Agent 事件序列</td></tr>
+          <tr><td><code>POST /v1/agent/permission/{requestId}</code></td><td>对需审批的工具调用放行 / 拒绝（Claude 路径）</td></tr>
+          <tr><td><code>POST /v1/agent/cancel/{queryId}</code></td><td>取消进行中的请求</td></tr>
+        </tbody>
+      </table>
+      <h3>流式发起一次 ask</h3>
+      <pre><code>TOKEN=$(cat ~/.lingcode/server.token)
+
+# 存活
+curl -s -H "Authorization: Bearer $TOKEN" http://127.0.0.1:7878/v1/ping
+
+# SSE 流式问答（curl -N 禁止缓冲）
+curl -N -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"provider":"claude","prompt":"list files","cwd":"'"$PWD"'"}' \
+     http://127.0.0.1:7878/v1/agent/ask</code></pre>
+      <p>SSE 每帧一条 JSON。Claude 常见事件：<code>query_started</code>、<code>assistant_text</code>、<code>tool_use</code>、<code>tool_result</code>、<code>permission_request</code>、<code>permission_resolved</code>、<code>token_usage</code>、终结帧 <code>query_finished</code>，以及 <code>query_failed</code> / <code>query_cancelled</code> / <code>error</code>。DeepSeek 与典型 OpenAI 兼容提供方输出的子集会略精简：仍会包含 <code>tool_use</code>，但通常<strong>不会</strong>出现 <code>permission_request</code>（工具直接执行，不经交互授权）。</p>
+      <h3>工具权限往返（Claude）</h3>
+      <p>当某次工具调用需要人工批准，流里会出现携带 <code>requestId</code> 的 <code>permission_request</code> 事件；客户端 POST 回结果后 SSE 继续：</p>
+      <pre><code>curl -s -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"behavior":"allow"}' \
+     http://127.0.0.1:7878/v1/agent/permission/&lt;requestId&gt;</code></pre>
+      <p>拒绝时可传 <code>{"behavior":"deny","message":"…"}</code>，附带给模型阅读的简短原因。</p>
+      <h3>多账号与守护进程复用</h3>
+      <p>在 ask 的 JSON 体中加 <code>"account": "work"</code>，可与 <code>lingcode auth login --account work</code> 对齐，按请求选用不同钥匙串条目。服务端加 <code>--bridge-daemon auto</code> 可重用正在运行的 <code>lingcode bridge daemon-start</code>，通常每轮 Claude 查询可省掉约 200–500 ms 的 Node 冷启动。</p>
+      <p>默认<strong>禁用 CORS</strong>，也未内置 TLS——若需在主机之外暴露端口，请在前面加 caddy、nginx、cloudflared 等反向代理与 TLS。</p>
+
+      <h2 id="acp-serve">ACP 宿主（acp-serve）</h2>
+      <p><code>lingcode acp-serve</code> 提供基于 stdin/stdout 的 Agent Control Protocol (ACP)。Zed、gemini-cli 等外部编辑器或 Agent 宿主可在<strong>不走 HTTP</strong> 的情况下驱动完整 LingCode Agent 循环；已注册的任一提供方皆可。</p>
+      <pre><code># stdio 对接 Claude Agent
+lingcode acp-serve --agent claude
+
+# DeepSeek
+lingcode acp-serve --agent deepseek
+
+# 任意 OpenAI 兼容别名
+lingcode acp-serve --agent openai-compat:groq
+lingcode acp-serve --agent openai-compat:openrouter
+
+# 指定工作目录（默认当前目录）
+lingcode acp-serve --agent claude --cwd ~/my-project</code></pre>
+      <p>协议为 JSON Lines：外部客户端发 Prompt，stdin/stdout 上持续收到结构化事件——<code>assistant_text</code>、<code>tool_use</code>、<code>tool_result</code>、<code>permission_request</code>，以及 <code>session_finished</code> 等收尾帧。</p>
+      <p><code>HardcodedDenyDecider</code> 在每轮往返前先做硬性安全否决；余下的权限请求再由 <code>ACPClientPermissionDecider</code> 转交给外部客户端 allow/deny。凭据解析顺序与 REPL 相同：macOS 钥匙串 → 环境变量 → 配置文件——若你已用 <code>lingcode auth login</code> 存过密钥，一般无需额外配置。</p>
+
+      <h2 id="reference">子命令参考</h2>
+      <table>
+        <thead><tr><th>子命令</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td><code>repl</code>(默认)</td><td>交互式多轮会话。<code>lingcode</code> 不带参数即等价。</td></tr>
+          <tr><td><code>ask</code></td><td>一次性 prompt,支持流式、JSON 输出、附件、续接。</td></tr>
+          <tr><td><code>auth</code></td><td><code>login</code> / <code>set</code> / <code>get</code> / <code>delete</code> / <code>status</code>，对接操作系统密钥库（钥匙串或 Linux JSON）。</td></tr>
+          <tr><td><code>config</code></td><td>读写 <code>~/.lingcode/config.json</code> —— 默认值、已存密钥。</td></tr>
+          <tr><td><code>init</code></td><td>分析仓库并为当前项目生成 <code>CLAUDE.md</code>。</td></tr>
+          <tr><td><code>history</code></td><td>列出 <code>~/.lingcode/history.jsonl</code> 里的历史会话。</td></tr>
+          <tr><td><code>completion zsh|bash|fish</code></td><td>输出 shell 补全脚本。</td></tr>
+          <tr><td><code>ping</code></td><td>IPC 探测运行中的 App。</td></tr>
+          <tr><td><code>open</code></td><td>在运行中的 App 打开文件或文件夹。</td></tr>
+          <tr><td><code>status</code></td><td>App 聚焦 / Agent 状态。</td></tr>
+          <tr><td><code>watch</code></td><td>流式 Agent 活动。</td></tr>
+          <tr><td><code>install</code></td><td>把 <code>lingcode</code> 符号链接到 PATH。</td></tr>
+          <tr><td><code>serve</code></td><td>启动 HTTP SSE 服务暴露 Agent。<a href="#serve">详见上文</a>。</td></tr>
+          <tr><td><code>acp-serve</code></td><td>stdio ACP 宿主，对接 Zed、gemini-cli 等。<a href="#acp-serve">详见上文</a>。</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="troubleshooting">故障排查</h2>
+
+      <h3><code>lingcode: ANTHROPIC_API_KEY is not set</code></h3>
+      <p>用 <code>lingcode auth login</code> 搞定,或在 shell 里 export,或 <code>lingcode config set anthropic-api-key sk-ant-...</code>。</p>
+
+      <h3><code>lingcode: &lt;PROVIDER_API_KEY&gt; is not set</code></h3>
+      <p>OpenAI 兼容提供方直接用环境变量。想用自定义变量名:<code>lingcode --provider openai --api-key-env MY_KEY</code>。</p>
+
+      <h3><code>lingcode: couldn't find Claude agent bridge</code></h3>
+      <p>Claude 提供方需要 <code>bridge.mjs</code>,它附带在 LingCode.app 或独立 CLI 压缩包里。要么把 LingCode.app 装到 <code>/Applications</code>,要么用 <code>export LINGCODE_AGENT_BRIDGE_DIR=/path/to/agent-bridge</code> 指向开发副本。</p>
+
+      <h3><code>lingcode: bundled Node.js runtime is missing</code></h3>
+      <p>macOS CLI 压缩包自带 Node 运行时,正常情况下不用自己装。看到这个报错说明自带二进制丢了(安装损坏、手工删过,或 Linux 构建):重装 lingcode(<code>curl -fsSL https://lingcode.dev/install-cli.sh | sh</code>)。也可以装系统 Node.js(<a href="https://nodejs.org/" rel="noopener">nodejs.org</a>)或把 <code>NODE</code> 指向具体路径作为兜底。只有 Claude 提供方用到 Node;OpenAI 兼容提供方走纯 Swift。</p>
+
+      <h3>被限流 / 429 / overloaded</h3>
+      <p><code>ask</code> 和 <code>repl</code> 都会自动以指数退避重试(最多 5 次,间隔最长 60 秒)。你会在 stderr 看到 <code>rate limited (attempt N/5) — retrying in Xs…</code>。</p>
+
+      <h3>App 响应了,但我想要 headless</h3>
+      <p>App 开着时 <code>lingcode ask</code> 默认路由给 App。加 <code>--headless</code> 强制本地执行。</p>
+
+      <h3>我在终端里粘贴过 API 密钥</h3>
+      <p>去提供方控制台轮换。shell 历史或 tmux scrollback 里的内容都要当作泄露处理。下次用 <code>lingcode auth login</code>(浏览器粘贴)或 <code>lingcode auth set &lt;provider&gt; &lt;key&gt;</code> —— 都不会把密钥打印到 stdout。</p>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">更多:</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;"><a href="/zh/features.html">完整功能</a> · <a href="/zh/docs.html">文档</a> · <a href="/zh/support.html">支持与 FAQ</a></p>
+        <a href="/zh/">下载 LingCode →</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-logo">灵码</span>
+      <nav class="footer-links">
+        <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+        <a href="/zh/docs.html">文档</a>
+        <a href="/zh/cli.html">命令行</a>
+        <a href="/zh/support.html">支持</a>
+      </nav>
+      <span class="footer-copy">100% Swift,无 Electron,专为 Mac 打造。</span>
+    </div>
+  </footer>
+  <script src="../nav.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

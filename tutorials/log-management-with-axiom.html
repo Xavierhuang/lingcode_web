@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log management with Axiom — LingCode Tutorials</title>
+  <meta name="description" content="Ship structured logs from any backend to Axiom. Free tier: 0.5 TB/mo. Grep production with SQL-like queries.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/log-management-with-axiom.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/log-management-with-axiom.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/log-management-with-axiom.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/log-management-with-axiom.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Log management with Axiom",
+  "description": "Ship structured logs from any backend to Axiom , grep them with APL (SQL-like), keep 30 days on the free tier. Sentry catches exceptions; Axiom catches everything else you printed.",
+  "url": "https://lingcode.dev/tutorials/log-management-with-axiom.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/log-management-with-axiom.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Pick Axiom when",
+      "url": "https://lingcode.dev/tutorials/log-management-with-axiom.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Create a dataset",
+      "url": "https://lingcode.dev/tutorials/log-management-with-axiom.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Ship logs from Node",
+      "url": "https://lingcode.dev/tutorials/log-management-with-axiom.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Ship logs from Vercel / Cloudflare / Fly",
+      "url": "https://lingcode.dev/tutorials/log-management-with-axiom.html#step-4"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Log management with Axiom",
+      "item": "https://lingcode.dev/tutorials/log-management-with-axiom.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/log-management-with-axiom.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Log management with Axiom</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Log management with Axiom</h1>
+      <p class="intro">Ship structured logs from any backend to <a href="https://axiom.co/" target="_blank" rel="noopener">Axiom</a>, grep them with APL (SQL-like), keep 30 days on the free tier. Sentry catches exceptions; Axiom catches everything else you printed.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Pick Axiom when</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick Axiom when</strong> — you want a free tier that's actually usable (0.5 TB ingest, 30-day retention), a query language that doesn't feel like the 2000s, and no per-seat pricing.</li>
+            <li><strong>Alternatives</strong> — <a href="https://betterstack.com/logs" target="_blank" rel="noopener">Better Stack Logs</a> (same vendor as <a href="/tutorials/uptime-monitoring-with-better-stack.html">Better Stack uptime</a>), <a href="https://www.datadoghq.com/" target="_blank" rel="noopener">Datadog</a> (much more powerful, much more expensive), <a href="https://www.elastic.co/observability/log-monitoring" target="_blank" rel="noopener">Elastic</a> (self-host friendly), <a href="https://grafana.com/oss/loki/" target="_blank" rel="noopener">Loki</a> (open-source, you operate it), <a href="https://signoz.io/" target="_blank" rel="noopener">SigNoz</a> (open-source observability).</li>
+            <li><strong>Don't use Axiom for</strong> — exception capture with grouping/alerting. Use <a href="/tutorials/set-up-sentry-error-tracking.html">Sentry</a> for that. Different shape.</li>
+            <li><strong>Sign up</strong> — <a href="https://app.axiom.co/register" target="_blank" rel="noopener">app.axiom.co/register</a>. No credit card.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Create a dataset</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>A dataset is the bucket your logs land in. Dashboard → <strong>Datasets → New dataset</strong>. Name it after the service: <code>api-prod</code>, <code>web-prod</code>, <code>worker-prod</code>. Separate datasets per service make queries cheaper and retention configurable per service.</p>
+          <p>Don't dump everything into one <code>logs</code> dataset — once you have 10M events you'll regret it.</p>
+        </div>
+      </div>
+
+      <h2>Get an API token</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p><strong>Settings → API tokens → New API token</strong>. Scope: <strong>Ingest</strong> only (for the app). For the read side (queries from a dashboard), create a separate <strong>Query</strong> token.</p>
+          <p>Add to <code>.env</code>:</p>
+          <pre><code>AXIOM_TOKEN=xaat-…
+AXIOM_DATASET=api-prod
+AXIOM_ORG_ID=your-org-id  # under Settings → Organization</code></pre>
+        </div>
+      </div>
+
+      <h2>Ship logs from Node</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Install the SDK:</p>
+          <pre><code>npm install @axiomhq/js</code></pre>
+          <p>Wire it up — preferably behind <a href="https://github.com/pinojs/pino" target="_blank" rel="noopener">pino</a> so your code stays portable:</p>
+          <pre><code>import pino from "pino";
+import { AxiomJSTransport } from "@axiomhq/pino";
+import { Axiom } from "@axiomhq/js";
+
+const axiom = new Axiom({ token: process.env.AXIOM_TOKEN });
+
+const logger = pino(
+  { level: "info" },
+  new AxiomJSTransport({
+    axiom,
+    dataset: process.env.AXIOM_DATASET,
+  }),
+);
+
+// Usage
+logger.info({ userId: user.id, action: "signup" }, "user signed up");
+logger.error({ err, requestId: req.id }, "stripe webhook failed");</code></pre>
+          <p>The transport batches every 1s or 1MB, so per-log overhead is near-zero. Crash-safe: a synchronous <code>flushSync()</code> on shutdown ships the tail.</p>
+          <p>Docs: <a href="https://axiom.co/docs/send-data/nodejs" target="_blank" rel="noopener">Send data from Node.js</a>.</p>
+        </div>
+      </div>
+
+      <h2>Ship logs from Vercel / Cloudflare / Fly</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>You don't need the SDK — install the integration. Native log drain, no code change.</p>
+          <ul>
+            <li><strong>Vercel</strong> — <a href="https://vercel.com/integrations/axiom" target="_blank" rel="noopener">Vercel Axiom integration</a>. One-click install, every <code>console.log</code> + request log streams to your dataset.</li>
+            <li><strong>Cloudflare Workers</strong> — <a href="https://axiom.co/docs/send-data/cloudflare-workers" target="_blank" rel="noopener">Workers Logpush guide</a>. Configure once, every Worker invocation logs.</li>
+            <li><strong>Fly.io</strong> — <a href="https://axiom.co/docs/send-data/fly" target="_blank" rel="noopener">Fly log shipper</a>. Runs as a sidecar.</li>
+            <li><strong>Railway / Render / DO App Platform</strong> — no native integration; use the SDK from app code.</li>
+            <li><strong>Kubernetes / VPS</strong> — install <a href="https://vector.dev/" target="_blank" rel="noopener">Vector</a> as a daemon and point it at Axiom's HTTP endpoint. <a href="https://axiom.co/docs/send-data/vector" target="_blank" rel="noopener">Vector + Axiom guide</a>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Query with APL</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>APL = Axiom Processing Language. SQL-shaped, optimized for time-series. Open <strong>Datasets → api-prod → Query</strong>:</p>
+          <pre><code>// Last hour of errors
+['api-prod']
+| where _time &gt; ago(1h) and level == "error"
+| project _time, msg, requestId, userId
+
+// Top 10 endpoints by error rate
+['api-prod']
+| where _time &gt; ago(24h)
+| summarize errors=countif(level == "error"), total=count() by route
+| extend errorRate = round(100.0 * errors / total, 2)
+| top 10 by errorRate
+
+// Drill into one user's session
+['api-prod']
+| where userId == "u_abc123" and _time &gt; ago(7d)
+| order by _time asc</code></pre>
+          <p>Save useful queries as starred queries (kept in the sidebar) and turn high-value ones into <strong>Monitors</strong> (next step).</p>
+          <p>APL reference: <a href="https://axiom.co/docs/apl/introduction" target="_blank" rel="noopener">axiom.co/docs/apl/introduction</a>.</p>
+        </div>
+      </div>
+
+      <h2>Alert on log patterns (monitors)</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p><strong>Monitors → New monitor</strong>. Pick a query, a threshold, a window. Examples:</p>
+          <ul>
+            <li><code>countif(level == "error") &gt; 50</code> over 5 min → page oncall</li>
+            <li><code>countif(msg contains "OOM") &gt; 0</code> → Slack #infra</li>
+            <li><code>countif(path == "/api/checkout" and status &gt;= 500) &gt; 5</code> → page founders</li>
+          </ul>
+          <p>Notification channels: Slack, PagerDuty, Discord, email, webhook. Wire <a href="https://opsgenie.com/" target="_blank" rel="noopener">Opsgenie</a> or <a href="https://www.pagerduty.com/" target="_blank" rel="noopener">PagerDuty</a> via webhook if you have on-call rotations.</p>
+        </div>
+      </div>
+
+      <h2>Common failures</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Logs missing fields</strong> — pino with a plain string (<code>logger.info("user signed up")</code>) ships a single <code>msg</code> field. Pass an object first: <code>logger.info(&#123; userId &#125;, "user signed up")</code>. Fields become queryable columns.</li>
+            <li><strong>PII leaks</strong> — don't log raw email addresses, payment tokens, or auth headers. Axiom is a third party with access. Add a redaction layer in pino: <code>redact: ["req.headers.authorization", "*.email", "*.password"]</code>.</li>
+            <li><strong>Ingest quota burst</strong> — a runaway debug log can eat 100 MB in a minute. Set per-dataset ingest caps in <strong>Settings → Datasets</strong>. Axiom drops past the cap with a warning rather than billing surprise.</li>
+            <li><strong>Logs trail behind by 10s</strong> — that's batch interval, not a bug. For "live tail" feel, lower <code>flushInterval</code> to 500ms or use the dashboard's live mode (it polls every 2s).</li>
+            <li><strong>Time skew on self-hosted clock-broken servers</strong> — Axiom uses event <code>_time</code> from the payload. If your host's clock is off by hours, logs appear in the wrong bucket. Run <code>chrony</code> or <code>timesyncd</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Free</strong> — 0.5 TB ingest/mo, 30-day retention, 3 monitors. Plenty for &lt;100 req/s services.</li>
+            <li><strong>Team</strong> — $25/mo + $0.30/GB above quota. 95-day retention. Unlimited monitors.</li>
+            <li><strong>Comparison</strong> — Datadog Logs is $0.10/GB ingest but $1.70/M events for retention; Axiom flat ingest pricing is typically 5–20× cheaper for log-heavy workloads. Loki is free if you operate it (S3 storage, you pay for that).</li>
+          </ul>
+          <p>Pricing page: <a href="https://axiom.co/pricing" target="_blank" rel="noopener">axiom.co/pricing</a>.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <ul>
+            <li><a href="https://axiom.co/docs" target="_blank" rel="noopener">Axiom docs home</a></li>
+            <li><a href="https://axiom.co/docs/apl/introduction" target="_blank" rel="noopener">APL language reference</a></li>
+            <li><a href="https://github.com/axiomhq/axiom-js" target="_blank" rel="noopener">JS SDK on GitHub</a></li>
+            <li><a href="https://github.com/axiomhq/axiom-go" target="_blank" rel="noopener">Go SDK</a> · <a href="https://github.com/axiomhq/axiom-py" target="_blank" rel="noopener">Python SDK</a> · <a href="https://github.com/axiomhq/axiom-rs" target="_blank" rel="noopener">Rust SDK</a></li>
+            <li><a href="https://axiom.co/docs/send-data/ingest" target="_blank" rel="noopener">Raw HTTP ingest API</a> — for any language.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Pair it with Sentry.</strong> <a href="/tutorials/set-up-sentry-error-tracking.html">Sentry</a> handles "exceptions with stack traces grouped + alerted"; Axiom handles "everything I logged and want to grep later." They overlap by ~5% and complement by 95%.
+      </div>
+
+      <div class="tutorial-next">
+        <h3>What's next</h3>
+        <div class="tutorial-next-cards">
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h4>Error tracking with Sentry</h4>
+            <p>The other half of observability — exceptions with grouped stack traces.</p>
+          </a>
+          <a href="/tutorials/uptime-monitoring-with-better-stack.html" class="tutorial-next-card">
+            <h4>Uptime monitoring with Better Stack</h4>
+            <p>Know when the service is down before users tell you.</p>
+          </a>
+          <a href="/tutorials/product-analytics-with-posthog.html" class="tutorial-next-card">
+            <h4>Product analytics with PostHog</h4>
+            <p>Behavioral events — the third leg of the observability stool.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 Upstash Redis 实现缓存与限流 — LingCode 教程</title>
+  <meta name="description" content="基于 HTTP 的无服务器 Redis。缓存热点查询、限制恶意 IP、将后台任务排入队列——无需自己维护 Redis 实例。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/cache-and-rate-limit-with-upstash.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/cache-and-rate-limit-with-upstash.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Upstash Redis 实现缓存与限流",
+  "description": "Upstash 是基于 HTTP 的无服务器 Redis。无需连接池、无需保持端口开放、无需维护空闲实例。缓存热点查询、限制恶意调用方、将后台任务排入队列——仅按请求数计费。",
+  "url": "https://lingcode.dev/zh/tutorials/cache-and-rate-limit-with-upstash.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/cache-and-rate-limit-with-upstash.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "何时选择 Upstash",
+      "url": "https://lingcode.dev/zh/tutorials/cache-and-rate-limit-with-upstash.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "创建数据库",
+      "url": "https://lingcode.dev/zh/tutorials/cache-and-rate-limit-with-upstash.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "在 Cloudflare Workers / Vercel Edge 中使用",
+      "url": "https://lingcode.dev/zh/tutorials/cache-and-rate-limit-with-upstash.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 Upstash 实现缓存与限流",
+      "item": "https://lingcode.dev/zh/tutorials/cache-and-rate-limit-with-upstash.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/cache-and-rate-limit-with-upstash.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>使用 Upstash 实现缓存与限流</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 Upstash Redis 实现缓存与限流</h1>
+      <p class="intro"><a href="https://upstash.com/" target="_blank" rel="noopener">Upstash</a> 是基于 HTTP 的无服务器 Redis。无需连接池、无需保持端口开放、无需维护空闲实例。缓存热点查询、限制恶意调用方、将后台任务排入队列——仅按请求数计费。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>何时选择 Upstash</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>适用场景</strong> — 当你在 Vercel/Cloudflare/Lambda 上运行，无法在调用之间保持 TCP Redis 连接时。他们的 HTTP/REST API 是在边缘函数中能使用的唯一 Redis 方式。</li>
+            <li><strong>替代方案</strong> — <a href="https://redis.io/cloud/" target="_blank" rel="noopener">Redis Cloud</a>（官方选项，仅 TCP，价格较高），<a href="https://railway.com/template/redis" target="_blank" rel="noopener">Redis on Railway/Fly/Render</a>（自行运维，便宜），在 VPS 上自托管（最便宜，工作量最大），<a href="https://developers.cloudflare.com/kv/" target="_blank" rel="noopener">Cloudflare KV</a>（最终一致性，边缘复制，API 功能较窄）。</li>
+            <li><strong>免费额度</strong> — 每天 10K 请求，256 MB 存储。足以支撑一个真实产品上线。</li>
+            <li><strong>注册入口</strong> — <a href="https://console.upstash.com/login" target="_blank" rel="noopener">console.upstash.com/login</a>，支持 GitHub 登录，无需绑定信用卡。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>创建数据库</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>进入控制台，点击 <strong>Create database</strong>，选择以下配置：</p>
+          <ul>
+            <li><strong>类型</strong> — Regional（更便宜，单区域，延迟约 5–20ms）或 Global（多区域复制，全球延迟约 5ms，费用较高）</li>
+            <li><strong>区域</strong> — 选择离你的<em>服务器</em>最近的区域，而非离用户最近的（你的应用本身已经负责路由用户流量）</li>
+            <li><strong>淘汰策略</strong> — 保持开启。若触及内存上限，最旧的键会被淘汰，而不是写入失败</li>
+          </ul>
+          <p>创建完成后，你会看到 <strong>UPSTASH_REDIS_REST_URL</strong> 和 <strong>UPSTASH_REDIS_REST_TOKEN</strong>，将两者都添加到 <code>.env</code> 文件中。</p>
+        </div>
+      </div>
+
+      <h2>缓存热点查询</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>安装客户端：</p>
+          <pre><code>npm install @upstash/redis</code></pre>
+          <p>将任何耗时查询包裹起来：</p>
+          <pre><code>import { Redis } from "@upstash/redis";
+
+const redis = Redis.fromEnv();
+
+async function getTopProducts() {
+  const cached = await redis.get&lt;Product[]&gt;("top-products");
+  if (cached) return cached;
+
+  const fresh = await db.query("SELECT * FROM products ORDER BY sales DESC LIMIT 20");
+  await redis.set("top-products", fresh, { ex: 60 }); // 60s TTL
+  return fresh;
+}</code></pre>
+          <p>关键使用模式：</p>
+          <ul>
+            <li><strong>始终设置 TTL</strong>（<code>ex</code> 单位为秒）。不设置意味着永久缓存，而过期数据比慢数据更糟糕。</li>
+            <li><strong>缓存问题的答案，而非整个对象</strong> — 用 <code>user:123:plan</code> 而非 <code>user:123</code>。这样可以只失效某个字段，而不必清除全部缓存。</li>
+            <li><strong>写入时主动失效</strong> — 当源数据行发生变更时，调用 <code>redis.del(key)</code>。不要单靠 TTL 来处理用户可见的数据。</li>
+            <li><strong>缓存空结果</strong> — "没有找到记录"同样值得短暂缓存。否则 404 路径反而会成为你最慢的路径。</li>
+          </ul>
+          <p>完整 API 参考：<a href="https://upstash.com/docs/redis/sdks/ts/getstarted" target="_blank" rel="noopener">Upstash TS SDK 文档</a>。命令与 Redis 标准一一对应：<code>get</code>、<code>set</code>、<code>incr</code>、<code>lpush</code>、<code>zadd</code> 等。</p>
+        </div>
+      </div>
+
+      <h2>对任意端点进行限流</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>安装限流辅助库：</p>
+          <pre><code>npm install @upstash/ratelimit</code></pre>
+          <p>以下中间件将每个 IP 限制为每 10 秒最多 10 次请求（滑动窗口）：</p>
+          <pre><code>import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(10, "10 s"),
+  analytics: true, // dashboard graphs
+});
+
+// Express
+app.use(async (req, res, next) =&gt; {
+  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+
+  res.setHeader("X-RateLimit-Limit", limit);
+  res.setHeader("X-RateLimit-Remaining", remaining);
+  res.setHeader("X-RateLimit-Reset", reset);
+
+  if (!success) {
+    return res.status(429).json({ error: "Too many requests" });
+  }
+  next();
+});</code></pre>
+          <p>限流器选项：</p>
+          <ul>
+            <li><code>fixedWindow(n, "1 m")</code> — 按固定分钟计数，开销最低，但在窗口边界容易出现流量突发。</li>
+            <li><code>slidingWindow(n, "10 s")</code> — 平滑限流，可防止边界突发。<strong>默认推荐。</strong></li>
+            <li><code>tokenBucket(n, "1 s", capacity)</code> — 允许最多 capacity 的突发流量，以指定速率匀速补充。适用于允许短时突发的 API。</li>
+          </ul>
+          <p>标识符选择：</p>
+          <ul>
+            <li><strong>IP</strong> — 粒度较粗；VPN/代理可绕过；但仍能拦截爬虫级别的滥用行为</li>
+            <li><strong>用户 ID</strong> — 针对已认证路由的首选方式</li>
+            <li><strong>API Key</strong> — 公开 API 的必选方案，支持为每个 Key 单独设置限额</li>
+            <li><strong>两者结合</strong> — 使用不同窗口的独立限流器（例如"每 IP 每分钟 5 次，<em>同时</em>每用户每小时 100 次"）</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>在 Cloudflare Workers / Vercel Edge 中使用</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>两个 SDK 在边缘运行时中均可直接使用——基于 HTTP/REST 意味着无需 TCP socket。在你的平台中配置环境变量：</p>
+          <ul>
+            <li><strong>Vercel</strong> — Project → Settings → Environment Variables。<a href="https://vercel.com/integrations/upstash" target="_blank" rel="noopener">Upstash Vercel 集成</a>可自动填充这些变量。</li>
+            <li><strong>Cloudflare Workers</strong> — <code>wrangler secret put UPSTASH_REDIS_REST_URL</code> + <code>wrangler secret put UPSTASH_REDIS_REST_TOKEN</code>。</li>
+            <li><strong>Fly.io</strong> — <code>fly secrets set UPSTASH_REDIS_REST_URL=…</code>。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>使用 QStash 处理后台任务</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>如果你还需要延迟或定时任务，<a href="https://upstash.com/docs/qstash/overall/getstarted" target="_blank" rel="noopener">QStash</a> 就在同一个控制台中提供消息队列功能。它是一个基于 HTTP 的任务执行器：你发送一个任务，QStash 会持续重试，直到你的端点返回 200。</p>
+          <pre><code>import { Client } from "@upstash/qstash";
+
+const qstash = new Client({ token: process.env.QSTASH_TOKEN });
+
+// Send "welcome email" 5 min after signup
+await qstash.publishJSON({
+  url: "https://yourapp.com/api/jobs/welcome-email",
+  body: { userId: user.id },
+  delay: 300, // seconds
+});</code></pre>
+          <p>替代方案：<a href="/zh/tutorials/background-jobs-with-inngest.html">Inngest</a>（更面向工作流，调试体验更好）、<a href="https://www.trigger.dev/" target="_blank" rel="noopener">Trigger.dev</a>、<a href="https://temporal.io/" target="_blank" rel="noopener">Temporal</a>（企业级）。QStash 是其中最简单的选择。</p>
+        </div>
+      </div>
+
+      <h2>常见故障</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>当天免费额度耗尽</strong> — 每天 10K 请求 ≈ 每分钟约 7 次。若限流器每个请求消耗 2 次 Redis 读取，额度很快就会耗尽。可以升级方案（$0.20/10 万次请求），或在短时间窗口内将限流检查结果缓存在内存中。</li>
+            <li><strong>写入后缓存未更新</strong> — 数据库已更新，但缓存仍返回旧数据。请在写入路径上添加 <code>redis.del(cacheKey)</code>，而不是单靠 TTL。</li>
+            <li><strong>限流误伤共享 NAT 后的真实用户</strong> — 高校、企业代理、移动运营商可能让数千用户共用同一个 IP。对于面向消费者的应用，一旦建立身份验证，应改为按用户 ID 限流；仅对未认证路由使用 IP 限流。</li>
+            <li><strong>多区域写入与读取不在同一区域</strong> — Regional 数据库只存在于单一区域。要么升级到 Global 套餐（多区域复制，约 $0.40/10 万次请求），要么将工作负载迁移到与数据库相同的区域。</li>
+            <li><strong>Vercel 冷启动延迟</strong> — 冷启动后的第一次 Redis 调用约需 80ms（TLS 握手 + 区域路由），后续调用约 5ms。不要用单次请求来衡量缓存命中率。</li>
+            <li><strong>Token 暴露在客户端代码中</strong> — <code>UPSTASH_REDIS_REST_TOKEN</code> 具有管理员级别权限，绝不能暴露给浏览器。如需客户端限流，请使用服务端代理或 Upstash 的<a href="https://upstash.com/docs/redis/sdks/ts/auth" target="_blank" rel="noopener">只读 Token</a>。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>定价实情</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>免费套餐</strong> — 每天 10K 请求，256 MB 存储，单区域。足以支撑真实产品。</li>
+            <li><strong>按量付费</strong> — $0.20/10 万次请求，$0.25/GB 存储/月，无最低消费。大多数小应用每月花费不超过 $5。</li>
+            <li><strong>Global（多区域）</strong> — $0.40/10 万次请求。如需在全球任意位置实现 &lt;20ms 读取延迟，可选此套餐。</li>
+            <li><strong>Pro</strong> — $280/月固定费用，包含 1 亿次请求和专属资源。适用于按量付费成本波动较大时。</li>
+            <li><strong>QStash</strong> — 单独计费：每天免费 500 条消息，超出部分 $1/10 万条。</li>
+          </ul>
+          <p>价格详情：<a href="https://upstash.com/pricing" target="_blank" rel="noopener">upstash.com/pricing</a>。</p>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <ul>
+            <li><a href="https://upstash.com/docs/redis/overall/getstarted" target="_blank" rel="noopener">Upstash Redis 文档</a></li>
+            <li><a href="https://upstash.com/docs/redis/sdks/ratelimit-ts/overview" target="_blank" rel="noopener">@upstash/ratelimit 参考文档</a></li>
+            <li><a href="https://upstash.com/docs/qstash/overall/getstarted" target="_blank" rel="noopener">QStash 文档</a></li>
+            <li><a href="https://github.com/upstash/redis-js" target="_blank" rel="noopener">redis-js on GitHub</a></li>
+            <li><a href="https://redis.io/docs/latest/commands/" target="_blank" rel="noopener">Redis 命令参考</a> — Upstash 支持完整的标准命令集。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>核心理解。</strong> Redis 是一个带数据结构的键值存储（列表、集合、有序集合、哈希、流）。缓存只是最常见的用法。一旦配置好，你会发现到处都能用上它：会话存储、排行榜、发布/订阅、去重窗口、功能开关覆盖。
+      </div>
+
+      <div class="tutorial-next">
+        <h3>接下来</h3>
+        <div class="tutorial-next-cards">
+          <a href="/zh/tutorials/background-jobs-with-inngest.html" class="tutorial-next-card">
+            <h4>使用 Inngest 处理后台任务</h4>
+            <p>面向工作流的任务执行器——复杂流程下调试体验优于 QStash。</p>
+          </a>
+          <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h4>使用 Sentry 追踪错误</h4>
+            <p>限流误判会造成用户困扰，Sentry 能捕获那些你意想不到的 429 错误。</p>
+          </a>
+          <a href="/zh/tutorials/log-management-with-axiom.html" class="tutorial-next-card">
+            <h4>使用 Axiom 管理日志</h4>
+            <p>随时间查看限流决策记录——谁被限速了、何时、为何。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想快速上线的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资材料</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

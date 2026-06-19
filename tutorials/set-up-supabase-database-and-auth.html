@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I set up Supabase for database and auth? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Sign up, create a project, get your URL and anon key, install the SDK, write your first query. Postgres + auth + storage in one signup. Free tier covers most early projects.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-supabase-database-and-auth.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Set up Supabase (database + auth)",
+  "description": "Postgres + Auth + Storage + a JS SDK, one signup. Most \"I just need a backend\" projects start here. Free tier is real — 500 MB DB, 50K active users, 1 GB storage. Ten minutes to a working sign-up flow.",
+  "url": "https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Create a project",
+      "url": "https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Install the SDK",
+      "url": "https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Create your first table",
+      "url": "https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Add authentication",
+      "url": "https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Enable OAuth providers",
+      "url": "https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html#step-5"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Set up Supabase (database + auth)",
+      "item": "https://lingcode.dev/tutorials/set-up-supabase-database-and-auth.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/set-up-supabase-database-and-auth.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Backend integrations</a>
+      <span>/</span>
+      <span>Set up Supabase (database + auth)</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I set up Supabase for database and auth?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Sign up at supabase.com, create a project, copy the <em>Project URL</em> and <em>anon</em> key from <em>Settings → API</em> into your env vars, and call <code>createClient(url, key)</code>. Database, auth, storage, and a JS SDK all come from that one signup. Free tier: 500 MB DB, 50K active users.</p>
+      <p class="intro">Postgres + Auth + Storage + a JS SDK, one signup. Most "I just need a backend" projects start here. Free tier is real — 500 MB DB, 50K active users, 1 GB storage. Ten minutes to a working sign-up flow.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why Supabase (and when not)</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick Supabase when</strong> — you want a working backend without setting up Postgres + auth + storage separately. The integration is the value.</li>
+            <li><strong>Skip Supabase when</strong> — you need very specific Postgres extensions Supabase doesn't enable, you're tied to a different auth provider, or you have a team-level standard for managed Postgres (Neon, RDS, etc.). For pure Postgres without auth, <a href="https://neon.tech/" target="_blank" rel="noopener">Neon ↗</a> or <a href="https://planetscale.com/" target="_blank" rel="noopener">PlanetScale ↗</a> (MySQL) are common alternatives.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Create a project</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Sign up at <a href="https://supabase.com/dashboard/sign-up" target="_blank" rel="noopener">supabase.com ↗</a> (free; GitHub OAuth or email).</p>
+          <p>Click <strong>New Project</strong>. Pick:</p>
+          <ul>
+            <li><strong>Name</strong> — anything.</li>
+            <li><strong>Database password</strong> — strong; save it. You'll need it for direct Postgres connections.</li>
+            <li><strong>Region</strong> — closest to your users / your hosting.</li>
+            <li><strong>Plan</strong> — Free tier is fine to start.</li>
+          </ul>
+          <p>Provisioning takes ~2 min. Then you're in the project dashboard.</p>
+        </div>
+      </div>
+
+      <h2>Grab your URL and anon key</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Project dashboard → <strong>Project Settings → API</strong>. Copy two values:</p>
+          <ul>
+            <li><strong>Project URL</strong> — <code>https://&lt;ref&gt;.supabase.co</code></li>
+            <li><strong>anon public key</strong> — long JWT-shaped string. Safe to ship in frontend bundles; row-level security limits what it can do.</li>
+            <li><strong>service_role key</strong> — also visible here. <strong>Never ship this to a browser.</strong> Backend-only; bypasses all row-level security.</li>
+          </ul>
+          <p>Backend env:</p>
+          <pre><code>SUPABASE_URL=https://&lt;ref&gt;.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIs...   # backend ONLY</code></pre>
+        </div>
+      </div>
+
+      <h2>Install the SDK</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <pre><code>npm install @supabase/supabase-js</code></pre>
+          <p>Other languages: <a href="https://supabase.com/docs/reference/python/start" target="_blank" rel="noopener">Python ↗</a>, <a href="https://supabase.com/docs/reference/dart/start" target="_blank" rel="noopener">Dart/Flutter ↗</a>, <a href="https://supabase.com/docs/reference/swift/start" target="_blank" rel="noopener">Swift ↗</a>, <a href="https://supabase.com/docs/reference/kotlin/start" target="_blank" rel="noopener">Kotlin ↗</a>, <a href="https://supabase.com/docs/reference/csharp/start" target="_blank" rel="noopener">C# ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Initialize the client</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <pre><code>import { createClient } from "@supabase/supabase-js";
+
+export const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);</code></pre>
+          <p>This client is safe to use in both frontend and backend. For backend code that needs to bypass row-level security (admin operations), create a separate client with the service-role key.</p>
+        </div>
+      </div>
+
+      <h2>Create your first table</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Supabase dashboard → <strong>Table Editor → New table</strong>. Or use SQL Editor:</p>
+          <pre><code>CREATE TABLE notes (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  body TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
+
+-- Allow users to read their own notes
+CREATE POLICY "users read own notes" ON notes
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Allow users to insert their own notes
+CREATE POLICY "users insert own notes" ON notes
+  FOR INSERT WITH CHECK (auth.uid() = user_id);</code></pre>
+          <p><strong>Row Level Security (RLS) is the most important Supabase concept.</strong> Without RLS, your anon key lets anyone read/write everything. With RLS, the database itself enforces who-can-do-what. Always enable RLS on tables that store user data.</p>
+          <p><a href="https://supabase.com/docs/guides/auth/row-level-security" target="_blank" rel="noopener">RLS docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Read and write data</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <pre><code>// Read
+const { data: notes, error } = await supabase
+  .from("notes")
+  .select("*")
+  .order("created_at", { ascending: false });
+
+// Write
+const { data: newNote, error } = await supabase
+  .from("notes")
+  .insert({ title: "Hello", body: "First note" })
+  .select()
+  .single();
+
+// Update
+await supabase
+  .from("notes")
+  .update({ title: "Updated title" })
+  .eq("id", newNote.id);
+
+// Delete
+await supabase.from("notes").delete().eq("id", newNote.id);</code></pre>
+          <p>If the user isn't signed in (next step), these will return empty arrays because the RLS policies require <code>auth.uid()</code>. That's the system working correctly.</p>
+        </div>
+      </div>
+
+      <h2>Add authentication</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Supabase Auth supports email/password, magic links, phone, and dozens of OAuth providers — all from the same SDK.</p>
+          <pre><code>// Sign up
+const { data, error } = await supabase.auth.signUp({
+  email: "user@example.com",
+  password: "secure-password",
+});
+
+// Sign in
+const { data, error } = await supabase.auth.signInWithPassword({
+  email: "user@example.com",
+  password: "secure-password",
+});
+
+// Sign out
+await supabase.auth.signOut();
+
+// Get current user (returns null if not signed in)
+const { data: { user } } = await supabase.auth.getUser();</code></pre>
+          <p>After sign-in, the SDK stores a JWT in local storage. Every subsequent <code>supabase.from(...)</code> call carries it; RLS policies use <code>auth.uid()</code> to filter.</p>
+        </div>
+      </div>
+
+      <h2>Enable OAuth providers</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Project dashboard → <strong>Authentication → Providers</strong>. Toggle Google, GitHub, Apple, etc. Each provider asks for Client ID + Client Secret from that provider's console — see <a href="/tutorials/sign-in-with-google-oauth.html">Sign in with Google</a> and <a href="/tutorials/sign-in-with-github-oauth.html">Sign in with GitHub</a> for how to get those.</p>
+          <p>Then in your app:</p>
+          <pre><code>await supabase.auth.signInWithOAuth({
+  provider: "google",
+  options: { redirectTo: "https://yourapp.com/auth/callback" },
+});</code></pre>
+          <p>That's the entire flow — Supabase handles the redirect dance, JWT issuance, and session refresh.</p>
+        </div>
+      </div>
+
+      <h2>React to auth state changes</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <pre><code>supabase.auth.onAuthStateChange((event, session) =&gt; {
+  // event: "SIGNED_IN" | "SIGNED_OUT" | "TOKEN_REFRESHED" | ...
+  if (event === "SIGNED_IN") {
+    console.log("Signed in as", session.user.email);
+  }
+});</code></pre>
+          <p>Subscribe once at app startup. Useful for syncing UI state (show "Sign out" button when signed in, etc.).</p>
+        </div>
+      </div>
+
+      <h2>Realtime subscriptions</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>Supabase publishes Postgres changes over WebSockets. Subscribe to a table:</p>
+          <pre><code>const channel = supabase
+  .channel("notes-changes")
+  .on(
+    "postgres_changes",
+    { event: "*", schema: "public", table: "notes" },
+    (payload) =&gt; {
+      console.log("Change:", payload);
+    }
+  )
+  .subscribe();
+
+// Later, to disconnect:
+supabase.removeChannel(channel);</code></pre>
+          <p>Combine with React state: live multiplayer cursors, real-time chat, collaborative docs — all without writing a WebSocket server. <a href="https://supabase.com/docs/guides/realtime" target="_blank" rel="noopener">Realtime docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Storage (file uploads)</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p>Supabase ships an S3-compatible object store. For file uploads inside Supabase apps:</p>
+          <pre><code>// Create a bucket once in the dashboard: Storage → Create bucket
+await supabase.storage
+  .from("avatars")
+  .upload(`${user.id}/profile.png`, fileBlob, { upsert: true });
+
+const { data } = supabase.storage
+  .from("avatars")
+  .getPublicUrl(`${user.id}/profile.png`);
+
+console.log(data.publicUrl);   // ready to put in an &lt;img&gt;</code></pre>
+          <p>If you're already on AWS or want zero egress, see <a href="/tutorials/upload-files-to-s3-or-r2.html">Upload files to S3 or Cloudflare R2</a>. Otherwise Supabase Storage is the easiest path within the same project.</p>
+        </div>
+      </div>
+
+      <h2>Local development with the CLI</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <p>For real projects, develop against a local Supabase instance, not production:</p>
+          <pre><code>brew install supabase/tap/supabase   # or via npm: npm i -g supabase
+supabase init                          # in your project root
+supabase start                         # spins up Postgres + Studio + Auth in Docker</code></pre>
+          <p>Run migrations as SQL files in <code>supabase/migrations/</code>. Push to production with <code>supabase db push</code>. <a href="https://supabase.com/docs/guides/cli/getting-started" target="_blank" rel="noopener">CLI docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>RLS is opt-in per table.</strong> Tables you create through the SQL editor don't have RLS enabled by default. If you forget, your anon key reads everything. Always run <code>ALTER TABLE foo ENABLE ROW LEVEL SECURITY;</code> immediately after creating a user-data table.
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">13</div>
+        <div class="step-body">
+          <p>Free tier: 500 MB database, 50,000 monthly active users, 1 GB file storage, 5 GB bandwidth, 2 free projects. Pauses inactive projects after a week of no requests (you can wake them up; not destroyed).</p>
+          <p>Pro tier: $25/mo — 8 GB DB, 100K MAU, 100 GB storage, projects never pause. <a href="https://supabase.com/pricing" target="_blank" rel="noopener">Supabase pricing ↗</a>.</p>
+          <p>Self-hosted: full source is open. <a href="https://supabase.com/docs/guides/self-hosting" target="_blank" rel="noopener">Self-hosting docs ↗</a>. Production self-hosting is real work; most people stay on managed.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://supabase.com/docs" target="_blank" rel="noopener">Supabase docs ↗</a></li>
+        <li><a href="https://supabase.com/docs/reference/javascript/introduction" target="_blank" rel="noopener">JS SDK reference ↗</a></li>
+        <li><a href="https://supabase.com/docs/guides/auth/row-level-security" target="_blank" rel="noopener">Row Level Security ↗</a></li>
+        <li><a href="https://supabase.com/docs/guides/auth" target="_blank" rel="noopener">Auth guide ↗</a></li>
+        <li><a href="https://supabase.com/docs/guides/database" target="_blank" rel="noopener">Database guide ↗</a></li>
+        <li><a href="https://supabase.com/docs/guides/cli" target="_blank" rel="noopener">CLI &amp; local dev ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>Sign in with Google (OAuth)</h3>
+            <p>Wire Supabase Auth to Google as your sign-in provider</p>
+          </a>
+          <a href="/tutorials/upload-files-to-s3-or-r2.html" class="tutorial-next-card">
+            <h3>Upload files to S3 or R2</h3>
+            <p>For when Supabase Storage isn't the right fit</p>
+          </a>
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>Set up Sentry error tracking</h3>
+            <p>Catch errors from your Supabase queries in production</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

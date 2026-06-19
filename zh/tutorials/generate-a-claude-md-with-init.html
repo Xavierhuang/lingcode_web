@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 /init 生成 CLAUDE.md — LingCode 教程</title>
+  <meta name="description" content="在新仓库中运行 /init，Agent 会为当前代码库量身撰写一份 CLAUDE.md。让每次后续对话都自动获得项目上下文——由 Agent 生成，无需手写。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/generate-a-claude-md-with-init.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/generate-a-claude-md-with-init.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/generate-a-claude-md-with-init.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/generate-a-claude-md-with-init.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 /init 生成 CLAUDE.md",
+  "description": "在任意仓库中输入 /init，Agent 会读取代码库、筛选出关键信息，并在项目根目录生成 CLAUDE.md。此后每次在该项目中发起对话，都会自动加载这份上下文——全程无需手写一字。",
+  "url": "https://lingcode.dev/zh/tutorials/generate-a-claude-md-with-init.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/generate-a-claude-md-with-init.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 /init 生成 CLAUDE.md"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "使用 /init 生成 CLAUDE.md",
+      "item": "https://lingcode.dev/zh/tutorials/generate-a-claude-md-with-init.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/generate-a-claude-md-with-init.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">原生 Mac IDE</a>
+      <span>/</span>
+      <span>使用 /init 生成 CLAUDE.md</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 /init 生成 CLAUDE.md</h1>
+      <p class="intro">在任意仓库中输入 <code>/init</code> 并发送。Agent 会读取代码库、筛选出关键信息，在项目根目录生成一份 <code>CLAUDE.md</code>。此后每次在该项目中发起对话，都会自动加载这份上下文——全程无需手写一字。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Agent 每次开始关于你项目的对话时，都是从零出发。它只能看到被要求查看的文件，对其余部分只能靠推断。对于简单任务——查找某个函数、修改一处错别字——这没什么问题。但凡是涉及代码库中约定俗成的事情，就很难处理了：用的是哪个测试库、部署流程是什么、规范的 README 在哪儿、哪些已废弃、团队避免哪些写法。</p>
+      <p>放在项目根目录的 <code>CLAUDE.md</code> 文件正是解决这种信息不对称的方式。它是一份简短、精心维护的项目级上下文文档，LingCode 会在每次有关该项目的对话中自动加载它。写得好，它能让 Agent 从"猜测"变为"了解"。代价是需要有人来写——但通常没人真的去写，因为给工具写文档感觉像是额外负担，而不是正经工作。</p>
+      <p><code>/init</code> 就是这个捷径。Agent 会自行读取代码库——文件结构、清单文件、依赖项、README、脚本、近期提交记录——并据此写出 <code>CLAUDE.md</code> 的初稿。你读一遍草稿，改掉不对的地方，提交。从"空白"到"每次对话都了解项目"，只需五分钟。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li><code>/init</code> 会读取哪些内容来生成草稿</li>
+        <li>如何在对话面板中运行它</li>
+        <li>一份好的 <code>CLAUDE.md</code> 应包含哪些内容（以及不该有什么）</li>
+        <li>提交前如何编辑草稿</li>
+        <li>何时重新运行 <code>/init</code>，何时手动更新</li>
+      </ul>
+
+      <h2>第一步：运行 /init</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>在对话面板中输入一条命令</h3>
+          <p>打开一个已加载该项目的对话，输入 <code>/init</code> 并发送。技能随即启动——Agent 会遍历文件树，读取明显的入口点（<code>README.md</code>、<code>package.json</code>、<code>Cargo.toml</code>、<code>Makefile</code>、<code>.github/</code>、scripts/ 等），查看近期提交记录以了解进行中的工作，然后在项目根目录写出 <code>CLAUDE.md</code> 草稿。</p>
+          <p>对于一般规模的项目，整个过程需要一两分钟。Agent 会展示其工作过程——你可以在对话中实时看到它读取的文件。输出的是一个真实存在于磁盘上的文件，随时可以查阅。</p>
+        </div>
+      </div>
+
+      <h2>第二步：阅读草稿</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>重点检查三件事</h3>
+          <p>打开 <code>CLAUDE.md</code>，一份好的草稿应包含：</p>
+          <ul>
+            <li><strong>项目是做什么的。</strong> 开头一段说清楚。Agent 通常能通过读取 README 把这部分写对。</li>
+            <li><strong>如何构建、测试和运行。</strong> 提供 Agent 应该使用的具体命令，而不是模糊的描述。<code>npm test</code> 比"用 npm 运行测试"有用得多。</li>
+            <li><strong>约定与注意事项。</strong> 命名规范、需要小心的文件、"不要手动编辑 X"、只有内部人才知道的事情。Agent 能从 <code>.editorconfig</code>、lint 配置和近期提交中推断出一部分，但其余的它会遗漏。</li>
+          </ul>
+          <p>一份差的草稿读起来像 README——只有描述，没有指导。这时就应该动手编辑，而不是照单全收。</p>
+        </div>
+      </div>
+
+      <h2>第三步：补充 Agent 无法推断的内容</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>加入团队内部知识</h3>
+          <p>草稿善于捕捉代码中可见的事实，却会遗漏只有人类才知道的东西：</p>
+          <ul>
+            <li>"我们正在从 X 迁移出去，不要新增对它的使用。"</li>
+            <li>"这个文件看起来很重要，但实际上已经废弃了——忽略它。"</li>
+            <li>"这整个子目录由另一个团队维护，改动前请先沟通。"</li>
+            <li>"<code>integration/</code> 里的测试在慢速机器上不稳定；如果偶尔失败，重跑一次，不用深究。"</li>
+          </ul>
+          <p>这些条目才是回报最丰厚的部分。用你自己的语言把它们加进去。Agent 不是在写一份精致的文档——它只是在替你播下种子，等待你来培育。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>保持精简。</strong> 一份 300 行的 <code>CLAUDE.md</code> 会在每次对话中全量加载。Agent 每次都要把它全部读完，占用你的 token 配额。目标是用最少的内容改变行为——不是教程，不是宣传，不是导览。"只留高价值的注意事项"是这里的原则。
+      </div>
+
+      <h2>第四步：提交</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>它属于仓库</h3>
+          <p>像对待其他文件一样，将 <code>CLAUDE.md</code> 暂存并提交。它是项目级的上下文；你的队友发起对话时同样受益。每次新克隆、每位新开发者的第一次对话、每次 CI Agent 运行——所有人都会获得同一份上下文。</p>
+          <p>一个合理的提交信息：<code>Add CLAUDE.md for agent context</code>。</p>
+        </div>
+      </div>
+
+      <h2>第五步：何时重新运行 /init</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>几乎不需要；通常直接手动编辑</h3>
+          <p>一旦 <code>CLAUDE.md</code> 就位，重新运行 <code>/init</code> 会覆盖它。这几乎永远不是你想要的——你已经添加了 Agent 看不到、也不会重新生成的人工撰写内容。</p>
+          <p>在以下情况下可以重新运行 <code>/init</code>：</p>
+          <ul>
+            <li>项目结构发生了重大变化（大规模重写、顶层目录结构调整）。</li>
+            <li>你对现有版本一直不满意，想要从头来过。</li>
+          </ul>
+          <p>其他情况直接手动编辑即可。大多数更新只是一行新增：记录一个新踩到的坑、补充一条废弃说明、记下一个约定。</p>
+        </div>
+      </div>
+
+      <h2>第六步：用户级与嵌套 CLAUDE.md</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>项目、用户与子目录三级作用域</h3>
+          <p>LingCode 会从三个位置读取 <code>CLAUDE.md</code>，并在对话开始时合并：</p>
+          <ul>
+            <li><strong>项目根目录</strong> — 即 <code>/init</code> 写入的位置。对该项目下的每次对话都会加载。</li>
+            <li><strong>用户级</strong>，位于 <code>~/.claude/CLAUDE.md</code> — 跨项目的个人习惯（"我希望提交信息始终使用祈使语气"）。<code>/init</code> 不会触及此文件。</li>
+            <li><strong>子目录</strong> — 子文件夹内的 <code>CLAUDE.md</code> 仅在该文件夹内工作时生效。适用于每个包有自己约定的 monorepo。</li>
+          </ul>
+          <p>若对话处于 <code>packages/api/</code> 目录下，则三者同时生效：用户级、项目根目录以及 <code>packages/api/CLAUDE.md</code>。项目约定会覆盖用户习惯；子目录规则会覆盖项目根目录。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>不要在 CLAUDE.md 中放置敏感信息。</strong> 它只是仓库中的普通文件。API 密钥、令牌、内部 URL——这些应放在环境变量或 Keychain 中，而不是 Agent 加载的文档里。把 <code>CLAUDE.md</code> 当作公开文件对待，即使你的仓库是私有的。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/write-a-custom-skill.html" class="tutorial-next-card">
+            <h3>编写自定义技能</h3>
+            <p>适用于场景化规则；CLAUDE.md 是项目级的，技能粒度更细</p>
+          </a>
+          <a href="/zh/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>安装并配置插件</h3>
+            <p>用于在项目和团队成员之间共享规则</p>
+          </a>
+          <a href="/zh/tutorials/add-custom-hooks.html" class="tutorial-next-card">
+            <h3>添加自定义 Hook</h3>
+            <p>当 CLAUDE.md 里的"请不要做 X"力度不够时</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真实工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

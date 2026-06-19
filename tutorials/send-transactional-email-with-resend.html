@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send transactional email with Resend — LingCode Tutorials</title>
+  <meta name="description" content="Resend is the dev-first email API — simple SDK, generous free tier, modern HTML templates. Here's how to set it up, get past the verification step, and not have your mail land in spam.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/send-transactional-email-with-resend.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/send-transactional-email-with-resend.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/send-transactional-email-with-resend.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/send-transactional-email-with-resend.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Send transactional email with Resend",
+  "description": "Resend is the developer-first email API — small SDK, generous free tier, real HTML templates. Setup takes ten minutes once you accept that the slow part is configuring DNS for your domain, not writing code.",
+  "url": "https://lingcode.dev/tutorials/send-transactional-email-with-resend.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/send-transactional-email-with-resend.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Send transactional email with Resend"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Send transactional email with Resend",
+      "item": "https://lingcode.dev/tutorials/send-transactional-email-with-resend.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/send-transactional-email-with-resend.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Send transactional email with Resend</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Send transactional email with Resend</h1>
+      <p class="intro">Resend is the developer-first email API — small SDK, generous free tier, real HTML templates. Setup takes ten minutes once you accept that the slow part is configuring DNS for your domain, not writing code.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Sending email from a web app is one of those things that's easy until you actually need to do it. You write a small function that POSTs to an email provider's API. Your test message goes out. It lands in your Gmail inbox. Done. Then production traffic kicks in and the mail starts landing in spam. Or worse, getting rejected by recipient servers entirely. The code is identical; the problem isn't the code.</p>
+      <p>Email deliverability is mostly a function of three DNS records — SPF, DKIM, and DMARC — that tell receiving servers "yes, this provider is authorized to send mail on behalf of this domain, here's how to verify it." Without them set, modern receivers (Gmail, Apple Mail, Outlook) at best put your mail in spam and at worst reject it. Setting them up is annoying because they have to live on the domain you're sending <em>from</em>, which means changing DNS at your registrar, which means waiting for propagation.</p>
+      <p>Resend's value proposition is "the email API where this whole dance is the easiest." The dashboard tells you exactly which DNS records to add and verifies them automatically. The SDK is small. The free tier (3,000 emails/month, 100/day) is enough for almost any indie project. Their HTML template story uses React components, which is unusual in this space and notably nicer than dragging a WYSIWYG editor around. This tutorial covers the setup; the principles apply to any modern email provider (Postmark, SendGrid, Loops, etc.) — the specifics are Resend-shaped.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Why DNS setup is the slow part (and what each record does)</li>
+        <li>Creating a Resend account and verifying a domain</li>
+        <li>The SDK call to send your first email</li>
+        <li>Templates with React Email</li>
+        <li>What to do when emails land in spam</li>
+      </ul>
+
+      <h2>Step 1: Decide what domain you'll send from</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Use your real domain</h3>
+          <p>You should send mail from a domain you own — <code>hello@yourapp.com</code>, not <code>yourapp@gmail.com</code>. There are two reasons:</p>
+          <ul>
+            <li><strong>Trust.</strong> Recipients see "from your-real-brand" instead of "from a generic email address that could be anyone."</li>
+            <li><strong>Deliverability.</strong> A domain you control can have proper SPF/DKIM/DMARC records. A free email address can't.</li>
+          </ul>
+          <p>If you don't have a domain yet, see <a href="/tutorials/buy-a-domain-from-cloudflare.html">the registrar tutorials</a>. You can also use a subdomain dedicated to transactional mail — <code>mail.yourapp.com</code> or <code>notifications.yourapp.com</code> — which is good practice because it isolates your sending reputation from anything else on the root domain.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Create a Resend account</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Sign up at resend.com</h3>
+          <p>Sign up. The free tier gives you 3,000 emails per month and 100 per day, sent from the shared <code>onboarding@resend.dev</code> domain. That's enough to test the SDK; it's not enough to ship to real users (because mail from <code>resend.dev</code> won't look like it's from you, and recipients may suspect it).</p>
+          <p>To send from your own domain you need to add and verify it. That's the next step.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Add your domain in the dashboard</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Resend → Domains → Add Domain</h3>
+          <p>Click <strong>Add Domain</strong>, type the domain (or subdomain) you'll send from, click <strong>Add</strong>. Resend shows you a list of DNS records to add. Typically 3–5 records: one for SPF, two or three for DKIM (depending on configuration), optionally one for DMARC, and an MX record if you want to also receive bounce notifications back through Resend.</p>
+          <p>The records look intimidating but you don't need to understand the cryptography — just copy each one verbatim into your DNS provider.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Add the records at your DNS provider</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Match Resend's instructions exactly</h3>
+          <p>For each record Resend shows, go to your DNS provider (see the <a href="/tutorials/connect-domain-to-server-with-dns.html">DNS tutorial</a> if needed) and add:</p>
+          <ul>
+            <li><strong>Type:</strong> matches what Resend says (TXT, CNAME, MX, etc.).</li>
+            <li><strong>Name/Host:</strong> matches exactly. Some providers want just <code>resend</code>; others want <code>resend.yourdomain.com</code>. Either format is fine if used consistently.</li>
+            <li><strong>Value:</strong> paste verbatim. Watch for whitespace — DNS values are exact strings.</li>
+            <li><strong>TTL:</strong> defaults are fine.</li>
+          </ul>
+          <p>After adding all records, click <strong>Verify DNS Records</strong> in Resend. Propagation can take minutes to hours. Resend re-checks automatically; you'll get a "verified" status when all records resolve correctly.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>What each record actually does:</strong> SPF (the TXT record) declares which mail servers are allowed to send for your domain. DKIM (a TXT or CNAME) is a cryptographic signature that proves the mail came from those servers and wasn't tampered with. DMARC (a TXT at <code>_dmarc</code>) tells receivers what to do when SPF or DKIM fail — quarantine, reject, or just report. Together they're the modern "yes, this mail is legitimate" handshake.
+      </div>
+
+      <h2>Step 5: Get an API key</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Resend → API Keys → Create</h3>
+          <p>Click <strong>Create API Key</strong>, name it (e.g., "production"), choose permissions (typically <em>Sending access</em> — restricted scope is better than full access). Copy the key (<code>re_…</code>); you only see it once.</p>
+          <p>Put it in your backend's env file: <code>RESEND_API_KEY=re_…</code>. As always, never commit to git.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Send your first email</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>The SDK call</h3>
+          <p>Install the SDK in your project:</p>
+          <pre><code>npm install resend
+# or: pip install resend, or: gem install resend</code></pre>
+          <p>Send a test email:</p>
+          <pre><code>import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+await resend.emails.send({
+  from: 'You &lt;hello@yourdomain.com&gt;',
+  to: ['recipient@example.com'],
+  subject: 'Hello from Resend',
+  html: '&lt;p&gt;This is the body of the email.&lt;/p&gt;',
+});</code></pre>
+          <p>Check your recipient inbox. If it arrives, you're done. If it doesn't, check the Resend dashboard's <strong>Emails</strong> log — it shows every send attempt with its status (delivered, bounced, spam-folder, etc.) and the receiver's response.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: Real templates with React Email</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Or any HTML you want</h3>
+          <p>For one-off emails, raw HTML strings work fine. For anything you'll send repeatedly (welcome emails, receipts, password resets), use templates. Resend's official option is <strong>React Email</strong> — write your email as a React component, render it to HTML at send time.</p>
+          <pre><code>import { Resend } from 'resend';
+import { ReceiptEmail } from './emails/Receipt';
+
+await resend.emails.send({
+  from: 'Receipts &lt;receipts@yourdomain.com&gt;',
+  to: customer.email,
+  subject: `Receipt for $${amount}`,
+  react: ReceiptEmail({ customerName: customer.name, amount, items }),
+});</code></pre>
+          <p>React Email components have email-safe primitives (<code>&lt;Container&gt;</code>, <code>&lt;Text&gt;</code>, <code>&lt;Button&gt;</code>) that render to the table-based HTML email clients require. You write modern JSX; the library handles the legacy markup.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: When emails land in spam</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>The deliverability checklist</h3>
+          <p>Mail in spam usually means one of these is true:</p>
+          <ul>
+            <li><strong>DNS records aren't fully verified.</strong> Check the Resend dashboard. Some records may have propagated; some not. All must be green.</li>
+            <li><strong>Your <code>From</code> domain doesn't match your DKIM domain.</strong> If you set up DKIM for <code>mail.yourdomain.com</code> but send from <code>hello@yourdomain.com</code>, the DKIM signature doesn't authorize the From. Either send from <code>hello@mail.yourdomain.com</code> or set up DKIM for the root.</li>
+            <li><strong>The content looks spammy.</strong> All caps, lots of "FREE!!!", many emoji, weird link patterns. Test with <code>mail-tester.com</code> — it'll give you a score and explain why.</li>
+            <li><strong>You're new and sending in volume.</strong> New domains have no sender reputation. Mail providers err on the side of suspicion until you've sent legitimate-looking mail for a week or two. Ramp up gradually.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Never send marketing email from a transactional account.</strong> Resend's terms (and similar providers') reserve the transactional tier for non-marketing mail — receipts, password resets, security alerts, notifications. Sending newsletters from a transactional account can get you suspended. Use a separate marketing platform (Loops, Customer.io, ConvertKit) for that.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-stripe-webhooks.html" class="tutorial-next-card">
+            <h3>Set up Stripe webhooks</h3>
+            <p>The natural pair — webhook fires, send a receipt with Resend</p>
+          </a>
+          <a href="/tutorials/set-up-stripe-api-keys.html" class="tutorial-next-card">
+            <h3>Set up Stripe API keys</h3>
+            <p>If you don't have Stripe set up yet</p>
+          </a>
+          <a href="/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>Connect your domain to a server with DNS</h3>
+            <p>The DNS layer where the email records live</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

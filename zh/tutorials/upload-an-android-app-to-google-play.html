@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首次将 Android 应用上传至 Google Play — LingCode 教程</title>
+  <meta name="description" content="从签名好的 Android App Bundle 到正式上架 Play 商店。签名密钥、Play 应用签名、内部测试轨道、商店元数据，以及审核期间的实际情况全面讲解。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/upload-an-android-app-to-google-play.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/upload-an-android-app-to-google-play.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/upload-an-android-app-to-google-play.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/upload-an-android-app-to-google-play.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "首次将 Android 应用上传至 Google Play",
+  "description": "从签名好的 AAB 到正式上架 Play 商店。上传本身只需一次点击，真正让首次发布者卡住的是签名密钥的选择、轨道管理、元数据填写以及漫长的审核等待。本教程为零 Android 发布经验的开发者提供完整的通关路径。",
+  "url": "https://lingcode.dev/zh/tutorials/upload-an-android-app-to-google-play.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/upload-an-android-app-to-google-play.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "首次将 Android 应用上传至 Google Play"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "首次将 Android 应用上传至 Google Play",
+      "item": "https://lingcode.dev/zh/tutorials/upload-an-android-app-to-google-play.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/upload-an-android-app-to-google-play.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">发布与基础设施</a>
+      <span>/</span>
+      <span>首次将 Android 应用上传至 Google Play</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-advanced">● 高级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>首次将 Android 应用上传至 Google Play</h1>
+      <p class="intro">从签名好的 AAB 到正式上架 Play 商店。上传本身只需一次点击，真正让首次发布者卡住的是签名密钥的选择、轨道管理、元数据填写以及漫长的审核等待。本教程为零 Android 发布经验的开发者提供完整的通关路径。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Google Play 的上传流程在概念上比 Apple 的更简单，但在实际操作中却更繁琐。说它简单，是因为二进制文件会即时推送给测试人员——没有预配置文件的繁复舞步，没有 entitlements 文件，也没有"开发版"与"发行版"构建之分。说它繁琐，是因为 Google 要求你填写的文件比 Apple 多得多：内容分级问卷、数据安全表单、目标受众声明、广告声明，以及开发者账号的政府 ID 验证。首次发布的大部分时间并不在构建上，而在元数据填写上。</p>
+      <p>理解整个流程的核心心智模型：你有一个<strong>签名密钥</strong>，它证明"这次更新来自与上一次相同的发布者"。一旦丢失，你将永远无法更新这个应用。<strong>Play 应用签名</strong>（Google 自 2017 年起推荐的方案）将其拆分为两个密钥：一个存放在你本机上的<em>上传密钥</em>（如果泄露可以轮换），以及一个由 Google 持有并用于签署实际下发给设备的二进制文件的<em>应用签名密钥</em>。除非有特殊原因，你几乎总应该选择 Play 应用签名。模型的另一半是<strong>轨道</strong>：内部测试 → 封闭测试 → 开放测试 → 正式发布，覆盖范围依次递增。通常先发布到内部测试轨道（最多 100 名指定测试人员，即时生效），再到封闭测试（私人邀请名单，约一小时生效），然后是开放测试（任何有链接的人），最后是正式发布（所有人）。大多数首次上传的路径是：内部测试 → 修复问题 → 正式发布，历时约一周。</p>
+      <p>本教程涵盖一次性账号设置、签名密钥方案选择、首个 AAB 构建、提交所需的元数据、内部轨道上传，以及收到审核反馈时的应对方式。最终状态：你的应用正式上架 Play 商店，任何 Android 设备均可下载。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>25 美元开发者账号、政府 ID 验证，以及新增的"发布前须有测试人员"要求</li>
+        <li>签名密钥：上传密钥与应用签名密钥的区别，以及为何 Play 应用签名是默认选择</li>
+        <li>构建已签名的 AAB（Android App Bundle），而非 APK</li>
+        <li>四条发布轨道（内部 / 封闭 / 开放 / 正式发布）及从哪条开始</li>
+        <li>Google 要求必填的元数据：商店列表、内容分级、数据安全、目标受众、广告声明</li>
+        <li>审核时间：首次审核（3–7 天）与后续更新审核（通常数小时）的区别</li>
+        <li>常见的首次提交被拒原因及预防方法</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前置条件：</strong>一个可在模拟器上构建并运行的 Android 应用（<a href="/zh/tutorials/create-and-run-your-first-avd.html">AVD 教程</a>）、一个 Google 账号、25 美元的一次性开发者注册费、一张政府颁发的身份证件（护照或驾照——Google 自 2023 年起要求新账号进行实名验证）、一张 1024×500 的特色图片、一个应用图标（512×512 PNG），以及至少 2 张手机截图（16:9 竖屏或横屏）。截图是大多数人在到达上传界面时才发现忘记准备的东西。
+      </div>
+
+      <h2>第 1 步：创建 Play Console 开发者账号</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>一次性 25 美元费用与政府 ID 验证</h3>
+          <p>前往 <a href="https://play.google.com/console/signup" target="_blank" rel="noopener">play.google.com/console/signup</a>，用你想用来拥有该应用的 Google 账号登录。选择<strong>个人</strong>或<strong>组织</strong>：</p>
+          <ul>
+            <li><strong>个人</strong>——你是个人发布者，需要政府 ID 验证。</li>
+            <li><strong>组织</strong>——以公司主体发布应用，需要企业的 D-U-N-S 编号以及与该组织绑定的可验证电话号码。验证周期较长（1–2 周），但可以品牌名义而非个人名义发布。</li>
+          </ul>
+          <p>支付 25 美元（终身有效，此账号可无限发布应用）。提交证件后等待验证——个人账号通常 48 小时内完成，组织账号时间更长。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>"20 名测试人员满 14 天"规则（2024 年新增）。</strong>个人账号的首次发布者必须在封闭测试轨道上邀请 20 名测试人员，并将应用在封闭测试轨道上运行至少 14 天，之后才能推送到正式发布。请提前规划：账号验证通过当天就启动封闭测试，即使应用尚未完成也无妨。这 14 天可以与你完善元数据的时间并行计算。组织账号不受此规则约束。
+      </div>
+
+      <h2>第 2 步：确定签名策略</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>绝大多数情况下，选择 Play 应用签名</h3>
+          <p>你需要在两种方案中选择一种：</p>
+          <ul>
+            <li><strong>Play 应用签名（约 99% 的情况推荐）。</strong>你在本地生成一个<em>上传密钥</em>；Google 生成并持有一个<em>应用签名密钥</em>。你上传的每个 AAB 都由上传密钥签名，Play 会将其剥离，再用应用签名密钥重新签名后下发给设备。如果上传密钥泄露，你可以联系 Google 进行轮换；用户设备上的应用仍可正常运行，因为应用签名密钥始终在 Google 手中。</li>
+            <li><strong>自管理签名（旧方式）。</strong>你生成一个密钥，自行签署所有内容，从不将密钥上传给 Google。一旦密钥丢失，便永远无法更新该应用。新应用将作为不同包名下的独立列表重新上架。这种方式适用于因法律原因不允许 Google 接触签名密钥的组织，并不适合大多数人。</li>
+          </ul>
+          <p>选择 Play 应用签名。你接下来要生成的"上传密钥"就是本地构建所使用的签名密钥。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：生成上传密钥</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>一个 keystore 文件，永久妥善保管</h3>
+          <pre><code>keytool -genkey -v \
+  -keystore ~/keys/mybrand-upload.keystore \
+  -keyalg RSA -keysize 2048 -validity 25000 \
+  -alias mybrand-upload
+# Enter a password. Save it in your password manager.
+# Fill in the X.500 fields (name, organization, country).
+# 25000 days = ~68 years. Yes, really. Keystores aren't supposed to expire.</code></pre>
+          <p>务必备份这个 keystore 文件：云存储、加密 U 盘、密码管理器附件——任何能在你笔记本电脑损坏后幸存的地方都行。一旦丢失，就必须走 Google 的申诉流程（流程存在，但极为缓慢）。把它当作一份不动产契约来对待。</p>
+          <p>keystore 密码和密钥密码（两者都会要求你输入）可以相同，很多人为了简便起见使用同一个密码。两者都应存入密码管理器。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：构建已签名的 AAB</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>必须是 AAB，不能是 APK——Play Console 会拒绝新应用的 APK 上传</h3>
+          <p>在 <code>app/build.gradle.kts</code>（或 Groovy DSL 的 <code>app/build.gradle</code>）中添加发布签名配置：</p>
+          <pre><code>android {
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("UPLOAD_KEYSTORE_PATH") ?: "$rootDir/keystore-not-set")
+            storePassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD")
+            keyAlias = "mybrand-upload"
+            keyPassword = System.getenv("UPLOAD_KEY_PASSWORD")
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+}</code></pre>
+          <p>构建 bundle：</p>
+          <pre><code>export UPLOAD_KEYSTORE_PATH=~/keys/mybrand-upload.keystore
+export UPLOAD_KEYSTORE_PASSWORD='your-password'
+export UPLOAD_KEY_PASSWORD='your-password'
+./gradlew :app:bundleRelease
+
+# Output:
+# app/build/outputs/bundle/release/app-release.aab</code></pre>
+          <p>这就是你要上传的文件。验证其签名是否正确：</p>
+          <pre><code>jarsigner -verify -verbose -certs app/build/outputs/bundle/release/app-release.aab
+# Last line should say: "jar verified."</code></pre>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>永远不要将 keystore 提交到 git。</strong>即使是私有仓库也存在未来泄露的风险。执行 <code>echo "*.keystore" &gt;&gt; .gitignore</code>，并通过环境变量或密钥管理器加载凭据。CI 构建应从加密密钥（GitHub Actions 加密密钥、AWS Secrets Manager 等）中获取 keystore，而非从仓库中读取。
+      </div>
+
+      <h2>第 5 步：在 Play Console 中创建应用</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>建立商店列表的基本框架</h3>
+          <p>Play Console → <strong>创建应用</strong>。填写以下信息：</p>
+          <ul>
+            <li><strong>应用名称</strong>——用户在商店中看到的名称，最多 30 个字符。之后可以修改，但 URL 别名由此初始值决定。</li>
+            <li><strong>默认语言</strong>——商店列表主要文案所使用的语言区域，之后可添加其他语言。</li>
+            <li><strong>应用或游戏</strong>——影响可选的分类树，多数情况下影响不大。</li>
+            <li><strong>免费或付费</strong>——付费指一次性购买或订阅。免费应用仍可包含应用内购买。<strong>免费应用之后无法改为付费</strong>，只能从付费改为免费。请谨慎选择。</li>
+          </ul>
+          <p>提交后，该应用将以草稿状态出现在 Play Console 中。此时还无法发布任何内容，你需要先在某个轨道上传已签名的 AAB，并填写完整的元数据。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：填写必要的元数据（这才是工作量最大的部分）</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>六个表单，一个都不能省</h3>
+          <p>在 Play Console 侧边栏中点击<strong>应用内容</strong>，逐项完成填写。未填写这些内容就提交是首次上传最常见的错误。</p>
+          <ul>
+            <li><strong>隐私政策。</strong>指向一个公开可访问的隐私政策文档的 URL。如果应用收集了任何数据，此项为必填。即使不收集任何数据，也需要一条简短声明。可使用生成工具（<a href="https://app-privacy-policy-generator.firebaseapp.com" target="_blank" rel="noopener">app-privacy-policy-generator.firebaseapp.com</a>），并将结果托管在稳定可访问的地址上。</li>
+            <li><strong>应用访问权限。</strong>如果应用的部分功能需要登录，你必须提供测试账号凭据，供审核人员访问。"用户名：review@test.com，密码：……"——Google 审核人员会实际使用这些凭据。</li>
+            <li><strong>广告。</strong>是或否。如选是，则需回答额外的广告内容分级问题。</li>
+            <li><strong>内容分级。</strong>一份问卷（"应用是否含有暴力内容？""是否涉及赌博？"），生成 IARC 分级。大约需要 5–10 分钟。分级结果会影响应用在哪些国家可见。</li>
+            <li><strong>目标受众和内容。</strong>年龄段划分，若面向 13 岁以下用户则有额外规定。对于大多数面向普通消费者的应用，选择"混合受众"较为稳妥。</li>
+            <li><strong>数据安全。</strong>最繁琐的表单。需要披露应用收集的每类数据（位置、通讯录、照片、文件、设备 ID 等），以及这些数据是否为必需、是否与第三方共享、是否在传输中加密。<strong>披露内容必须与实际情况一致</strong>——Google 会对比应用的运行时行为与表单内容，不符将是下架原因。首次填写此表单请预留 20–40 分钟。</li>
+            <li><strong>政府应用 / 新闻应用 / 健康应用等。</strong>如果你的应用属于受监管类别，需填写相应的条件声明。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第 7 步：构建商店列表</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>用户点击你的应用后看到的内容</h3>
+          <p>侧边栏<strong>主商店列表</strong>，必填素材如下：</p>
+          <ul>
+            <li><strong>应用图标</strong>——512×512 PNG，32 位，带 Alpha 通道。Google 在各处展示的图标。</li>
+            <li><strong>特色图片</strong>——1024×500 JPG/PNG，显示在商店列表顶部的横幅图。</li>
+            <li><strong>手机截图</strong>——至少 2 张，最多 8 张。PNG 或 JPG，16:9 或 9:16，短边在 320 至 3840 像素之间。可从 AVD 截取：<code>adb exec-out screencap -p &gt; screen.png</code>。</li>
+            <li><strong>简短说明</strong>——80 个字符以内，显示在搜索结果摘要中。</li>
+            <li><strong>完整说明</strong>——最多 4000 个字符，即应用的完整产品页文案。</li>
+            <li><strong>平板电脑截图</strong>——可选，但如果你支持平板电脑，建议提供。不提供的话，平板用户看到的是手机截图以不太理想的宽高比呈现的效果。</li>
+          </ul>
+          <p>描述文案是最值得反复打磨的部分——上线后仍可编辑，因此首次发布时"足够好"就行了。图标和特色图片重新上传则相对麻烦。</p>
+        </div>
+      </div>
+
+      <h2>第 8 步：上传至内部测试轨道</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>最快在真实设备上安装应用的路径</h3>
+          <p>侧边栏<strong>测试</strong> → <strong>内部测试</strong> → <strong>创建新版本</strong>：</p>
+          <ul>
+            <li><strong>应用签名</strong>——首次上传时 Play Console 会提示开启 Play 应用签名，接受即可。</li>
+            <li><strong>上传 AAB</strong>——拖入第 4 步生成的 <code>app-release.aab</code>，上传需 1–3 分钟。</li>
+            <li><strong>版本名称</strong>——自动从版本号填充，保持默认即可。</li>
+            <li><strong>版本说明</strong>——描述本次更新内容。首次发布填写"初始版本"即可。</li>
+          </ul>
+          <p>保存 → 审核版本 → 开始向内部测试版推出。版本通常在 5 分钟内处理完毕。</p>
+          <p>添加测试人员：<strong>内部测试</strong> → <strong>测试人员</strong>标签页 → 创建电子邮件列表（每行粘贴一个 Gmail 地址，最多 100 人）。保存后，每位测试人员会收到一个 Play 商店加入链接，点击后方可安装应用。</p>
+          <p>将加入链接发给测试人员。他们点击链接并接受后，访问该应用的 Play 商店页面（或内部测试直链）即可安装。版本推出后约 5–10 分钟，应用便可在他们的设备上安装。</p>
+        </div>
+      </div>
+
+      <h2>第 9 步：逐步推进至封闭测试 → 开放测试 → 正式发布</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <h3>真正面向公众发布的完整流程</h3>
+          <p>内部测试确认构建无误后：</p>
+          <ul>
+            <li><strong>封闭测试</strong>——私人群组，通常基于邮件列表或 Google 群组。上传流程相同，将版本从内部测试提升到封闭测试即可。适合早期体验用户或 Beta 计划。<strong>如果你使用的是个人账号，这就是 14 天的必经阶段。</strong></li>
+            <li><strong>开放测试（可选）</strong>——任何有链接的人都可以加入，承诺度低于正式发布，适合在不获得 Play 商店搜索曝光的情况下进行"软发布"。</li>
+            <li><strong>正式发布</strong>——公开上线。支持国家/地区的所有用户均可搜索并安装你的应用。首次正式发布需经过完整审核（3–7 天），后续更新通常在 24 小时内通过。</li>
+          </ul>
+          <p>首次推送到正式发布：<strong>正式发布</strong> → <strong>创建新版本</strong> → <strong>从封闭测试版推广</strong>。添加版本说明后提交，然后等待。状态变更时会收到邮件通知。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>常见的首次提交被拒原因。</strong>Google 审核人员的拒绝理由具体且可修复，几乎不会给出模糊的说法：
+        <ul>
+          <li><strong>数据安全内容不符</strong>——表单中声明不收集位置信息，但 manifest 中声明了 <code>ACCESS_FINE_LOCATION</code> 权限。修改表单或移除该权限。</li>
+          <li><strong>目标 API 级别过低</strong>——Play 要求应用针对较新的 Android API（新应用目前要求 API 34 / Android 14）。提高 <code>targetSdkVersion</code> 并重新构建。</li>
+          <li><strong>隐私政策 URL 无法访问</strong>——该 URL 必须能正常打开。404 会被视为缺失。</li>
+          <li><strong>"需要登录但未提供测试账号"</strong>——在"应用访问权限"中填写可用的测试凭据。</li>
+          <li><strong>敏感权限缺少使用说明</strong>——对于短信、通话记录或"所有文件访问"等权限，你必须说明应用为何需要这些权限，并使用官方的权限声明流程。</li>
+        </ul>
+      </div>
+
+      <h2>首次发布后的更新循环</h2>
+      <p>应用上线并配置好 Play 应用签名之后，后续更新会比第一次快得多：</p>
+      <pre><code># Bump versionCode and versionName in app/build.gradle.kts
+# Build a new signed AAB
+./gradlew :app:bundleRelease
+
+# Upload it via the Play Console UI, OR via the official gradle plugin:
+# https://github.com/Triple-T/gradle-play-publisher
+./gradlew publishReleaseBundle</code></pre>
+      <p>gradle-play-publisher 插件通过 service account JSON 密钥进行认证（从 Play Console → 设置 → 开发者账号 → API 访问权限下载），可以让你从 CI 推送版本。完成第一次手动上传后，所有后续发布都可以通过一步 CI 完成。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/reupload-an-android-app.html" class="tutorial-next-card">
+            <h3>重新上传 Android 应用</h3>
+            <p>首次发布完成后，更新流程会更短、更快</p>
+          </a>
+          <a href="/zh/tutorials/create-and-run-your-first-avd.html" class="tutorial-next-card">
+            <h3>创建并运行你的第一个 AVD</h3>
+            <p>本教程所依赖的模拟器配置流程</p>
+          </a>
+          <a href="/zh/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>使用 Agent 上传至 TestFlight</h3>
+            <p>iOS 对应流程——逻辑相同，机制截然不同</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

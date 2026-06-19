@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode Docs — Core concepts, AI workflows, build, ship, reference</title>
+  <meta name="description" content="Everything to install LingCode, master the four core concepts (work protection, IDE-aware agent, no-proxy privacy, local models), build and run iOS/Android/web, ship to any store, and understand why each step works.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#FAFAFF">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/docs.html">
+  <meta property="og:title" content="LingCode Docs — Core concepts, AI workflows, build, ship, reference">
+  <meta property="og:description" content="Seven organized sections: start here, core concepts (work protection, IDE-aware agent, no proxy, local models), AI workflows, build &amp; run (iOS + Android toolchains), ship to App Store/Play/Web, deploy fundamentals, and reference.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <style>
+    :root {
+      --bg: #FAFAFF;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F5F3FF;
+      --bg-nav: rgba(250, 250, 255, 0.75);
+      --text: #1A1530;
+      --text-muted: #5D5475;
+      --text-dim: #8B829F;
+      --signal: #A855F7;
+      --signal-glow: rgba(168, 85, 247, 0.18);
+      --green: #16A34A;
+      --red: #DC2626;
+      --border: rgba(168, 85, 247, 0.12);
+      --border-strong: rgba(168, 85, 247, 0.30);
+      --radius: 14px;
+      --accent: #A855F7;
+      --accent-soft: rgba(168, 85, 247, 0.10);
+      --accent-line: rgba(168, 85, 247, 0.40);
+      --ink: #1A1530;
+      --ink-dim: #5D5475;
+      --ink-faint: #8B829F;
+      --ff-display: 'Instrument Serif', 'EB Garamond', Georgia, serif;
+      --ff-body: 'Geist', system-ui, -apple-system, sans-serif;
+      --ff-mono: 'JetBrains Mono', ui-monospace, monospace;
+      --grad-aurora: linear-gradient(135deg, #A855F7 0%, #C026D3 50%, #F472B6 100%);
+    }
+    body {
+      background:
+        radial-gradient(ellipse 90% 50% at 50% -10%, rgba(168, 85, 247, 0.12), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 20%, rgba(244, 114, 182, 0.06), transparent 70%),
+        var(--bg);
+      color: var(--text);
+      font-family: var(--ff-body);
+      font-weight: 400;
+    }
+    ::selection { background: var(--accent); color: var(--bg); }
+
+    /* Nav overrides */
+    .nav-bar { background: var(--bg-nav); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); }
+    /* Full-width nav (logo left, primary links flow into a stretched cell,
+       search + auth pinned right). Was `1fr auto 1fr` with nav-links cell
+       sized to its content and centered, which dragged the search form and
+       Sign up CTA into the middle of the row instead of the right edge. */
+    .nav-inner {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0;
+      max-width: none;
+      margin: 0;
+      padding: 18px 40px;
+      height: auto;
+    }
+    .nav-inner > .nav-logo   { grid-column: 1; justify-self: start; }
+    .nav-inner > .nav-links  {
+      grid-column: 2;
+      justify-self: stretch;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+    .nav-inner > .nav-burger { grid-column: 3; justify-self: end; }
+    /* Two-auto-margin trick: with the first primary link AND .nav-search
+       both carrying margin-left: auto, the free space in the stretched
+       .nav-links column splits evenly between them. Result: primary nav
+       links centered, search + Sign up CTA flush right. (Single auto on
+       .nav-search alone leaves the primary links flush left next to the
+       logo, which is the bug we were seeing.) */
+    .nav-inner > .nav-links > a:first-of-type { margin-left: auto; }
+    .nav-inner > .nav-links > .nav-search { margin-left: auto; }
+    @media (max-width: 720px) {
+      .nav-inner { padding: 14px 20px; }
+    }
+    .nav-logo {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--ff-display); font-size: 1.375rem; font-style: italic; font-weight: 400; letter-spacing: -0.01em;
+    }
+    .nav-logo::before {
+      content: "L"; display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; background: var(--accent); border-radius: 6px;
+      color: var(--bg); font-family: var(--ff-display); font-size: 18px; font-style: normal;
+      transform: rotate(-4deg); box-shadow: 0 6px 20px rgba(168, 85, 247, 0.30);
+    }
+    .nav-links a { color: var(--ink-dim); }
+    .nav-links a:hover { color: var(--ink); }
+    /* Canonical nav: .nav-cta is the flex wrapper around Sign in + Start
+       downloading. The purple styling lives on .btn-primary inside it. */
+    .nav-cta { display: inline-flex; gap: 10px; align-items: center; }
+
+    /* Hub layout */
+    .hub-hero { padding: 148px 32px 56px; text-align: center; }
+    .hub-hero h1 {
+      font-family: var(--ff-display); font-size: clamp(3rem, 7vw, 5rem);
+      font-weight: 400; line-height: 0.96; margin: 0 0 22px; letter-spacing: -0.025em;
+    }
+    .hub-hero p { color: var(--ink-dim); font-size: 1.125rem; max-width: 640px; margin: 0 auto; line-height: 1.55; }
+    .section-eyebrow { color: var(--accent); font-family: var(--ff-mono); font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 20px; }
+    .hub-nav { font-size: 0.875rem; margin-top: 14px; }
+    .hub-nav a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .hub-nav a:hover { text-decoration: underline; }
+    .hub-content { max-width: 1100px; margin: 0 auto; padding: 0 32px 80px; }
+    .hub-section { margin: 56px 0 8px; padding-top: 40px; border-top: 1px solid var(--border); }
+    .hub-section:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .hub-section h2 {
+      font-family: var(--ff-display); font-size: clamp(2rem, 4vw, 2.75rem);
+      font-weight: 400; line-height: 1.05; margin: 0 0 8px; letter-spacing: -0.015em; color: var(--ink);
+    }
+    .hub-section p.lead { color: var(--ink-dim); margin: 0 0 20px; font-size: 0.9375rem; line-height: 1.6; }
+    .hub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .hub-card {
+      background: rgba(255,255,255,0.78); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: 0 16px 44px rgba(168, 85, 247, 0.07);
+      padding: 20px 22px; text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; transition: border-color 0.15s, transform 0.15s;
+    }
+    .hub-card:hover { border-color: var(--accent-line); transform: translateY(-2px); }
+    .hub-card-icon { font-size: 22px; margin-bottom: 6px; }
+    .hub-card h3 { font-size: 1rem; margin: 0 0 6px; color: var(--ink); font-weight: 600; }
+    .hub-card-desc { color: var(--ink-dim); font-size: 0.875rem; line-height: 1.55; margin: 0; flex-grow: 1; }
+    .hub-card-desc code { background: var(--accent-soft); padding: 2px 7px; border-radius: 3px; font-family: var(--ff-mono); font-size: 0.86em; color: var(--accent); }
+    .hub-card-cta { color: var(--accent); font-size: 0.8125rem; font-weight: 600; margin-top: 12px; }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--border); padding: 60px 40px 40px; }
+    .footer-grid { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: 48px; max-width: 1200px; margin: 0 auto 48px; }
+    .footer-brand p { color: var(--ink-dim); font-size: 13px; margin-top: 16px; max-width: 280px; line-height: 1.5; }
+    .footer-col h4 { font-family: var(--ff-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); margin-bottom: 16px; font-weight: 500; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; padding: 0; margin: 0; }
+    .footer-col a { color: var(--ink-dim); text-decoration: none; font-size: 14px; }
+    .footer-col a:hover { color: var(--ink); }
+    .footer-bottom { max-width: 1200px; margin: 0 auto; padding-top: 32px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-faint); font-family: var(--ff-mono); flex-wrap: wrap; gap: 16px; }
+    .footer-col, .footer-brand { min-width: 0; }
+    @media (max-width: 900px) { .footer-grid { grid-template-columns: 1.4fr repeat(2, 1fr); gap: 32px; } .footer-grid .footer-col:nth-child(5) { grid-column: 2 / span 2; } }
+    @media (max-width: 600px) {
+      .hub-hero { padding-top: 116px; }
+      .hub-hero h1 { font-size: clamp(2.6rem, 13vw, 4rem); }
+      .hub-section h2 { font-size: 2rem; }
+      .hub-grid { grid-template-columns: 1fr; }
+      footer { padding: 48px 20px 32px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 36px; }
+      .footer-grid .footer-col:nth-child(5) { grid-column: auto; }
+      .footer-brand { grid-column: span 2; }
+      .footer-brand p { max-width: 100%; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 24px; }
+    }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; gap: 28px; margin-bottom: 32px; } .footer-brand { grid-column: auto; } }
+    /* Compact nav search — sits between canonical links and the auth CTAs. */
+  .nav-search-li { list-style: none; display: inline-flex; }
+  .nav-search {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg-card, #FFFFFF);
+    border: 1px solid var(--border, var(--border-hi, rgba(168, 85, 247, 0.18)));
+    border-radius: 100px;
+    padding: 4px 10px 4px 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    max-width: 220px; min-width: 0;
+    margin: 0 4px;
+  }
+  .nav-search:focus-within {
+    border-color: var(--signal, var(--accent, #A855F7));
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+  }
+  .nav-search svg {
+    width: 14px; height: 14px; flex-shrink: 0;
+    color: var(--text-muted, var(--ink-dim, #5D5475));
+  }
+  .nav-search input {
+    border: none; outline: none; background: transparent;
+    font-family: 'Geist', -apple-system, sans-serif;
+    font-size: 13px;
+    color: var(--text, var(--ink, #1A1530));
+    padding: 4px 0; width: 130px; min-width: 0;
+  }
+  .nav-search input::placeholder { color: var(--text-dim, var(--ink-faint, #8B829F)); }
+  @media (max-width: 980px) { .nav-search, .nav-search-li { display: none !important; } }
+</style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="hub-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Docs</p>
+        <h1>Everything LingCode, in one map.</h1>
+        <p>Start with core concepts, move to AI workflows, build and run, ship, then deep reference. Jump to the section you need.</p>
+        <p class="hub-nav"><a href="#start">Start here</a> · <a href="#concepts">Core concepts</a> · <a href="#ai">AI workflows</a> · <a href="#build">Build &amp; run</a> · <a href="#ship">Ship</a> · <a href="#fundamentals">Deploy fundamentals</a> · <a href="#reference">Reference</a></p>
+      </div>
+    </section>
+
+    <div class="hub-content">
+
+      <div class="hub-section" id="start">
+        <h2>Start here</h2>
+        <p class="lead">Install, first launch, first AI session, first deploy. ~10 minutes end-to-end.</p>
+        <div class="hub-grid">
+          <a href="/getting-started.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🚀</div>
+            <h3>Getting Started</h3>
+            <p class="hub-card-desc">Install LingCode, add your first API key, open a project, try a slash command, run a build. The 10-minute onboarding.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/development-setup.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🧰</div>
+            <h3>Development Setup</h3>
+            <p class="hub-card-desc">Backend, database, frontend. Postgres/MySQL/Redis locally, migrations, <code>.env</code> patterns, five stacks end-to-end.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/support.html#faq-getting-started" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🆔</div>
+            <h3>API keys &amp; providers</h3>
+            <p class="hub-card-desc">Set up Anthropic, OpenAI, Gemini, DeepSeek, Qwen, or local Ollama. Keys live in Keychain.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="hub-section" id="cloud">
+        <h2>LingCode Cloud</h2>
+        <p class="lead">The managed backend for the apps you build — Postgres, auth, storage, functions, realtime, vector search, and full-stack hosting. Provision one, point the SDK at it, ship. No server to run.</p>
+        <div class="hub-grid">
+          <a href="/docs/cloud/" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">☁️</div>
+            <h3>Cloud overview &amp; quickstart</h3>
+            <p class="hub-card-desc">What's in the box and a five-minute getting-started: provision a backend, create a schema, wire the SDK, read and write.</p>
+            <div class="hub-card-cta">Start here →</div>
+          </a>
+          <a href="/docs/cloud/database.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🗄️</div>
+            <h3>Database</h3>
+            <p class="hub-card-desc">The chainable query builder, filter operators, migrations, row-level security, and the table-CRUD model (no JOINs/upserts).</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/docs/cloud/auth.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🔑</div>
+            <h3>Authentication</h3>
+            <p class="hub-card-desc">Email/password, magic links, OTP, Google/GitHub/Apple OAuth, and TOTP MFA — with the access-token model.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/docs/cloud/functions.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">⚡</div>
+            <h3>Functions</h3>
+            <p class="hub-card-desc">Seven zero-deploy builtins (email, SMS, Stripe Checkout, HTTP fetch…) plus custom Deno-sandboxed serverless functions.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/docs/cloud/hosting.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🚢</div>
+            <h3>App hosting</h3>
+            <p class="hub-card-desc">Deploy static frontends and full-stack Worker/SSR apps to <code>*.run.lingcode.dev</code> with custom domains.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/docs/cloud/security.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🛡️</div>
+            <h3>Security &amp; RLS</h3>
+            <p class="hub-card-desc">Why the public anon key is safe, and copy-paste row-level-security policies so users only ever see their own rows.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/docs/cloud/api-reference.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">📘</div>
+            <h3>API reference &amp; more</h3>
+            <p class="hub-card-desc">The full SDK + REST surface — plus storage, realtime, vector, secrets, push, analytics, remote config, best practices, and troubleshooting guides.</p>
+            <div class="hub-card-cta">Reference →</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="hub-section" id="concepts">
+        <h2>Core concepts</h2>
+        <p class="lead">The four things that make LingCode structurally different from Cursor, Copilot, and other AI editors. Understand these and the rest of the docs click into place.</p>
+        <div class="hub-grid">
+          <a href="/features.html#work-protection" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🛡️</div>
+            <h3>Work protection</h3>
+            <p class="hub-card-desc">Pre-edit snapshots of <code>project.pbxproj</code>, <code>Info.plist</code>, Gradle, entitlements. Per-hunk diff review. Semantic time-travel undo. Worktree isolation. Nothing the agent changes is one-way.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/why-not-cursor.html#ide-aware" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">👁️</div>
+            <h3>IDE-aware agent</h3>
+            <p class="hub-card-desc">The agent calls <code>BuildLogService</code>, <code>LLDB</code>, <code>SimulatorController</code> as in-process Swift APIs — not shelled-out commands. It reads build state, debugger, sim logs live.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/why-not-cursor.html#no-proxy" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🔑</div>
+            <h3>Your keys. No proxy.</h3>
+            <p class="hub-card-desc">Direct-to-provider architecture. Your API keys live in the macOS Keychain. Prompts go from your Mac to Anthropic/OpenAI/Gemini with zero LingCode servers in between.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/why-not-cursor.html#local-models" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">💻</div>
+            <h3>Local models &amp; offline</h3>
+            <p class="hub-card-desc">One-click Ollama integration. Run Qwen 2.5 Coder, Llama 3, Mistral locally. Full IDE functionality with zero network traffic. Cursor cannot do this.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="hub-section" id="ai">
+        <h2>AI workflows</h2>
+        <p class="lead">How to actually get leverage from the agent day-to-day. Patterns, habits, and tool integrations.</p>
+        <div class="hub-grid">
+          <a href="/best-practices.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🧠</div>
+            <h3>AI development best practices</h3>
+            <p class="hub-card-desc">Ten habits for Swift/iOS developers using LingCode with Claude: prompting, code review, Git, context, work protection, and IDE-aware prompting.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/blog.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">⚡</div>
+            <h3>Skills &amp; slash commands</h3>
+            <p class="hub-card-desc">25+ built-in AI workflows — <code>/review</code>, <code>/explain</code>, <code>/refactor</code>, <code>/fix</code>, <code>/commit</code>, <code>/security</code>, <code>/mode</code>, and more. Plus custom skills.</p>
+            <div class="hub-card-cta">Browse →</div>
+          </a>
+          <a href="/claude-sessions.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">💬</div>
+            <h3>Multiple Claude sessions</h3>
+            <p class="hub-card-desc">Run parallel Claude Code tabs on the same project. Keep feature work and refactoring in separate contexts.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/best-practices.html#ide-aware" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🎯</div>
+            <h3>IDE-aware prompts</h3>
+            <p class="hub-card-desc">Prompt patterns that only work when the agent can read your live build log, debugger, and sim logs. <em>"Why did this build fail?"</em> without pasting errors.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/best-practices.html#work-protection" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">⏪</div>
+            <h3>Work protection workflow</h3>
+            <p class="hub-card-desc">How to check the recovery panel, use worktree isolation for risky experiments, and trust semantic undo over <code>git reset</code>.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/remote-control.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">📱</div>
+            <h3>Remote control from iPhone/iPad</h3>
+            <p class="hub-card-desc">SSH + Tailscale + tmux. Drive Claude Code on your Mac from anywhere with full chat control.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/collaboration.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">👥</div>
+            <h3>Real-time collaboration</h3>
+            <p class="hub-card-desc">Share a file with a teammate, see each other's cursors, edit together over CRDT. Roles, invite links, what's persisted.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/debugging.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🐛</div>
+            <h3>Debugging iOS, macOS &amp; Android</h3>
+            <p class="hub-card-desc">Breakpoints, step, threads, stack, variables, expression evaluation. lldb-dap for Apple, JDWP for Kotlin — one UI.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="hub-section" id="build">
+        <h2>Build &amp; run</h2>
+        <p class="lead">The toolchain side: iOS Simulator, Android Emulator, debuggers, signing. LingCode's native integrations with Apple and Google SDKs.</p>
+        <div class="hub-grid">
+          <a href="/#macos-kernel-heading" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🍏</div>
+            <h3>Apple toolchain (Xcode-side)</h3>
+            <p class="hub-card-desc"><code>xcodebuild</code>, iOS Simulator via <code>simctl</code>, LLDB debugger, code signing from Keychain, scheme editor, SPM packages, archive &amp; TestFlight.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/#android-kernel-heading" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🤖</div>
+            <h3>Android toolchain</h3>
+            <p class="hub-card-desc">Gradle builds, AVD emulators via <code>emulator</code> &amp; <code>adb</code>, <code>logcat</code> streaming, Kotlin debugging via JDWP/DAP, APK/AAB output.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/features.html#editor" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">✍️</div>
+            <h3>Editor &amp; LSP</h3>
+            <p class="hub-card-desc">SourceKit-LSP for Swift, Kotlin LSP, TypeScript, Python, Go, Rust. Tree-sitter highlighting. Per-hunk AI diff review.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/features.html#database" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🗄️</div>
+            <h3>Database tools</h3>
+            <p class="hub-card-desc">PostgreSQL workspace (connection manager, query runner with autocomplete, row-level edit, EXPLAIN trees). MySQL inspector. SQLite inspector &amp; schema editor. Agent can read your live schema.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/features.html#codebase-index" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🧭</div>
+            <h3>Codebase index</h3>
+            <p class="hub-card-desc">Local, persistent symbol index. Tree-sitter + swift-syntax. Fast lookup, jump-to-symbol, agent context. Zero cloud upload.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/tutorials/the-bottom-panel-explained.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🧰</div>
+            <h3>The bottom panel</h3>
+            <p class="hub-card-desc">Problems, Output, Run Console, Console, Terminal, Debug Console, Test Results, REST Client, Ports — what each of the nine tabs is for, plus deep dives on the REST Client, Test Results, and Ports.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="hub-section" id="ship">
+        <h2>Ship</h2>
+        <p class="lead">Every deploy target, with the exact one-time platform setup each needs. Magic Deploy detects your project and runs the right flow.</p>
+        <div class="hub-grid">
+          <a href="/magic-deploy-setup.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">📱</div>
+            <h3>App Store (iOS + macOS)</h3>
+            <p class="hub-card-desc">Archive, export, and upload via App Store Connect API key. Platform auto-detected from Xcode scheme.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/google-play-deploy-setup.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🤖</div>
+            <h3>Google Play (Android)</h3>
+            <p class="hub-card-desc">Signed AAB via Play Developer API. Remote preflight verifies access before gradle runs.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/magic-deploy-web-platforms.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🌐</div>
+            <h3>Web platforms</h3>
+            <p class="hub-card-desc">Vercel, Netlify, Railway, Fly.io, Heroku. CLI install + auth per platform.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/magic-deploy-scripts.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">📜</div>
+            <h3>Your own server</h3>
+            <p class="hub-card-desc">Before-launch &amp; After-deploy script cookbook for VPS / droplet / bare-metal rsync deploys.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/deploy.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🗺️</div>
+            <h3>Deploy hub</h3>
+            <p class="hub-card-desc">All deploy targets on one page, with "which should I pick" guidance.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/deploy-faq.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">❓</div>
+            <h3>Deploy FAQ</h3>
+            <p class="hub-card-desc">Real questions devs ask when setting up deploy. App Store quirks, Play version codes, CLI auth.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="hub-section" id="fundamentals">
+        <h2>Deploy fundamentals</h2>
+        <p class="lead">Not required to ship. Essential when things break. Written plain-language — no "read the Apple docs" hand-waving.</p>
+        <div class="hub-grid">
+          <a href="/learn-code-signing.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🔏</div>
+            <h3>How App Store code signing works</h3>
+            <p class="hub-card-desc">The trust chain from Apple's root CA down to the signature on your binary. Why provisioning profiles exist.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/learn-jwt-auth.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🎟️</div>
+            <h3>JWT auth in 5 minutes</h3>
+            <p class="hub-card-desc">Why every deploy tool uses JSON Web Tokens — and why they beat API keys.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/learn-version-code.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🔢</div>
+            <h3>Why versionCode breaks your second deploy</h3>
+            <p class="hub-card-desc">Build numbers, monotonic integers, and the rules each store enforces.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/learn-service-accounts.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🔐</div>
+            <h3>What a service account really is</h3>
+            <p class="hub-card-desc">Google's identity for machines, and why it's strictly better than an API key.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/annotated-examples.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">📄</div>
+            <h3>Annotated file examples</h3>
+            <p class="hub-card-desc">Side-by-side views of <code>.p8</code>, service-account JSON, and <code>ExportOptions.plist</code> with every field explained.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/glossary.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">📖</div>
+            <h3>Glossary</h3>
+            <p class="hub-card-desc">Every term from the deploy guides in plain English. 28 entries.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="hub-section" id="reference">
+        <h2>Reference</h2>
+        <p class="lead">FAQ, competitive comparisons, support, and community.</p>
+        <div class="hub-grid">
+          <a href="/support.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🆘</div>
+            <h3>Support &amp; FAQ</h3>
+            <p class="hub-card-desc">26 detailed Q&amp;As on privacy, work protection, IDE awareness, local models, troubleshooting. Plus bug reports and direct contact.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/why-not-cursor.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">⚖️</div>
+            <h3>Why not Cursor?</h3>
+            <p class="hub-card-desc">Five structural differences: trust, IDE-awareness, no proxy, local models, and iOS tooling. Plus the Electron ceiling.</p>
+            <div class="hub-card-cta">Read →</div>
+          </a>
+          <a href="/features.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">📚</div>
+            <h3>Full feature list</h3>
+            <p class="hub-card-desc">Every feature LingCode ships, grouped by area. The exhaustive reference.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/blog.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">⚡</div>
+            <h3>Skills reference</h3>
+            <p class="hub-card-desc">The 25+ built-in slash commands (<code>/review</code>, <code>/commit</code>, <code>/explain</code>, <code>/batch</code>) with full usage docs and examples.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/cli.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">⌨️</div>
+            <h3>lingcode CLI</h3>
+            <p class="hub-card-desc">Terminal companion to LingCode.app. Run <code>lingcode ask</code> from any shell — routes to the running app, or falls back to DeepSeek / Claude headless when the app is closed.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+          <a href="/privacy.html" class="hub-card">
+            <div class="hub-card-icon" aria-hidden="true">🔒</div>
+            <h3>Privacy policy</h3>
+            <p class="hub-card-desc">What LingCode sends over the network, where API keys live, and why we have zero telemetry.</p>
+            <div class="hub-card-cta">Open →</div>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

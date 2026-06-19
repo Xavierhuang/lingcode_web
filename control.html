@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Control — LingCode</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:* http://localhost:* https://*.ts.net">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    :root {
+      --user-bg: rgba(99, 102, 241, 0.12);
+      --user-border: rgba(99, 102, 241, 0.35);
+      --tool-bg: rgba(0, 0, 0, 0.25);
+      --tool-border: rgba(255, 255, 255, 0.08);
+    }
+    .ctl-wrap { max-width: 820px; margin: 0 auto; padding: 96px 16px 100px; }
+    .ctl-hero { text-align: center; margin-bottom: 18px; }
+    .ctl-hero h1 { font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 6px; letter-spacing: -0.03em; }
+    .ctl-hero p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+    .ctl-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px; margin-bottom: 14px;
+    }
+    .ctl-row { display: grid; grid-template-columns: 110px 1fr; gap: 8px 12px; align-items: center; margin-bottom: 8px; }
+    .ctl-row:last-child { margin-bottom: 0; }
+    .ctl-row label { color: var(--text-muted); font-size: 0.8rem; }
+    .ctl-row input, .ctl-row select, .ctl-row textarea {
+      background: rgba(0, 0, 0, 0.3); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px;
+      /* 16px prevents iOS Safari from auto-zooming on focus. */
+      font-size: 16px;
+      font-family: 'Geist', sans-serif; outline: none; width: 100%;
+      min-height: 44px;
+    }
+    .ctl-row input[type="password"], .ctl-row textarea { font-family: 'Geist Mono', monospace; }
+    .ctl-row textarea { min-height: 60px; resize: vertical; }
+    .ctl-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .ctl-actions button {
+      background: var(--signal, #00d084); color: white; border: 0;
+      border-radius: 8px; padding: 10px 18px; font-weight: 500;
+      font-size: 0.875rem; cursor: pointer; transition: background 0.12s;
+      font-family: 'Geist', sans-serif; min-height: 44px;
+    }
+    .ctl-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ctl-actions button.secondary {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .ctl-actions button.danger {
+      background: transparent; color: #f87171;
+      border: 1px solid rgba(248, 113, 113, 0.4);
+    }
+    .ctl-status {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-radius: 10px;
+      background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+      font-size: 0.825rem; color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .ctl-status .dot { width: 8px; height: 8px; border-radius: 50%; background: #888; }
+    .ctl-status.ok .dot { background: #22c55e; }
+    .ctl-status.err .dot { background: #f87171; }
+    .ctl-status.pending .dot { background: #fbbf24; }
+
+    .ctl-chat {
+      min-height: 280px; max-height: 60vh; overflow-y: auto;
+      padding: 14px; display: flex; flex-direction: column; gap: 10px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 12px;
+    }
+    .msg {
+      padding: 10px 12px; border-radius: 10px;
+      font-size: 0.875rem; line-height: 1.5;
+      max-width: 100%; word-wrap: break-word; white-space: pre-wrap;
+    }
+    .msg.user { background: var(--user-bg); border: 1px solid var(--user-border); align-self: flex-end; max-width: 85%; }
+    .msg.assistant { background: rgba(255,255,255,0.03); border: 1px solid var(--border); }
+    .msg.tool { background: var(--tool-bg); border: 1px solid var(--tool-border); font-family: 'Geist Mono', monospace; font-size: 0.8rem; }
+    .msg.tool .tool-name { color: #93c5fd; }
+    .msg.thinking { color: var(--text-muted); font-style: italic; font-size: 0.825rem; }
+    .msg.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.4); color: #fca5a5; }
+    .msg .role { font-size: 0.7rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+
+    /* Composer is sticky on mobile so it stays in view when the keyboard
+       opens. `100dvh` (dynamic viewport) accounts for iOS Safari's URL-bar
+       collapse better than `100vh`. */
+    .ctl-composer {
+      display: flex; gap: 8px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 10px;
+      position: sticky; bottom: 0;
+      /* env(safe-area-inset-bottom) leaves room for the iPhone home indicator. */
+      margin-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .ctl-composer textarea {
+      flex: 1; background: transparent; color: var(--text);
+      border: 0; outline: none; resize: none;
+      font-family: 'Geist', sans-serif;
+      /* 16px prevents iOS Safari from auto-zooming on focus. */
+      font-size: 16px;
+      min-height: 24px; max-height: 200px;
+    }
+    .ctl-composer button {
+      background: var(--signal, #00d084); color: white; border: 0;
+      border-radius: 10px; padding: 0 20px; font-weight: 500;
+      font-size: 0.875rem; cursor: pointer; align-self: flex-end;
+      font-family: 'Geist', sans-serif;
+      /* 44pt is the iOS HIG minimum tap target. */
+      min-height: 44px;
+    }
+    .ctl-composer button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .ctl-token-warning { font-size: 0.75rem; color: #fbbf24; margin-top: 8px; }
+    .ctl-help { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+    .ctl-help code { background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 4px; font-family: 'Geist Mono', monospace; }
+
+    /* Cancel pill — shown only while a query is in flight. */
+    .ctl-cancel-row { display: none; justify-content: flex-end; margin-top: 6px; }
+    .ctl-cancel-row.active { display: flex; }
+    .ctl-cancel-row button {
+      background: transparent; color: #f87171; border: 1px solid rgba(248,113,113,0.4);
+      border-radius: 999px; padding: 4px 12px; font-size: 0.75rem; cursor: pointer;
+      font-family: 'Geist', sans-serif;
+    }
+    .ctl-cancel-row button:hover { background: rgba(248,113,113,0.08); }
+
+    /* Permission modal — backdrop + card. Only constructed when a
+       permission_request arrives, so the chat stays uncluttered when
+       running with bypassPermissions or against non-Claude providers. */
+    .perm-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; padding: 16px;
+    }
+    .perm-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 20px; max-width: 460px; width: 100%;
+    }
+    .perm-card h3 { margin: 0 0 8px; font-size: 1rem; font-weight: 600; }
+    .perm-card .perm-tool { color: #93c5fd; font-family: 'Geist Mono', monospace; font-size: 0.85rem; }
+    .perm-card pre {
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px; margin: 10px 0;
+      font-family: 'Geist Mono', monospace; font-size: 0.78rem;
+      max-height: 200px; overflow: auto; white-space: pre-wrap; word-wrap: break-word;
+    }
+    .perm-card .perm-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap; }
+    .perm-card .perm-actions button {
+      border: 0; border-radius: 8px; padding: 8px 16px; font-weight: 500;
+      font-size: 0.85rem; cursor: pointer; font-family: 'Geist', sans-serif;
+    }
+    .perm-card .perm-actions .allow { background: var(--signal, #00d084); color: white; }
+    .perm-card .perm-actions .deny { background: rgba(248,113,113,0.15); color: #fca5a5; border: 1px solid rgba(248,113,113,0.4); }
+
+    @media (max-width: 600px) {
+      .ctl-wrap { padding: 80px 12px env(safe-area-inset-bottom, 12px); }
+      .ctl-row { grid-template-columns: 1fr; gap: 4px; }
+      .ctl-row label { font-size: 0.7rem; }
+      .ctl-chat { max-height: 50vh; }
+      .perm-card { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <div class="ctl-wrap">
+
+      <div class="ctl-hero">
+        <p class="section-eyebrow">Web Control</p>
+        <h1>Drive your local LingCode agent</h1>
+        <p>Your phone or any browser, talking to <code>lingcode serve</code> on your Mac.</p>
+      </div>
+
+      <div class="ctl-card" id="settings-card">
+        <div class="ctl-row">
+          <label for="server-url">Server</label>
+          <input id="server-url" type="text" placeholder="http://127.0.0.1:7878" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="ctl-row">
+          <label for="token">Token</label>
+          <input id="token" type="password" placeholder="paste from ~/.lingcode/server.token" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="ctl-row">
+          <label for="provider">Provider</label>
+          <select id="provider">
+            <option value="claude">Claude</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="openai">OpenAI</option>
+            <option value="groq">Groq</option>
+            <option value="openrouter">OpenRouter</option>
+            <option value="mistral">Mistral</option>
+            <option value="xai">xAI</option>
+            <option value="fireworks">Fireworks</option>
+            <option value="gemini">Gemini</option>
+            <option value="kimi">Kimi</option>
+            <option value="qwen">Qwen</option>
+            <option value="together">Together</option>
+            <option value="ollama">Ollama (local)</option>
+          </select>
+        </div>
+        <div class="ctl-actions">
+          <button type="button" id="connect-btn">Connect</button>
+          <button type="button" class="secondary" id="forget-btn">Forget token</button>
+        </div>
+        <div class="ctl-help">
+          On the Mac running the agent: <code>lingcode serve --web-origin https://lingcode.dev</code>. The token is printed to stderr on first run, or read with <code>cat ~/.lingcode/server.token</code>.
+        </div>
+        <div class="ctl-token-warning" id="cors-hint" style="display:none">
+          Connection blocked. Restart serve with <code>--web-origin <span id="origin-echo">https://lingcode.dev</span></code> so the browser can reach it.
+        </div>
+      </div>
+
+      <div class="ctl-status" id="status">
+        <span class="dot"></span>
+        <span id="status-text">Not connected.</span>
+      </div>
+
+      <div class="ctl-chat" id="chat" aria-live="polite"></div>
+
+      <div class="ctl-composer">
+        <textarea id="composer" placeholder="Ask the agent…" rows="1" disabled></textarea>
+        <button type="button" id="send-btn" disabled>Send</button>
+      </div>
+      <div class="ctl-cancel-row" id="cancel-row">
+        <button type="button" id="cancel-btn">Cancel query</button>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="nav.js?v=202605131900" defer></script>
+  <script>
+(function () {
+  'use strict';
+
+  // ---- State ------------------------------------------------------------
+  // Token + server URL persist per-origin in localStorage. The URL fragment
+  // (#token=...) takes priority on first load so the desktop's QR-code path
+  // (Day 6) can hand off without a paste step. Fragment is wiped immediately
+  // so it doesn't sit in scroll-history.
+  var STORAGE_KEY = 'lingcode.control.v1';
+  var defaults = { serverUrl: 'http://127.0.0.1:7878', token: '', provider: 'claude' };
+  var state = loadState();
+  var currentAbort = null;       // AbortController for the active SSE fetch
+  var currentQueryId = null;     // queryId reported by query_started
+  var liveAssistantEl = null;    // DOM node we're appending assistant_text into
+  var liveThinkingEl = null;     // DOM node we're appending thinking text into
+
+  function loadState() {
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (_) {}
+    var s = Object.assign({}, defaults);
+    if (raw) {
+      try {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') Object.assign(s, parsed);
+      } catch (_) {}
+    }
+    // Fragment override: #token=<urlencoded>[&server=<urlencoded>]
+    if (location.hash && location.hash.length > 1) {
+      var params = new URLSearchParams(location.hash.slice(1));
+      var t = params.get('token');
+      if (t) s.token = t;
+      var srv = params.get('server');
+      if (srv) s.serverUrl = srv;
+      // Wipe the fragment without reloading.
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (_) {}
+    }
+    return s;
+  }
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
+  }
+
+  // ---- DOM refs ---------------------------------------------------------
+  var $serverUrl = document.getElementById('server-url');
+  var $token = document.getElementById('token');
+  var $provider = document.getElementById('provider');
+  var $connect = document.getElementById('connect-btn');
+  var $forget = document.getElementById('forget-btn');
+  var $status = document.getElementById('status');
+  var $statusText = document.getElementById('status-text');
+  var $corsHint = document.getElementById('cors-hint');
+  var $originEcho = document.getElementById('origin-echo');
+  var $chat = document.getElementById('chat');
+  var $composer = document.getElementById('composer');
+  var $send = document.getElementById('send-btn');
+  var $cancelRow = document.getElementById('cancel-row');
+  var $cancel = document.getElementById('cancel-btn');
+
+  $serverUrl.value = state.serverUrl;
+  $token.value = state.token;
+  $provider.value = state.provider;
+  $originEcho.textContent = location.origin;
+
+  // ---- Status helpers ---------------------------------------------------
+  function setStatus(kind, text) {
+    $status.className = 'ctl-status ' + (kind || '');
+    $statusText.textContent = text;
+  }
+
+  function showCorsHint(show) {
+    $corsHint.style.display = show ? '' : 'none';
+  }
+
+  // ---- Chat rendering ---------------------------------------------------
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function appendMessage(kind, role, text) {
+    var el = document.createElement('div');
+    el.className = 'msg ' + kind;
+    if (role) {
+      var r = document.createElement('div');
+      r.className = 'role';
+      r.textContent = role;
+      el.appendChild(r);
+    }
+    var body = document.createElement('div');
+    body.textContent = text || '';
+    el.appendChild(body);
+    $chat.appendChild(el);
+    $chat.scrollTop = $chat.scrollHeight;
+    return body;
+  }
+
+  // tool_use input shapes differ across providers: Claude bridge sends a
+  // parsed JSON object; DeepSeek and OpenAI-compat send the raw JSON string
+  // the model returned. Normalize to a pretty-printed string for display.
+  function formatToolInput(input) {
+    if (input == null || input === '') return '';
+    if (typeof input === 'string') {
+      try { return JSON.stringify(JSON.parse(input), null, 2); }
+      catch (_) { return input; }
+    }
+    try { return JSON.stringify(input, null, 2); }
+    catch (_) { return String(input); }
+  }
+
+  function appendToolUse(name, input) {
+    var el = document.createElement('div');
+    el.className = 'msg tool';
+    var head = document.createElement('div');
+    head.innerHTML = '<span class="tool-name">⚙ ' + escapeHtml(name) + '</span>';
+    el.appendChild(head);
+    var formatted = formatToolInput(input);
+    if (formatted) {
+      var pre = document.createElement('div');
+      pre.style.marginTop = '4px';
+      pre.style.opacity = '0.7';
+      pre.textContent = formatted;
+      el.appendChild(pre);
+    }
+    $chat.appendChild(el);
+    $chat.scrollTop = $chat.scrollHeight;
+  }
+
+  // tool_result is Claude-only (DeepSeek and OpenAI-compat run tools in
+  // process and feed the result back to the model without surfacing it as
+  // a separate SSE event). Render with isError styling so failed shell
+  // calls and the like read clearly.
+  function appendToolResult(content, isError) {
+    var el = document.createElement('div');
+    el.className = 'msg tool';
+    if (isError) el.style.borderColor = 'rgba(248,113,113,0.4)';
+    var head = document.createElement('div');
+    head.innerHTML = '<span class="tool-name" style="color:' + (isError ? '#fca5a5' : '#86efac') + '">' +
+      (isError ? '✗ tool error' : '↳ tool result') + '</span>';
+    el.appendChild(head);
+    var body = document.createElement('div');
+    body.style.marginTop = '4px';
+    body.style.opacity = '0.85';
+    body.style.whiteSpace = 'pre-wrap';
+    body.style.wordWrap = 'break-word';
+    body.textContent = String(content || '');
+    el.appendChild(body);
+    $chat.appendChild(el);
+    $chat.scrollTop = $chat.scrollHeight;
+  }
+
+  // ---- Connection check -------------------------------------------------
+  // /v1/health is richer than /v1/ping (it reports activeQueries +
+  // allowedWebOrigins). Use it for the connect handshake; if the user
+  // happens to be running an older serve that lacks /v1/health, fall back
+  // to /v1/ping so they're not stranded on a 404.
+  function ping() {
+    setStatus('pending', 'Connecting…');
+    showCorsHint(false);
+    var url = state.serverUrl.replace(/\/+$/, '') + '/v1/health';
+    return fetch(url, {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + state.token },
+      mode: 'cors',
+    }).then(function (r) {
+      if (r.status === 401) {
+        setStatus('err', 'Token rejected. Check ~/.lingcode/server.token.');
+        return false;
+      }
+      if (r.status === 404) {
+        // Older serve build — fall back to /v1/ping with simpler status text.
+        return fetch(state.serverUrl.replace(/\/+$/, '') + '/v1/ping', {
+          method: 'GET',
+          headers: { 'Authorization': 'Bearer ' + state.token },
+          mode: 'cors',
+        }).then(function (r2) {
+          if (!r2.ok) {
+            setStatus('err', 'Server returned ' + r2.status + '.');
+            return false;
+          }
+          return r2.json().then(function (j) {
+            var v = (j && j.version) ? ' (v' + j.version + ')' : '';
+            setStatus('ok', 'Connected' + v + ' — older serve, /v1/health unavailable.');
+            return true;
+          });
+        });
+      }
+      if (!r.ok) {
+        setStatus('err', 'Server returned ' + r.status + '.');
+        return false;
+      }
+      return r.json().then(function (j) {
+        var v = (j && j.version) ? 'v' + j.version : '';
+        var active = (typeof j.activeQueries === 'number') ? j.activeQueries : null;
+        var max = (typeof j.maxConcurrentQueries === 'number') ? j.maxConcurrentQueries : null;
+        var parts = [];
+        if (v) parts.push(v);
+        if (active !== null) parts.push(active + (active === 1 ? ' query' : ' queries') + (max ? '/' + max : '') + ' active');
+        // If our origin isn't in the allow-list, surface it — common foot-gun.
+        var origins = j.allowedWebOrigins || [];
+        if (origins.length && origins.indexOf(location.origin) === -1) {
+          setStatus('err', 'Connected ' + parts.join(' · ') + ', but ' + location.origin + ' is not in --web-origin.');
+          showCorsHint(true);
+          return true;
+        }
+        setStatus('ok', 'Connected · ' + parts.join(' · '));
+        return true;
+      });
+    }).catch(function (err) {
+      // Most "TypeError: Failed to fetch" cases are CORS or no listener.
+      setStatus('err', 'Cannot reach ' + state.serverUrl + '. Is serve running?');
+      showCorsHint(true);
+      return false;
+    });
+  }
+
+  $connect.addEventListener('click', function () {
+    state.serverUrl = $serverUrl.value.trim() || defaults.serverUrl;
+    state.token = $token.value.trim();
+    state.provider = $provider.value;
+    saveState();
+    if (!state.token) {
+      setStatus('err', 'Paste your token first.');
+      return;
+    }
+    ping().then(function (ok) {
+      $composer.disabled = !ok;
+      $send.disabled = !ok;
+      if (ok) $composer.focus();
+    });
+  });
+
+  $forget.addEventListener('click', function () {
+    state.token = '';
+    $token.value = '';
+    saveState();
+    setStatus('', 'Token forgotten.');
+    $composer.disabled = true;
+    $send.disabled = true;
+  });
+
+  // ---- SSE consumption --------------------------------------------------
+  // Browsers' EventSource doesn't support custom Authorization headers or
+  // POST bodies, so we drive the stream by hand: fetch + read the body as
+  // a ReadableStream, accumulate bytes, split on the SSE record delimiter
+  // (\n\n), and parse each record into {event, data}.
+  function consumeSSE(response, onEvent) {
+    var reader = response.body.getReader();
+    var decoder = new TextDecoder('utf-8');
+    var buffer = '';
+
+    function pump() {
+      return reader.read().then(function (chunk) {
+        if (chunk.done) {
+          if (buffer.trim()) emitFrame(buffer);
+          return;
+        }
+        buffer += decoder.decode(chunk.value, { stream: true });
+        var idx;
+        while ((idx = buffer.indexOf('\n\n')) !== -1) {
+          var record = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 2);
+          emitFrame(record);
+        }
+        return pump();
+      });
+    }
+
+    function emitFrame(record) {
+      // Heartbeats are ": keepalive" — ignore.
+      if (!record || record.charAt(0) === ':') return;
+      var event = 'message';
+      var data = '';
+      var lines = record.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (line.indexOf('event:') === 0) event = line.slice(6).trim();
+        else if (line.indexOf('data:') === 0) data += line.slice(5).trim();
+      }
+      var payload = {};
+      try { payload = JSON.parse(data); } catch (_) {}
+      onEvent(event, payload);
+    }
+
+    return pump();
+  }
+
+  function send(prompt) {
+    if (!prompt.trim()) return;
+    if (currentAbort) return; // Don't allow overlapping queries in v1.
+
+    appendMessage('user', 'you', prompt);
+    liveAssistantEl = null;
+    liveThinkingEl = null;
+
+    currentAbort = new AbortController();
+    setStatus('pending', 'Thinking…');
+    $send.disabled = true;
+    $cancelRow.classList.add('active');
+    $composer.value = '';
+    autosize($composer);
+
+    var url = state.serverUrl.replace(/\/+$/, '') + '/v1/agent/ask';
+    fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      signal: currentAbort.signal,
+      headers: {
+        'Authorization': 'Bearer ' + state.token,
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        provider: state.provider,
+      }),
+    }).then(function (r) {
+      if (!r.ok) {
+        return r.text().then(function (body) {
+          appendMessage('error', 'error', 'HTTP ' + r.status + ': ' + body);
+          finishQuery();
+        });
+      }
+      return consumeSSE(r, onSSE).then(finishQuery);
+    }).catch(function (err) {
+      if (err && err.name === 'AbortError') return;
+      appendMessage('error', 'error', String(err && err.message ? err.message : err));
+      finishQuery();
+    });
+  }
+
+  function onSSE(event, payload) {
+    switch (event) {
+      case 'query_started':
+        currentQueryId = payload.queryId || null;
+        break;
+      case 'assistant_text':
+        if (!liveAssistantEl) liveAssistantEl = appendMessage('assistant', 'agent', '');
+        liveAssistantEl.textContent += (payload.text || '');
+        $chat.scrollTop = $chat.scrollHeight;
+        break;
+      case 'thinking':
+        if (!liveThinkingEl) liveThinkingEl = appendMessage('thinking', null, '');
+        liveThinkingEl.textContent += (payload.text || '');
+        $chat.scrollTop = $chat.scrollHeight;
+        break;
+      case 'tool_use':
+        liveAssistantEl = null; // next assistant_text starts a new bubble
+        liveThinkingEl = null;
+        appendToolUse(payload.name || 'tool', payload.input);
+        break;
+      case 'tool_result':
+        liveAssistantEl = null;
+        liveThinkingEl = null;
+        appendToolResult(payload.content, !!payload.isError);
+        break;
+      case 'permission_request':
+        showPermissionModal(payload);
+        break;
+      case 'permission_resolved':
+        // Bridge confirmed our decision; nothing more to render. The chat
+        // already showed the user the modal outcome.
+        break;
+      case 'token_usage':
+        // Could surface in the status bar later.
+        break;
+      case 'query_finished':
+        setStatus('ok', 'Done.');
+        break;
+      case 'query_cancelled':
+        setStatus('ok', 'Cancelled.');
+        break;
+      case 'query_failed':
+      case 'error':
+        appendMessage('error', 'error', payload.message || 'unknown error');
+        break;
+      default:
+        // Unknown event — surface for debugging during Day 4 parity work.
+        console.log('[control] unhandled SSE event', event, payload);
+    }
+  }
+
+  // ---- Permission modal -------------------------------------------------
+  // Built lazily on first request and re-used. The Claude bridge is the
+  // only loop that emits permission_request today (DeepSeek/OpenAI-compat
+  // do tool dispatch in-process without a permission round-trip), so this
+  // path only fires for `provider: claude`.
+  function respondPermission(requestId, behavior, message) {
+    if (!requestId) return Promise.resolve();
+    var url = state.serverUrl.replace(/\/+$/, '') + '/v1/agent/permission/' + encodeURIComponent(requestId);
+    var body = { behavior: behavior };
+    if (message) body.message = message;
+    return fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Authorization': 'Bearer ' + state.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).catch(function () { /* best effort */ });
+  }
+
+  function showPermissionModal(payload) {
+    var backdrop = document.createElement('div');
+    backdrop.className = 'perm-backdrop';
+    var card = document.createElement('div');
+    card.className = 'perm-card';
+
+    var title = payload.title || ('Run ' + (payload.toolName || 'tool') + '?');
+    var desc = payload.description || '';
+    var inputJSON = '';
+    if (payload.input != null && payload.input !== '') {
+      try { inputJSON = JSON.stringify(JSON.parse(payload.input), null, 2); }
+      catch (_) { inputJSON = String(payload.input); }
+    }
+
+    var html =
+      '<h3>' + escapeHtml(title) + '</h3>' +
+      '<div class="perm-tool">' + escapeHtml(payload.toolName || '') + '</div>';
+    if (desc) html += '<p style="color:var(--text-muted);font-size:0.85rem;margin:8px 0 0">' + escapeHtml(desc) + '</p>';
+    if (payload.blockedPath) html += '<p style="color:#fbbf24;font-size:0.8rem;margin:8px 0 0">Blocked path: <code>' + escapeHtml(payload.blockedPath) + '</code></p>';
+    if (inputJSON) html += '<pre>' + escapeHtml(inputJSON) + '</pre>';
+    html += '<div class="perm-actions"><button type="button" class="deny">Deny</button><button type="button" class="allow">Allow</button></div>';
+    card.innerHTML = html;
+    backdrop.appendChild(card);
+    document.body.appendChild(backdrop);
+
+    function close(decision) {
+      backdrop.remove();
+      appendMessage(
+        decision === 'allow' ? 'tool' : 'error',
+        'permission',
+        (decision === 'allow' ? '✓ Allowed ' : '✗ Denied ') + (payload.toolName || 'tool')
+      );
+      respondPermission(payload.requestId, decision, decision === 'deny' ? 'denied by user' : undefined);
+    }
+
+    card.querySelector('.allow').addEventListener('click', function () { close('allow'); });
+    card.querySelector('.deny').addEventListener('click', function () { close('deny'); });
+    // Click outside the card = deny (safer default).
+    backdrop.addEventListener('click', function (e) { if (e.target === backdrop) close('deny'); });
+  }
+
+  function finishQuery() {
+    currentAbort = null;
+    currentQueryId = null;
+    liveAssistantEl = null;
+    liveThinkingEl = null;
+    $send.disabled = false;
+    $cancelRow.classList.remove('active');
+  }
+
+  // Server-side cancel hits /v1/agent/cancel/{queryId}. Aborting the local
+  // fetch alone wouldn't stop the agent — it'd keep churning through tool
+  // calls until natural completion.
+  $cancel.addEventListener('click', function () {
+    if (!currentQueryId) {
+      // Stream hadn't reported a queryId yet (e.g., crashed before
+      // query_started). Just abort locally.
+      if (currentAbort) currentAbort.abort();
+      finishQuery();
+      setStatus('ok', 'Cancelled.');
+      return;
+    }
+    var url = state.serverUrl.replace(/\/+$/, '') + '/v1/agent/cancel/' + encodeURIComponent(currentQueryId);
+    fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Authorization': 'Bearer ' + state.token },
+    }).catch(function () { /* server may have already finished */ });
+    // Server emits query_cancelled and closes the stream; finishQuery runs
+    // in the SSE consumer's then().
+  });
+
+  // ---- Composer ---------------------------------------------------------
+  function autosize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  }
+  $composer.addEventListener('input', function () { autosize($composer); });
+  $composer.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      if (!$send.disabled) send($composer.value);
+    }
+  });
+  $send.addEventListener('click', function () { send($composer.value); });
+
+  // Auto-ping if a token already exists from the URL fragment or storage.
+  if (state.token) {
+    ping().then(function (ok) {
+      $composer.disabled = !ok;
+      $send.disabled = !ok;
+    });
+  }
+})();
+  </script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

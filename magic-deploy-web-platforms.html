@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magic Deploy Web Platforms: Vercel, Netlify, Railway, Fly.io, Heroku | LingCode</title>
+  <meta name="description" content="Install the CLI, authenticate, and deploy to Vercel, Netlify, Railway, Fly.io, or Heroku directly from LingCode. Token links, config files, and common errors covered.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/magic-deploy-web-platforms.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/magic-deploy-web-platforms.html">
+  <meta property="og:title" content="Magic Deploy Web Platforms: Vercel, Netlify, Railway, Fly.io, Heroku">
+  <meta property="og:description" content="CLI install, auth (login or token), config files, and common errors for each web deploy target.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Magic Deploy Web Platforms Setup Guide">
+  <meta name="twitter:description" content="Deploy to Vercel, Netlify, Railway, Fly.io, or Heroku from LingCode — setup in minutes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .blog-content { max-width: 800px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 12px 0 20px; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .field-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .field-table th, .field-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .field-table th { color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field-table td { color: var(--text); }
+    .field-table td:first-child { font-family: ui-monospace, monospace; color: var(--signal); white-space: nowrap; }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .callout p { margin: 0; color: var(--text); }
+    .callout strong { color: var(--signal); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+    .platform-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin: 20px 0; }
+    .platform-card h3:first-child { margin-top: 0; }
+    .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 20px 0 32px; }
+    .toc ul { margin: 0; padding-left: 20px; }
+    .toc li { margin-bottom: 4px; }
+    .sibling-nav { max-width: 800px; margin: 0 auto; padding: 20px 32px 0; }
+    .sibling-nav-inner { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .sibling-nav-label { font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px; }
+    .sibling-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 0.8125rem; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+    .sibling-pill:hover { color: var(--text); border-color: var(--signal); text-decoration: none; }
+    .sibling-pill.current { background: var(--signal); color: #fff; border-color: var(--signal); cursor: default; }
+    .sibling-pill.current:hover { color: #fff; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <nav class="sibling-nav" aria-label="Deploy guide siblings">
+      <div class="sibling-nav-inner">
+        <span class="sibling-nav-label">Deploy guides:</span>
+        <a href="/magic-deploy-setup.html" class="sibling-pill">App Store</a>
+        <a href="/app-store-connect-fields.html" class="sibling-pill">ASC fields</a>
+        <a href="/google-play-deploy-setup.html" class="sibling-pill">Google Play</a>
+        <a href="/magic-deploy-web-platforms.html" class="sibling-pill current" aria-current="page">Web</a>
+        <a href="/host-your-own-server.html" class="sibling-pill">Provision</a>
+        <a href="/magic-deploy-scripts.html" class="sibling-pill">Scripts</a>
+      </div>
+    </nav>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Guide</p>
+        <h1>Deploying to Vercel, Netlify, Railway, Fly.io &amp; Heroku</h1>
+        <p>How to get each platform's CLI installed and authenticated so LingCode can deploy directly. Links, token pages, and common errors for each.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2>What LingCode does — and what you set up</h2>
+      <p>LingCode doesn't re-implement each platform's API. It invokes the platform's official CLI (<code>vercel</code>, <code>netlify</code>, <code>railway</code>, <code>fly</code>, or <code>git push heroku</code>) and streams the output into the progress log. That means:</p>
+      <ul>
+        <li><strong>LingCode checks</strong> that the CLI is installed. If not, the UI shows <em>"{platform} CLI not found. Install with: ..."</em> and you can't deploy until you install it.</li>
+        <li><strong>You set up</strong> auth — either by running the platform's <code>login</code> command once, or by pasting an API token into LingCode's AutoConfig flow. LingCode passes the token as an env var to the CLI.</li>
+      </ul>
+
+      <div class="callout">
+        <p><strong>Two paths to auth for every platform below.</strong> Either (a) run the platform's <code>login</code> command in Terminal once and let the CLI remember you, or (b) generate a token from the platform's dashboard and paste it into LingCode's Magic Deploy AutoConfig pane. Option (b) is better for CI-like setups and when you're on a new machine; option (a) is friction-free for your main dev Mac.</p>
+      </div>
+
+      <div class="callout">
+        <p><strong>Why does each platform have its own CLI?</strong> Deploying a web app isn't one problem — it's five different ones stitched together per platform: build detection (is this Next.js or a Rails app?), build execution, artifact packaging, upload, and runtime configuration. Each vendor has their own opinions on every step, so a universal "deploy to anywhere" tool would have to be the intersection of all of them — which is nothing useful. Each platform's CLI encodes that vendor's specific pipeline. LingCode doesn't replace those CLIs; it just invokes them with the right env var for auth and streams the output into one panel.</p>
+      </div>
+
+      <div class="toc">
+        <ul>
+          <li><a href="#vercel">Vercel</a></li>
+          <li><a href="#netlify">Netlify</a></li>
+          <li><a href="#railway">Railway</a></li>
+          <li><a href="#fly">Fly.io</a></li>
+          <li><a href="#heroku">Heroku</a></li>
+          <li><a href="#recap">Recap: which env var goes to which platform</a></li>
+        </ul>
+      </div>
+
+      <h2 id="vercel">Vercel</h2>
+      <div class="platform-card">
+        <h3>1. Install the CLI</h3>
+        <pre><code>npm i -g vercel
+vercel --version   # confirm it works</code></pre>
+
+        <h3>2. Authenticate — pick one</h3>
+        <p><strong>Option A — CLI login (easiest):</strong></p>
+        <pre><code>vercel login</code></pre>
+        <p>Opens your browser, confirms via email, stores credentials in <code>~/.vercel/auth.json</code>. After this, LingCode deploys without any extra config.</p>
+
+        <p><strong>Option B — Paste a token into LingCode:</strong></p>
+        <ol>
+          <li>Go to <a href="https://vercel.com/account/tokens" rel="noopener noreferrer">vercel.com/account/tokens</a>.</li>
+          <li>Click <strong>Create Token</strong>, name it <em>"LingCode"</em>, pick a scope (your team), pick an expiry.</li>
+          <li>Copy the token (it's only shown once).</li>
+          <li>In LingCode Magic Deploy, paste it into the AutoConfig field. LingCode detects it's a Vercel token and sets <code>VERCEL_TOKEN</code> automatically.</li>
+        </ol>
+
+        <h3>3. Optional: <code>vercel.json</code></h3>
+        <p>If your project needs custom build settings or rewrites, add a <code>vercel.json</code> at the project root. If you don't have one, Vercel auto-detects the framework and does the right thing for Next.js, Vite, Astro, SvelteKit, Nuxt, Remix, and dozens of others.</p>
+
+        <h3>4. What LingCode runs</h3>
+        <pre><code>vercel --prod            # if authenticated via CLI login
+VERCEL_TOKEN=xxx vercel --prod   # if you pasted a token</code></pre>
+
+        <h3>5. Common errors</h3>
+        <ul>
+          <li><strong>"Vercel CLI not found"</strong> — you haven't installed it. Run <code>npm i -g vercel</code>.</li>
+          <li><strong>"Not authenticated. Please log in with `vercel login`"</strong> — neither option A nor B is set up. Pick one.</li>
+          <li><strong>"Project not found"</strong> — Vercel doesn't have a project linked to this folder. Run <code>vercel link</code> once in Terminal, pick (or create) a project, and retry.</li>
+          <li><strong>"Token does not have access to this scope"</strong> — the token's team scope doesn't include the project's team. Regenerate the token at the right scope.</li>
+        </ul>
+      </div>
+
+      <h2 id="netlify">Netlify</h2>
+      <div class="platform-card">
+        <h3>1. Install the CLI</h3>
+        <pre><code>npm i -g netlify-cli
+netlify --version</code></pre>
+
+        <h3>2. Authenticate — pick one</h3>
+        <p><strong>Option A — CLI login:</strong></p>
+        <pre><code>netlify login</code></pre>
+        <p>Stores auth in <code>~/.netlify/state.json</code>.</p>
+
+        <p><strong>Option B — Paste a personal access token:</strong></p>
+        <ol>
+          <li>Go to <a href="https://app.netlify.com/user/applications#personal-access-tokens" rel="noopener noreferrer">app.netlify.com/user/applications#personal-access-tokens</a>.</li>
+          <li>Click <strong>New access token</strong>, name it <em>"LingCode"</em>.</li>
+          <li>Copy the token, paste into LingCode AutoConfig. LingCode sets <code>NETLIFY_AUTH_TOKEN</code>.</li>
+          <li>You also need a <strong>site ID</strong>. In Netlify, open your site → <strong>Site settings</strong> → copy the <em>API ID</em> (a UUID). Paste that into AutoConfig too — LingCode sets <code>NETLIFY_SITE_ID</code>.</li>
+        </ol>
+
+        <h3>3. Optional: <code>netlify.toml</code></h3>
+        <p>Lets you define build command, publish dir, redirects, headers. Example:</p>
+        <pre><code>[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200</code></pre>
+
+        <h3>4. What LingCode runs</h3>
+        <pre><code>netlify deploy --prod --dir=dist
+NETLIFY_AUTH_TOKEN=xxx NETLIFY_SITE_ID=yyy netlify deploy --prod --dir=dist</code></pre>
+        <p><code>dist</code> is the default output dir; override in <code>netlify.toml</code> if yours is different (e.g. <code>build/</code> for CRA, <code>out/</code> for Next static export).</p>
+
+        <h3>5. Common errors</h3>
+        <ul>
+          <li><strong>"Error: You are not authenticated"</strong> — run <code>netlify login</code> or paste the token.</li>
+          <li><strong>"Error: No site id found"</strong> — either run <code>netlify link</code> to bind the folder to a site, or paste the API ID as above.</li>
+          <li><strong>"Deploy path not found: dist"</strong> — your build didn't produce <code>dist/</code>. Check your framework's output dir and set it in <code>netlify.toml</code>.</li>
+        </ul>
+      </div>
+
+      <h2 id="railway">Railway</h2>
+      <div class="platform-card">
+        <h3>1. Install the CLI</h3>
+        <pre><code>npm i -g @railway/cli
+railway --version</code></pre>
+
+        <h3>2. Authenticate — pick one</h3>
+        <p><strong>Option A — CLI login:</strong></p>
+        <pre><code>railway login</code></pre>
+
+        <p><strong>Option B — Paste a token:</strong></p>
+        <ol>
+          <li>Go to <a href="https://railway.app/account/tokens" rel="noopener noreferrer">railway.app/account/tokens</a>.</li>
+          <li>Click <strong>Create Token</strong>, name it <em>"LingCode"</em>.</li>
+          <li>Paste into LingCode AutoConfig. LingCode detects the JWT format and sets <code>RAILWAY_TOKEN</code>.</li>
+        </ol>
+
+        <h3>3. Link the project</h3>
+        <p>Railway needs the folder linked to a project before <code>railway up</code> works. In Terminal, <strong>once per project</strong>:</p>
+        <pre><code>railway link</code></pre>
+        <p>Pick your project from the list. Railway stores the link in <code>.railway/</code> — don't delete it.</p>
+
+        <h3>4. Optional: <code>railway.json</code></h3>
+        <p>Only needed for custom build/start commands. Most Node/Python/Rails projects work with Railway's defaults.</p>
+
+        <h3>5. What LingCode runs</h3>
+        <pre><code>railway up
+RAILWAY_TOKEN=xxx railway up</code></pre>
+
+        <h3>6. Common errors</h3>
+        <ul>
+          <li><strong>"Project Token not found"</strong> — neither <code>railway login</code> nor the token has been set. Do one.</li>
+          <li><strong>"No linked project found"</strong> — run <code>railway link</code> once.</li>
+          <li><strong>"Environment variable missing"</strong> — set required env vars in Railway's dashboard (Project → Variables), not locally. <code>railway up</code> uses the remote env.</li>
+        </ul>
+      </div>
+
+      <h2 id="fly">Fly.io</h2>
+      <div class="platform-card">
+        <h3>1. Install <code>flyctl</code></h3>
+        <pre><code>brew install flyctl
+fly version</code></pre>
+
+        <h3>2. Authenticate — pick one</h3>
+        <p><strong>Option A — CLI login:</strong></p>
+        <pre><code>fly auth login</code></pre>
+
+        <p><strong>Option B — Paste a token:</strong></p>
+        <ol>
+          <li>Go to <a href="https://fly.io/user/personal_access_tokens" rel="noopener noreferrer">fly.io/user/personal_access_tokens</a>.</li>
+          <li>Click <strong>Create access token</strong>, name it <em>"LingCode"</em>, pick an expiry and org scope.</li>
+          <li>Copy it (starts with <code>fo1_</code> or <code>fo2_</code>). Paste into LingCode AutoConfig — sets <code>FLY_API_TOKEN</code>.</li>
+        </ol>
+        <p>Tip: you can also grab a token from the CLI with <code>fly auth token</code>.</p>
+
+        <h3>3. Required: <code>fly.toml</code></h3>
+        <p>Unlike the others, Fly <strong>requires</strong> a <code>fly.toml</code> in the project root — it defines the app name, primary region, VM size, build strategy, and ports. Generate one the first time:</p>
+        <pre><code>fly launch --no-deploy</code></pre>
+        <p>This asks a few questions, creates the app in your Fly org, writes <code>fly.toml</code>, and stops without deploying. After this LingCode can deploy.</p>
+
+        <h3>4. What LingCode runs</h3>
+        <pre><code>fly deploy
+FLY_API_TOKEN=xxx fly deploy</code></pre>
+
+        <h3>5. Common errors</h3>
+        <ul>
+          <li><strong>"Could not find App ..."</strong> — <code>fly.toml</code>'s <code>app</code> name doesn't match an app in your Fly org. Either edit <code>fly.toml</code> or run <code>fly launch</code> fresh.</li>
+          <li><strong>"We couldn't find a Dockerfile nor detect a buildpack"</strong> — Fly doesn't know how to build your project. Add a <code>Dockerfile</code>, or re-run <code>fly launch</code> and pick a supported buildpack.</li>
+          <li><strong>"unauthorized"</strong> — token expired or revoked. Regenerate at the token page.</li>
+          <li><strong>"Machine in unrecoverable state"</strong> — usually a bad previous deploy. Run <code>fly machine list</code> and <code>fly machine destroy &lt;id&gt;</code> to clean up, then retry.</li>
+        </ul>
+      </div>
+
+      <h2 id="heroku">Heroku</h2>
+      <div class="platform-card">
+        <h3>1. Install the CLI</h3>
+        <pre><code>brew tap heroku/brew && brew install heroku
+heroku --version</code></pre>
+
+        <h3>2. Authenticate — pick one</h3>
+        <p><strong>Option A — CLI login:</strong></p>
+        <pre><code>heroku login</code></pre>
+        <p>Opens a browser for SSO / email confirm.</p>
+
+        <p><strong>Option B — Paste the API key:</strong></p>
+        <ol>
+          <li>Go to <a href="https://dashboard.heroku.com/account" rel="noopener noreferrer">dashboard.heroku.com/account</a>.</li>
+          <li>Scroll to <strong>API Key</strong>, click <strong>Reveal</strong>, copy it.</li>
+          <li>Paste into LingCode AutoConfig — sets <code>HEROKU_API_KEY</code>.</li>
+        </ol>
+        <p>Alternative: <code>heroku auth:token</code> in Terminal prints the same key.</p>
+
+        <h3>3. Add Heroku as a git remote (critical!)</h3>
+        <p>Heroku is the odd one out — LingCode deploys via <code>git push heroku main:main</code>, so Heroku must be a git remote. Once per project:</p>
+        <pre><code>heroku create my-app-name        # creates app + adds remote
+# or, if the app already exists:
+heroku git:remote -a my-app-name</code></pre>
+
+        <h3>4. Optional: <code>Procfile</code></h3>
+        <p>Tells Heroku how to start your app. Node projects usually auto-detect from <code>package.json</code>'s <code>start</code> script. For anything non-standard:</p>
+        <pre><code>web: node dist/server.js
+worker: node dist/worker.js</code></pre>
+
+        <h3>5. What LingCode runs</h3>
+        <pre><code>git push heroku main:main
+HEROKU_API_KEY=xxx git push heroku main:main</code></pre>
+
+        <h3>6. Common errors</h3>
+        <ul>
+          <li><strong>"fatal: 'heroku' does not appear to be a git repository"</strong> — you haven't added the remote. Run <code>heroku git:remote -a &lt;app&gt;</code>.</li>
+          <li><strong>"! Your account has no verified credit card"</strong> — Heroku requires a verified card even for free-tier apps. Add one at <a href="https://dashboard.heroku.com/account/billing" rel="noopener noreferrer">dashboard.heroku.com/account/billing</a>.</li>
+          <li><strong>"App not found"</strong> — the app name in the git remote doesn't exist or belongs to another account.</li>
+          <li><strong>"Push rejected, failed to compile"</strong> — your buildpack failed. Scroll up in the log for the actual error. Usually a missing dependency or mismatched Node/Python version in your manifest.</li>
+          <li><strong>Uncommitted changes</strong> — Heroku only sees what's committed. Commit your latest changes before deploying from LingCode.</li>
+        </ul>
+      </div>
+
+      <h2 id="recap">Recap: env vars LingCode sets</h2>
+      <table class="field-table">
+        <thead><tr><th>Platform</th><th>Env var</th><th>Token page</th></tr></thead>
+        <tbody>
+          <tr><td>Vercel</td><td><code>VERCEL_TOKEN</code></td><td><a href="https://vercel.com/account/tokens" rel="noopener noreferrer">vercel.com/account/tokens</a></td></tr>
+          <tr><td>Netlify</td><td><code>NETLIFY_AUTH_TOKEN</code> + <code>NETLIFY_SITE_ID</code></td><td><a href="https://app.netlify.com/user/applications#personal-access-tokens" rel="noopener noreferrer">app.netlify.com/.../personal-access-tokens</a></td></tr>
+          <tr><td>Railway</td><td><code>RAILWAY_TOKEN</code></td><td><a href="https://railway.app/account/tokens" rel="noopener noreferrer">railway.app/account/tokens</a></td></tr>
+          <tr><td>Fly.io</td><td><code>FLY_API_TOKEN</code></td><td><a href="https://fly.io/user/personal_access_tokens" rel="noopener noreferrer">fly.io/user/personal_access_tokens</a></td></tr>
+          <tr><td>Heroku</td><td><code>HEROKU_API_KEY</code></td><td><a href="https://dashboard.heroku.com/account" rel="noopener noreferrer">dashboard.heroku.com/account</a></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p><strong>Security:</strong> these tokens are the equivalent of your password for each platform. LingCode stores them in UserDefaults and only passes them as env-var prefixes to the platform CLI at deploy time — they never leave your Mac except to the platform itself. Revoke any token from its dashboard if it leaks.</p>
+      </div>
+
+      <h2>Further reading</h2>
+      <p>Each platform's official CLI / API reference — bookmark whichever you're using:</p>
+      <ul>
+        <li><a href="/glossary.html">LingCode deploy glossary</a> — terms like <a href="/glossary.html#jwt">JWT</a>, <a href="/glossary.html#oauth">OAuth 2.0</a>, and more.</li>
+        <li><a href="https://vercel.com/docs/cli" rel="noopener noreferrer">Vercel CLI</a> · <a href="https://vercel.com/docs/deployments/overview" rel="noopener noreferrer">Vercel deployment docs</a></li>
+        <li><a href="https://docs.netlify.com/cli/get-started/" rel="noopener noreferrer">Netlify CLI</a> · <a href="https://docs.netlify.com/configure-builds/file-based-configuration/" rel="noopener noreferrer">netlify.toml reference</a></li>
+        <li><a href="https://docs.railway.com/guides/cli" rel="noopener noreferrer">Railway CLI</a> · <a href="https://docs.railway.com/reference/config-as-code" rel="noopener noreferrer">railway.json reference</a></li>
+        <li><a href="https://fly.io/docs/flyctl/" rel="noopener noreferrer">flyctl reference</a> · <a href="https://fly.io/docs/reference/configuration/" rel="noopener noreferrer">fly.toml reference</a></li>
+        <li><a href="https://devcenter.heroku.com/articles/heroku-cli" rel="noopener noreferrer">Heroku CLI</a> · <a href="https://devcenter.heroku.com/articles/git" rel="noopener noreferrer">Heroku Git deploy</a></li>
+      </ul>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">Shipping to a store or your own server?</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">See the <a href="/magic-deploy-setup.html">App Store Connect guide</a> (iOS + macOS), the <a href="/google-play-deploy-setup.html">Google Play guide</a>, or the <a href="/magic-deploy-scripts.html">Before-launch &amp; After-deploy script cookbook</a>.</p>
+        <a href="/">Download LingCode for Mac</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

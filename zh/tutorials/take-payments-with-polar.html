@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 Polar（代商销售模式）接收付款 — LingCode 教程</title>
+  <meta name="description" content="Polar 替你处理增值税、消费税、商品与服务税及争议退款，让你专注于产品。适合不想在 50 个税务管辖区注册的独立 SaaS 创业者。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/take-payments-with-polar.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/take-payments-with-polar.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/take-payments-with-polar.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/take-payments-with-polar.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Polar（代商销售模式）接收付款",
+  "description": "Polar 替你处理增值税、消费税、商品与服务税及争议退款，而 Stripe 不负责这些。如果你正在独立发布面向全球的 SaaS，又不想在 50 个税务管辖区注册，这是一个值得了解的权衡选择。",
+  "url": "https://lingcode.dev/zh/tutorials/take-payments-with-polar.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/take-payments-with-polar.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "创建产品",
+      "url": "https://lingcode.dev/zh/tutorials/take-payments-with-polar.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "在应用中创建结账流程",
+      "url": "https://lingcode.dev/zh/tutorials/take-payments-with-polar.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "配置 webhook 完成订单履行",
+      "url": "https://lingcode.dev/zh/tutorials/take-payments-with-polar.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "使用 CLI 在本地测试",
+      "url": "https://lingcode.dev/zh/tutorials/take-payments-with-polar.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "在每次请求时校验权益",
+      "url": "https://lingcode.dev/zh/tutorials/take-payments-with-polar.html#step-5"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 Polar 接收付款",
+      "item": "https://lingcode.dev/zh/tutorials/take-payments-with-polar.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/take-payments-with-polar.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>使用 Polar 接收付款</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 Polar（代商销售模式）接收付款</h1>
+      <p class="intro"><a href="https://polar.sh/" target="_blank" rel="noopener">Polar</a> 替你处理增值税、消费税、商品与服务税及争议退款。Stripe 不负责这些。如果你正在独立发布面向全球的 SaaS，又不想在 50 个税务管辖区逐一注册，这是一个值得认真权衡的选择。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么「代商销售模式」很重要</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Stripe</strong> 负责刷卡处理并将钱转给你。你是商户——<em>你</em>需要在加利福尼亚缴纳销售税、在德国缴纳增值税、在印度缴纳商品与服务税，等等。仅欧盟增值税就有 27 个国家的不同税率。</li>
+            <li><strong>Polar（以及 <a href="https://lemonsqueezy.com/" target="_blank" rel="noopener">Lemon Squeezy</a>、<a href="https://paddle.com/" target="_blank" rel="noopener">Paddle</a>）</strong>是代商销售平台——它们以自己的名义将产品卖给你的客户，你再将产品卖给它们。所有税务合规义务由它们承担，你只需收到以自己货币结算的单一汇款。</li>
+            <li><strong>代商模式的成本</strong>——每笔交易约 5–6%，而 Stripe 约为 2.9% + 30¢。多出来的费用相当于购买税务合规服务。对于年收入不足 100 万美元的独立 SaaS，这笔交换非常值得。</li>
+            <li><strong>选择 Polar 的时机</strong>——当你想要最注重开发者体验的代商平台时（开源、GitHub 风格认证、简洁的 API）。如果你更看重界面精致度，选 Lemon Squeezy；如果需要企业级功能，选 Paddle。</li>
+            <li><strong>注册</strong>——前往 <a href="https://polar.sh/login" target="_blank" rel="noopener">polar.sh/login</a>，使用 GitHub 账号登录。审核（KYC）需要 1–3 个工作日。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>创建产品</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>进入控制台，点击 <strong>Products → New product</strong>，选择：</p>
+          <ul>
+            <li><strong>类型</strong>——一次性购买（许可证、终身授权）或订阅制</li>
+            <li><strong>计费周期</strong>——按月、按年，或两者都支持</li>
+            <li><strong>价格</strong>——以美元计价，Polar 在结账时自动换算</li>
+            <li><strong>权益</strong>——Polar 的核心亮点。你可以绑定自动化权益：GitHub 仓库访问、Discord 角色、文件下载、许可证密钥、自定义 webhook。购买成功后自动触发，取消订阅后自动撤销。</li>
+          </ul>
+          <p>保存后，复制 <code>product_id</code>——结账 URL 需要用到它。</p>
+        </div>
+      </div>
+
+      <h2>获取 API 密钥</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>前往 <strong>Settings → API Keys → Create API key</strong>，选择以下权限范围：</p>
+          <ul>
+            <li><code>checkouts:write</code>——用于创建结账会话</li>
+            <li><code>customers:read</code>——用于查询客户状态</li>
+            <li><code>subscriptions:read</code>——用于校验权益</li>
+          </ul>
+          <p>添加到 <code>.env</code>：</p>
+          <pre><code>POLAR_ACCESS_TOKEN=polar_oat_…
+POLAR_WEBHOOK_SECRET=polar_whs_…  # from next step
+POLAR_PRODUCT_ID=prod_…           # from step 1</code></pre>
+          <div class="warn-box">
+            <strong>沙盒环境与生产环境。</strong>Polar 提供沙盒环境 <a href="https://sandbox.polar.sh/" target="_blank" rel="noopener">sandbox.polar.sh</a>，开发阶段请使用它。两个环境的 Token 前缀不同，不要混用。
+          </div>
+        </div>
+      </div>
+
+      <h2>在应用中创建结账流程</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>安装 SDK：</p>
+          <pre><code>npm install @polar-sh/sdk</code></pre>
+          <p>服务端路由——当用户点击「升级」时触发：</p>
+          <pre><code>import { Polar } from "@polar-sh/sdk";
+
+const polar = new Polar({
+  accessToken: process.env.POLAR_ACCESS_TOKEN,
+  server: "production", // or "sandbox"
+});
+
+// POST /api/upgrade
+app.post("/api/upgrade", async (req, res) =&gt; {
+  const checkout = await polar.checkouts.create({
+    products: [process.env.POLAR_PRODUCT_ID],
+    successUrl: "https://yourapp.com/welcome?checkout_id={CHECKOUT_ID}",
+    customerEmail: req.user.email,
+    metadata: { userId: req.user.id },   // critical — see step 5
+  });
+  res.json({ url: checkout.url });
+});</code></pre>
+          <p>客户端重定向到 <code>checkout.url</code>。Polar 负责处理信用卡输入、根据客户所在国家计算税额，以及发送收据邮件。</p>
+          <p>另一种方式：<strong>Polar Checkout Links</strong>——无需调用 API，直接使用类似 <code>polar.sh/checkout/abc</code> 的托管链接，放入按钮即可。非常适合落地页场景。</p>
+        </div>
+      </div>
+
+      <h2>配置 webhook 完成订单履行</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Polar 会在状态变更时向你的服务器发送事件。不要依赖成功页面的跳转来确认付款——用户可能中途关闭标签页，卡扣也可能异步重试。</p>
+          <p>进入 <strong>Settings → Webhooks → Add endpoint</strong>：</p>
+          <ul>
+            <li><strong>URL</strong>——<code>https://yourapp.com/api/webhooks/polar</code></li>
+            <li><strong>事件</strong>——<code>subscription.created</code>、<code>subscription.updated</code>、<code>subscription.canceled</code>、<code>order.created</code>、<code>order.refunded</code></li>
+            <li>将签名密钥填入 <code>POLAR_WEBHOOK_SECRET</code></li>
+          </ul>
+          <p>验证并处理事件：</p>
+          <pre><code>import { validateEvent } from "@polar-sh/sdk/webhooks";
+
+app.post(
+  "/api/webhooks/polar",
+  express.raw({ type: "application/json" }),
+  async (req, res) =&gt; {
+    let event;
+    try {
+      event = validateEvent(
+        req.body,
+        req.headers,
+        process.env.POLAR_WEBHOOK_SECRET,
+      );
+    } catch {
+      return res.status(401).send("bad signature");
+    }
+
+    switch (event.type) {
+      case "subscription.created":
+      case "subscription.updated": {
+        const userId = event.data.metadata.userId;
+        await db.users.update(userId, {
+          plan: event.data.product.name,
+          polarSubscriptionId: event.data.id,
+          subscriptionStatus: event.data.status, // active | past_due | …
+        });
+        break;
+      }
+      case "subscription.canceled": {
+        const userId = event.data.metadata.userId;
+        await db.users.update(userId, { plan: "free" });
+        break;
+      }
+    }
+    res.json({ ok: true });
+  },
+);</code></pre>
+          <p>这与 <a href="/zh/tutorials/set-up-stripe-webhooks.html">Stripe webhook 教程</a>的结构完全一致，适用规则也相同：快速返回 2xx、处理函数保持幂等、在写入数据库前完成签名验证。</p>
+        </div>
+      </div>
+
+      <h2>使用 CLI 在本地测试</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Polar 没有像 Stripe 那样的 webhook 转发 CLI。有两种替代方案：</p>
+          <ul>
+            <li><a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a>——运行 <code>ngrok http 3000</code>，将生成的公网 URL 设置为沙盒 webhook 端点</li>
+            <li><a href="https://docs.svix.com/play" target="_blank" rel="noopener">Svix Play</a>——捕获并重放 webhook，无需反复创建测试订单</li>
+          </ul>
+          <p>使用 Polar 的测试卡号在沙盒中发起购买——与 Stripe 相同（<code>4242 4242 4242 4242</code>）。查看服务器日志，确认 webhook 已带签名到达，并验证数据库已正确更新。</p>
+        </div>
+      </div>
+
+      <h2>在每次请求时校验权益</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>不要在每次请求时都查询 Polar 的 API——速度慢且有频率限制。直接从数据库读取：</p>
+          <pre><code>// middleware
+function requirePlan(...plans) {
+  return (req, res, next) =&gt; {
+    if (!plans.includes(req.user.plan)) {
+      return res.status(402).json({ error: "Upgrade required" });
+    }
+    next();
+  };
+}
+
+app.post("/api/pro-only", requirePlan("pro", "max_pro"), handler);</code></pre>
+          <p>webhook 负责保持数据库与 Polar 同步。Polar 服务器是权威数据源，你的数据库是缓存层。</p>
+        </div>
+      </div>
+
+      <h2>客户门户（管理订阅）</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>不要自己搭建取消或升级界面。Polar 提供托管的<strong>客户门户</strong>。</p>
+          <pre><code>app.post("/api/billing/portal", async (req, res) =&gt; {
+  const session = await polar.customerPortal.sessions.create({
+    customerId: req.user.polarCustomerId,
+  });
+  res.redirect(session.customerPortalUrl);
+});</code></pre>
+          <p>用户可以在此：更换绑定的信用卡、升级或降级套餐、取消订阅、查看历史账单、下载收据（含正确的税务信息）。套餐变更的折算由 Polar 处理。</p>
+        </div>
+      </div>
+
+      <h2>常见问题</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>测试 webhook 未触发</strong>——沙盒端点和生产端点是分开配置的，需要管理<em>两套</em> webhook 端点，不要混淆。</li>
+            <li><strong>metadata 未正常传递</strong>——结账时附带的 <code>metadata</code> 会流转到订单和订阅对象，但需要从 <code>event.data.metadata</code> 读取（而非 <code>event.metadata</code>）。这个拼写错误很容易犯。</li>
+            <li><strong>手续费高于 Stripe</strong>——是的，约 5%。换个角度理解：多出来的 2% 就是你的税务合规团队。仅欧盟增值税注册，每个国家每年就需要约 2000 美元。</li>
+            <li><strong>只支持美元结算</strong>——Polar 通过电汇/ACH 以美元付款。如果需要本地货币结算，Paddle 更灵活（但更贵且偏企业化）。</li>
+            <li><strong>部分地区无法使用</strong>——Polar 无法接受受制裁国家的付款，所有代商平台都一样。如果需要覆盖全球所有地区，可能需要同时接入 Stripe 和某家代商平台。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>不适合使用 Polar 的情况</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>你已有实体公司和税务注册</strong>——如果你有美国 LLC、欧盟增值税注册，并使用了 TaxJar 或 Anrok 等税务软件，用 Stripe 加会计师反而更省钱。</li>
+            <li><strong>ARR 超过 100 万美元且仍在增长</strong>——规模大了之后，代商模式多出的 2% 手续费会累积成一笔不小的数字。到时候应该迁移到 Stripe 加专属税务工具。</li>
+            <li><strong>你销售实体商品</strong>——Polar 只支持数字产品（SaaS、下载内容、许可证）。实体商品请使用 Shopify 或 Stripe。</li>
+            <li><strong>B2B 需要开具发票/采购订单</strong>——Polar 支持这些功能，但在企业级开票方面不如 Paddle 成熟。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>定价实情</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Polar</strong>——每笔交易 4% + 40¢，无月费，无最低金额限制。</li>
+            <li><strong>Lemon Squeezy</strong>——5% + 50¢。2024 年被 <a href="https://stripe.com/" target="_blank" rel="noopener">Stripe</a> 收购，目前仍独立运营，但未来走向不明朗。</li>
+            <li><strong>Paddle</strong>——标准版 5% + 50¢，企业版费率可协商。</li>
+            <li><strong>Stripe + 自行处理税务</strong>——2.9% + 30¢，加上你的时间成本、税务软件（Anrok 约每月 500 美元，TaxJar 入门版约每月 200 美元）、会计师费用，以及各地报税费用。</li>
+          </ul>
+          <p>定价页面：<a href="https://polar.sh/pricing" target="_blank" rel="noopener">polar.sh/pricing</a>、<a href="https://lemonsqueezy.com/pricing" target="_blank" rel="noopener">lemonsqueezy.com/pricing</a>、<a href="https://paddle.com/pricing/" target="_blank" rel="noopener">paddle.com/pricing</a>。</p>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <ul>
+            <li><a href="https://docs.polar.sh/" target="_blank" rel="noopener">Polar 文档首页</a></li>
+            <li><a href="https://docs.polar.sh/api-reference" target="_blank" rel="noopener">API 参考</a></li>
+            <li><a href="https://github.com/polarsource/polar" target="_blank" rel="noopener">Polar 源码（开源，AGPL 协议）</a>——理论上可以自托管，但大多数人不会这么做。</li>
+            <li><a href="https://docs.polar.sh/integrate/sdk" target="_blank" rel="noopener">SDK 列表</a>——支持 TS/JS、Python、Go，以及 Next.js、Astro 等框架适配器。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>权衡框架。</strong>Stripe = 更低手续费，你自行处理合规。代商模式 = 更高手续费，由平台处理合规。独立创业者面向全球发布产品？多花那 2%。有了融资和财务团队？再切换回 Stripe。
+      </div>
+
+      <div class="tutorial-next">
+        <h3>接下来</h3>
+        <div class="tutorial-next-cards">
+          <a href="/zh/tutorials/set-up-stripe-webhooks.html" class="tutorial-next-card">
+            <h4>Stripe webhook（另一种方案）</h4>
+            <p>如果你决定自行处理税务——结构相同，换个服务商。</p>
+          </a>
+          <a href="/zh/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h4>使用 Resend 发送收据</h4>
+            <p>Polar 会发送收据邮件，但你可能还需要定制一封「欢迎升级到 Pro」的邮件。</p>
+          </a>
+          <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h4>使用 Sentry 进行错误追踪</h4>
+            <p>webhook 失败意味着收入损失，要第一时间收到告警。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发环境。专为想要快速发布的创业者和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · 为发布而生</span>
+    <span>原生 · 快速 · 诚实</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

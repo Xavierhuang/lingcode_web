@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I set up Stripe API keys correctly? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Stripe gives you four keys total — publishable and secret, test and live. Knowing which key goes where, and how to handle them safely, prevents the most common Stripe accidents.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-stripe-api-keys.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-stripe-api-keys.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-stripe-api-keys.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/set-up-stripe-api-keys.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Set up Stripe API keys",
+  "description": "Stripe gives you four keys — publishable and secret, test and live. They look similar; they are not interchangeable. The five-minute walk through this tutorial saves you from the two Stripe accidents that hurt: leaking a secret key to the public, and accidentally charging real ca",
+  "url": "https://lingcode.dev/tutorials/set-up-stripe-api-keys.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/set-up-stripe-api-keys.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Set up Stripe API keys"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Set up Stripe API keys",
+      "item": "https://lingcode.dev/tutorials/set-up-stripe-api-keys.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/set-up-stripe-api-keys.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Backend integrations</a>
+      <span>/</span>
+      <span>Set up Stripe API keys</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I set up Stripe API keys correctly?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Stripe gives you four keys: <em>pk_test</em>, <em>sk_test</em>, <em>pk_live</em>, <em>sk_live</em>. Publishable (pk) goes in client code, secret (sk) goes in env vars only — never client code. Use test keys until launch, then swap to live keys in one place (env vars), not in code.</p>
+      <p class="intro">Stripe gives you four keys — publishable and secret, test and live. They look similar; they are not interchangeable. The five-minute walk through this tutorial saves you from the two Stripe accidents that hurt: leaking a secret key to the public, and accidentally charging real cards in test mode.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Every credential system has a unique mental model, and Stripe's is one of the better-designed ones — once you understand it. There are two axes. The first axis is <em>visibility</em>: publishable keys are safe to ship in the frontend (browser, mobile app); secret keys are only safe on your backend server. The second axis is <em>environment</em>: test keys hit a sandbox where charges are fake and no money moves; live keys hit production where every transaction is real money. Multiply the two: <code>pk_test_…</code>, <code>sk_test_…</code>, <code>pk_live_…</code>, <code>sk_live_…</code>.</p>
+      <p>What goes wrong with developers new to Stripe almost always traces back to confusing these. A secret key committed to GitHub is the classic accident — public repos get scraped within minutes of secret keys being pushed. A live secret used by accident during a demo is the other — somebody's card gets a real charge instead of a test one. Both are recoverable (Stripe lets you rotate keys; refunds are quick) but both are avoidable.</p>
+      <p>This tutorial covers fetching the keys, understanding which one to use where, and putting them in your project in a way that doesn't accidentally publish them. The companion tutorial on <a href="/tutorials/set-up-stripe-webhooks.html">webhooks</a> covers what your server actually does with the keys.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The four keys and what each is for</li>
+        <li>Where to find them in the Stripe dashboard</li>
+        <li>How to store them so they don't end up in git</li>
+        <li>The "test mode toggle" and why it matters</li>
+        <li>Rotating a leaked key</li>
+      </ul>
+
+      <h2>Step 1: Create a Stripe account</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Test mode works before you submit business details</h3>
+          <p>Sign up at <code>dashboard.stripe.com</code>. The signup is fast — email, password, basic business info. You'll be in <strong>test mode</strong> immediately, with full API access and test keys. You don't need to submit verification documents to start integrating.</p>
+          <p>Live mode (real charges) requires Stripe to verify your business: business name, address, tax ID, bank account. That can wait until you're ready to accept real payments. For now, test mode is the whole game.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Find the keys</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Developers → API Keys</h3>
+          <p>In the Stripe dashboard, click <strong>Developers</strong> in the top nav (or in the menu), then <strong>API keys</strong>. You'll see two keys for whatever mode you're currently in:</p>
+          <ul>
+            <li><strong>Publishable key</strong> — starts with <code>pk_</code>. Shown in full. Safe to put in frontend code, ship in your JavaScript bundle, expose in URLs. It can identify your Stripe account but can't read sensitive data or move money on its own.</li>
+            <li><strong>Secret key</strong> — starts with <code>sk_</code>. Hidden by default; click "Reveal" to see. NEVER put this anywhere a non-trusted party could see — that includes frontend code, public repos, error logs, JSON responses to clients. Anyone with this key can charge cards, refund payments, create customers, and read every transaction.</li>
+          </ul>
+          <p>The test-mode keys have <code>test</code> in their name (<code>pk_test_…</code>, <code>sk_test_…</code>). The live-mode keys (visible after you switch toggle and complete verification) have <code>live</code> (<code>pk_live_…</code>, <code>sk_live_…</code>).</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Understand the test/live toggle</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>The single most important Stripe UI element</h3>
+          <p>Top-right of every Stripe dashboard page is a toggle that says either <strong>Test mode</strong> (orange) or <strong>Live mode</strong> (default). The toggle controls:</p>
+          <ul>
+            <li>Which keys appear on the API Keys page.</li>
+            <li>Which webhooks fire (test and live have separate endpoint configs).</li>
+            <li>Which customers and charges you see — they're separate stores.</li>
+            <li>What test cards work (test mode accepts <code>4242 4242 4242 4242</code>; live doesn't).</li>
+          </ul>
+          <p>If you're seeing "your customer doesn't exist" errors in development, you're probably in live mode looking at a test customer (or vice versa). Check the toggle first; nine times out of ten that's the bug.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>The orange test-mode banner is your friend.</strong> Stripe shows an orange banner across the top of every page when you're in test mode. Train yourself to glance at it. If you don't see it and you're about to do something destructive (refund, cancel, etc.), you're in live mode — slow down.
+      </div>
+
+      <h2>Step 4: Put the keys in your project</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Environment variables, not source files</h3>
+          <p>Three rules:</p>
+          <ol>
+            <li><strong>Never hard-code secret keys.</strong> Use environment variables. In Node: <code>process.env.STRIPE_SECRET_KEY</code>. In Python: <code>os.environ["STRIPE_SECRET_KEY"]</code>. Same pattern everywhere.</li>
+            <li><strong>Never commit your <code>.env</code> file.</strong> Add <code>.env</code> to <code>.gitignore</code>. Use <code>.env.example</code> with placeholder values to document what env vars exist, and commit that.</li>
+            <li><strong>Use the test key in development, the live key in production.</strong> Your production server needs <code>STRIPE_SECRET_KEY=sk_live_…</code>; your dev box has <code>sk_test_…</code>. Same variable name; different values per environment.</li>
+          </ol>
+          <p>For frontend code, the publishable key can live in the bundle but should still come from an env var at build time (<code>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>, <code>VITE_STRIPE_PUBLISHABLE_KEY</code>, etc.). This is mostly for cleanliness — the value isn't secret, but you don't want to rebuild to swap from test to live.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Confirm it works</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>One curl, one assertion</h3>
+          <p>From your backend (or a terminal where the env var is set):</p>
+          <pre><code>curl https://api.stripe.com/v1/charges \
+  -u "$STRIPE_SECRET_KEY:" \
+  -d amount=2000 \
+  -d currency=usd \
+  -d "source=tok_visa" \
+  -d "description=test charge"</code></pre>
+          <p>If the key works, you get a JSON response with a charge object. If it doesn't, you get a 401 with a clear error message. <code>tok_visa</code> is a Stripe test token; the charge is fake; nothing moves.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: When (not if) you leak a key</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Rotation is fast; assume the worst</h3>
+          <p>Sooner or later you (or a teammate) will leak a secret key — committed to a public repo, pasted in a Slack channel that was screen-shared, in a browser dev-tools dump someone screenshotted. The fix:</p>
+          <ol>
+            <li>In the Stripe dashboard, <strong>Developers → API keys → Roll secret key</strong>. The old key is immediately invalid; Stripe issues a new one.</li>
+            <li>Update <code>STRIPE_SECRET_KEY</code> in every environment that uses the key (production, staging, dev) and redeploy.</li>
+            <li>Audit your account for any suspicious activity in the window between leak and rotation. Stripe's logs make this easy.</li>
+          </ol>
+          <p>Don't be ashamed of having to rotate. Everyone does it eventually. The mature response is "rotate, audit, move on" — not "panic, delete account, start over."</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>GitHub scans for leaked keys.</strong> If you push a secret key to a public repo, Stripe usually invalidates it within minutes — GitHub notifies Stripe, Stripe rolls the key automatically. This is helpful (the worst-case window is short) but it's not a substitute for not leaking. Don't rely on the safety net.
+      </div>
+
+      <h2>Step 7: Restricted keys (production hygiene)</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>The "full secret key" isn't the only option</h3>
+          <p>For production, consider creating <strong>restricted keys</strong> — keys scoped to specific resources (e.g., "can create charges, can't read customers"). In the dashboard: <strong>Developers → API keys → Restricted keys → Create</strong>.</p>
+          <p>If your app only ever creates Checkout Sessions, a restricted key with just that permission is safer than the full secret key. The fallout from leaking is bounded by what the key can do.</p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-stripe-webhooks.html" class="tutorial-next-card">
+            <h3>Set up Stripe webhooks</h3>
+            <p>The companion: how Stripe notifies your server about events</p>
+          </a>
+          <a href="/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h3>Send transactional email with Resend</h3>
+            <p>Send the receipt after the Stripe charge succeeds</p>
+          </a>
+          <a href="/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-next-card">
+            <h3>Buy a server from DigitalOcean</h3>
+            <p>If you don't have somewhere to put the Stripe keys yet</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

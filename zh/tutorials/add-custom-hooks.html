@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何在 LingCode 中添加自定义钩子（PreToolUse、UserPromptSubmit）？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="钩子让你在 Agent 动作前后执行 shell 命令，可阻止危险工具、记录每条提示词、在提交前强制运行 lint。这是真正的策略执行，而非口头建议。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/add-custom-hooks.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/add-custom-hooks.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/add-custom-hooks.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/add-custom-hooks.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "添加自定义钩子",
+  "description": "钩子是 LingCode 在 Agent 生命周期特定时刻执行的 shell 命令——工具调用之前、提交提示词之后、会话结束时。钩子负责执行策略：不是写在 CLAUDE.md 里的"请不要做 X"，而是真正说"不"的代码。",
+  "url": "https://lingcode.dev/zh/tutorials/add-custom-hooks.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/add-custom-hooks.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "添加自定义钩子"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "添加自定义钩子",
+      "item": "https://lingcode.dev/zh/tutorials/add-custom-hooks.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/add-custom-hooks.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>添加自定义钩子</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何在 LingCode 中添加自定义钩子？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>编辑 <code>~/.claude/settings.json</code>（或项目中的 <code>.claude/settings.json</code>），添加一个 <code>hooks</code> 字段，将事件（<code>PreToolUse</code>、<code>UserPromptSubmit</code>、<code>SessionStart</code>、<code>Stop</code>）映射到 shell 命令。运行命令的是框架本身，而非 Agent——适合用来设置守护规则和自动化流程。</p>
+      <p class="intro">钩子是 LingCode 在 Agent 生命周期特定时刻执行的 shell 命令——工具调用之前、提交提示词之后、会话结束时。钩子负责执行策略：不是写在 CLAUDE.md 里的"请不要做 X"，而是真正说"不"的代码。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>影响 Agent 行为的方式有两种。一种是告诉它：写在 CLAUDE.md 里、写成技能、或直接写进提示词。这种方式大多数时候都管用，但偶尔会失效——因为 Agent 是模型，而模型是概率性的。对于那些绝对必须发生、或绝对不能发生的事情，"告诉"就不够了。你写下的规则可能在压力下被忽略，在新的对话里被完全遗忘，或者当 Agent 判断当前情况与你描述的不同时被悄悄绕过。</p>
+      <p>另一种方式是强制执行：在 Agent 工作时、围绕其动作运行的代码。<em>PreToolUse</em> 钩子在任何工具调用之前触发，可以否决它。<em>UserPromptSubmit</em> 钩子在你发送消息时触发，可以记录、修改或拦截消息。<em>PostToolUse</em> 钩子在工具调用成功后触发。<em>SessionEnd</em> 钩子在对话关闭时触发。每个钩子都是一条 shell 命令——你的代码——通过环境变量获取上下文，并通过退出码和输出决定后续行为。</p>
+      <p>当错误结果的代价高到概率性保障无法接受时，就应该使用钩子。"绝对不能让 Agent 推送到 <code>main</code> 分支。""提交前必须运行 linter。""记录今天 Agent 执行的每条 shell 命令以供审计。"这些是策略问题，不是感觉问题——钩子就是将它们变成代码的方式。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>四种钩子事件类型及各自的触发时机</li>
+        <li>hooks.json 的格式</li>
+        <li>如何读取钩子接收到的 LINGCODE_* / CLAUDE_* 环境变量</li>
+        <li>钩子退出码的含义（以及为何约定用 exit 1 来阻止）</li>
+        <li>钩子的存放位置：项目级、用户全局，或插件内置</li>
+      </ul>
+
+      <h2>第一步：四种事件类型</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>各事件的作用</h3>
+          <ul>
+            <li><strong>UserPromptSubmit</strong> — 每次你点击发送时触发。可获取提示词文本，可记录、修改或拦截提交。常见用途：过滤用户不小心输入的敏感信息。</li>
+            <li><strong>PreToolUse</strong> — 任何工具调用前触发。可获取工具名称和参数，可批准、记录或否决。常见用途：拒绝匹配危险模式的 <code>shell</code> 命令。</li>
+            <li><strong>PostToolUse</strong> — 工具调用成功后触发。可获取工具名称、参数和返回结果。常见用途：写入审计日志；触发下游通知。</li>
+            <li><strong>SessionEnd</strong> — 对话关闭或 Agent 退出时触发。常见用途：清理资源、汇总指标、发送摘要。</li>
+          </ul>
+          <p>这些事件在 Mac 应用的对话界面和 <a href="/zh/tutorials/install-and-use-the-lingcode-cli.html">CLI</a> 中保持一致。你编写的钩子在两种环境中都能生效。</p>
+        </div>
+      </div>
+
+      <h2>第二步：hooks.json 格式</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>每个钩子对应一个条目的 JSON 文件</h3>
+          <p>在项目中创建 <code>.claude/hooks/hooks.json</code>（或在用户全局目录创建 <code>~/.claude/hooks/hooks.json</code>）：</p>
+          <pre><code>{
+  "PreToolUse": [
+    {
+      "matcher": "shell",
+      "command": "./.claude/hooks/block-dangerous-shell.sh"
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "command": "./.claude/hooks/log-prompt.sh"
+    }
+  ]
+}</code></pre>
+          <p>每个事件对应一个钩子条目数组。每个条目至少包含一个 <code>command</code>（要运行的 shell 命令），以及可选的 <code>matcher</code>（仅在工具调用匹配该模式时触发）。命令可以是脚本路径、内联表达式，或任何你的 shell 能接受的内容。</p>
+        </div>
+      </div>
+
+      <h2>第三步：钩子接收的信息</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>包含 Agent 所知信息的环境变量</h3>
+          <p>钩子运行时，LingCode 会设置一组以 <code>LINGCODE_</code> 为前缀的环境变量（同时以 <code>CLAUDE_</code> 为别名，兼容 Claude Code）。常用变量如下：</p>
+          <ul>
+            <li><code>LINGCODE_EVENT</code> — 事件名称（如 <code>PreToolUse</code> 等）</li>
+            <li><code>LINGCODE_TOOL_NAME</code> — 对于工具相关事件，为工具名称</li>
+            <li><code>LINGCODE_TOOL_ARGS</code> — 工具参数的 JSON 格式</li>
+            <li><code>LINGCODE_PROMPT</code> — 对于 <code>UserPromptSubmit</code>，为原始提示词文本</li>
+            <li><code>LINGCODE_SESSION_ID</code> — 当前对话的稳定 ID，可用于日志关联</li>
+            <li><code>LINGCODE_CWD</code> — 项目的工作目录</li>
+          </ul>
+          <p>钩子读取这些变量、执行操作后退出。关于标准流：stdin 为空，stdout 被捕获用于上下文，stderr 在钩子阻止事件时会显示在对话面板中。</p>
+        </div>
+      </div>
+
+      <h2>第四步：退出码 0 表示允许，1 表示阻止</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>最简单的约定</h3>
+          <p>钩子以 0 退出表示允许事件继续，以非零退出表示阻止。如果 <code>PreToolUse</code> 钩子以 1 退出，工具调用将被拒绝，Agent 会看到拒绝信息并调整策略。如果 <code>UserPromptSubmit</code> 钩子以 1 退出，消息将不会发送。阻止时，钩子向 stderr 写入的内容会作为拒绝原因传给 Agent——请写一条清晰的单行说明。</p>
+          <p>对于修改场景（重写提示词、脱敏参数），钩子将新值写入 stdout 并以 0 退出。LingCode 会用钩子的 stdout 替换原始内容。"脱敏敏感信息"钩子就是这样工作的。</p>
+        </div>
+      </div>
+
+      <h2>第五步：具体示例</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>阻止向 main 分支执行 <code>git push --force</code></h3>
+          <p>创建 <code>.claude/hooks/block-force-push.sh</code>：</p>
+          <pre><code>#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${LINGCODE_TOOL_NAME}" == "shell" ]]; then
+  cmd=$(echo "$LINGCODE_TOOL_ARGS" | jq -r '.command // ""')
+  if echo "$cmd" | grep -qE 'git push (-f|--force).*main\b'; then
+    echo "Refused: --force push to main is not allowed. Open a PR instead." >&2
+    exit 1
+  fi
+fi
+exit 0</code></pre>
+          <p>然后在 <code>.claude/hooks/hooks.json</code> 中添加：</p>
+          <pre><code>{
+  "PreToolUse": [
+    {
+      "matcher": "shell",
+      "command": "./.claude/hooks/block-force-push.sh"
+    }
+  ]
+}</code></pre>
+          <p>为脚本添加可执行权限（<code>chmod +x</code>）。从此，Agent 任何向 main 强制推送的尝试都会在工具边界被拒绝——Agent 会看到 stderr 中的拒绝原因并改换策略。这条规则无法被"说服"绕过，因为它现在是代码。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>钩子优先于权限模式：</strong>阻止某个工具的钩子，在所有<a href="/zh/tutorials/permission-modes.html">权限模式</a>下都会阻止它。设置 <code>acceptEdits</code> 并不能绕过钩子。这是有意为之——钩子是策略，模式是便利。
+      </div>
+
+      <h2>第六步：钩子的三种存放位置</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>项目级、用户全局，或插件内置</h3>
+          <ul>
+            <li><strong>项目本地：</strong>项目根目录下的 <code>.claude/hooks/</code>。纳入 git 管理，团队所有成员共享同一规则。</li>
+            <li><strong>用户全局：</strong><code>~/.claude/hooks/</code>。适合个人习惯（例如"在我所有项目中，提交前始终运行 lint"）。</li>
+            <li><strong>插件内置：</strong>放在<a href="/zh/tutorials/install-and-configure-plugins.html">插件</a>的 <code>hooks/</code> 目录中，可复用地分发钩子——但安装此类插件时会弹出授权提示，因为钩子可以执行 shell。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>不要在失败时放行。</strong>如果你的钩子脚本有 bug，对每个事件都以非零退出，实际上就等于完全阻止了 Agent。在部署前先单独测试钩子脚本（手动设置环境变量后运行 <code>.sh</code> 文件）。一个有缺陷的钩子比没有钩子更糟糕。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/write-a-custom-skill.html" class="tutorial-next-card">
+            <h3>编写自定义技能</h3>
+            <p>为 Agent 提供软性指导——与强制执行的钩子天然互补</p>
+          </a>
+          <a href="/zh/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>安装和配置插件</h3>
+            <p>将你的钩子打包分发给团队</p>
+          </a>
+          <a href="/zh/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>权限模式</h3>
+            <p>模式系统如何与钩子交互</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

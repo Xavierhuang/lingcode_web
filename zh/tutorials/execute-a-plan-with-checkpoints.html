@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>按检查点执行计划 — 在运行中保持 LingCode 方向正确</title>
+  <meta name="description" content="让 LingCode 在没有检查点的情况下运行一个 12 步计划，意味着最后要重新审查 12 个步骤——这是发现架构偏差最糟糕的时机。检查点让纠错变得更容易。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/execute-a-plan-with-checkpoints.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/execute-a-plan-with-checkpoints.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/execute-a-plan-with-checkpoints.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="按检查点执行计划 — 在运行中保持 LingCode 方向正确">
+  <meta property="og:description" content="让 LingCode 在没有检查点的情况下运行一个 12 步计划，意味着最后要重新审查 12 个步骤——这是发现架构偏差最糟糕的时机。检查点让纠错变得更容易。">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/execute-a-plan-with-checkpoints.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "按检查点执行计划",
+  "description": "让 LingCode 在没有检查点的情况下运行整个 12 步计划，意味着最后要重新审查 12 个步骤——这是发现架构偏差最糟糕的时机。检查点让纠错变得更容易。",
+  "url": "https://lingcode.dev/zh/tutorials/execute-a-plan-with-checkpoints.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/execute-a-plan-with-checkpoints.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "按检查点执行计划"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "按检查点执行计划",
+      "item": "https://lingcode.dev/zh/tutorials/execute-a-plan-with-checkpoints.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/execute-a-plan-with-checkpoints.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">原生 Mac IDE</a>
+      <span>/</span>
+      <span>按检查点执行计划</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>按检查点执行计划</h1>
+      <p class="intro">让 LingCode 在没有检查点的情况下运行整个 12 步计划，意味着最后要重新审查 12 个步骤——这是发现架构偏差最糟糕的时机。检查点让纠错变得更容易。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么在运行结束时审查是最昂贵的审查</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>LingCode 的速度足以在一次连续运行中完成多步骤计划。这感觉像是一场胜利，直到你在最后读到 diff 时才发现问题。</p>
+          <p>当没有中途检查点时，会发生三件事：</p>
+          <ul>
+            <li><strong>架构偏差会累积。</strong>第 2 步选择了一个略微错误的模式。第 3 步在此基础上继续构建。到第 8 步时，每个文件都围绕着错误的模式成型，而修复它意味着要重做八个步骤，而不是一个。发现第 2 步错误的正确时机，就是第 2 步完成之后。</li>
+            <li><strong>审查疲劳随之而来。</strong>审查一个文件很容易。坐下来一次性审查四十个由 AI 编写的文件则令人精疲力竭，你会不可避免地略读。略读的审查会放过 bug。</li>
+            <li><strong>你失去了廉价的回滚机会。</strong>如果第 3 步（共 12 步）出了问题，回退一个步骤轻而易举。但如果问题藏在"这个 40 文件的 diff 某处"，你要么接受全部，要么从头再来。</li>
+          </ul>
+          <p>检查点是解药：在每个计划步骤（或每对相关步骤）之后，LingCode 停下来，总结它做了哪些更改，然后等待你确认才继续。代价是小小的中断。回报是在回退还只需一次撤销时就发现偏差。</p>
+        </div>
+      </div>
+
+      <h2>开始前需要准备什么</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>仓库中的计划文件。</strong>如果还没有，请先阅读<a href="/zh/tutorials/write-an-implementation-plan-with-lingcode.html">使用 LingCode 编写实施计划</a>。计划是检查点检验的依据。</li>
+            <li><strong>干净的工作区。</strong>提交（或暂存）所有无关的工作。你希望检查点的 diff 只显示 LingCode 在当前步骤所做的更改。</li>
+            <li><strong>可运行的测试。</strong>即使覆盖率很低，你也需要一个"测试通过"的基线，这样逐步验证才有参照。如果测试套件在开始前就已经损坏，先修复它。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>以明确的检查点规则启动</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>告诉 LingCode 逐步执行计划，并在每步之后停下来。默认行为是一路推进；你必须明确地选择退出这种模式：</p>
+          <pre><code>Execute IMPLEMENTATION_PLAN.md one step at a time.
+
+After each step:
+1. Summarize what you changed (files touched, behavior before
+   vs. after) in 3-5 lines.
+2. Run the verification specified for that step in the plan.
+   Paste the actual output, not "looks good."
+3. Stop and wait for me to confirm before starting the next
+   step. Do not roll into the next step.
+
+If a step fails verification, stop and diagnose — don't move on
+hoping a later step will fix it. If the plan is wrong, propose
+a plan amendment rather than silently deviating.
+
+Start with step 1.</code></pre>
+          <p>这三条规则——总结、验证、停下来——就是整个技巧的精髓。本教程的其余内容是关于当 LingCode 偏离这些规则时如何把它拉回来。</p>
+        </div>
+      </div>
+
+      <h2>审查摘要，而不是 diff</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>当 LingCode 提交检查点摘要时，先读摘要。将其与计划中这一步骤应该完成的内容进行比对。</p>
+          <ul>
+            <li><strong>与计划一致？</strong>略读 diff 确认一下，然后批准。</li>
+            <li><strong>做的比计划多？</strong>提出异议。"第 2 步应该只是添加数据库列。你还添加了 API 端点——那是第 3 步的内容。请回退该端点，让我单独批准它。"超出范围的工作隐藏在检查点内，是最常见的偏差模式。</li>
+            <li><strong>做的比计划少？</strong>询问缺少了什么。有时 LingCode 遇到了意外的依赖关系并悄悄跳过；你需要让这个问题浮出水面，而不是被忽略。</li>
+            <li><strong>做了不同的事？</strong>暂停进行真正的审查。要么计划需要修改（明确修订），要么更改需要回退。</li>
+          </ul>
+          <div class="tip-box">
+            <strong>摘要是一份契约，而不仅仅是回顾。</strong>如果 LingCode 的摘要与 diff 不符，这就是一个信号——要么摘要有误，要么 LingCode 并未完全理解自己做了什么。无论哪种情况，都应该放慢脚步。
+          </div>
+        </div>
+      </div>
+
+      <h2>使用计划中指定的命令进行验证</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>每个计划步骤都应该指定了验证方式——请参阅计划编写教程了解原因。在检查点处，运行（或让 LingCode 运行）那个精确的命令，并查看实际输出。</p>
+          <p>"看起来没问题"不是验证。"<code>xcodebuild test -scheme MyApp</code> 以退出码 0 完成，47 个测试通过，0 个失败"才是。要求后者。</p>
+          <p>如果验证失败，你已经在问题出现的确切步骤捕获了它。现在就诊断，在第 N+1 步在其上继续构建之前。</p>
+          <div class="warn-box">
+            <strong>不要让 LingCode 跳过红色的验证继续前进。</strong>"我会在后续步骤中修复"正是这个技巧要防止的失败模式。如果第 N 步有问题，就在第 N 步修复它。
+          </div>
+        </div>
+      </div>
+
+      <h2>按检查点提交，而不是按计划提交</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>当检查点通过——摘要与计划一致，验证结果为绿色——单独提交该步骤：</p>
+          <pre><code>git add -A
+git commit -m "Step 2: Add user_quota table and migration"</code></pre>
+          <p>按检查点提交有三个好处：</p>
+          <ul>
+            <li><strong>回滚变得轻而易举。</strong>如果第 5 步事后证明有问题，对单个提交执行 <code>git revert</code>，而不是在四十个文件中逐一剥离。</li>
+            <li><strong>为审查者提供清晰的叙事。</strong>PR 显示为按顺序排列的八个提交，与八个计划步骤一一对应。比一个巨大的 diff 容易跟进得多。</li>
+            <li><strong>为 LingCode 的上下文提供锚点。</strong>当你说"回到第 4 步结束时的状态"，有一个真实的提交可以重置到。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>审慎地处理计划修订</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>大约有一半的时候，执行计划的过程会让你发现计划需要更改。这没问题——但修订本身是一个单独的步骤。</p>
+          <p>当 LingCode（或你）注意到计划需要更改时：</p>
+          <pre><code>Don't deviate silently. Update IMPLEMENTATION_PLAN.md to
+reflect the new approach for steps 5-8, explain in 2 lines
+why we're changing course, and commit just the plan edit:
+
+git commit -m "Amend plan: switch step 5 from REST to GraphQL
+because the existing schema is already exposed there"
+
+Then wait for me to confirm before continuing execution.</code></pre>
+          <p>计划是你的契约。当契约发生变化时，要以书面形式记录并获得签认——而不是顺带地夹在代码提交里。</p>
+        </div>
+      </div>
+
+      <h2>从错误的步骤中恢复</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>如果检查点揭示最后一步是错误的——方法不对、验证失败、范围蔓延——要审慎地恢复：</p>
+          <ol>
+            <li><strong>回退提交。</strong>执行 <code>git revert HEAD</code>，或者如果尚未推送且想要干净的历史记录，执行 <code>git reset --hard HEAD~1</code>。</li>
+            <li><strong>如果步骤本身有问题，更新计划。</strong>原始计划把你引到了这里；如果不修订它，你会再次回到同一个地方。</li>
+            <li><strong>重新运行该步骤。</strong>现在从已知的良好状态出发，带着修正后的指令。</li>
+          </ol>
+          <p>这正是检查点存在的意义。没有检查点，"回退一步"根本不是一个选项——错误的代码与七个其他正确步骤的代码混在一起，无法分离。</p>
+        </div>
+      </div>
+
+      <h2>"完成"是什么样子</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>当最后一个计划步骤通过检查点时，工作就完成了——但还需要再验证一件事：</p>
+          <ul>
+            <li><strong>端到端运行整个计划的验证。</strong>每个步骤都验证了自身；现在确认它们组合在一起也没问题。"每个测试单独通过"并不总是意味着"整个测试套件一起通过"。</li>
+            <li><strong>重新阅读计划的非目标。</strong>确保在整个运行过程中没有范围蔓延。中途的范围蔓延在检查点处更容易发现，但最后做一次全面检查是值得的。</li>
+            <li><strong>检查 git 日志。</strong>八个步骤，八个提交，按顺序排列。如果日志比这更乱，在开启 PR 前先压缩提交。</li>
+          </ul>
+          <p>在 PR 正文中引用计划文件，然后开启 PR。审查者将获得与你相同的检查点结构，只是以只读方式呈现。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>检查点不仅仅适用于大型计划。</strong>即使是四步计划，让 LingCode 在每步之后停下来，也能捕获同样的偏差问题。额外开销很小；收益是一样的。
+      </div>
+
+      <h2>在 LingCode 中使用此功能</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>将执行工作流打包为一个技能，这样每当 LingCode 运行计划时就会自动应用它：</p>
+          <pre><code>---
+name: executing-plans
+description: Use when you have a written implementation plan to execute in a separate session with review checkpoints. Triggers: 'execute the plan', 'work through the plan', 'implement IMPLEMENTATION_PLAN.md', 'do steps 1-5', 'start the plan'. Actions: stepwise execution, summarize each step, verify with real output, per-step commit, deliberate plan amendment, bad-step recovery. Stops mid-plan if a step changes architecture. Output: clean diffs per step + verification evidence.
+---
+
+Execute the referenced plan file (IMPLEMENTATION_PLAN.md by
+default) one step at a time.
+
+For each step:
+1. Read the step from the plan file. Confirm understanding of
+   what changes, why ordered here, and how to verify.
+2. Make the changes.
+3. Summarize: 3-5 lines covering files touched and behavior
+   before vs. after.
+4. Run the verification command specified by the plan. Paste
+   the actual output.
+5. Commit the step on its own with message "Step N:
+   &lt;description&gt;".
+6. Stop. Wait for user confirmation before starting the next
+   step.
+
+Never roll into a later step without confirmation. If a
+verification fails, stop and diagnose — do not push past red.
+If the plan turns out to be wrong, amend the plan file with a
+brief reason, commit the amendment by itself, and wait for
+sign-off before continuing.
+
+At the end, run the full plan's verification end-to-end and
+confirm nothing in the non-goals list crept in.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/executing-plans/SKILL.md</code>——参阅<a href="/zh/tutorials/install-a-skill.html">安装技能</a>了解确切路径以及技能如何被发现。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/write-an-implementation-plan-with-lingcode.html" class="tutorial-next-card">
+            <h3>编写实施计划</h3>
+            <p>如果你还没有计划，这是本教程所有内容的前提条件</p>
+          </a>
+          <a href="/zh/tutorials/stress-test-your-plan-with-grill-me.html" class="tutorial-next-card">
+            <h3>用 /grill-me 对计划进行压力测试</h3>
+            <p>在执行之前，让 LingCode 审问计划，暴露隐藏的假设</p>
+          </a>
+          <a href="/zh/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html" class="tutorial-next-card">
+            <h3>真实五阶段计划的实际应用</h3>
+            <p>看看检查点如何应用于一个历时数周的原生迁移项目，逐阶段推进</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要发布产品的创始人和想要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

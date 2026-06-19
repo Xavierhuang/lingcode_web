@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deploy on Render — LingCode Tutorials</title>
+  <meta name="description" content="Render is the Heroku-shaped PaaS with predictable flat-rate pricing. Free static sites, $7/month web services, managed Postgres — and no surprise bills.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-on-render.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-on-render.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-on-render.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/deploy-on-render.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Deploy on Render",
+  "description": "Render is the most Heroku-shaped of the post-Heroku PaaSes — same five service types, same flat monthly pricing, same \"connect a repo, deploy\" flow. The trade against Railway is less magic in detection; the trade against Fly is fewer regions. The win is that the bill is the bill.",
+  "url": "https://lingcode.dev/tutorials/deploy-on-render.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/deploy-on-render.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Deploy on Render"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Deploy on Render",
+      "item": "https://lingcode.dev/tutorials/deploy-on-render.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/deploy-on-render.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Deploy on Render</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Deploy on Render</h1>
+      <p class="intro">Render is the most Heroku-shaped of the post-Heroku PaaSes — same five service types, same flat monthly pricing, same "connect a repo, deploy" flow. The trade against Railway is less magic in detection; the trade against Fly is fewer regions. The win is that the bill is the bill.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>If you've used Heroku at any point in the last decade, Render's UI is going to feel deeply familiar. Web services, background workers, cron jobs, static sites, managed databases — same five-service mental model, same per-service settings pages, same "this branch builds and deploys automatically" workflow. The fact that this shape feels like home to so many developers is exactly why Render's adoption has been steady: nothing new to learn if you'd shipped on Heroku, with all the things you wished Heroku would fix.</p>
+      <p>The most concrete improvement over Heroku is pricing. Render's plans are flat per service per month — a web service is $7, a worker is $7, a managed Postgres is $7+, a static site is free. The bill at the end of the month is the same as the bill at the start. This sounds boring, and it is, and that's the point. For projects where you want to know exactly what you're paying before the month begins, Render is the friendliest answer.</p>
+      <p>The trade-offs are real but bounded. Render has fewer regions than Fly (a handful, all in North America/Europe/Asia, not 30+). Auto-detection of stacks is rougher than Railway — you'll often write a tiny <code>render.yaml</code> or set explicit start commands. Cold starts on the free tier are 30–60 seconds, which is fine for a personal site but terrible for anything user-facing. None of these are dealbreakers; they're the cost of "boring works."</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Render's five service types and when to use each</li>
+        <li>The deploy-from-GitHub flow</li>
+        <li>The free-tier cold-start trade-off</li>
+        <li>Setting up Postgres and connecting it</li>
+        <li>When Railway or Fly is the better fit</li>
+      </ul>
+
+      <h2>Step 1: Sign up + connect GitHub</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Render.com, GitHub OAuth</h3>
+          <p>Sign up at <code>render.com</code> with your GitHub account. The OAuth flow asks for repo access — scope it to specific repos rather than "all" for safety. No credit card required until you create a non-free service.</p>
+          <p>Render also supports GitLab and Bitbucket if you're not on GitHub.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Pick a service type</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Five shapes</h3>
+          <p>Render's service types:</p>
+          <ul>
+            <li><strong>Static Site</strong> — built from your repo's static assets. Free. Good for plain HTML, React/Vue SPAs (after build), documentation sites. CDN-served globally.</li>
+            <li><strong>Web Service</strong> — a long-running HTTP server. The most common type. $7/month for the starter tier; bigger plans available.</li>
+            <li><strong>Background Worker</strong> — a long-running process with no HTTP port. For job queues, message consumers, etc. $7/month.</li>
+            <li><strong>Cron Job</strong> — a script that runs on a schedule. Cheap; charged per run.</li>
+            <li><strong>Private Service</strong> — a web service only reachable from your other Render services. For internal APIs. $7/month.</li>
+          </ul>
+          <p>Plus managed databases: Postgres, Redis, Key Value — separate products at their own per-month prices.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Deploy a web service</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>The most common flow</h3>
+          <p>Click <strong>New + → Web Service</strong>. Pick the repo. Configure:</p>
+          <ul>
+            <li><strong>Name:</strong> anything; this becomes part of the URL.</li>
+            <li><strong>Region:</strong> closest to your users.</li>
+            <li><strong>Branch:</strong> usually <code>main</code>.</li>
+            <li><strong>Build command:</strong> what to run to build (e.g., <code>npm install &amp;&amp; npm run build</code>).</li>
+            <li><strong>Start command:</strong> what to run to start the server (e.g., <code>npm start</code>).</li>
+            <li><strong>Plan:</strong> Free (with cold starts) or Starter ($7/month, always-on).</li>
+          </ul>
+          <p>Click <strong>Create Web Service</strong>. Render builds and deploys; the URL is live in a few minutes.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>The free tier has cold starts.</strong> A free web service that hasn't received a request in 15 minutes is spun down. The next request wakes it up — taking 30–60 seconds. Fine for hobby projects you visit occasionally; not okay for anything with real users. The $7 Starter tier doesn't have this.
+      </div>
+
+      <h2>Step 4: Add a Postgres database</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Managed; one click</h3>
+          <p>From your dashboard, <strong>New + → PostgreSQL</strong>. Pick name, region (same as your service ideally), plan ($7/mo starter is fine for most apps). Render provisions a managed Postgres in a couple of minutes.</p>
+          <p>To connect: copy the "Internal Database URL" from the Postgres dashboard, set it as the <code>DATABASE_URL</code> env var on your web service. Internal URLs only work within Render's network — they're private and don't go over the public internet. There's also an "External Database URL" if you need to connect from outside Render (e.g., from your local machine), but use the internal one for the service.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Environment variables</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Per-service Environment tab</h3>
+          <p>Each service has an <strong>Environment</strong> tab where you set env vars. Secret variables are masked; non-secret ones aren't. Add <code>API_KEY=...</code>, <code>NODE_ENV=production</code>, etc. as needed. Render auto-redeploys when you save changes — you don't need to manually trigger.</p>
+          <p>Render also has <strong>Environment Groups</strong> — sets of variables you can attach to multiple services. Useful when several services share secrets (a worker and a web service both need the database URL).</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Custom domain + TLS</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>One CNAME, Render handles TLS</h3>
+          <p>Service settings → <strong>Custom Domains</strong> → Add Custom Domain. Render gives you a CNAME target. Add it at your <a href="/tutorials/connect-domain-to-server-with-dns.html">DNS provider</a>:</p>
+          <ul>
+            <li>Name: your subdomain (or <code>@</code> if your DNS provider supports apex CNAMEs).</li>
+            <li>Value: the target Render provided.</li>
+          </ul>
+          <p>Within minutes Render validates and issues a free TLS cert (Let's Encrypt under the hood). Auto-renews forever; you don't think about it again.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: render.yaml for production discipline</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Infrastructure-as-code, optional</h3>
+          <p>If you don't want the dashboard to be the source of truth for your config, put a <code>render.yaml</code> at the repo root:</p>
+          <pre><code>services:
+  - type: web
+    name: my-api
+    env: node
+    buildCommand: npm install &amp;&amp; npm run build
+    startCommand: npm start
+    plan: starter
+
+databases:
+  - name: my-postgres
+    plan: starter</code></pre>
+          <p>Commit it. From now on, the config in git is the truth. Render's "Blueprints" feature reads <code>render.yaml</code> when you create the project; for an existing project you can switch to it via Settings.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: When Render isn't the right pick</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>Three cases</h3>
+          <ul>
+            <li><strong>You want global edge.</strong> Render's regions are limited. <a href="/tutorials/deploy-on-fly-io.html">Fly.io</a> wins for multi-region by a wide margin.</li>
+            <li><strong>You want the absolute easiest onboarding.</strong> <a href="/tutorials/deploy-on-railway.html">Railway's</a> detection is friendlier; Render asks you to specify build/start commands more often.</li>
+            <li><strong>You want pay-only-for-what-you-use.</strong> Render's flat plans mean a barely-used service still costs $7/month. Railway's usage-based pricing is cheaper for low-traffic projects.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>The free tier is enough for testing, not production.</strong> Free web services have cold starts. Free Postgres has a 90-day retention limit and gets deleted after that. Both are explicit in the docs but easy to miss; if anything matters, use the paid tier from day one.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/deploy-on-railway.html" class="tutorial-next-card">
+            <h3>Deploy on Railway</h3>
+            <p>Friendlier detection, usage-based pricing</p>
+          </a>
+          <a href="/tutorials/deploy-on-fly-io.html" class="tutorial-next-card">
+            <h3>Deploy on Fly.io</h3>
+            <p>More control, global edge, Docker-native</p>
+          </a>
+          <a href="/tutorials/set-up-https-with-lets-encrypt.html" class="tutorial-next-card">
+            <h3>Set up HTTPS with Let's Encrypt</h3>
+            <p>If you'd rather run TLS yourself than let a PaaS do it</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>通过 Agent View 管理后台 Agent — LingCode 教程</title>
+  <meta name="description" content="Agents 侧边栏是管理所有后台任务的控制台。本教程讲解行结构、状态分组、预览窗格和调度输入框的使用方法，以及使用 bypassPermissions 之前需要了解的注意事项。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/navigate-agents-with-agent-view.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/navigate-agents-with-agent-view.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/navigate-agents-with-agent-view.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605171200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-17T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/navigate-agents-with-agent-view.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "通过 Agent View 管理后台 Agent",
+  "description": "当多个 Agent 同时运行时，哪个需要你介入，哪个已完成，哪个正在消耗费用？Agents 侧边栏是快速筛查的控制台。本教程从上到下逐一讲解面板结构——行结构、状态分组、预览窗格、调度输入框，以及使用前必须了解的信任决策。",
+  "url": "https://lingcode.dev/zh/tutorials/navigate-agents-with-agent-view.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-17",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/navigate-agents-with-agent-view.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "通过 Agent View 管理后台 Agent"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "通过 Agent View 管理后台 Agent",
+      "item": "https://lingcode.dev/zh/tutorials/navigate-agents-with-agent-view.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/navigate-agents-with-agent-view.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>通过 Agent View 管理后台 Agent</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-17</span>
+      </div>
+      <h1>通过 Agent View 管理后台 Agent</h1>
+      <p class="intro">当多个 Agent 同时运行时，哪个需要你介入，哪个已经完成，哪个正在烧钱？Agents 侧边栏是快速筛查这些任务的控制台。本教程从上到下逐一讲解面板结构——行结构、状态分组、预览窗格、调度输入框——并解释在启动任何任务之前你需要做出的那个关键信任决策。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>对话标签页是你逐步驾驭 Agent 的地方；Agent View 则是你观察那些已脱手运行的任务的地方。大多数时候两者并用：前台是你正在思考的对话，旁边还有三四个<em>已调度</em>的后台任务在运行——测试套件、重构、快照扫描——等你随时回来查看。Agents 面板就是管理这"第二堆"任务的仪表盘。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>在这个视图的数据模型中，"Agent"究竟指什么</li>
+        <li>你会看到的三类行，以及它们行为各异的原因</li>
+        <li>如何一眼读懂一行——状态图标、活动摘要行、费用、PR 圆点</li>
+        <li>如何调度后台 Agent，以及使用前你需要了解的 <code>bypassPermissions</code> 含义</li>
+        <li>预览窗格：实时转录、待回答问题，以及回复框有时被禁用的原因</li>
+        <li>行级操作：置顶、重命名、重跑、停止、删除</li>
+      </ul>
+
+      <h2>第一步：建立心智模型</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>两种 Agent 工作，一个任务列表</h3>
+          <p>Agent View 中的"Agent"指的是一个 Claude Code 会话——但这些会话出现在这里有三种不同的原因：</p>
+          <ul>
+            <li><strong>Active（活跃）</strong>——你当前在编辑器中打开的对话标签页。你正在驾驭它们。</li>
+            <li><strong>后台任务</strong>——你已调度并放手让其独立运行的 Agent，它们在独立进程中运行。</li>
+            <li><strong>Recent（最近）</strong>——你保存过的历史对话会话。处于静止状态，可随时重新打开为标签页。</li>
+          </ul>
+          <p>这种分组不是装饰性的，每组回答的是不同的问题：<em>"我在做什么？"</em>、<em>"现在什么需要我介入？"</em>、<em>"我最近做了什么？"</em> 如果你只记住本教程的一件事，就记住哪个分组回答哪个问题——面板的其余部分都以此为基础展开。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>这与标签页内的历史弹窗不同。</strong>每个 Claude 对话标签页都有自己的"打开历史会话"选择器。Agent View 展示的是跨所有标签页的最近 20 个会话，以及当前任何位置正在运行的全部任务。可以把它理解为跨标签页的全局视图。
+      </div>
+
+      <h2>第二步：打开面板</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>活动栏，从上往下第四个图标</h3>
+          <p>点击活动栏中的 <strong>Agents</strong> 按钮——那个堆叠矩形图标，从上往下第四个，位于 Source Control 下方。悬停任意活动栏图标可确认标签；Agents 图标的标签就是"Agents"。</p>
+          <p>目前没有打开面板的快捷键。如果你经常使用活动栏，过几天就会靠肌肉记忆记住它的位置。</p>
+          <p>如果你从未调度过后台 Agent，也没有打开 Claude 对话标签页，你会看到空状态提示：<em>"No active sessions — Open a Claude tab or dispatch a background agent above."</em> 这是正常的——面板是动态的，不会预填任何内容。</p>
+        </div>
+      </div>
+
+      <h2>第三步：面板结构解析</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>从上到下：标题栏 → 调度栏 → 列表 → 预览窗格</h3>
+          <p>面板由四个堆叠区域组成。了解每个区域的用途，能让后续教程内容容易理解得多。</p>
+          <table>
+            <thead>
+              <tr><th>区域</th><th>内容</th><th>用途</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>标题栏（Header）</strong></td>
+                <td>"AGENTS"标题 + 刷新按钮（↻）</td>
+                <td>当某个任务的状态看起来不新鲜时，强制重新扫描 <code>~/.lingcode/jobs/</code>。</td>
+              </tr>
+              <tr>
+                <td><strong>调度栏（Dispatch bar）</strong></td>
+                <td>文本框"Dispatch a background agent…"+ 发送按钮</td>
+                <td>输入目标，按 ↩，走开。详见第五步。</td>
+              </tr>
+              <tr>
+                <td><strong>分组列表（Grouped list）</strong></td>
+                <td>Active → 状态分组 → Recent</td>
+                <td>任务列表。点击某行即可对其操作。</td>
+              </tr>
+              <tr>
+                <td><strong>预览窗格（Peek pane）</strong>（选中后台任务行时显示）</td>
+                <td>转录内容 + 底部回复输入框</td>
+                <td>无需离开侧边栏即可观察任务进度。详见第六步。</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>后台任务按状态分组：<strong>Working</strong>、<strong>Idle</strong>、<strong>Completed</strong>、<strong>Failed</strong>、<strong>Stopped</strong>。这种分组让"现在什么需要我介入"一目了然——Failed 组或长时间未更新的 Working 行是优先查看的对象。</p>
+        </div>
+      </div>
+
+      <h2>第四步：一眼读懂一行</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>每行包含五个筛查信号</h3>
+          <p>每个后台任务行在一行内压缩了五条信息。从左往右读，但把每个信号当作独立的——你很少需要同时看全部五个。</p>
+          <ul>
+            <li><strong>状态图标</strong>（最左侧）。闪烁虚线强调点 = Working（运行中）。黄色 <code>?</code> = 需要输入。空心灰圆 = Idle（空闲）。绿色 ✓ = Completed（已完成）。红色 <code>!</code> = Failed（失败）。灰色停止标记 = Stopped（已停止）。这是你判断"是否需要操作"的主要渠道。</li>
+            <li><strong>名称</strong>，若已置顶则附有置顶图标（旋转 45°）。名称在调度时根据提示词的开头几个词自动生成——如果不好辨认，可以重命名（第七步）。</li>
+            <li><strong>活动行 vs. 摘要行</strong>。任务 Working 时，显示实时工具调用（"bash run_tests.sh"、"read package.json"）；一旦转为 Idle 或 Completed，则切换为 Agent 的最终摘要文本。同一个位置，两种含义——取决于任务是"飞行中"还是"已落地"。</li>
+            <li><strong>费用标记</strong>（等宽字体，如 <code>$0.0423</code>）。只在任务产生消费后才显示。这是失控循环的早期预警——如果某行费用涨得比预期快，请及时介入。</li>
+            <li><strong>PR 圆点</strong>（小彩色圆圈）。紫色 = 至少一个 PR 已合并。绿色 = 所有 PR 的检查均通过。黄色 = 至少一个处于 pending 或失败状态。灰色 = 未知（尚未报告检查结果）。如果超过一个 PR，数字会显示在圆点旁。悬停可看到"2/3 merged"或"Checks pending"等提示。</li>
+            <li><strong>相对时间</strong>（最右侧，等宽字体）。<code>30s</code>、<code>5m</code>、<code>2h</code>、<code>3d</code>。告诉你该行的"新鲜度"——一个超过一小时没有更新的 Working 行很可能已经卡住了。</li>
+          </ul>
+          <p>你不需要死记颜色代码——悬停任何元素，提示就会告诉你。本节的重点是让你意识到<em>每个字形都有其特定含义</em>，这样你才不会对它们视而不见。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>"Active"行的行为不同。</strong>Active 分组下的行是编辑器中实时的对话标签页。点击它会跳转到那个标签页——<em>不会</em>打开下方的预览窗格。状态分组下的后台任务行才会打开预览窗格。Recent 行则会以新标签页的形式重新加载。同一面板，三种行为，取决于该行所在的分组。
+      </div>
+
+      <h2>第五步：调度后台 Agent</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>输入目标，按 ↩，走开</h3>
+          <p>在调度栏中输入一个完整的目标——比如"<em>运行测试套件，修复所有失败的快照</em>"——然后按 ↩（或点击发送箭头）。Agent 立即在独立进程中启动，调度框随即清空，一两秒内 Working 分组下会出现一条新行。你可以关闭 Agents 面板、切换项目，甚至关闭窗口——任务会继续运行。</p>
+          <p>任务在当前项目的根目录下运行（即编辑器中打开的目录）。如果没有打开任何目录，则回退到你的主目录。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>请注意副标签文字："Runs detached with bypassPermissions; close the panel any time."</strong> 已调度的 Agent 会在<em>无需请求权限</em>的情况下执行任意工具——bash 命令、文件写入、网络请求。这是你换取"走开不管"便利性所做的交换。适合用于副作用可逆的任务，且在可回滚的项目上操作（测试套件、快照重生、文档清理、你会在合并前审查的依赖升级）。<strong>不要用于</strong>涉及生产环境、部署或不可恢复状态的操作。如果不确定某个任务是否属于"可逆"范畴，请改用普通对话标签页驾驭它——这样你能看到每个权限提示，在出问题前及时叫停。
+      </div>
+
+      <h2>第六步：预览窗格</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>点击后台任务行，查看其运行情况</h3>
+          <p>点击任意状态分组下的行，面板下半部分会分出一个预览窗格，显示：</p>
+          <ul>
+            <li><strong>状态标记</strong>（左上角）：任务状态，颜色与行图标一致</li>
+            <li><strong>名称、任务 ID 和模型</strong>：在日志中重新找到该任务所需的元数据</li>
+            <li><strong>待回答问题块</strong>（黄色背景，"Awaiting your input"）：仅当 Agent 提出问题并等待回复时才显示</li>
+            <li><strong>转录内容</strong>：最多显示最近 12 个事件——你的回合、助手的文本、工具调用（<code>⏵</code>）、工具结果（<code>↳</code> 或 <code>✗</code>）以及最终结果（<code>done</code> 或 <code>failed</code>）</li>
+            <li><strong>回复输入框</strong>（底部）</li>
+          </ul>
+          <p>回复输入框是最值得注意的地方。当 Agent 进程仍在运行时，它处于禁用状态，占位文字会根据禁用原因而变化：</p>
+          <ul>
+            <li><em>"Waiting for first SDK turn…"</em>——Agent 尚未建立会话 ID（刚启动）</li>
+            <li><em>"Agent still working — wait or stop first"</em>——Agent 正在处理当前回合，此时发送新提示会产生冲突</li>
+            <li><em>"Send a follow-up turn…"</em>——进程已退出，你可以继续对话</li>
+          </ul>
+          <p>这就是设计意图：你调度了一次自主运行。你回复的是它的<em>结论</em>或<em>待回答的问题</em>，而不是它执行中途的状态。如果你需要在任务进行中途插话，请先使用<strong>Stop</strong>（第七步），然后再发送新提示。</p>
+        </div>
+      </div>
+
+      <h2>第七步：行级操作（右键单击）</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>六项操作，各有其用</h3>
+          <p>右键单击任意状态分组下的后台任务行，可打开操作菜单。每项操作都有其特定用途：</p>
+          <table>
+            <thead>
+              <tr><th>操作</th><th>适用场景</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Open in Window（在窗口中打开）</strong></td>
+                <td>预览窗格最多显示 12 条转录记录。如需查看完整历史、与另一个任务并排对比，或进行长时间审查，可将其弹出为独立窗口。</td>
+              </tr>
+              <tr>
+                <td><strong>Stop（停止）</strong></td>
+                <td>终止正在运行的进程。仅在行的进程状态为 <code>alive</code> 时可用——之后显示"Stop (already exited)"且无效。</td>
+              </tr>
+              <tr>
+                <td><strong>Rerun (fresh session)（重跑，全新会话）</strong></td>
+                <td>用干净的对话重新调度相同的提示词。适合需要第二次独立运行，或第一次运行陷入混乱、想要重来而不是追加回合时使用。</td>
+              </tr>
+              <tr>
+                <td><strong>Pin / Unpin（置顶 / 取消置顶）</strong></td>
+                <td>已置顶的行无论新旧都排在分组顶部。适合标记你真正关注的两三个任务——调度了十几个任务后仍能快速扫描面板。</td>
+              </tr>
+              <tr>
+                <td><strong>Rename…（重命名）</strong></td>
+                <td>根据提示词开头自动生成的名称往往没有辨识度（"Run the…"、"Fix the…"）。重命名为你能一眼识别的内容。</td>
+              </tr>
+              <tr>
+                <td><strong>Delete（删除）</strong></td>
+                <td>若任务仍在运行则先停止，然后从磁盘移除条目并丢弃转录内容。操作前有确认对话框——请认真阅读。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>删除是不可撤销的破坏性操作。</strong>确认提示框的内容为："<em>'&lt;name&gt;' will be stopped (if running) and removed from disk. Its transcript will be lost.</em>" 如果你之后可能还想查看 Agent 做了什么，请先 Stop，把行留在原处。每个任务占用的磁盘空间很小，无需主动删除。
+      </div>
+
+      <h2>第八步：完整的实战示例</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>一次真实筛查流程的全貌</h3>
+          <p>具体来说，使用 Agents 面板的日常流程大致如下：</p>
+          <ol>
+            <li>打开项目，打开 Agents 面板，在调度栏输入<em>"运行测试套件，修复所有失败的快照，提一个包含变更的 PR"</em>，按 ↩。</li>
+            <li>行出现在 Working 分组下，活动行依次显示工具调用——<code>bash npm test</code>、<code>read src/&lt;file&gt;.snap</code>，然后写入。关闭面板，继续你的主要工作。</li>
+            <li>一小时后再次打开面板。该行已移入 Completed 分组，费用标记显示 <code>$0.0312</code>，PR 圆点为黄色——检查待定中。</li>
+            <li>点击该行，预览窗格打开。有待回答问题吗？没有。转录内容显示一次干净的运行，最终以 <code>done</code> 结束，附有 Agent 的摘要："<em>Regenerated 4 snapshot files; opened PR #847.</em>"</li>
+            <li>你想看完整转录。右键 → <strong>Open in Window</strong>，在弹出的详情窗口中阅读整个运行过程，包括它撰写的 PR 描述。</li>
+            <li>半小时后刷新面板，PR 圆点变为绿色，从你的常规流程合并即可。</li>
+          </ol>
+          <p>重点不在于具体流程——而在于你只打开了面板三次，从未坐在那里盯着 Agent 工作，而行上的字形在每次查看时都已告诉你一切所需信息。这正是 Agent View 所优化的使用方式。</p>
+        </div>
+      </div>
+
+      <h2>面板暂未提供的功能</h2>
+      <p>以下内容目前不存在，以免你花时间寻找：没有筛选或搜索框、没有多选、没有批量 Stop/Delete，也没有打开面板的快捷键。如果任务多到让你觉得缺少这些功能，建议减少调度数量，或使用 Pin 把重要任务置顶。"Recent"分组最多显示 20 条——更旧的保存会话仍然存在，可从任意 Claude Code 对话标签页内的历史弹窗中打开。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/write-a-subagent.html" class="tutorial-next-card">
+            <h3>编写子 Agent</h3>
+            <p>"多个 Agent"的另一面——构建一个拥有独立提示词和工具的专用 Agent</p>
+          </a>
+          <a href="/zh/tutorials/multi-agent-swarms-when-to-use.html" class="tutorial-next-card">
+            <h3>多 Agent 群：何时使用，何时跳过</h3>
+            <p>同时调度多个任务背后的策略考量</p>
+          </a>
+          <a href="/zh/tutorials/switch-providers-mid-conversation.html" class="tutorial-next-card">
+            <h3>对话中途切换提供商</h3>
+            <p>在不丢失历史记录的情况下，将陷入僵局的对话交给另一个模型继续</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要上线的创始人和想要真正趁手工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资</a></li>
+        <li><a href="/privacy.html">隐私</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

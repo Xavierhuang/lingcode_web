@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何将 MCP 服务器连接到 LingCode？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="将 MCP 服务器连接到 LingCode，为 AI 代理添加 Linear、GitHub、数据库或任何支持 Model Context Protocol 的服务的类型化工具。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/connect-an-mcp-server.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-an-mcp-server.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-an-mcp-server.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/connect-an-mcp-server.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "连接 MCP 服务器",
+  "description": "MCP 服务器让你为 AI 代理提供一套全新的类型化工具——用于 Linear、GitHub、数据库、内部管理 API 等任何服务。只需配置一次，工具便会出现在每次对话中，以命名空间区分并逐次获得授权。",
+  "url": "https://lingcode.dev/zh/tutorials/connect-an-mcp-server.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/connect-an-mcp-server.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "连接 MCP 服务器"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "连接 MCP 服务器",
+      "item": "https://lingcode.dev/zh/tutorials/connect-an-mcp-server.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/connect-an-mcp-server.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>连接 MCP 服务器</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何将 MCP 服务器连接到 LingCode？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>在 <code>.lingcode/mcp.json</code> 中（或通过 Mac IDE 的界面）添加一个 MCP 服务器条目，填写服务器的命令、参数和环境变量。LingCode 会将其作为子进程启动，并将其工具以 <code>mcp__&lt;id&gt;__&lt;name&gt;</code> 的形式暴露给代理。支持 Mac IDE、CLI 和 /try（/try 中仅支持 HTTP 传输）。</p>
+      <p class="intro">MCP 服务器是你为 AI 代理赋予全新类型化工具的方式——可用于 Linear、GitHub、数据库、内部管理 API 等任何服务。只需配置一次，工具便会出现在每次对话中，以命名空间区分并逐次获得授权。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>代理内置的工具各司其职——读取文件、运行 shell、搜索代码——但它们都有一个共同的局限：只能做本地终端里能做的事。而现实中的工程工作有很大一部分并不在本地。在 Linear 中查找工单、向 Slack 发布状态更新、查询生产数据库中的用户记录、触发 CI 流程——这些远程操作，在没有额外接口的情况下，代理根本无法完成。</p>
+      <p>一个简单粗暴的做法是给代理 shell 访问权限，让它直接调 <code>curl</code>，寄希望于它能构造出正确的 API 请求。这种方式偶尔凑效，但大多数时候会出问题——代理必须在提示词中记住端点、认证头、响应结构和错误码。一个错误的请求头就是 401，一个错误的端点就是 404，代理只能靠 HTTP 错误码来反复调试，而不是结构化的反馈。</p>
+      <p>MCP（Model Context Protocol）是这个问题的结构化解决方案。MCP 服务器是一个小型进程，它以带有明确 JSON Schema 的形式暴露类型化工具（如 <code>create_ticket</code>、<code>get_user_by_email</code>、<code>run_query</code>），包括参数和返回值。代理按名称调用工具，并拿到结构化的数据返回。认证只在服务器启动时进行一次，代理根本看不到凭据。</p>
+      <p>本教程介绍如何连接一个已有的 MCP 服务器（编写自己的 MCP 服务器是另一个更深入的话题）。你将了解 LingCode 支持的两种传输方式、配置的存放位置、工具的命名空间规则，以及每次工具调用的授权流程。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>MCP 服务器配置的基本结构</li>
+        <li>stdio 与 HTTP 传输的区别及各自的适用场景</li>
+        <li>三种声明服务器的位置（用户级、项目级、插件级）</li>
+        <li>工具调用的命名方式和提示展示形式</li>
+        <li>常见的失败情形（服务器无法启动、工具列表无法加载）</li>
+      </ul>
+
+      <h2>第 1 步：MCP 服务器配置的基本结构</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>一段简短的 JSON 配置</h3>
+          <p>一个 MCP 服务器条目只需要几个字段：</p>
+          <pre><code>{
+  "mcpServers": {
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-linear"],
+      "env": {
+        "LINEAR_API_KEY": "lin_api_..."
+      }
+    }
+  }
+}</code></pre>
+          <p>这就是最精简的配置：一个唯一的名称（<code>linear</code>）、用于启动服务器的 <code>command</code> + <code>args</code>，以及它所需的环境变量。LingCode 会在代理开始一轮对话时启动这个进程，通过 stdin/stdout 与之通信，并在轮次结束后将其关闭，保持整洁。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：选择传输方式——stdio 还是 HTTP</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>服务器的两种监听方式</h3>
+          <p>MCP 支持两种传输方式：</p>
+          <ul>
+            <li><strong>stdio</strong>——本地开发的默认选择。服务器作为 LingCode 管理的子进程运行，轻量、快速、无需网络。适合任何可以在本地作为 Node 或 Python 进程运行的服务。</li>
+            <li><strong>HTTP / SSE</strong>——用于通过网络连接的远程服务器。使用 <code>url</code> 代替 <code>command</code>，并在 <code>headers</code> 中传递认证信息。适合运行在团队成员机器上的服务、内部共享服务，或托管的第三方服务商。</li>
+          </ul>
+          <p>两者使用同一套协议，区别仅在于连接方式。代理本身并不知道也不在乎它使用的是哪种传输。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>浏览器端 MCP：</strong>/try 沙箱仅支持 HTTP 传输——stdio 无法在浏览器环境中使用。如果你希望某个工具同时在 LingCode（Mac 客户端）和 /try（浏览器）中可用，请将其封装为 HTTP 传输。
+      </div>
+
+      <h2>第 3 步：选择声明服务器的位置</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>用户级、项目级还是插件级——选对作用域</h3>
+          <p>LingCode 从三个位置查找 MCP 服务器配置：</p>
+          <ul>
+            <li><strong>用户级（全局）：</strong><code>~/.claude/mcp.json</code>——在任何地方均生效。适合个人账号级别的服务（你自己的 Linear、你自己的 GitHub）。</li>
+            <li><strong>项目级（局部）：</strong>项目根目录或其上级目录中的 <code>.claude/mcp.json</code>——仅在该项目中生效。适合项目专属的服务（该产品的管理 API）。</li>
+            <li><strong>插件内置：</strong>放在某个<a href="/zh/tutorials/install-and-configure-plugins.html">插件</a>的 <code>mcp/</code> 目录中——适合可共享、有命名空间的工具（例如团队共同安装的"通过 mcp-server-linear 接入 Linear"插件）。</li>
+          </ul>
+          <p>三者在加载时会合并。命名冲突时，项目级配置优先于用户级配置。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：第一次工具调用——它的样子</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>命名空间格式：<code>mcp__&lt;server&gt;__&lt;tool&gt;</code></h3>
+          <p>服务器注册后，LingCode 会发现其工具，并以 <code>mcp__linear__create_issue</code>、<code>mcp__linear__list_projects</code> 等名称将其暴露给代理。这个前缀很重要：它能防止两个都暴露了 <code>create_issue</code> 工具的 MCP 服务器产生命名冲突，也能让你在聊天面板中一眼看出某次工具调用来自 MCP，而非内置工具集。</p>
+          <p>在一次会话中，每当代理首次调用某个 MCP 工具时，你会看到一个授权提示，显示工具名称、参数以及服务器身份。你可以选择批准、拒绝，或"本次会话内始终批准"。授权是按工具粒度的，而非按服务器——这是有意为之的设计，因为有些 MCP 服务器会将强大的工具和无害的工具混在一起暴露。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：出了问题怎么办——两种常见故障</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>服务器无法启动，或工具不显示</h3>
+          <p><strong>服务器无法启动。</strong>运行 <code>lingcode doctor</code>（或在 REPL 中输入 <code>/doctor</code>）。它会尝试启动每个已配置的 MCP 服务器，并报告启动失败的服务器的 stderr 输出。常见原因包括：PATH 中找不到 <code>npx</code>/<code>node</code>、必填的环境变量未设置、服务器包尚未发布（npm 包名有拼写错误）。看到实际的错误信息后，解决方案通常一目了然。</p>
+          <p><strong>服务器启动了，但工具不显示。</strong>服务器在运行，但没有注册任何工具。这通常意味着服务器端的工具定义存在 Schema 问题——工具在代码中存在，但未能通过校验，代理因此看不到它们。查看服务器自身的日志；Schema 校验失败通常会有明显的报错信息。如果是第三方服务器且是近期才出现的问题，建议向上游提交 issue。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：一个防患于未然的好习惯</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>像对待 ASC API Key 一样对待 MCP 凭据</h3>
+          <p>如果 <code>mcp.json</code> 文件在版本控制中，不要将 <code>LINEAR_API_KEY</code> 直接写成明文字符串。要么提交一个模板（<code>$LINEAR_API_KEY</code>），让环境变量在运行时提供实际值；要么将真实配置放在 <code>~/.claude/mcp.json</code> 中（该文件属于用户个人，不会被提交）。MCP 服务器功能强大——泄露凭据的风险等同于泄露任何其他 API Key。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>性能提示：</strong>MCP 服务器每轮对话都会重新启动。启动较慢的服务器会为每次提示增加延迟。对于频繁使用的服务器，优先考虑 HTTP 传输连接到一个长期运行的本地进程，而不是使用 stdio 方式在每次启动时导入大量代码。
+      </div>
+
+      <h2>接下来做什么</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>安装与配置插件</h3>
+            <p>与团队共享 MCP 配置的最佳方式</p>
+          </a>
+          <a href="/zh/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>权限模式</h3>
+            <p>MCP 工具调用所经过的逐次授权流程</p>
+          </a>
+          <a href="/zh/tutorials/install-and-use-the-lingcode-cli.html" class="tutorial-next-card">
+            <h3>安装和使用 lingcode CLI</h3>
+            <p>lingcode doctor 是诊断 MCP 服务器问题的好帮手</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发工具。专为想要快速发布的创业者和需要真正趁手工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

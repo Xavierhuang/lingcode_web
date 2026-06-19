@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>从 Cloudflare Registrar 购买域名 — LingCode 教程</title>
+  <meta name="description" content="Cloudflare Registrar 按注册局原价出售域名——无加价、无附加销售、无续费陷阱。本教程带你完成购买流程，并说明唯一需要了解的注意事项。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/buy-a-domain-from-cloudflare.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/buy-a-domain-from-cloudflare.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/buy-a-domain-from-cloudflare.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/buy-a-domain-from-cloudflare.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "从 Cloudflare Registrar 购买域名",
+  "description": "Cloudflare Registrar 按注册局原价收费，无加价、无附加销售、无首年低价续费高价陷阱。唯一的限制是你必须使用 Cloudflare 的 DNS。对大多数开发者项目来说，这其实是一个优点，而非约束。",
+  "url": "https://lingcode.dev/zh/tutorials/buy-a-domain-from-cloudflare.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/buy-a-domain-from-cloudflare.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "从 Cloudflare Registrar 购买域名"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "从 Cloudflare Registrar 购买域名",
+      "item": "https://lingcode.dev/zh/tutorials/buy-a-domain-from-cloudflare.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/buy-a-domain-from-cloudflare.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">发布与基础设施</a>
+      <span>/</span>
+      <span>从 Cloudflare Registrar 购买域名</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>从 Cloudflare Registrar 购买域名</h1>
+      <p class="intro">Cloudflare Registrar 按注册局原价收费，无加价、无附加销售、无首年低价续费高价陷阱。唯一的限制是你必须使用 Cloudflare 的 DNS。对大多数开发者项目来说，这其实是一个优点，而非约束。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>大多数域名注册商同时做两门生意。第一是枯燥的数据库业务——记录谁拥有哪个域名。第二才是真正赚钱的地方：向你推销附加服务——邮箱、SSL、"高级" DNS、托管、隐私保护。结账时 $9 的域名常常变成 $50 的附加包，第一年 $9 到第二年就变成 $18。这种摩擦很烦人——你得花时间取消勾选各种选项——而定价本身也让那些只想买个名字、然后继续工作的人感到不爽。</p>
+      <p>Cloudflare Registrar 的卖点是他们只做第一门生意。他们按注册局批发价收费（撰写本文时 <code>.com</code> 约为 $9.15），原价转给你，不加一分钱。没有"续费加价"，结账流程里也没有附加推销。价格就是价格，年年如此。</p>
+      <p>代价是：Cloudflare 要求域名使用 Cloudflare 的域名服务器。你不能把域名放在 Cloudflare 却用别家的 DNS；域名必须全程托管在你的 Cloudflare 账户中。对大多数开发者来说这完全没问题——Cloudflare 的 DNS 又快又免费，各类记录类型一应俱全。如果你坚持使用其他 DNS 提供商，那这就是个死局。这就是全部的限制条件。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>为什么 Cloudflare 能比 Namecheap 收费更低（这不是亏本引流）</li>
+        <li>哪些域名可以在这里注册，哪些不行</li>
+        <li>一步完成域名注册的流程</li>
+        <li>"使用 Cloudflare 域名服务器"为何大多数情况下是优点</li>
+        <li>什么情况下应该选择其他注册商</li>
+      </ul>
+
+      <h2>第 1 步：创建 Cloudflare 账户</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>免费，一分钟搞定</h3>
+          <p>在 <code>cloudflare.com</code> 注册账户。免费套餐已足够完成本教程的所有操作。记得开启双重验证（2FA）——这个账户将同时管理你的域名和 DNS，值得多一道防线。</p>
+          <p>如果你已经因为 Cloudflare 其他产品（Workers、R2、Pages、Tunnel 等）注册过账户，直接用就好，无需单独注册注册商账户。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：搜索域名</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>控制台 → Domain Registration → Register Domains</h3>
+          <p>在 Cloudflare 控制台中找到 <strong>Domain Registration</strong> → <strong>Register Domains</strong>。Cloudflare 时常调整控制台导航结构；如果截图里的位置已经变了，用控制台顶部的全局搜索（<kbd>/</kbd>）能立即找到——输入"register"即可。</p>
+          <p>搜索你想要的域名。Cloudflare 会提前显示每个它支持的顶级域名的价格——重要的是，这个价格年年不变，不存在"第一年 $9，续费 $18"的套路。</p>
+          <p>并非所有顶级域名都支持——Cloudflare 覆盖的是一个子集，聚焦于开发者常用的扩展名（<code>.com</code>、<code>.net</code>、<code>.org</code>、<code>.io</code>、<code>.dev</code>、<code>.app</code>、<code>.ai</code>、各国家代码等）。如果你想要的顶级域名不在列表中，就需要去别处注册。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>比较价格：</strong>Cloudflare 显示的数字是注册局批发价加 ICANN 费用。<code>.com</code> 目前约为 $9.15。对比时要看其他注册商的续费年价格（而非首年促销价），差距通常在每年 $5–10 之间。
+      </div>
+
+      <h2>第 3 步：结账——没有任何东西需要跳过</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>一个项目，一次点击</h3>
+          <p>购物车里只有域名本身。没有 SSL 推销，没有高级 DNS 推销，没有建站工具，没有邮箱。WHOIS 隐私保护默认免费开启。</p>
+          <p>填写联系信息（用于注册局登记，公开 WHOIS 中会被隐私保护遮蔽），输入支付方式，确认。域名就是你的了。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步："必须用 Cloudflare 域名服务器"这件事</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>为什么这大多数情况下是优点</h3>
+          <p>结账完成后，Cloudflare 会立即为你的域名创建一个 DNS 区域，并分配他们的域名服务器（<code>NSx.cloudflare.com</code>，两个）。你无法更换域名服务器，只能在 Cloudflare 内部管理 DNS 记录。</p>
+          <p>对大多数开发者项目而言，这是好事：</p>
+          <ul>
+            <li><strong>Cloudflare 的 DNS 是全球速度最快的之一。</strong>免费、任播、缓存完善。</li>
+            <li><strong>控制台界面简洁。</strong>A、CNAME、MX、TXT 记录一应俱全，界面现代，没有奇怪的限制。</li>
+            <li><strong>通过 Cloudflare CDN 免费获得 TLS。</strong>如果你把域名通过 Cloudflare 的代理指向某台服务器，<a href="/zh/tutorials/connect-domain-to-server-with-dns.html">HTTPS</a> 会自动启用。</li>
+            <li><strong>免费套餐包含 DDoS 防护。</strong>你可能用不上，但它就在那里。</li>
+          </ul>
+          <p>以下情况则是真正的限制：你的公司因现有基础设施或合同要求，必须使用第三方 DNS 提供商（Route 53、DNSimple 等）。这种情况下 Cloudflare Registrar 不适合你，应从允许自定义域名服务器的注册商购买，比如 Namecheap 或 Porkbun。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：添加第一条 DNS 记录</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>将域名指向某处</h3>
+          <p>域名已注册，但还没有指向任何地方。在 Cloudflare 控制台中点击进入该域名，然后在侧边栏选择 <strong>DNS</strong>，添加你需要的记录：</p>
+          <ul>
+            <li>将根域名指向某个 IP：添加一条 <code>A</code> 记录，名称填 <code>@</code>，值填服务器 IP。</li>
+            <li>将 <code>www</code> 指向同一位置：添加一条 <code>CNAME</code> 记录，名称填 <code>www</code>，值填根域名（或再添加一条 A 记录）。</li>
+            <li>指向 Vercel 或 Netlify 等托管平台：通常添加一条 <code>CNAME</code> 记录，名称填 <code>@</code>（或顶级域；Cloudflare 会自动展平），值填平台提供的目标地址。</li>
+          </ul>
+          <p><a href="/zh/tutorials/connect-domain-to-server-with-dns.html">DNS 连接教程</a>对各类记录类型有更深入的介绍。简而言之：A 和 CNAME 覆盖了你 95% 的使用场景。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：Cloudflare 不是最佳选择的情况</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>三个合理的理由让你选择其他地方</h3>
+          <ul>
+            <li><strong>你需要 Cloudflare 不支持的顶级域名。</strong>支持列表相当全面，但并不完整。<code>.co.uk</code> 在 Cloudflare？不行。<code>.xyz</code>？可以。决定之前先查一下注册页面。</li>
+            <li><strong>你绑定了其他 DNS 提供商。</strong>如果你的公司在 Route 53 或 NS1 上管理 DNS，就无法从 Cloudflare 迁移过去。请从允许自定义域名服务器的注册商购买，比如 <a href="/zh/tutorials/buy-a-domain-from-namecheap.html">Namecheap</a>、Porkbun 等。</li>
+            <li><strong>你想把域名和邮箱账单合并到一家。</strong>Cloudflare 不卖邮件托管服务。如果你希望一站式搞定，Namecheap 这样的注册商或 Fastmail 这样的邮件服务商（既提供邮箱又可以注册域名）是更好的选择。</li>
+            <li><strong>你需要在锁定账户时有人工客服可以拨打。</strong>Cloudflare 免费套餐没有人工支持——账户恢复完全依赖邮件和双重验证。如果两者都丢失，找回域名会非常困难。对于承载重要品牌价值或未来收益的域名，即便每年费用更高，选择提供付费电话支持的注册商可能是更安全的做法。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>想把现有域名转入？</strong>Cloudflare 接受从其他注册商转入（需要转移授权码，等待 5–7 天，流程和其他地方一样）。如果域名目前正在使用，建议在开始转移前几天将现有 DNS 记录的 TTL 降至 300——这样域名服务器变更后传播更快，能把切换窗口降到最低。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/buy-a-domain-from-namecheap.html" class="tutorial-next-card">
+            <h3>从 Namecheap 购买域名</h3>
+            <p>友好的默认选择——更高的灵活性，价格略高</p>
+          </a>
+          <a href="/zh/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>将域名连接到服务器</h3>
+            <p>拥有域名之后，把它指向你的网站所在地</p>
+          </a>
+          <a href="/zh/tutorials/magic-deploy-a-website.html" class="tutorial-next-card">
+            <h3>Magic Deploy 部署网站</h3>
+            <p>另一条路——让 LingCode 选择托管商，再绑定你的域名</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速交付的创始人和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

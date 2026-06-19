@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prepare a fresh Linux server for production — LingCode Tutorials</title>
+  <meta name="description" content="A fresh Ubuntu VPS is not production-ready. System updates, a non-root user, SSH hardening, ufw, fail2ban, swap, automatic security updates — the universal checklist before your first deploy.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/prepare-a-fresh-linux-server-for-production.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/prepare-a-fresh-linux-server-for-production.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/prepare-a-fresh-linux-server-for-production.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/prepare-a-fresh-linux-server-for-production.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Prepare a fresh Linux server for production",
+  "description": "A blank Ubuntu VPS is not production-ready. Within hours of booting on a public IP, automated scanners are trying root/admin/test passwords on SSH. The universal checklist — updates, non-root user, SSH key-only, firewall, fail2ban, swap, auto-patches — turns a fresh box into some",
+  "url": "https://lingcode.dev/tutorials/prepare-a-fresh-linux-server-for-production.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/prepare-a-fresh-linux-server-for-production.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Prepare a fresh Linux server for production"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Prepare a fresh Linux server for production",
+      "item": "https://lingcode.dev/tutorials/prepare-a-fresh-linux-server-for-production.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/prepare-a-fresh-linux-server-for-production.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Prepare a fresh Linux server for production</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Prepare a fresh Linux server for production</h1>
+      <p class="intro">A blank Ubuntu VPS is not production-ready. Within hours of booting on a public IP, automated scanners are trying root/admin/test passwords on SSH. The universal checklist — updates, non-root user, SSH key-only, firewall, fail2ban, swap, auto-patches — turns a fresh box into something you can responsibly point a domain at. Twenty minutes of work, paid back the first time it matters.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The default state of a fresh Linux VPS is "everything passes, please come in." Root login is enabled on SSH. Password authentication is enabled (often with the provider's emailed default password). No firewall is running. No automatic updates are configured. Within minutes of a public IP being assigned, log entries start showing thousands of SSH attempts per hour from automated botnets trying common usernames and weak passwords. Most of them fail. Some don't.</p>
+      <p>None of the hardening below is exotic. It's the same checklist DigitalOcean, AWS, Hetzner, Linode, and every other VPS provider has been linking to for a decade. The reason to do it deliberately rather than skip it is that the steps are <em>conditionally fast</em>: the first time, twenty minutes; every time after, the same image clone or Ansible role. Once you've done it once, it's never the bottleneck.</p>
+      <p>This tutorial walks the universal first-boot checklist for an Ubuntu 22.04 / 24.04 server (Debian works identically; Alpine differs and is called out where it matters). After the steps, your box has: a non-root deploy user, SSH key-only auth, an active firewall, an SSH brute-force throttle, a swap file sized for the instance, log rotation in place, and unattended security updates configured. Then you're ready to <a href="/tutorials/run-a-node-api-on-aws-lightsail.html">deploy your application</a>.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>What automated scanners do to fresh public-IP boxes (and why root SSH is the prize)</li>
+        <li>The user model: <code>root</code> for emergency only; everyday work via a sudo-capable user</li>
+        <li>SSH configuration that closes the most common attack vector</li>
+        <li>ufw — the simplest sane firewall, with the three rules every web server needs</li>
+        <li>fail2ban — automatic IP bans for repeated SSH failures</li>
+        <li>Swap files: when and how much; the OOM-safety thing nobody mentions</li>
+        <li>Unattended-upgrades: the patch you forget to apply, applied for you</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> A fresh Ubuntu 22.04 or 24.04 server with a public IP and root access. Your local SSH public key (<code>~/.ssh/id_ed25519.pub</code> or <code>~/.ssh/id_rsa.pub</code>). If you don't have an SSH key on your laptop, generate one first: <code>ssh-keygen -t ed25519 -C "you@yourmail.com"</code>. <strong>Do not skip this and continue with password auth</strong> — that defeats the rest of the tutorial.
+      </div>
+
+      <h2>Step 1: Update everything before doing anything else</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>The first command on a fresh box</h3>
+          <p>The image you booted from is some snapshot in time. Between the snapshot and your boot, security patches happened. Pull them before anything else, because the steps below assume a current package set:</p>
+          <pre><code>ssh root@&lt;PUBLIC_IP&gt;
+apt update
+apt full-upgrade -y
+# A kernel update may queue a reboot prompt — accept it.
+reboot</code></pre>
+          <p>Wait a minute, reconnect. You're now on the latest patches. <code>full-upgrade</code> rather than <code>upgrade</code> because the latter holds back packages that need dependency changes — usually exactly the security ones.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Create a non-root deploy user</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Root is for emergencies; daily work goes through sudo</h3>
+          <p>Every common username — <code>root</code>, <code>admin</code>, <code>ubuntu</code>, <code>deploy</code>, <code>www</code> — is being guessed by scanners. The mitigation is <em>combining</em> a non-default username with key-only auth, but the username matters less than people think — the firewall and key-only auth do the real work. Pick something memorable; <code>deploy</code> is fine.</p>
+          <pre><code>adduser deploy
+# Set a password. You'll basically never type it; pick a long random one
+# and store it in your password manager. It's only used if sudo asks
+# (which you can disable too).
+
+usermod -aG sudo deploy</code></pre>
+          <p>Copy your SSH key into the new user's <code>authorized_keys</code> so you can log in as <code>deploy</code> without a password:</p>
+          <pre><code>rsync --archive --chown=deploy:deploy ~/.ssh /home/deploy
+# rsync copies your root .ssh/authorized_keys to /home/deploy/.ssh/
+# and fixes ownership. Verify:
+ls -la /home/deploy/.ssh/</code></pre>
+          <p>Open a <em>second</em> terminal (don't disconnect from root yet) and test:</p>
+          <pre><code>ssh deploy@&lt;PUBLIC_IP&gt;
+# Should let you in without a password. From here on, do work as deploy;
+# escalate with sudo when needed.</code></pre>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't disconnect the root session yet.</strong> If the next step misconfigures SSH and locks you out, the still-open root session is how you fix it. Keep it open until Step 4 succeeds end-to-end.
+      </div>
+
+      <h2>Step 3: Disable root login and password auth on SSH</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Two lines in sshd_config; this is the biggest single security win</h3>
+          <p>As the <code>deploy</code> user (so you can verify sudo works):</p>
+          <pre><code>sudo nano /etc/ssh/sshd_config</code></pre>
+          <p>Find and set (uncomment if needed):</p>
+          <pre><code>PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+# Optional but recommended:
+ChallengeResponseAuthentication no
+UsePAM yes
+KbdInteractiveAuthentication no</code></pre>
+          <p>Save. On Ubuntu 22.04+, SSH config is often split across <code>/etc/ssh/sshd_config.d/*.conf</code> files; provider images sometimes drop a <code>50-cloud-init.conf</code> that re-enables password auth. Check:</p>
+          <pre><code>sudo grep -rE "^(Password|PermitRoot)" /etc/ssh/sshd_config /etc/ssh/sshd_config.d/
+# Any line setting PasswordAuthentication yes or PermitRootLogin yes in
+# the .d/ directory will override your edit. Comment them out.</code></pre>
+          <p>Apply:</p>
+          <pre><code>sudo systemctl restart ssh
+# (On older Ubuntu the unit is named sshd.service. systemctl restart sshd
+#  is the same; systemd resolves the alias.)</code></pre>
+          <p>From your laptop, in a <em>new</em> terminal, try:</p>
+          <pre><code>ssh deploy@&lt;PUBLIC_IP&gt;     # should still work
+ssh root@&lt;PUBLIC_IP&gt;       # should be rejected: "Permission denied (publickey)"</code></pre>
+          <p>If both behave correctly, your original root session can close. If anything went wrong, the open root terminal in the original window is how you re-edit <code>sshd_config</code>.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Enable ufw with the three rules every web server needs</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Default deny, allow only what you need</h3>
+          <p>ufw ("uncomplicated firewall") is iptables with a sane interface. On Ubuntu it's pre-installed but inactive:</p>
+          <pre><code>sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow OpenSSH       # port 22
+sudo ufw allow http          # port 80
+sudo ufw allow https         # port 443
+sudo ufw enable
+# It'll warn about disconnecting SSH — you allowed it on the previous line, so safe.
+sudo ufw status verbose</code></pre>
+          <p>If your provider has its own external firewall (Lightsail's firewall tab, AWS security groups, DigitalOcean Cloud Firewalls), keep ufw <em>and</em> the provider firewall both running. Two layers; either can save the other.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>If your app listens on a non-standard port</strong> (3000 for Node dev, 5432 for Postgres, 6379 for Redis) — <em>do not</em> open those ports in ufw. Run them on <code>127.0.0.1</code> only and front them with nginx on 80/443. The firewall rule list should be three lines forever; everything else is internal.
+      </div>
+
+      <h2>Step 5: Install fail2ban</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Auto-ban IPs that try and fail to log in</h3>
+          <p>fail2ban watches log files for failed login attempts and adds firewall rules banning the offending IP. With key-only SSH it's belt-and-suspenders, but the belt is cheap:</p>
+          <pre><code>sudo apt install -y fail2ban
+sudo systemctl enable --now fail2ban</code></pre>
+          <p>The default jail watches SSH. Override defaults in a <em>local</em> config file (don't edit the shipped one — package updates overwrite it):</p>
+          <pre><code>sudo tee /etc/fail2ban/jail.local &gt;/dev/null &lt;&lt;'EOF'
+[DEFAULT]
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+
+[sshd]
+enabled = true
+EOF
+sudo systemctl restart fail2ban</code></pre>
+          <p>Verify: <code>sudo fail2ban-client status sshd</code>. Currently-banned IPs accumulate over time; <code>sudo fail2ban-client unban &lt;IP&gt;</code> lets you out of jail if you ever ban yourself.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Add swap (especially on small boxes)</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Not for performance — for OOM survival</h3>
+          <p>Most VPS providers don't allocate swap by default. On a 512 MB or 1 GB box, a sudden memory spike (a runaway log parse, a misconfigured Node app) triggers the Linux OOM killer, which usually shoots whatever is using the most memory — often your app. Swap doesn't make things fast; it gives the OOM killer breathing room and prevents the worst-case "service randomly disappears."</p>
+          <pre><code># For a 1 GB instance, 2 GB swap is reasonable. Scale proportionally.
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Make it persist across reboots:
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# Tune: how aggressive swap usage should be. Lower = avoid swap until necessary.
+echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/99-swap.conf
+sudo sysctl -p /etc/sysctl.d/99-swap.conf
+
+# Verify:
+free -h</code></pre>
+          <p>The output of <code>free -h</code> now shows a Swap row with 2.0 GB. The box is no longer one memory spike away from OOM-killing your app.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: Configure unattended-upgrades</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Security patches apply themselves while you sleep</h3>
+          <p>The patch you didn't apply is the one the exploit hits. Ubuntu ships <code>unattended-upgrades</code> for automatic security updates; on most provider images it's installed but not enabled:</p>
+          <pre><code>sudo apt install -y unattended-upgrades apt-listchanges
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+# Answer "Yes" to "automatically download and install stable updates"
+
+# Verify it's running on a schedule:
+systemctl status unattended-upgrades.timer</code></pre>
+          <p>By default, only security updates are applied automatically. Application updates (Node, Postgres) stay manual — those can break compatibility and shouldn't auto-apply. To enable broader auto-updates (not recommended for production), edit <code>/etc/apt/apt.conf.d/50unattended-upgrades</code> and uncomment additional origins.</p>
+          <p>Auto-restart after kernel updates is <em>off</em> by default. If you want it on (recommended for non-stateful boxes), set <code>Unattended-Upgrade::Automatic-Reboot "true";</code> and <code>Unattended-Upgrade::Automatic-Reboot-Time "03:00";</code> in the same file. Boxes with persistent state (databases) should leave reboot manual.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: Log rotation sanity check</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>Already configured; verify it's working</h3>
+          <p>Ubuntu ships <code>logrotate</code> with sane defaults. You don't need to set it up, but verify it actually runs — a misconfigured one fills the disk with old logs over months:</p>
+          <pre><code>sudo logrotate -d /etc/logrotate.conf 2&gt;&amp;1 | head -20
+# -d is "debug" mode — shows what it would do without doing it.
+# You should see logs being identified for rotation.
+
+# Manual run (force):
+sudo logrotate -f /etc/logrotate.conf</code></pre>
+          <p>When you install your own services (nginx, postgres, custom apps), they typically drop config files into <code>/etc/logrotate.d/</code>. The defaults — rotate weekly, keep 4 weeks, compress old logs — are fine for most services.</p>
+        </div>
+      </div>
+
+      <h2>Step 9: Final reboot and verify</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <h3>Survive a reboot before declaring victory</h3>
+          <pre><code>sudo reboot
+# Wait 30 seconds, then reconnect:
+ssh deploy@&lt;PUBLIC_IP&gt;</code></pre>
+          <p>After reconnect, run a quick five-check:</p>
+          <pre><code># 1. You're the deploy user, not root.
+whoami    # → deploy
+
+# 2. Swap is active.
+free -h | grep Swap    # → 2.0Gi total
+
+# 3. Firewall is active and configured.
+sudo ufw status    # → Status: active, with your three rules
+
+# 4. fail2ban is running.
+sudo systemctl is-active fail2ban    # → active
+
+# 5. Unattended-upgrades is running.
+sudo systemctl is-active unattended-upgrades.timer    # → active</code></pre>
+          <p>All five green: the box is ready. Time to install your application stack and deploy.</p>
+        </div>
+      </div>
+
+      <h2>What this didn't cover (and where to go)</h2>
+      <p><strong>Database / cache</strong> — Postgres, Redis, and friends are separate beasts with their own hardening. See <a href="/tutorials/install-postgres-and-redis-on-your-server.html">Install Postgres and Redis</a>.</p>
+      <p><strong>SSH on a non-standard port</strong> — moving SSH from 22 to a random high port is debated: it cuts most botnet noise from your logs but is security-through-obscurity rather than real protection. fail2ban + key-only auth + no root is the meaningful defense. If you do move it, remember to <code>ufw allow &lt;new-port&gt;/tcp</code> and update your local <code>~/.ssh/config</code>.</p>
+      <p><strong>Monitoring and log shipping</strong> — local syslog is fine for an audit trail but useless for debugging if the box is unreachable. CloudWatch agent (AWS), Grafana Cloud (free tier), or Sentry (for app errors) ship logs off-machine.</p>
+      <p><strong>Backups</strong> — provider snapshots are the easy floor. For database state, schedule <code>pg_dump | gzip | aws s3 cp -</code> via cron and verify restores periodically.</p>
+      <p><strong>Idempotent re-runs</strong> — when you do this twice, write it as an Ansible playbook or a bash script. The provider-specific image is the next step up; the boring text-file script is the right starting point.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/install-postgres-and-redis-on-your-server.html" class="tutorial-next-card">
+            <h3>Install Postgres and Redis on your server</h3>
+            <p>Backing services for your app, with the security defaults that aren't on by default</p>
+          </a>
+          <a href="/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>Run a Node API on Lightsail</h3>
+            <p>Now that the box is hardened, deploy something to it</p>
+          </a>
+          <a href="/tutorials/buy-a-server-from-aws-ec2.html" class="tutorial-next-card">
+            <h3>Buy a server from EC2</h3>
+            <p>The other AWS server path — same hardening checklist applies</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

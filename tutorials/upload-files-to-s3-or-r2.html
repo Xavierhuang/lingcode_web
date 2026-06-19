@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload files to S3 or Cloudflare R2 — LingCode Tutorials</title>
+  <meta name="description" content="Add file uploads to your app. Create a bucket, configure credentials, sign URLs for direct browser uploads. Works on AWS S3 and Cloudflare R2 — same S3-compatible API.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/upload-files-to-s3-or-r2.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/upload-files-to-s3-or-r2.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/upload-files-to-s3-or-r2.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/upload-files-to-s3-or-r2.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Upload files to S3 or Cloudflare R2",
+  "description": "Add file uploads to your app — profile pictures, attachments, exports, whatever. Same code works on AWS S3 and Cloudflare R2; pick the one that fits your wallet. Direct-from-browser uploads with presigned URLs are the default pattern.",
+  "url": "https://lingcode.dev/tutorials/upload-files-to-s3-or-r2.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/upload-files-to-s3-or-r2.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Upload files to S3 or Cloudflare R2"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Upload files to S3 or Cloudflare R2",
+      "item": "https://lingcode.dev/tutorials/upload-files-to-s3-or-r2.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/upload-files-to-s3-or-r2.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Upload files to S3 or Cloudflare R2</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Upload files to S3 or Cloudflare R2</h1>
+      <p class="intro">Add file uploads to your app — profile pictures, attachments, exports, whatever. Same code works on AWS S3 and Cloudflare R2; pick the one that fits your wallet. Direct-from-browser uploads with presigned URLs are the default pattern.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>S3 vs. R2 — pick one</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>Both speak the same API. The code below works on either; the only difference is which endpoint you point at.</p>
+          <ul>
+            <li><strong>AWS S3</strong> — battle-tested, integrates with every other AWS service. Pricing: storage ~$0.023/GB/month, <strong>plus $0.09/GB egress</strong>. Egress is the killer; high-bandwidth apps get expensive fast. <a href="https://aws.amazon.com/s3/pricing/" target="_blank" rel="noopener">S3 pricing ↗</a>.</li>
+            <li><strong>Cloudflare R2</strong> — S3-compatible, no egress fees. Storage ~$0.015/GB/month, <strong>zero egress</strong>. Perfect for serving images/files publicly. <a href="https://developers.cloudflare.com/r2/pricing/" target="_blank" rel="noopener">R2 pricing ↗</a>.</li>
+          </ul>
+          <p>For new projects: <strong>R2 unless you're already deep in AWS.</strong> The egress savings compound.</p>
+        </div>
+      </div>
+
+      <h2>Create the bucket</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p><strong>S3:</strong> Console → <a href="https://s3.console.aws.amazon.com/s3/" target="_blank" rel="noopener">S3 ↗</a> → <strong>Create bucket</strong>. Pick a globally-unique name (lowercase, no underscores). Region close to your users.</p>
+          <p><strong>R2:</strong> Cloudflare dashboard → <a href="https://dash.cloudflare.com/?to=/:account/r2" target="_blank" rel="noopener">R2 ↗</a> → <strong>Create bucket</strong>. Name only needs to be unique within your Cloudflare account.</p>
+          <p>Block public access by default. We'll serve files through your server or signed URLs.</p>
+        </div>
+      </div>
+
+      <h2>Get credentials</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p><strong>S3:</strong> Create an IAM user with <code>AmazonS3FullAccess</code> (or scoped to the bucket). <a href="https://console.aws.amazon.com/iam/" target="_blank" rel="noopener">IAM console ↗</a> → Users → Create. Generate access keys.</p>
+          <p><strong>R2:</strong> R2 dashboard → <strong>Manage R2 API Tokens</strong> → Create token. Pick "Object Read &amp; Write" scoped to your bucket.</p>
+          <p>Either way you get two values: an <strong>Access Key ID</strong> and a <strong>Secret Access Key</strong>. Store in your backend env:</p>
+          <pre><code>S3_ACCESS_KEY_ID=AKIAxxxxxxxxxxxxxxxx
+S3_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+S3_BUCKET=my-app-uploads
+S3_REGION=auto                                  # R2 uses "auto"; S3 uses e.g. "us-east-1"
+S3_ENDPOINT=https://&lt;account&gt;.r2.cloudflarestorage.com  # R2 only; omit for S3</code></pre>
+        </div>
+      </div>
+
+      <h2>Install the SDK</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Same package for both:</p>
+          <pre><code>npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner</code></pre>
+          <p>For Python: <code>pip install boto3</code>. For Go: <a href="https://aws.github.io/aws-sdk-go-v2/" target="_blank" rel="noopener">aws-sdk-go-v2 ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>The client</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <pre><code>const { S3Client } = require("@aws-sdk/client-s3");
+
+const s3 = new S3Client({
+  region: process.env.S3_REGION,
+  endpoint: process.env.S3_ENDPOINT,   // omit for AWS S3
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  },
+});</code></pre>
+          <p>This same client works for S3 and R2. The only difference is whether you set <code>endpoint</code>.</p>
+        </div>
+      </div>
+
+      <h2>Pattern A: server-side upload (simple, slow)</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Browser sends file to your server; your server forwards to S3/R2. Easiest mental model, but every byte goes through your server (slow for big files, expensive for serverless).</p>
+          <pre><code>const { PutObjectCommand } = require("@aws-sdk/client-s3");
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
+
+app.post("/api/upload", upload.single("file"), async (req, res) =&gt; {
+  const key = `uploads/${Date.now()}-${req.file.originalname}`;
+  await s3.send(new PutObjectCommand({
+    Bucket: process.env.S3_BUCKET,
+    Key: key,
+    Body: req.file.buffer,
+    ContentType: req.file.mimetype,
+  }));
+  res.json({ key });
+});</code></pre>
+          <p>Works. Don't do this for files over ~10 MB or any high-traffic upload — it ties up your server's memory and bandwidth.</p>
+        </div>
+      </div>
+
+      <h2>Pattern B: presigned URL (recommended)</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Your server signs a one-time URL that lets the browser upload <em>directly</em> to S3/R2. Your server never sees the file bytes.</p>
+          <pre><code>const { PutObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
+// 1) Browser asks your server for an upload URL
+app.post("/api/upload-url", async (req, res) =&gt; {
+  const { filename, contentType } = req.body;
+  const key = `uploads/${Date.now()}-${filename}`;
+
+  const url = await getSignedUrl(
+    s3,
+    new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET,
+      Key: key,
+      ContentType: contentType,
+    }),
+    { expiresIn: 60 * 5 }   // 5 minutes
+  );
+  res.json({ url, key });
+});</code></pre>
+          <p>Then the browser:</p>
+          <pre><code>// In the browser
+async function uploadFile(file) {
+  const r = await fetch("/api/upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename: file.name, contentType: file.type }),
+  });
+  const { url, key } = await r.json();
+
+  await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+
+  return key;   // your app stores this in the DB
+}</code></pre>
+          <p>One server round-trip to sign, then the upload goes direct. Files of any size; your server stays cheap and stateless.</p>
+        </div>
+      </div>
+
+      <h2>CORS — the thing that breaks first</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Direct browser uploads require CORS on the bucket. Without this, the browser blocks the PUT.</p>
+          <p><strong>S3:</strong> bucket → <strong>Permissions → CORS</strong>:</p>
+          <pre><code>[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["PUT", "POST", "GET"],
+    "AllowedOrigins": ["https://yourdomain.com", "http://localhost:3000"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]</code></pre>
+          <p><strong>R2:</strong> bucket → <strong>Settings → CORS Policy</strong>. Same JSON. <a href="https://developers.cloudflare.com/r2/buckets/cors/" target="_blank" rel="noopener">R2 CORS docs ↗</a>.</p>
+          <p>If the browser console shows "blocked by CORS policy" — this is the file to edit.</p>
+        </div>
+      </div>
+
+      <h2>Serving files back</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>You stored the <code>key</code> in your DB. Two ways to serve it back:</p>
+          <p><strong>Public read (free, simple):</strong></p>
+          <ul>
+            <li><strong>R2:</strong> connect a custom domain (<a href="https://developers.cloudflare.com/r2/buckets/public-buckets/" target="_blank" rel="noopener">R2 public bucket docs ↗</a>). URLs become <code>https://cdn.yourdomain.com/uploads/xxx.jpg</code> — served free, globally.</li>
+            <li><strong>S3:</strong> use CloudFront in front of the bucket. <a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RestrictingAccessToS3.html" target="_blank" rel="noopener">S3 + CloudFront ↗</a>.</li>
+          </ul>
+          <p><strong>Signed read URLs</strong> (for private files):</p>
+          <pre><code>const { GetObjectCommand } = require("@aws-sdk/client-s3");
+
+const url = await getSignedUrl(
+  s3,
+  new GetObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key }),
+  { expiresIn: 60 * 60 }   // 1 hour
+);</code></pre>
+          <p>Use for user-specific content (private docs, paid downloads). URL works once for the expiry window.</p>
+        </div>
+      </div>
+
+      <h2>Validate uploads server-side</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Presigned URLs trust the client. If you don't constrain things, a user could upload a 5 GB executable as "profile.jpg." Two practical guardrails:</p>
+          <ul>
+            <li><strong>Constrain the presign</strong> — set <code>ContentType</code> and <code>ContentLength</code> in <code>PutObjectCommand</code>. S3/R2 will reject uploads that don't match.</li>
+            <li><strong>Verify after upload</strong> — your server does a <code>HEAD</code> request on the key after the client says it's done. Confirm size, MIME, maybe inspect the bytes.</li>
+          </ul>
+          <p>For images specifically, <a href="https://sharp.pixelplumbing.com/" target="_blank" rel="noopener">sharp ↗</a> in a post-upload Lambda/Worker can resize + sanitize.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't expose your access keys to the browser.</strong> Presigned URLs are the only safe pattern for browser uploads. If you find yourself instantiating <code>new S3Client({ credentials })</code> in client-side code, stop — those keys go in the bundle, get scraped, and someone runs up your AWS bill.
+      </div>
+
+      <h2>Useful patterns</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Multipart for big files</strong> — files over ~100 MB benefit from multipart upload. Use <a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/Package/-aws-sdk-lib-storage/" target="_blank" rel="noopener">@aws-sdk/lib-storage ↗</a>.</li>
+            <li><strong>Progress bars</strong> — use <code>XMLHttpRequest</code> instead of <code>fetch</code> for upload progress events. Or <a href="https://uppy.io/" target="_blank" rel="noopener">Uppy ↗</a> for a full-featured uploader UI.</li>
+            <li><strong>Image transforms</strong> — Cloudflare R2 + <a href="https://developers.cloudflare.com/images/transform-images/" target="_blank" rel="noopener">Cloudflare Image Transformations ↗</a> resizes on the fly via URL params. S3 + <a href="https://aws.amazon.com/serverless/serverlessrepo/" target="_blank" rel="noopener">Lambda@Edge ↗</a> can do the same.</li>
+            <li><strong>Anti-virus scanning</strong> — for user-uploaded files in regulated contexts, use <a href="https://aws.amazon.com/marketplace/pp/prodview-bvcdylzkcyzm6" target="_blank" rel="noopener">AWS GuardDuty Malware Protection ↗</a> on S3, or a post-upload Lambda calling ClamAV.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html" target="_blank" rel="noopener">S3 User Guide ↗</a></li>
+        <li><a href="https://developers.cloudflare.com/r2/" target="_blank" rel="noopener">R2 docs ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/" target="_blank" rel="noopener">AWS SDK for JS v3 ↗</a></li>
+        <li><a href="https://developers.cloudflare.com/r2/api/s3/api/" target="_blank" rel="noopener">R2 S3-compatible API reference ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html" target="_blank" rel="noopener">Presigned URL docs ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>Set up Sentry error tracking</h3>
+            <p>Catch upload failures in production</p>
+          </a>
+          <a href="/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>Sign in with Google (OAuth)</h3>
+            <p>Authenticate users before they upload</p>
+          </a>
+          <a href="/tutorials/automate-deploys-with-github-actions.html" class="tutorial-next-card">
+            <h3>Automate deploys with GitHub Actions</h3>
+            <p>Deploy your upload backend on every push</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

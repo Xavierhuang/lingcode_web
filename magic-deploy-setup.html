@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magic Deploy Setup: App Store Connect API Key Guide (iOS + macOS) | LingCode</title>
+  <meta name="description" content="Step-by-step guide to filling in Key ID, Issuer ID, Team ID, and the .p8 file for LingCode Magic Deploy. Upload your iOS or Mac app to the App Store in minutes.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/magic-deploy-setup.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/magic-deploy-setup.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/magic-deploy-setup.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/magic-deploy-setup.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/magic-deploy-setup.html">
+  <meta property="og:title" content="Magic Deploy Setup: App Store Connect API Key Guide">
+  <meta property="og:description" content="Where to find Key ID, Issuer ID, Team ID, and the .p8 file so LingCode can upload your iOS or Mac app to the App Store.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Magic Deploy Setup — App Store Connect API Key Guide">
+  <meta name="twitter:description" content="Fill in Key ID, Issuer ID, Team ID, and the .p8 file. Upload your iOS or Mac app from LingCode in minutes.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Set up App Store Connect API key for LingCode Magic Deploy",
+    "description": "How to obtain the Key ID, Issuer ID, Team ID, and .p8 file required by LingCode Magic Deploy to upload an iOS or Mac app to the App Store.",
+    "step": [
+      { "@type": "HowToStep", "name": "Create an API key in App Store Connect", "text": "Sign in at appstoreconnect.apple.com, open Users and Access, switch to the Integrations tab, and create a new App Store Connect API key with Admin or App Manager access." },
+      { "@type": "HowToStep", "name": "Download the .p8 file", "text": "Click Download API Key. The .p8 file can only be downloaded once. Save it somewhere safe and rename it to AuthKey_<KeyID>.p8." },
+      { "@type": "HowToStep", "name": "Copy the Key ID and Issuer ID", "text": "On the same Keys page, copy the 10-character Key ID and the UUID-style Issuer ID shown above the table." },
+      { "@type": "HowToStep", "name": "Find your Team ID", "text": "Sign in at developer.apple.com/account, open Membership Details, and copy the 10-character Team ID." },
+      { "@type": "HowToStep", "name": "Paste into LingCode and deploy", "text": "Open Magic Deploy in LingCode, paste the four values, click Browse to attach the .p8, and click Deploy to App Store." }
+    ],
+    "publisher": { "@type": "Organization", "name": "LingCode" }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .blog-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.875rem; }
+    .blog-content pre code { background: none; padding: 0; }
+    .field-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .field-table th, .field-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .field-table th { color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field-table td { color: var(--text); }
+    .field-table { table-layout: fixed; }
+    .field-table td, .field-table th { word-break: break-word; overflow-wrap: anywhere; }
+    .field-table td:first-child { font-family: ui-monospace, monospace; color: var(--signal); }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .callout p { margin: 0; color: var(--text); }
+    .callout strong { color: var(--signal); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+    .sibling-nav { max-width: 800px; margin: 0 auto; padding: 20px 32px 0; }
+    .sibling-nav-inner { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .sibling-nav-label { font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px; }
+    .sibling-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 0.8125rem; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+    .sibling-pill:hover { color: var(--text); border-color: var(--signal); text-decoration: none; }
+    .sibling-pill.current { background: var(--signal); color: #fff; border-color: var(--signal); cursor: default; }
+    .sibling-pill.current:hover { color: #fff; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <nav class="sibling-nav" aria-label="Deploy guide siblings">
+      <div class="sibling-nav-inner">
+        <span class="sibling-nav-label">Deploy guides:</span>
+        <a href="/magic-deploy-setup.html" class="sibling-pill current" aria-current="page">App Store</a>
+        <a href="/app-store-connect-fields.html" class="sibling-pill">ASC fields</a>
+        <a href="/google-play-deploy-setup.html" class="sibling-pill">Google Play</a>
+        <a href="/magic-deploy-web-platforms.html" class="sibling-pill">Web</a>
+        <a href="/host-your-own-server.html" class="sibling-pill">Provision</a>
+        <a href="/magic-deploy-scripts.html" class="sibling-pill">Scripts</a>
+      </div>
+    </nav>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Guide</p>
+        <h1>Magic Deploy Setup</h1>
+        <p>Where to find the Key ID, Issuer ID, Team ID, and <code>.p8</code> file LingCode needs to upload your iOS or Mac app to the App Store. Platform is auto-detected — no picker to configure.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2>What you're filling in</h2>
+      <p>When you click <strong>Magic Deploy</strong> in LingCode and choose <strong>App Store Connect (API key)</strong>, you'll see four fields. Each comes from a different page on Apple's developer portals — this guide walks through them in the order LingCode shows them.</p>
+
+      <table class="field-table">
+        <thead>
+          <tr><th>Field</th><th>What it is</th><th>Where to get it</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Key ID</td><td>10-character ID for your API key, e.g. <code>ABC123XYZ0</code>.</td><td>App Store Connect → Users and Access → Integrations → Keys</td></tr>
+          <tr><td>Issuer ID</td><td>UUID for your team's API integration.</td><td>Same Keys page (shown above the table)</td></tr>
+          <tr><td>Team ID</td><td>10-character Apple Developer team ID, e.g. <code>HPTTZS5J27</code>.</td><td>Apple Developer → Membership Details</td></tr>
+          <tr><td>.p8 file</td><td>Private key Apple generates once when you create the API key.</td><td>Downloaded the moment you create the key — saved as <code>AuthKey_&lt;KeyID&gt;.p8</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p><strong>Two in-app shortcuts make this easier.</strong> Magic Deploy runs a <em>preflight</em> before any <code>xcodebuild</code> call, checking that Xcode (not just Command Line Tools) is selected and that your keychain holds an <em>Apple Distribution</em> certificate matching the Team ID — catching ~70% of first-deploy failures in about a second. And the <strong>Auto-bump build number</strong> checkbox next to the fields runs <code>agvtool next-version -all</code> before each archive, eliminating the second-most-common failure ("Redundant Binary Upload"). The auto-bump toggle is off by default — tick it the first time you deploy.</p>
+      </div>
+
+      <div class="callout">
+        <p><strong>Why are there so many pieces?</strong> Apple's deploy flow is long because it chains together a <em>trust chain</em>: your Apple ID proves you, your <a href="/glossary.html#team-id">Team ID</a> proves which organization you ship under, your <a href="/glossary.html#apple-distribution">Apple Distribution certificate</a> proves your team holds the private key, the <a href="/glossary.html#provisioning-profile">provisioning profile</a> proves the app is allowed to use that cert with those entitlements, and the signed <a href="/glossary.html#xcarchive">.xcarchive</a> carries that chain all the way to the user's device, which verifies it on every launch. Each field LingCode asks you for plugs into one link of that chain — removing any link breaks the whole thing. Terms unfamiliar? See the <a href="/glossary.html">glossary</a>.</p>
+      </div>
+
+      <h2>Before you start — one-time Apple setup</h2>
+      <p>The four fields in Magic Deploy are the <em>final</em> piece. Several things have to already be true on the Apple side, or the upload will fail in ways the UI can't always explain clearly. Walk this checklist once, then you're done for the life of the project.</p>
+
+      <h3>1. A paid Apple Developer Program membership</h3>
+      <p>A free Apple ID can build and run on your own Mac but <strong>cannot</strong> upload to App Store Connect. Enroll at <a href="https://developer.apple.com/programs/enroll/" rel="noopener noreferrer">developer.apple.com/programs/enroll</a>. It's $99/year for an individual; organizations need a D-U-N-S number and typically take 3–10 business days to be verified. Until your account status shows as <em>Active</em> on <a href="https://developer.apple.com/account" rel="noopener noreferrer">developer.apple.com/account</a>, <strong>none</strong> of the steps below will work.</p>
+
+      <h3>2. Xcode installed, not just Command Line Tools</h3>
+      <p>LingCode Magic Deploy shells out to <code>xcodebuild</code>, which lives inside the full Xcode app — the standalone Command Line Tools bundle is not enough. Install Xcode from the <a href="https://apps.apple.com/us/app/xcode/id497799835" rel="noopener noreferrer">Mac App Store</a> or <a href="https://developer.apple.com/download/all/" rel="noopener noreferrer">developer.apple.com/download</a>, open it once to accept the license, then confirm in Terminal:</p>
+      <pre><code>xcode-select -p
+# should print: /Applications/Xcode.app/Contents/Developer</code></pre>
+      <p>If it prints <code>/Library/Developer/CommandLineTools</code> instead, point it at Xcode:</p>
+      <pre><code>sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -license accept</code></pre>
+
+      <h3>3. Signed in to Xcode with your developer account</h3>
+      <p>Open <strong>Xcode → Settings → Accounts</strong>. Click <strong>+</strong>, pick <strong>Apple ID</strong>, and sign in with the account that owns your developer membership. The team you want to ship under should appear under your Apple ID row; click it and confirm the Team ID matches the one you'll paste into LingCode.</p>
+
+      <h3>4. A distribution certificate in your login keychain</h3>
+      <p><code>xcodebuild</code> signs the archive with a <strong>"Apple Distribution"</strong> (or legacy <em>"Mac App Distribution"</em>) certificate. The easiest way to get one is to let Xcode generate it the first time you archive — but you can also create it yourself:</p>
+      <ul>
+        <li><strong>Xcode Settings → Accounts → Manage Certificates → + → Apple Distribution</strong>. Xcode creates the cert and adds it to your login keychain.</li>
+      </ul>
+      <p>Sanity-check in Terminal:</p>
+      <pre><code>security find-identity -v -p codesigning | grep -i distribution</code></pre>
+      <p>You should see a line like <code>1) 1A2B...  "Apple Distribution: Your Name (HPTTZS5J27)"</code>. The 10-character code in parentheses is your Team ID — it must match the Team ID field in LingCode.</p>
+
+      <div class="callout">
+        <p><strong>Certificates are machine-local.</strong> If you regenerate a Mac or switch computers, you'll need to either export/import the private key from the old machine's Keychain Access, or create a new certificate and ship from the new machine. Magic Deploy cannot upload from a machine that has no matching private key.</p>
+      </div>
+
+      <h3>5. An app record in App Store Connect</h3>
+      <p>Apple will not accept uploads for a bundle identifier that doesn't exist yet. Create the record first:</p>
+      <ol>
+        <li>Sign in at <a href="https://appstoreconnect.apple.com" rel="noopener noreferrer">appstoreconnect.apple.com</a>.</li>
+        <li><strong>My Apps → +</strong> → <strong>New App</strong>.</li>
+        <li><strong>Platforms:</strong> tick <strong>iOS</strong>, <strong>macOS</strong>, or both — whichever matches the Xcode target you're shipping. Magic Deploy auto-detects from the scheme and picks the right <code>altool --type</code>.</li>
+        <li><strong>Bundle ID:</strong> pick the identifier that matches your Xcode project's <em>Bundle Identifier</em> exactly (shown in the target's <strong>General</strong> tab). If it's not in the dropdown, register it first at <a href="https://developer.apple.com/account/resources/identifiers/list" rel="noopener noreferrer">developer.apple.com/account/resources/identifiers</a> as a <strong>Mac App</strong> identifier (not iOS).</li>
+        <li><strong>SKU:</strong> any internal string you'll never reuse. Can't be changed after creation. <code>com-example-myapp</code> is a safe default.</li>
+        <li><strong>User access:</strong> leave as <em>Full Access</em> unless you have a reason to restrict.</li>
+      </ol>
+      <p>The record can be completely unfilled — no screenshots, no description, no pricing — and you still can't submit for review, but you <em>can</em> upload builds to it. That's what Magic Deploy does.</p>
+
+      <h2>Your Xcode project must have these settings</h2>
+      <p>The Apple side can be perfect and the upload will still fail if the <code>.xcodeproj</code> isn't configured for Mac App Store distribution. Open the target's <strong>Signing &amp; Capabilities</strong> tab and verify each of these:</p>
+
+      <h3>Signing &amp; Capabilities</h3>
+      <ul>
+        <li><strong>Automatically manage signing</strong> — turned <strong>on</strong>. Magic Deploy's generated <code>ExportOptions.plist</code> sets <code>signingStyle</code> to <code>automatic</code>, so manual signing will conflict.</li>
+        <li><strong>Team</strong> — set to the same team whose Team ID you'll paste into LingCode. If you see a yellow warning triangle here, click it and resolve (usually just "Add Account").</li>
+        <li><strong>Bundle Identifier</strong> — matches the app record you created in App Store Connect. Typos (<code>com.example.MyApp</code> vs <code>com.example.myapp</code>) cause rejections at upload time.</li>
+        <li><strong>App Sandbox</strong> — required <em>for Mac App Store only</em>. Click <strong>+ Capability</strong> if it isn't already there. Enable any entitlements your app actually needs (Network → Outgoing Connections, File Access, etc.) — <em>don't</em> enable everything "just in case", each entitlement is reviewed. (iOS targets skip this — iOS apps are sandboxed by default at the OS level.)</li>
+        <li><strong>Hardened Runtime</strong> — required <em>for Mac App Store only</em>. Xcode adds this automatically for new macOS targets, but older projects may need to add it by hand. (Not applicable to iOS.)</li>
+      </ul>
+
+      <h3>Version and build numbers</h3>
+      <p>In the target's <strong>General</strong> tab, under <strong>Identity</strong>:</p>
+      <ul>
+        <li><strong>Version</strong> (<code>CFBundleShortVersionString</code>) — the human-facing version, e.g. <code>1.2.3</code>. App Store review cares about this.</li>
+        <li><strong>Build</strong> (<code>CFBundleVersion</code>) — the internal build number. <strong>Must be strictly greater</strong> than every build you've previously uploaded <em>for the same Version</em>. If you upload <code>1.2.3 (42)</code>, the next upload for <code>1.2.3</code> has to be at least <code>43</code>. Many first-time-with-Magic-Deploy failures are just "I forgot to bump this."</li>
+      </ul>
+
+      <h3>Scheme</h3>
+      <p>LingCode picks the <strong>first scheme</strong> that <code>xcodebuild -list</code> returns. If your project has multiple schemes (app + tests + a helper target, for example), make sure the one that builds the distributable app comes first — reorder in <strong>Xcode → Product → Scheme → Manage Schemes</strong>.</p>
+      <p>Also ensure the scheme is marked <strong>Shared</strong> in that same dialog. Non-shared schemes live in your personal <code>xcuserdata/</code> and may not be visible to <code>xcodebuild</code>.</p>
+
+      <h2>Step 1 — Create an App Store Connect API key</h2>
+      <p>This single step gets you three of the four fields: the <strong>Key ID</strong>, the <strong>Issuer ID</strong>, and the <strong>.p8 file</strong>.</p>
+      <ol>
+        <li>Sign in at <a href="https://appstoreconnect.apple.com" rel="noopener noreferrer">appstoreconnect.apple.com</a> with the Apple ID that owns your developer account.</li>
+        <li>In the top nav, click <strong>Users and Access</strong>.</li>
+        <li>Switch to the <strong>Integrations</strong> tab, then select <strong>App Store Connect API</strong> in the sidebar (sometimes labelled just <strong>Keys</strong>).</li>
+        <li>Click the <strong>+</strong> button to generate a new key. Give it a name like <em>"LingCode Magic Deploy"</em> and pick the access level — <strong>App Manager</strong> is enough to upload builds; use <strong>Admin</strong> if you also want LingCode to manage app metadata later.</li>
+        <li>Click <strong>Generate</strong>. Apple shows a one-time <strong>Download API Key</strong> link.</li>
+      </ol>
+
+      <div class="callout">
+        <p><strong>The .p8 file can only be downloaded once.</strong> Apple will not let you re-download it. If you lose it, you have to revoke the key and create a new one. Save it somewhere you back up — Documents, iCloud Drive, or a password manager that supports file attachments.</p>
+      </div>
+
+      <p>After downloading, the file will be named something like <code>AuthKey_ABC123XYZ0.p8</code>. The 10 characters between <code>AuthKey_</code> and <code>.p8</code> are your <strong>Key ID</strong>. The same Key ID appears in the table on the Keys page; the long UUID at the top of that page (above the table, next to <em>Issuer ID</em>) is your <strong>Issuer ID</strong>.</p>
+
+      <h3>Copy these into LingCode</h3>
+      <ul>
+        <li><strong>Key ID</strong> → paste into the Key ID field.</li>
+        <li><strong>Issuer ID</strong> → paste into the Issuer ID field.</li>
+        <li><strong>.p8 file</strong> → click <strong>Browse…</strong> in LingCode and pick the file you just downloaded.</li>
+      </ul>
+
+      <h2>Step 2 — Get your Team ID</h2>
+      <p>The Team ID lives on a different site — the Apple Developer portal, not App Store Connect.</p>
+      <ol>
+        <li>Sign in at <a href="https://developer.apple.com/account" rel="noopener noreferrer">developer.apple.com/account</a> with the same Apple ID.</li>
+        <li>In the sidebar, click <strong>Membership Details</strong> (older accounts may show it as just <strong>Membership</strong>).</li>
+        <li>Copy the 10-character <strong>Team ID</strong>.</li>
+      </ol>
+
+      <div class="callout">
+        <p>If you belong to multiple teams (personal + organization, for example), make sure the team you pick is the one that owns the App Store Connect record for the app you're shipping. The Team ID and the API key must match the same team.</p>
+      </div>
+
+      <h2>Step 3 — Click Deploy</h2>
+      <p>With all four fields filled and the <code>.p8</code> selected, the <strong>Deploy to App Store</strong> button activates. Before we walk through what LingCode actually runs, here's what the <em>manual</em> version of this would look like — it's worth seeing so the automation makes sense.</p>
+
+      <h3>The typical archive &amp; upload flow (by hand)</h3>
+      <p>If you were shipping this without Magic Deploy, you'd do roughly this sequence in Xcode and App Store Connect:</p>
+      <ol>
+        <li><strong>Create the app record.</strong> In App Store Connect → <strong>My Apps</strong> → <strong>+</strong>, create a new app with the same bundle ID as your Xcode project. You can't upload a build to an app that doesn't exist yet.</li>
+        <li><strong>Pick the release scheme.</strong> In Xcode's scheme dropdown, choose the scheme that builds the distributable target (usually just your app's scheme, in <strong>Release</strong> configuration — check <strong>Product → Scheme → Edit Scheme → Archive</strong>).</li>
+        <li><strong>Archive.</strong> <strong>Product → Archive</strong>. Xcode builds the release configuration, code-signs with your team's certificate (automatic signing fetches or creates a Distribution profile on the fly), and produces an <code>.xcarchive</code> bundle in <code>~/Library/Developer/Xcode/Archives/</code>.</li>
+        <li><strong>Open the Organizer.</strong> Xcode jumps to <strong>Window → Organizer → Archives</strong> automatically when the archive finishes. Pick the archive you just made.</li>
+        <li><strong>Validate (optional but recommended).</strong> Click <strong>Validate App</strong>. Xcode talks to App Store Connect to check the archive — missing icons, wrong Info.plist keys, bad entitlements surface here before you spend time uploading.</li>
+        <li><strong>Distribute App.</strong> Click <strong>Distribute App</strong> → <strong>App Store Connect</strong> → <strong>Upload</strong>. Xcode asks about signing (pick <em>Automatically manage signing</em>), then uploads the archive to App Store Connect. On a good connection this takes 1–5 minutes depending on bundle size.</li>
+        <li><strong>Wait for processing.</strong> The build lands in App Store Connect in <strong>Processing</strong> state. Apple's build servers do their own validation, symbolicate crash info, and extract metadata. This takes anywhere from 2 minutes to 30 minutes, outside your control.</li>
+        <li><strong>Submit for review or distribute to TestFlight.</strong> Once processing finishes, the build is attachable to a new app version (for App Store review) or to a TestFlight group (for internal/external testers).</li>
+      </ol>
+      <p>The tedious parts are steps 3–6: clicking through Xcode, answering the same signing questions every time, and waiting for the Organizer UI to respond. Magic Deploy replaces all of it.</p>
+
+      <h3>What LingCode Magic Deploy runs instead</h3>
+      <p>Under the hood, the <strong>Deploy to App Store</strong> button shells out to the same command-line tools Xcode uses. You can see this in your project's <code>build/</code> directory while it runs. In order:</p>
+      <ol>
+        <li><strong>Find the project and scheme.</strong> LingCode looks in the open project folder for a <code>.xcodeproj</code>, then runs <code>xcodebuild -list -project &lt;project&gt; -json</code> to enumerate schemes and picks the first one. <em>There is no scheme override in the UI</em> — if your project has multiple schemes and the first isn't the right one, reorder them in <strong>Manage Schemes</strong> in Xcode, or for now archive by hand.</li>
+        <li><strong>Archive.</strong>
+          <pre><code>xcodebuild archive \
+  -scheme &lt;scheme&gt; \
+  -configuration Release \
+  -archivePath build/&lt;scheme&gt;.xcarchive \
+  -destination "generic/platform=macOS"</code></pre>
+          The destination (<code>generic/platform=macOS</code> or <code>generic/platform=iOS</code>) and the <code>--type</code> flag on <code>altool</code> are chosen automatically from the scheme's <code>SUPPORTED_PLATFORMS</code>. You'll see <code>[App Store] Detected platform: iOS</code> or <code>macOS</code> in the progress log, so you can confirm before it builds.
+        </li>
+        <li><strong>Generate <code>ExportOptions.plist</code>.</strong> LingCode writes a three-key plist to <code>build/ExportOptions.plist</code>:
+          <pre><code>&lt;key&gt;method&lt;/key&gt;        &lt;string&gt;app-store&lt;/string&gt;
+&lt;key&gt;teamID&lt;/key&gt;        &lt;string&gt;&lt;your Team ID&gt;&lt;/string&gt;
+&lt;key&gt;signingStyle&lt;/key&gt;  &lt;string&gt;automatic&lt;/string&gt;</code></pre>
+          That's why the Team ID field matters — it ends up here, and it must match the team that owns the signing certificate installed in your keychain.
+        </li>
+        <li><strong>Export.</strong>
+          <pre><code>xcodebuild -exportArchive \
+  -archivePath build/&lt;scheme&gt;.xcarchive \
+  -exportPath build/AppStoreExport \
+  -exportOptionsPlist build/ExportOptions.plist</code></pre>
+          This produces <code>build/AppStoreExport/&lt;scheme&gt;.app</code>, a fully signed and packaged app bundle ready for upload.
+        </li>
+        <li><strong>Upload.</strong>
+          <pre><code>API_PRIVATE_KEYS_DIR=&lt;dir with .p8&gt; xcrun altool \
+  --upload-app \
+  -f build/AppStoreExport/&lt;scheme&gt;.app \
+  --type macos \
+  --apiKey &lt;Key ID&gt; \
+  --apiIssuer &lt;Issuer ID&gt;</code></pre>
+          This is the same <code>altool</code> that Xcode's <em>Distribute App → Upload</em> uses internally. The <code>.p8</code> you provided is how it signs JWTs to authenticate against App Store Connect.
+        </li>
+      </ol>
+      <p>Every <code>stdout</code> / <code>stderr</code> line from these commands streams into the progress panel in real time, so when something goes wrong (bad certificate, missing entitlement, App Store Connect validation failure) you see the exact error Xcode would have shown you — without having to click through the Organizer to find it.</p>
+      <p>On success, the build lands in App Store Connect in <strong>Processing</strong>. After Apple's processing finishes (2–30 minutes, outside LingCode's control), it shows up under <strong>TestFlight → Builds</strong> and is ready to submit for review or distribute to testers.</p>
+
+      <h2>Reading the progress log</h2>
+      <p>While Magic Deploy runs, the right-hand panel streams the live output of <code>xcodebuild</code> and <code>xcrun altool</code>. Everything LingCode prefixes with <code>[App Store]</code> is a status marker from LingCode itself; everything else is verbatim output from Apple's tools.</p>
+      <p>A successful run looks roughly like this, end-to-end:</p>
+      <pre><code>[App Store] Archiving...
+Build settings from command line:
+    ...
+ArchiveSucceeded
+[App Store] Writing ExportOptions.plist...
+[App Store] Exporting...
+ExportArchive: signing
+ExportArchive: writing /…/build/AppStoreExport/MyApp.app
+[App Store] Uploading...
+*** Upload Progress: ...
+No errors uploading '…/MyApp.app'.
+[App Store] Upload complete. Check App Store Connect for the new build.</code></pre>
+      <p><strong>Where to look when things break:</strong> scroll to the <em>very end</em> of the log. <code>xcodebuild</code> prints warnings all the way through the build — the <em>real</em> error is almost always in the last 20 lines, usually after the line that begins <code>** ARCHIVE FAILED **</code>, <code>** EXPORT FAILED **</code>, or <code>*** Error: ...</code>. LingCode's short "Archive failed. Check the log above." message is just a pointer; the diagnostic detail is in the raw output.</p>
+
+      <h2>Per-phase troubleshooting</h2>
+      <p>Group failures by which phase they happen in — the fix path is different in each.</p>
+
+      <h3>Archive phase (<code>xcodebuild archive</code>)</h3>
+      <p>This is where most first-time errors surface, because it's the first time your project is actually being built for Release with real signing.</p>
+      <table class="field-table">
+        <thead><tr><th>Log contains</th><th>Why</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>No signing certificate "Apple Distribution" found</td>
+            <td>No distribution cert in your keychain, or the one you have belongs to a different team.</td>
+            <td>Xcode → Settings → Accounts → Manage Certificates → + → <strong>Apple Distribution</strong>. Then re-run Deploy.</td>
+          </tr>
+          <tr>
+            <td>No profiles for 'com.example.app' were found</td>
+            <td>Automatic signing couldn't create or fetch a provisioning profile for this bundle ID, usually because the bundle ID isn't registered at developer.apple.com.</td>
+            <td>Register the bundle ID at <a href="https://developer.apple.com/account/resources/identifiers/list" rel="noopener noreferrer">developer.apple.com/account/resources/identifiers</a> (as <strong>Mac App</strong>), then retry.</td>
+          </tr>
+          <tr>
+            <td>Provisioning profile doesn't include the current device</td>
+            <td>You have manual signing turned on with a wrong profile.</td>
+            <td>Signing &amp; Capabilities → turn <strong>Automatically manage signing</strong> back on.</td>
+          </tr>
+          <tr>
+            <td>Command PhaseScriptExecution failed with a nonzero exit code</td>
+            <td>A Run Script build phase (CocoaPods, SwiftLint, SwiftGen, etc.) errored out.</td>
+            <td>Open the target's <strong>Build Phases</strong> tab in Xcode, find the failing script, and read its actual error in the log lines just above.</td>
+          </tr>
+          <tr>
+            <td>Swift compile errors (<code>error: …</code>)</td>
+            <td>Your code doesn't compile in Release — commonly due to <code>#if DEBUG</code> branches or conditional imports.</td>
+            <td>In Xcode, switch the scheme's Run configuration to <strong>Release</strong> and build locally until it compiles.</td>
+          </tr>
+          <tr>
+            <td>Missing required architecture x86_64</td>
+            <td>Your project isn't building a universal binary. Mac App Store accepts Apple Silicon-only, but mixed setups often fail here.</td>
+            <td>Target → Build Settings → <strong>Architectures</strong> → set to <code>$(ARCHS_STANDARD)</code>. Remove any hard-coded <code>arm64</code>-only overrides.</td>
+          </tr>
+          <tr>
+            <td>The archive was not created</td>
+            <td>Scheme doesn't have an Archive action enabled, or the Archive build configuration isn't set to Release.</td>
+            <td>Product → Scheme → Edit Scheme → <strong>Archive</strong> tab → <strong>Build Configuration: Release</strong>, and make sure the app target is ticked.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Export phase (<code>xcodebuild -exportArchive</code>)</h3>
+      <table class="field-table">
+        <thead><tr><th>Log contains</th><th>Why</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>error: exportArchive: No "Apple Distribution" signing certificate matching team ID</td>
+            <td>The <code>teamID</code> in the generated ExportOptions.plist doesn't match any cert in your keychain.</td>
+            <td>Fix the <strong>Team ID</strong> field in Magic Deploy. Run <code>security find-identity -v -p codesigning</code> — the 10-char code in parentheses is the one to paste.</td>
+          </tr>
+          <tr>
+            <td>error: Provisioning profile "…" doesn't include the entitlement com.apple.security.app-sandbox</td>
+            <td>App Sandbox isn't enabled on the target but Mac App Store requires it.</td>
+            <td>Signing &amp; Capabilities → <strong>+ Capability → App Sandbox</strong>.</td>
+          </tr>
+          <tr>
+            <td>error: Provisioning profile "…" doesn't include the hardened runtime</td>
+            <td>Hardened Runtime not enabled for the Release config.</td>
+            <td>Signing &amp; Capabilities → <strong>+ Capability → Hardened Runtime</strong>, or set <code>ENABLE_HARDENED_RUNTIME = YES</code> in Build Settings.</td>
+          </tr>
+          <tr>
+            <td>error: No matching profiles found for bundle identifier …</td>
+            <td>Automatic signing can generate the profile for Development but not for Distribution — often because the App Store Connect app record doesn't exist yet.</td>
+            <td>Create the app record in App Store Connect (see <em>Before you start</em> step 5). Re-run Deploy.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Upload phase (<code>xcrun altool --upload-app</code>)</h3>
+      <table class="field-table">
+        <thead><tr><th>Log contains</th><th>Why</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Unable to find API key with Key ID …</td>
+            <td><code>altool</code> couldn't find <code>AuthKey_&lt;KeyID&gt;.p8</code> in the directory you picked.</td>
+            <td>Re-select the <code>.p8</code> file in Magic Deploy, and make sure its filename is exactly <code>AuthKey_&lt;KeyID&gt;.p8</code>. Renaming it will break <code>altool</code>.</td>
+          </tr>
+          <tr>
+            <td>Authentication credentials are missing or invalid (HTTP 401)</td>
+            <td>Key ID, Issuer ID, or the <code>.p8</code> don't match.</td>
+            <td>Copy the Key ID and Issuer ID directly off the <em>Keys</em> page in App Store Connect — don't retype. Issuer ID is a UUID (with dashes); Key ID is 10 alphanumerics.</td>
+          </tr>
+          <tr>
+            <td>Forbidden / ITMS-90166</td>
+            <td>The API key doesn't have upload permission.</td>
+            <td>In App Store Connect → Users and Access → Integrations, edit the key and set role to <strong>App Manager</strong> or <strong>Admin</strong>. Developer is read-only.</td>
+          </tr>
+          <tr>
+            <td>ERROR ITMS-90189: "Redundant Binary Upload"</td>
+            <td>You're uploading a build number that's already on Apple's servers for this version.</td>
+            <td>Bump the <strong>Build</strong> field in Xcode (target → General → Build) and re-archive.</td>
+          </tr>
+          <tr>
+            <td>ERROR ITMS-90035: "Invalid Signature"</td>
+            <td>The signed app fails Apple's codesign verification — usually a nested framework signed with a development cert, or a helper tool missing its own signature.</td>
+            <td>Check <strong>Signing &amp; Capabilities → Frameworks</strong> on the target; make sure every embedded framework says <em>Embed &amp; Sign</em>. For helper tools, add an <em>Embed &amp; Sign</em> Copy Files phase.</td>
+          </tr>
+          <tr>
+            <td>ERROR ITMS-90338: "Non-public API usage"</td>
+            <td>A framework (often an analytics SDK) links against a private Apple API.</td>
+            <td>Update the offending SDK, or remove it. Apple lists the specific symbol in the error message.</td>
+          </tr>
+          <tr>
+            <td>ERROR ITMS-90713: "Missing Info.plist value"</td>
+            <td>A required key like <code>NSCameraUsageDescription</code> or <code>LSApplicationCategoryType</code> is missing.</td>
+            <td>Add the key to your target's <code>Info.plist</code>. Apple's error message names exactly which key.</td>
+          </tr>
+          <tr>
+            <td>The network connection was lost / timed out</td>
+            <td>Flaky upload. Large bundles over slow connections time out the 600-second budget.</td>
+            <td>Retry. If it keeps failing, run the <code>xcrun altool</code> command from the log directly in Terminal — <code>altool</code> will show a richer progress indicator and can sometimes resume.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>What happens after a successful upload</h2>
+      <p>When Magic Deploy finishes, the build is in <strong>App Store Connect → your app → TestFlight → macOS → Builds</strong>, initially in <strong>Processing</strong> state. Apple's build servers run their own post-upload validation — symbolicating crash info, scanning for private API usage, extracting metadata. This usually takes 5–30 minutes but can stretch to an hour or more at peak times. You'll get an email when processing finishes (or when it fails with an <code>ITMS-</code> error).</p>
+      <p>Once processing is done, you have two paths:</p>
+      <ul>
+        <li><strong>TestFlight</strong> — attach the build to an internal or external test group to distribute to testers. Internal testers (up to 100 users with App Store Connect access) get it immediately. External testers require a brief Beta App Review (usually under 24h for minor updates).</li>
+        <li><strong>Submit for review</strong> — attach the build to a new app version under the <strong>macOS App</strong> section, fill in the required metadata (description, screenshots, pricing, privacy), and click <strong>Add for Review</strong>. Review typically takes 24–72 hours for macOS apps.</li>
+      </ul>
+      <p>If the build never shows up at all — not even in Processing — check the email associated with your Apple ID. Apple sends rejection emails (<code>ITMS-90xxx</code> codes) for binaries that failed server-side validation, and those rejected builds don't appear in App Store Connect at all.</p>
+
+      <h2>Quick reference: where to go when something's wrong</h2>
+      <table class="field-table">
+        <thead><tr><th>Symptom</th><th>Where to fix</th></tr></thead>
+        <tbody>
+          <tr><td>Magic Deploy button stays disabled</td><td>One of the four fields is empty, or the <code>.p8</code> file isn't attached. LingCode validates all four before enabling the button.</td></tr>
+          <tr><td>"No Xcode project found"</td><td>You opened a folder that doesn't contain a <code>.xcodeproj</code>. Open the folder that does, or the <code>.xcodeproj</code> itself.</td></tr>
+          <tr><td>"No schemes found"</td><td>Your schemes aren't marked Shared. Xcode → Product → Scheme → Manage Schemes → tick <strong>Shared</strong> on the one you want to build.</td></tr>
+          <tr><td>Archive phase fails</td><td>Open Xcode, switch to the Release configuration, and do Product → Archive yourself. Fix whatever Xcode complains about, then retry Magic Deploy.</td></tr>
+          <tr><td>Export phase fails</td><td>99% of the time it's the ExportOptions.plist <code>teamID</code> not matching your keychain. Run <code>security find-identity -v -p codesigning</code> and fix the Team ID field in LingCode.</td></tr>
+          <tr><td>Upload phase fails with HTTP 401/403</td><td>Problem is the API key. Re-download the <code>.p8</code>, or create a fresh key with <strong>App Manager</strong> role and try again.</td></tr>
+          <tr><td>Upload succeeds but build never appears</td><td>Check the email on your Apple ID for an <code>ITMS-</code> rejection. If nothing, wait 30 minutes — Apple's processing queue varies.</td></tr>
+          <tr><td>"Redundant binary upload"</td><td>Bump the Build number in Xcode. Any integer greater than the previous one.</td></tr>
+          <tr><td>Still stuck</td><td>Copy the exact <code>xcodebuild</code> or <code>xcrun altool</code> command from the log and run it in Terminal — the error messages are identical and easier to Google than <em>"Archive failed. Check the log above."</em>.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Common mistakes (quick checklist)</h2>
+      <ul>
+        <li><strong>Renaming the <code>.p8</code> file.</strong> LingCode looks for <code>AuthKey_&lt;KeyID&gt;.p8</code>. If you renamed it, either rename it back or make sure the Key ID field matches whatever is between <code>AuthKey_</code> and <code>.p8</code> in the filename.</li>
+        <li><strong>Wrong access level.</strong> A <em>Developer</em>-level key can read but not upload. You need <strong>App Manager</strong> or <strong>Admin</strong>.</li>
+        <li><strong>Issuer ID vs Key ID confusion.</strong> Key ID is 10 characters and shown per-key in the table. Issuer ID is a long UUID (with dashes) shown once at the top of the Keys page.</li>
+        <li><strong>Team ID from the wrong team.</strong> If your Apple ID is on multiple teams, switch teams in the developer portal first to make sure you copy the right one.</li>
+        <li><strong>Bundle ID not registered.</strong> The app's bundle identifier needs an App Store Connect record, and the identifier itself needs to exist in <strong>Certificates, IDs &amp; Profiles</strong> at developer.apple.com. Create the app record in App Store Connect → My Apps → <strong>+</strong> first, using the same bundle ID as your Xcode project.</li>
+        <li><strong>Forgetting to bump Build.</strong> Every upload for the same Version needs a higher Build number. This is the single most common cause of second-upload failures — tick <strong>Auto-bump build number</strong> in the pane to have LingCode run <code>agvtool next-version -all</code> for you.</li>
+        <li><strong>Manual signing turned on.</strong> Magic Deploy's <code>ExportOptions.plist</code> uses <code>signingStyle = automatic</code>. If your target has manual signing on, the export will fail or produce an unsignable binary.</li>
+      </ul>
+
+      <h2>Security notes</h2>
+      <p>The <code>.p8</code> private key is the equivalent of a password for your App Store Connect account. Treat it that way: don't commit it to git, don't share it in Slack, and revoke it from the Keys page if a teammate leaves or a laptop is lost. LingCode never uploads the <code>.p8</code> anywhere — it stays on your Mac and is only handed to Apple's <code>xcrun altool</code> at upload time.</p>
+
+      <h2>Further reading</h2>
+      <p>Primary sources for the concepts on this page, from Apple and the IETF:</p>
+      <ul>
+        <li><a href="/glossary.html">LingCode deploy glossary</a> — every term on this page, defined.</li>
+        <li><a href="https://developer.apple.com/documentation/appstoreconnectapi" rel="noopener noreferrer">App Store Connect API reference</a> (Apple) — what <code>altool</code> and LingCode talk to under the hood.</li>
+        <li><a href="https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases" rel="noopener noreferrer">Distributing your app for beta testing and releases</a> (Apple) — official Xcode distribution guide.</li>
+        <li><a href="https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/Introduction/Introduction.html" rel="noopener noreferrer">Code Signing Guide</a> (Apple) — deep dive on certs, profiles, and what signing actually proves.</li>
+        <li><a href="https://datatracker.ietf.org/doc/html/rfc7519" rel="noopener noreferrer">RFC 7519 — JSON Web Token</a> — the JWT spec Apple's API uses for auth.</li>
+        <li><a href="https://developer.apple.com/testflight/" rel="noopener noreferrer">TestFlight</a> (Apple) — the beta service your uploads land in first.</li>
+      </ul>
+
+      <h2 id="magic-submit" style="border-top:1px solid var(--border); padding-top:24px;">Magic Submit — fill version metadata after upload</h2>
+      <p>Magic Deploy hands Apple the binary. The form fields around the binary — Description, Keywords, Promotional Text, What's New, Support URL, screenshots metadata, build selection — still live in App Store Connect. <strong>Magic Submit</strong> fills the API-doable ~80% of those fields via the App Store Connect API, reusing the same Key ID / Issuer ID / Team ID / <code>.p8</code> you've already configured.</p>
+
+      <p>The 20% it deliberately doesn't automate: <a href="/app-store-connect-fields.html#privacy">App Privacy disclosures</a> and the <a href="/app-store-connect-fields.html#age-rating">Age Rating questionnaire</a>. Apple gates both behind the web UI as legal attestations — Magic Submit gives you a one-click button to open them in your browser instead.</p>
+
+      <h3>How to use it</h3>
+      <ol>
+        <li>Open the <strong>Magic Deploy</strong> popover from the LingCode toolbar and switch to the <em>App Store</em> pane.</li>
+        <li>Make sure <strong>Key ID</strong>, <strong>Issuer ID</strong>, <strong>Team ID</strong>, and the <code>.p8</code> path are filled in (same fields as the regular Deploy flow).</li>
+        <li>Click <strong>Fill App Store metadata (Magic Submit)</strong> — sits below the Deploy button, opens a sheet.</li>
+        <li><strong>Bundle ID, Version, and Platform are auto-detected from your open project</strong> (read from <code>PRODUCT_BUNDLE_IDENTIFIER</code>, <code>MARKETING_VERSION</code>, and <code>SUPPORTED_PLATFORMS</code> via <code>xcodebuild -showBuildSettings</code>). A small "Auto-detected from project" hint appears above the fields when detection succeeds. You can override any value if you have a multi-target project or want to write metadata for a different version.</li>
+        <li>Adjust <strong>Locale</strong> if needed (defaults to <code>en-US</code>).</li>
+        <li>Fill the metadata fields you want pushed — character counters live-update so you don't blow the limits described in <a href="/app-store-connect-fields.html#version">App Store Connect fields → Version metadata</a>.</li>
+        <li>Click <strong>Submit metadata</strong>. The phase indicator walks you through: signing JWT → looking up app → finding latest build → creating version record → attaching build → writing localized metadata.</li>
+        <li>On success, click <strong>Open in App Store Connect →</strong> to land on your version page, then use the <strong>Open App Privacy / Age Rating →</strong> button to finish the legally-gated parts.</li>
+      </ol>
+
+      <div class="callout">
+        <p><strong>What Magic Submit pushes:</strong> Description, Keywords, Promotional Text, What's New, Support URL, Marketing URL, plus selecting the most-recently-uploaded build for the version. <strong>What it doesn't:</strong> screenshots, App Privacy, Age Rating, Pricing, IDFA / Export Compliance answers. Those still need the web UI — but they're one-time setup, not per-release.</p>
+      </div>
+
+      <h3>When to run it</h3>
+      <p>Right after Magic Deploy upload finishes successfully. Apple usually takes ~2–5 minutes to process the build before it's visible to the API; Magic Submit's "Couldn't find the most recent build" error means you're early — wait a minute and retry. The same Magic Submit sheet works for re-runs; if a version record already exists for the version string + platform you specified, Magic Submit updates it in place rather than creating a duplicate.</p>
+
+      <h3>Common failures</h3>
+      <table class="field-table">
+        <thead><tr><th>Error</th><th>Why</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Couldn't sign JWT</td>
+            <td>The <code>.p8</code> file isn't a valid EC P-256 PKCS#8 key — usually because someone re-saved it as a different format or it's truncated.</td>
+            <td>Re-download the key from <a href="https://appstoreconnect.apple.com/access/api">App Store Connect → Users and Access → Integrations → Keys</a>. Apple lets you regenerate; the original was only downloadable once.</td>
+          </tr>
+          <tr>
+            <td>No app with bundle ID …</td>
+            <td>The bundle ID isn't registered to this team, or you typed a typo.</td>
+            <td>Verify at <a href="https://developer.apple.com/account/resources/identifiers/list">developer.apple.com → Identifiers</a>. Match exactly — capitalization matters.</td>
+          </tr>
+          <tr>
+            <td>No builds found</td>
+            <td>Magic Deploy upload finished but Apple hasn't processed the binary yet.</td>
+            <td>Wait ~5 minutes and click Submit again. If the build never appears in App Store Connect's "TestFlight → Builds" list either, the upload silently failed — re-run Magic Deploy.</td>
+          </tr>
+          <tr>
+            <td>Version string must be ≥ previous</td>
+            <td>You're trying to set <code>1.0.2</code> when <code>1.0.3</code> is already public.</td>
+            <td>Bump the version in Xcode and re-archive. Apple won't let you publish a lower version.</td>
+          </tr>
+          <tr>
+            <td>Description is too long (4000)</td>
+            <td>Character counters in the sheet were over budget. The counter caps at <code>/4000</code> for Description, <code>/100</code> for Keywords, <code>/170</code> for Promotional Text, <code>/4000</code> for What's New.</td>
+            <td>Trim and resubmit. Magic Submit reports Apple's validation error verbatim.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">Ready to ship?</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">See the full <a href="/features.html">Magic Deploy feature set</a>, or read about <a href="/blog.html">slash commands</a> and <a href="/claude-sessions.html">multi-session Claude workflows</a>.</p>
+        <a href="/">Download LingCode for Mac</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

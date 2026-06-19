@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set up uptime monitoring — LingCode Tutorials</title>
+  <meta name="description" content="External pings asking 'is your site reachable?' Different from error tracking — Sentry tells you when code crashes; uptime tells you when no one can reach your site. The /health endpoint and the alert that wakes you.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-uptime-monitoring.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-uptime-monitoring.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-uptime-monitoring.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/set-up-uptime-monitoring.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Set up uptime monitoring",
+  "description": "Five minutes of setup, ten years of \"I knew before my users did.\" An external service pings your site every minute from multiple regions; when the ping fails, you get a message before customers tweet about it. The cheapest reliability tool that exists.",
+  "url": "https://lingcode.dev/tutorials/set-up-uptime-monitoring.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/set-up-uptime-monitoring.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Set up uptime monitoring"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Set up uptime monitoring",
+      "item": "https://lingcode.dev/tutorials/set-up-uptime-monitoring.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/set-up-uptime-monitoring.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Set up uptime monitoring</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Set up uptime monitoring</h1>
+      <p class="intro">Five minutes of setup, ten years of "I knew before my users did." An external service pings your site every minute from multiple regions; when the ping fails, you get a message before customers tweet about it. The cheapest reliability tool that exists.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Uptime monitoring and error tracking sound similar and aren't. <a href="/tutorials/set-up-sentry-error-tracking.html">Sentry</a> watches your application code from the inside — when a request crashes, Sentry catches the exception and tells you. Uptime monitoring watches your site from the outside — when nobody can reach the server at all, Sentry can't tell you because Sentry can't reach the server either. The two are complementary; you want both. This tutorial covers the second one.</p>
+      <p>The mental model is simple: an external service makes an HTTPS request to your URL every minute (or every five, depending on plan), checks the response, and alerts you when the response stops looking right. "Right" can mean any of: HTTP 200, a specific string in the body, a response time under N milliseconds, a valid TLS certificate. The checks come from multiple geographic regions so a single-region network problem doesn't generate false alerts. The alert reaches you via the channel you picked: email, SMS, Slack, Discord, PagerDuty, push notification on a phone app.</p>
+      <p>This tutorial picks <strong>UptimeRobot</strong> as the default — its free tier covers most personal and small-business needs (50 monitors, 5-minute intervals), and the UI is genuinely simple. Better Stack, Pingdom, StatusCake, and Hyperping all do the same things; the patterns transfer. We'll set up the monitor, design a sensible <code>/health</code> endpoint that distinguishes "the process is alive" from "the database is reachable," wire up Slack notifications, and (optionally) put up a public status page so users can self-serve when something's wrong.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Why uptime monitoring is different from error tracking, and why you need both</li>
+        <li>Designing a <code>/health</code> endpoint that's useful — not just <code>res.send("ok")</code></li>
+        <li>Setting up an HTTPS monitor (5-minute intervals, multi-region)</li>
+        <li>Wiring Slack / Discord / SMS alerts</li>
+        <li>Status pages: when worth the setup, when overkill</li>
+        <li>Avoiding alert fatigue — the threshold and grace-period settings</li>
+        <li>Bonus: monitoring scheduled jobs (cron health checks)</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> A live URL that responds to HTTPS (a deployed site, an API endpoint, or just a domain pointing at a host). If your URL is still <code>localhost:3000</code>, deploy something first — uptime monitoring requires a public endpoint to ping. A Slack or Discord workspace is helpful but not required; email alerts work out of the box.
+      </div>
+
+      <h2>Step 1: Design the /health endpoint</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Three flavors; pick at least one</h3>
+          <p>You can monitor your homepage URL directly — and for static sites, that's fine. For an app with a database and backing services, the homepage might return 200 even when the database is unreachable (cached HTML, static fallback, generic error page). A purpose-built <code>/health</code> endpoint distinguishes three levels:</p>
+          <ul>
+            <li><strong>Liveness</strong> — "the process is running and responding." A one-line endpoint: <code>app.get('/health', (req, res) =&gt; res.send('ok'))</code>. Good for catching crashed processes; useless for catching dependency failures.</li>
+            <li><strong>Readiness</strong> — "the process is running <em>and</em> can talk to its dependencies." Check that Postgres responds; check that Redis responds; check that any required external service is reachable. Return 200 only if all checks pass; 503 with details otherwise.</li>
+            <li><strong>Deep health</strong> — same as readiness but with more checks (queue lengths, recent error rates, etc.). Useful for status pages and dashboards; usually too slow for per-minute uptime pings.</li>
+          </ul>
+          <p>For uptime monitoring, <strong>readiness</strong> is the right shape:</p>
+          <pre><code>app.get('/health', async (req, res) =&gt; {
+  try {
+    await db.query('SELECT 1');
+    await redis.ping();
+    res.json({ status: 'ok', db: 'ok', redis: 'ok' });
+  } catch (err) {
+    res.status(503).json({ status: 'degraded', error: err.message });
+  }
+});</code></pre>
+          <p>Now a 200 from <code>/health</code> means "process up <em>and</em> dependencies reachable" — a much stronger signal than monitoring the homepage.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Keep <code>/health</code> cheap and ungated.</strong> Don't require auth on it (the monitor can't authenticate); don't make it run expensive queries; don't put rate-limiting in front of it. The endpoint runs every minute from multiple monitors — if it's slow, your bill goes up; if it's gated, the monitor reports false outages.
+      </div>
+
+      <h2>Step 2: Create an UptimeRobot monitor</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Free tier handles most personal needs</h3>
+          <p>Sign up at <a href="https://uptimerobot.com" target="_blank" rel="noopener">uptimerobot.com</a>. The free tier includes 50 monitors at 5-minute intervals. (The paid Solo tier adds 1-minute intervals and SMS for $7/month.)</p>
+          <p>Dashboard → <strong>+ New Monitor</strong>:</p>
+          <ul>
+            <li><strong>Monitor Type:</strong> HTTP(s).</li>
+            <li><strong>Friendly Name:</strong> "Mybrand API" or similar — appears in alerts.</li>
+            <li><strong>URL:</strong> <code>https://mybrand.com/health</code>.</li>
+            <li><strong>Monitoring Interval:</strong> 5 minutes (free) or 1 minute (paid).</li>
+            <li><strong>Monitor Timeout:</strong> 30 seconds. Slower responses count as down.</li>
+            <li><strong>Advanced → Keyword Monitoring</strong>: optional but useful. Set keyword <code>"ok"</code> with type "Yes — alert when keyword does not exist." Now the monitor checks for the literal string in the response body, not just the HTTP status. Pages that return 200 with an error message stop fooling it.</li>
+          </ul>
+          <p>Save. The monitor starts pinging within a minute; you'll see the response time graph populate.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Add alert channels</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Email is the default; Slack / Discord wakes the right person</h3>
+          <p>UptimeRobot dashboard → <strong>My Settings</strong> → <strong>Alert Contacts</strong> → <strong>Add Alert Contact</strong>. Each "contact" is a destination for alerts:</p>
+          <ul>
+            <li><strong>Email</strong> — set up by default to the signup email. Free.</li>
+            <li><strong>Slack</strong> — pick Slack as the type, paste an incoming webhook URL. In Slack: an admin creates the webhook at <code>&lt;workspace&gt;.slack.com/apps</code> → search "Incoming Webhooks" → pick the channel → copy URL. Alerts post into the channel with the monitor name and downtime duration.</li>
+            <li><strong>Discord</strong> — same pattern. Discord webhook URL from a channel's <strong>Integrations</strong> settings.</li>
+            <li><strong>SMS</strong> — paid plans only. Useful for "wake me at 3 AM if production goes down."</li>
+            <li><strong>Webhook</strong> — for piping into your own systems (PagerDuty, Opsgenie, custom). UptimeRobot POSTs a JSON payload when status changes.</li>
+          </ul>
+          <p>After adding contacts, edit the monitor and tick which contacts should receive its alerts. Production monitors usually get all of email + Slack + SMS; staging monitors get only email.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Avoid alert fatigue</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The settings that make alerts mean something</h3>
+          <p>An uptime monitor that alerts on every flicker becomes background noise. Three settings tame it:</p>
+          <ul>
+            <li><strong>Grace period (consecutive failures):</strong> alert only after the URL has been down for N consecutive checks. Default 1 is too aggressive — set to 2 or 3. A single transient blip stops paging you; a real outage still alerts within 10–15 minutes.</li>
+            <li><strong>Multi-region confirmation:</strong> in UptimeRobot Pro and competitors, only alert if multiple monitoring regions agree the site is down. Cuts false alerts from a single-region network problem.</li>
+            <li><strong>Maintenance windows:</strong> schedule scheduled downtime (deploy windows, planned maintenance) so the monitor doesn't alert during them. UptimeRobot: monitor → <strong>Maintenance Window</strong> → recurring or one-off.</li>
+          </ul>
+          <p>The goal is "every alert is real, every real outage alerts." Drift in either direction kills the value of the monitor.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Status pages (optional)</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Public-facing visibility into uptime</h3>
+          <p>A status page (status.mybrand.com) shows your users which parts of your service are up. When something breaks, users check it instead of emailing support. When things are fine, the page is a trust signal.</p>
+          <ul>
+            <li><strong>UptimeRobot's built-in public status pages</strong> — free, attached to your monitors. <strong>Dashboard → Status Pages → Create</strong>. Custom URL on a UptimeRobot subdomain; custom domain on paid plans. Three minutes to set up.</li>
+            <li><strong>Better Stack / Better Uptime</strong> — competing service with richer status pages (incident history, scheduled maintenance posts, subscriber notifications). Paid only but cheap; worth it if you have customers.</li>
+            <li><strong>Atlassian Statuspage</strong> — the enterprise standard. Expensive ($29+/mo) and overbuilt for small projects.</li>
+            <li><strong>Self-hosted with Cachet or Upptime</strong> — open-source status pages. Free but operational overhead.</li>
+          </ul>
+          <p>For most projects with under 10K users, the free UptimeRobot status page is enough. Upgrade only when you have customers asking for an incident history.</p>
+        </div>
+      </div>
+
+      <h2>Step 6 (bonus): Monitor scheduled jobs</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Cron jobs that silently stopped running</h3>
+          <p>HTTP uptime monitors only catch HTTP-facing failures. The other common silent failure: a cron job (nightly backup, weekly digest email, hourly cleanup) that's been broken for two weeks and nobody noticed.</p>
+          <p>The pattern: a service like <strong>Healthchecks.io</strong> (free for up to 20 checks) gives you a unique URL per cron job. The job pings the URL on every successful run. If pings stop arriving on the expected schedule, Healthchecks alerts you.</p>
+          <pre><code># In your cron job script, last line:
+curl -fsS --retry 3 https://hc-ping.com/&lt;your-unique-uuid&gt; &gt; /dev/null
+
+# In crontab:
+0 3 * * * /usr/local/bin/backup.sh &amp;&amp; curl -fsS https://hc-ping.com/&lt;uuid&gt;</code></pre>
+          <p>Healthchecks knows the schedule (you configure it) and pages you when a ping is overdue. Most useful for backups (where "did the backup run" is the question that only matters the day you need to restore).</p>
+        </div>
+      </div>
+
+      <h2>When uptime monitoring isn't worth it</h2>
+      <p><strong>Static sites on Vercel / Netlify / Cloudflare Pages.</strong> These platforms have ~100% uptime on the CDN; an outage of theirs is broader than your site. Adding uptime monitoring catches your-config-broke-the-build outages but those usually show up in deploy logs first.</p>
+      <p><strong>Internal-only tools, no users, no revenue impact.</strong> If the only person affected by an outage is you, and you'll notice within the hour anyway, the monitor and its config maintenance aren't paying for themselves.</p>
+      <p><strong>You can't be alerted in the next 24 hours anyway.</strong> Uptime monitors are most valuable when paired with an on-call rotation that responds to alerts. Without that, the alert just queues up unread. Set up the monitor when you're at the stage where you'd actually act on a 3 AM page.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>Set up Sentry error tracking</h3>
+            <p>The complement to uptime — catch errors inside your code, not just at the network edge</p>
+          </a>
+          <a href="/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>Run a Node API on Lightsail</h3>
+            <p>The backend the /health endpoint lives in</p>
+          </a>
+          <a href="/tutorials/automate-deploys-with-github-actions.html" class="tutorial-next-card">
+            <h3>CI/CD with GitHub Actions</h3>
+            <p>Add the /health endpoint and uptime monitor to your deploy checklist before going live</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

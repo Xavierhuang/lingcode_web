@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remote config &amp; experiments — feature flags and A/B variants from the backend | LingCode Cloud Docs</title>
+  <meta name="description" content="Change your app's behavior without shipping a new build. Read feature flags, tunable values, and A/B experiment variants from LingCode Cloud at runtime with client.config — ready, get, and all() — and flip them server-side.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/config.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/config.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/config.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/config.html">
+  <meta property="og:title" content="Remote config &amp; experiments — LingCode Cloud">
+  <meta property="og:description" content="Feature flags, tunable values, and A/B experiment variants delivered from the backend at runtime. Read them with client.config; flip them server-side.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Remote config</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Guide</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Remote config &amp; experiments</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Remote config lets you change how your app behaves <em>without shipping a new build</em> — feature flags, tunable values, and A/B experiment variants delivered from the backend at runtime. You <strong>read</strong> values in your app with <code>lingcode.config</code>; you <strong>flip</strong> them server-side. Always pass a default to <code>get()</code> so the app works before config loads.</p>
+      <p class="intro">A build is a slow, all-or-nothing way to make a decision. Hard-code <code>new_checkout = true</code> and you've committed every user, and the only way back is another release through the store. Remote config inverts that: the decision lives on the server, the app reads it at startup, and you can roll a flag forward, dial it back, or split traffic into experiment variants — all without touching the binary your users already have.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>Why remote config</h2>
+      <p>Three jobs, one mechanism. A <strong>feature flag</strong> turns a code path on or off (ship dark, enable later, kill a regression instantly). A <strong>tunable value</strong> exposes a number or a piece of copy you want to adjust without a release — a page size, a price-display string, a retry count. An <strong>experiment</strong> hands different users different variants so you can measure which one wins. All three are just key/value pairs your app reads at runtime.</p>
+      <p>The split to hold in your head: <strong>you read values in the client, you set them in the backend.</strong> The client never decides what a flag should be — it asks, gets an answer, and branches. Changing the answer is a server-side action that takes effect on the next config load, no rebuild involved.</p>
+
+      <h2>The SDK surface</h2>
+      <p>Everything lives under <code>client.config</code> (inside <code>/try</code> and the Mac preview the client is already injected as <code>lingcode</code>):</p>
+      <ul>
+        <li><code>config.ready</code> → <code>Promise&lt;ConfigApi&gt;</code>. Resolves once this client's remote config has loaded. <code>await</code> it before reading on first paint.</li>
+        <li><code>config.get(key, def?)</code> → value. Returns the configured value, or <code>def</code> if the key is unset. Experiment variants are delivered through <code>get()</code> too.</li>
+        <li><code>config.all()</code> → <code>Record&lt;string, any&gt;</code>. All resolved config values.</li>
+      </ul>
+
+      <h2>Reading a flag</h2>
+      <p>Wait for config to load, read the flag with a sensible default, and branch:</p>
+      <pre><code>await lingcode.config.ready;
+
+const showNewCheckout = lingcode.config.get('new_checkout', false); // default false
+
+if (showNewCheckout) {
+  renderNewCheckout();
+} else {
+  renderOldCheckout();
+}</code></pre>
+      <p>The default isn't decoration — it's the value the app uses if config hasn't loaded yet or the fetch fails. Pick a default that's <em>correct on its own</em> (here, the existing checkout) and your app degrades gracefully no matter what the network does.</p>
+
+      <h2>Running an experiment</h2>
+      <p>An experiment is a flag with more than two outcomes: the backend assigns a <strong>variant per client</strong>, and you read it with <code>get()</code> and branch on it. Pair it with <a href="/docs/cloud/telemetry.html">telemetry</a> — <code>logEvent</code> on the outcome you care about — so you can measure which variant actually wins:</p>
+      <pre><code>await lingcode.config.ready;
+
+const variant = lingcode.config.get('checkout_button', 'control'); // 'control' | 'green' | 'urgent'
+
+renderCheckoutButton(variant);
+
+// later, when the user converts — attribute the outcome to the variant
+async function onPurchase(amount) {
+  await lingcode.telemetry.logEvent('purchase', { variant, amount });
+}</code></pre>
+      <p>Same client assignment in, outcome event out — that's the whole loop. Over time the telemetry tells you whether <code>green</code> or <code>urgent</code> beat <code>control</code>, and you promote the winner by flipping the config server-side.</p>
+
+      <h2>Reading everything at once</h2>
+      <p>When you want the full resolved set — to hydrate a settings screen, or to log which config a session ran under — use <code>all()</code>:</p>
+      <pre><code>await lingcode.config.ready;
+const cfg = lingcode.config.all(); // { new_checkout: true, checkout_button: 'green', page_size: 50, ... }</code></pre>
+
+      <div class="info-box">
+        <h3>What config is for — and what it isn't</h3>
+        <p>Treat remote config as the home for <strong>feature flags, rollouts, copy tweaks, and tunable numbers</strong>. It is <em>not</em> a place for secrets. Private keys (Stripe secret, third-party API keys) belong in the <a href="/docs/cloud/secrets.html">Secrets vault</a> and are read from <a href="/docs/cloud/functions.html">functions</a>, which run server-side. And lean on your <strong>defaults</strong>: the app should behave correctly with every flag at its default value, so a slow or failed config load is never a broken app.</p>
+      </div>
+
+      <div class="warn-box">
+        <strong>Config values are delivered to the client.</strong> They're readable by anyone using your app — inspect the network tab and they're right there. Never put anything sensitive in a config value. Use it for behavior, not for secrets.
+      </div>
+
+      <h2>Under the hood (REST)</h2>
+      <p>The SDK fetches config from a single endpoint, scoped to the client so each one can receive its own experiment assignments:</p>
+      <pre><code>GET https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/config?client_id=&lt;id&gt;</code></pre>
+      <p>The response is a flat object of key/value pairs:</p>
+      <pre><code>{
+  "new_checkout": true,
+  "checkout_button": "green",
+  "page_size": 50
+}</code></pre>
+      <p>If the fetch fails the SDK surfaces a <code>config_failed</code> error — which is exactly why every <code>get()</code> call should carry a default. The app keeps running on its defaults; you don't have to handle the error inline.</p>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/telemetry.html">
+            <span class="card-eyebrow">Measure</span>
+            <h3>Telemetry</h3>
+            <p>Log events with <code>logEvent</code> to score your experiment variants and see which one wins.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/secrets.html">
+            <span class="card-eyebrow">Security</span>
+            <h3>Secrets vault</h3>
+            <p>Where private keys actually belong — encrypted and read server-side from functions, never the client.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">Reference</span>
+            <h3>API reference</h3>
+            <p>The full SDK surface and every <code>/api/cloud/be/&lt;id&gt;/…</code> REST endpoint, with shapes.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

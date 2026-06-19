@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何正确配置 Stripe API 密钥？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Stripe 共提供四种密钥——可发布密钥和私密密钥，分为测试版和正式版。了解各密钥的使用场景及安全处理方式，能帮你避免最常见的 Stripe 事故。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-stripe-api-keys.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-stripe-api-keys.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-stripe-api-keys.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/set-up-stripe-api-keys.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "配置 Stripe API 密钥",
+  "description": "Stripe 共有四种密钥——可发布密钥和私密密钥，分为测试版和正式版。它们看起来相似，但不能互换使用。通过本教程，只需五分钟即可避免两大常见 Stripe 事故：私密密钥泄露到公众，以及在测试模式下意外向真实银行卡收费。",
+  "url": "https://lingcode.dev/zh/tutorials/set-up-stripe-api-keys.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/set-up-stripe-api-keys.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "配置 Stripe API 密钥"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "配置 Stripe API 密钥",
+      "item": "https://lingcode.dev/zh/tutorials/set-up-stripe-api-keys.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/set-up-stripe-api-keys.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">后端集成</a>
+      <span>/</span>
+      <span>配置 Stripe API 密钥</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何正确配置 Stripe API 密钥？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>Stripe 提供四种密钥：<em>pk_test</em>、<em>sk_test</em>、<em>pk_live</em>、<em>sk_live</em>。可发布密钥（pk）放在客户端代码中，私密密钥（sk）只能放在环境变量里——绝不能出现在客户端代码中。在上线前使用测试密钥，上线时只需在一处（环境变量）替换为正式密钥，无需改动代码。</p>
+      <p class="intro">Stripe 提供四种密钥——可发布密钥和私密密钥，分为测试版和正式版。它们看起来相似，但不能互换使用。只需花五分钟读完本教程，就能避免两大常见 Stripe 事故：私密密钥泄露到公众，以及在测试模式下意外向真实银行卡收费。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>每个凭据系统都有其独特的思维模型，Stripe 的设计算是其中较为出色的——一旦理解就会豁然开朗。它有两个维度。第一个维度是<em>可见性</em>：可发布密钥可以安全地放在前端（浏览器、移动应用）；私密密钥只能放在后端服务器上。第二个维度是<em>环境</em>：测试密钥对接沙箱环境，收费是虚拟的，不会产生真实资金流动；正式密钥对接生产环境，每笔交易都是真实资金。两两组合得到：<code>pk_test_…</code>、<code>sk_test_…</code>、<code>pk_live_…</code>、<code>sk_live_…</code>。</p>
+      <p>初学 Stripe 的开发者出错，几乎都源于混淆了这些密钥。私密密钥被提交到 GitHub 是最经典的事故——公开仓库中的私密密钥往往在推送后数分钟内就会被扫描工具发现。另一个常见事故是在演示时误用了正式密钥——导致某人的银行卡被真实扣款，而非测试扣款。两种事故都可以补救（Stripe 支持轮换密钥，退款也很快），但完全可以提前避免。</p>
+      <p>本教程涵盖：获取密钥、了解各密钥的使用场景，以及将密钥安全地添加到项目中而不会意外泄露。关于 <a href="/zh/tutorials/set-up-stripe-webhooks.html">webhooks</a> 的配套教程会讲解你的服务器实际如何使用这些密钥。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>四种密钥各自的用途</li>
+        <li>在 Stripe 控制台中如何找到它们</li>
+        <li>如何存储密钥以避免进入 git</li>
+        <li>"测试模式切换"及其重要性</li>
+        <li>如何轮换已泄露的密钥</li>
+      </ul>
+
+      <h2>第 1 步：创建 Stripe 账户</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>提交业务资料前即可使用测试模式</h3>
+          <p>在 <code>dashboard.stripe.com</code> 注册账户。注册流程很快——填写邮箱、密码和基本业务信息即可。注册完成后你会立即进入<strong>测试模式</strong>，拥有完整的 API 访问权限和测试密钥。开始集成不需要提交任何验证文件。</p>
+          <p>正式模式（真实收费）需要 Stripe 验证你的业务信息：公司名称、地址、税务 ID、银行账户。这些可以等到你准备好接受真实付款时再办理。目前，测试模式就是一切。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：找到密钥</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>开发者 → API 密钥</h3>
+          <p>在 Stripe 控制台中，点击顶部导航（或菜单）中的<strong>开发者</strong>，再点击 <strong>API 密钥</strong>。你会看到当前模式下的两个密钥：</p>
+          <ul>
+            <li><strong>可发布密钥</strong>——以 <code>pk_</code> 开头。完整显示。可以放在前端代码中、打包进 JavaScript bundle 或暴露在 URL 里。它能标识你的 Stripe 账户，但无法读取敏感数据或独自转移资金。</li>
+            <li><strong>私密密钥</strong>——以 <code>sk_</code> 开头。默认隐藏，点击"显示"可查看。绝对不能放在任何非可信方能看到的地方——包括前端代码、公开仓库、错误日志、返回给客户端的 JSON 响应。持有此密钥的人可以向银行卡收费、退款、创建客户，并读取所有交易记录。</li>
+          </ul>
+          <p>测试模式的密钥名称中包含 <code>test</code>（<code>pk_test_…</code>、<code>sk_test_…</code>）。切换到正式模式并完成验证后可见的正式密钥则包含 <code>live</code>（<code>pk_live_…</code>、<code>sk_live_…</code>）。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：理解测试/正式模式切换</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Stripe 界面中最重要的元素</h3>
+          <p>每个 Stripe 控制台页面右上角都有一个切换按钮，显示<strong>测试模式</strong>（橙色）或<strong>正式模式</strong>（默认）。该切换控制：</p>
+          <ul>
+            <li>API 密钥页面显示哪些密钥。</li>
+            <li>哪些 webhook 会触发（测试模式和正式模式各有独立的端点配置）。</li>
+            <li>你能看到哪些客户和收费记录——它们是相互独立的数据集。</li>
+            <li>哪些测试卡号有效（测试模式接受 <code>4242 4242 4242 4242</code>；正式模式不接受）。</li>
+          </ul>
+          <p>如果你在开发环境中遇到"客户不存在"的错误，很可能是因为你处于正式模式，却在查找测试模式下的客户（反之亦然）。先检查切换状态；十有八九问题就在这里。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>橙色测试模式横幅是你的好朋友。</strong>处于测试模式时，Stripe 会在每个页面顶部显示一条橙色横幅。养成扫一眼的习惯。如果你看不到它，却要进行可能造成影响的操作（退款、取消等），说明你处于正式模式——请放慢脚步，谨慎确认。
+      </div>
+
+      <h2>第 4 步：将密钥放入项目</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>使用环境变量，而非源文件</h3>
+          <p>三条原则：</p>
+          <ol>
+            <li><strong>绝不硬编码私密密钥。</strong>使用环境变量。Node 中：<code>process.env.STRIPE_SECRET_KEY</code>。Python 中：<code>os.environ["STRIPE_SECRET_KEY"]</code>。各语言模式相同。</li>
+            <li><strong>绝不提交 <code>.env</code> 文件。</strong>将 <code>.env</code> 加入 <code>.gitignore</code>。使用包含占位值的 <code>.env.example</code> 来记录环境变量，并提交该文件。</li>
+            <li><strong>开发环境使用测试密钥，生产环境使用正式密钥。</strong>你的生产服务器需要 <code>STRIPE_SECRET_KEY=sk_live_…</code>；开发机上使用 <code>sk_test_…</code>。变量名相同，不同环境的值不同。</li>
+          </ol>
+          <p>对于前端代码，可发布密钥可以打包进 bundle，但最好在构建时通过环境变量注入（<code>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>、<code>VITE_STRIPE_PUBLISHABLE_KEY</code> 等）。这主要是为了整洁——该值本身并不保密，但这样你在切换测试与正式密钥时无需重新构建代码。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：验证是否正常工作</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>一条 curl 命令，一个断言</h3>
+          <p>在你的后端（或已设置环境变量的终端）中执行：</p>
+          <pre><code>curl https://api.stripe.com/v1/charges \
+  -u "$STRIPE_SECRET_KEY:" \
+  -d amount=2000 \
+  -d currency=usd \
+  -d "source=tok_visa" \
+  -d "description=test charge"</code></pre>
+          <p>如果密钥有效，你会收到包含收费对象的 JSON 响应。如果无效，会收到带有明确错误信息的 401 响应。<code>tok_visa</code> 是 Stripe 的测试 token；该收费是虚拟的，不会产生真实资金流动。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：当（不是如果）你泄露了密钥</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>轮换很快，请做最坏的假设</h3>
+          <p>迟早你（或你的队友）会泄露一个私密密钥——提交到公开仓库、粘贴到共享屏幕的 Slack 频道、出现在别人截图的浏览器开发工具中。解决方法：</p>
+          <ol>
+            <li>在 Stripe 控制台中，选择<strong>开发者 → API 密钥 → 轮换私密密钥</strong>。旧密钥立即失效，Stripe 会颁发新的密钥。</li>
+            <li>在所有使用该密钥的环境（生产、预发布、开发）中更新 <code>STRIPE_SECRET_KEY</code> 并重新部署。</li>
+            <li>审查从泄露到轮换这段时间内账户是否有可疑活动。Stripe 的日志让这项工作非常方便。</li>
+          </ol>
+          <p>不必为了需要轮换密钥而感到羞耻。每个人早晚都会遇到这种情况。成熟的应对方式是"轮换、审查、继续前行"——而不是"恐慌、删账户、从头来过"。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>GitHub 会扫描泄露的密钥。</strong>如果你将私密密钥推送到公开仓库，Stripe 通常会在数分钟内将其失效——GitHub 会通知 Stripe，Stripe 会自动轮换密钥。这很有帮助（最坏情况的时间窗口很短），但这不能替代防止泄露的根本措施。不要依赖这张安全网。
+      </div>
+
+      <h2>第 7 步：受限密钥（生产环境安全规范）</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>"完整私密密钥"并非唯一选项</h3>
+          <p>在生产环境中，可以考虑创建<strong>受限密钥</strong>——将密钥限定在特定资源的权限范围内（例如"可以创建收费，但无法读取客户信息"）。在控制台中：<strong>开发者 → API 密钥 → 受限密钥 → 创建</strong>。</p>
+          <p>如果你的应用只需要创建 Checkout Session，那么拥有该权限的受限密钥比完整私密密钥更安全。万一泄露，造成的损失也仅限于该密钥被授权的操作范围。</p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/set-up-stripe-webhooks.html" class="tutorial-next-card">
+            <h3>配置 Stripe webhooks</h3>
+            <p>配套教程：Stripe 如何将事件通知你的服务器</p>
+          </a>
+          <a href="/zh/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h3>使用 Resend 发送事务性邮件</h3>
+            <p>在 Stripe 收费成功后发送收据</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-next-card">
+            <h3>从 DigitalOcean 购买服务器</h3>
+            <p>如果你还没有地方存放 Stripe 密钥</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为希望快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

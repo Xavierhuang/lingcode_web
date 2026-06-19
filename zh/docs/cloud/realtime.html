@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>实时订阅 —— 通过 SSE 订阅行变更 | LingCode Cloud 文档</title>
+  <meta name="description" content="LingCode Cloud 实时订阅让你的界面在数据库发生变化的瞬间作出反应。通过按 RLS 过滤的 Server-Sent Events 订阅一张表，实时追踪 INSERT、UPDATE 和 DELETE——无需轮询。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/realtime.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/realtime.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/realtime.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/realtime.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/realtime.html">
+  <meta property="og:title" content="LingCode Cloud 实时订阅">
+  <meta property="og:description" content="通过按 RLS 过滤的 Server-Sent Events 订阅行变更——实时追踪 INSERT、UPDATE 和 DELETE，无需轮询。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .tutorial-next-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+    .tutorial-next-grid a { display: block; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); text-decoration: none; transition: border-color .15s ease, transform .15s ease; }
+    .tutorial-next-grid a:hover { border-color: var(--signal); transform: translateY(-2px); }
+    .tutorial-next-grid h4 { margin: 0 0 6px; font-size: 0.98rem; color: var(--text); }
+    .tutorial-next-grid p { margin: 0; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/realtime.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>实时订阅</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● 已上线</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>实时订阅</h1>
+      <p class="tldr"><strong>一句话：</strong>实时订阅让你的界面在数据库发生变化的瞬间作出反应，而不是靠轮询。订阅一张表，每当有行被插入、更新或删除，你就会收到一个事件。它通过 <strong>Server-Sent Events</strong> 投递，并且<strong>按行级安全过滤</strong>——已登录用户只会收到自己被允许看到的行。一行调用：<code>lingcode.from('table').subscribe(onChange)</code>，它返回一个取消订阅函数，你在销毁时调用它。</p>
+      <p class="intro">多数应用靠一个定时器来伪装「实时」：每隔几秒重新拉取一次，并寄望期间没发生什么要紧的事。什么都没变时这很浪费，真有变化时又会有延迟。实时订阅把它反了过来——服务器在行变化的那一刻就把它推给你，于是你的聊天、仪表盘或共享列表会在写入落地的瞬间更新，其余时候保持安静。本页介绍你为何会用它、SDK、一个完整示例，以及底层在做什么。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>为什么用实时订阅而不是轮询</h2>
+      <p>轮询是在新鲜度和负载之间做权衡：轮询得勤，你就为大多没变的数据反复敲打后端；轮询得稀，界面又会显得陈旧。实时订阅消除了这个权衡。订阅会保持一条打开的流，服务器<em>只</em>在某行你能看到的数据真正发生变化时，才给你发一个很小的事件。每当屏幕应当反映别人（或别的标签页、或某个后台任务）刚做的事，就该用它：</p>
+      <ul>
+        <li><strong>聊天</strong>——在新消息被插入时实时追踪它们。</li>
+        <li><strong>在线状态类界面</strong>——订阅一张状态表，展示谁在线或活跃。</li>
+        <li><strong>实时仪表盘</strong>——随着底层行的变动而更新的计数器与信息流。</li>
+        <li><strong>协作列表</strong>——待办、看板卡片和文档，两个人编辑同一份数据。</li>
+      </ul>
+      <p>实时订阅反映的是<em>你的查询所返回的同一份数据</em>——它不是一份独立的副本。所以自然的模式是：用一次初始 <code>.select()</code> 加载历史，再配一个 <code>.subscribe()</code> 实时追踪之后的一切。</p>
+
+      <h2>SDK</h2>
+      <p>表构造器上的一个方法：</p>
+      <pre><code>client.from('table').subscribe(onChange, onError?) // → unsubscribe</code></pre>
+      <p>每当有行变化，你的 <code>onChange</code> 回调会收到一个<strong>事件</strong>对象：</p>
+      <pre><code>{
+  table: string,                          // 变更来自哪张表
+  type: "INSERT" | "UPDATE" | "DELETE",   // 发生了什么
+  row: object                             // 受影响的行
+}</code></pre>
+      <p><code>subscribe</code> 的返回值是一个<strong>取消订阅函数</strong>。用完时调用它——通常是在组件卸载时——来关闭这条流。保留这个句柄并调用它，是唯一要紧的规则；忘了它，你就会泄漏打开的流。</p>
+      <pre><code>const off = lingcode.from('messages').subscribe(({ type, row }) =&gt; {
+  if (type === 'INSERT') appendMessage(row);
+});
+
+// 稍后，在销毁时：
+off();</code></pre>
+
+      <div class="info-box">
+        <h3>过滤是怎么工作的</h3>
+        <p>每一次变更在投递<em>之前</em>都会针对订阅者的权限重新核对，所以用户永远不会收到那些用普通查询读不到的行——守门你 <code>.select()</code> 的同一套行级安全，也守门你的订阅。由于被删除的行已经不存在了，<code>DELETE</code> 事件退而采用尽力而为的归属检查。而非常大的行——接近数据库通知大小上限（~8&nbsp;KB）的那种——会以一个轻量的「有东西变了，请重新拉取」信号来投递，而不是完整的行。要为此做好准备：如果一次变更到达时没有完整的 <code>row</code> 负载，就重新查询以获取当前状态。</p>
+      </div>
+
+      <h2>一个完整示例</h2>
+      <p>这是一个聊天视图的完整闭环：用 <code>.select()</code> 加载一次最近历史，然后订阅以实时追加新消息，再在销毁时取消订阅。在 <code>/try</code> 和 Mac 预览里，<code>lingcode</code> 已经存在；在你自己的应用里，先创建客户端（参见 <a href="/zh/docs/cloud/api-reference.html">API 参考</a>）。</p>
+      <pre><code>// 1. 加载历史。
+const { data: history } = await lingcode
+  .from('messages')
+  .order('created_at', { ascending: true })
+  .limit(100)
+  .select();
+
+for (const row of history) appendMessage(row);
+
+// 2. 实时追踪之后的一切。
+const off = lingcode.from('messages').subscribe(
+  ({ type, row }) =&gt; {
+    if (!row) { reloadMessages(); return; } // 大行的「重新拉取」信号
+    if (type === 'INSERT') appendMessage(row);
+    if (type === 'UPDATE') replaceMessage(row);
+    if (type === 'DELETE') removeMessage(row);
+  },
+  (err) =&gt; console.error('realtime stream error', err)
+);
+
+// 3. 在销毁时（例如组件卸载），关闭这条流。
+function teardown() {
+  off();
+}</code></pre>
+      <p>这就是那个标准形态：一次初始读取拿到状态，一个订阅负责实时追踪，再加一个你真的会调用的取消订阅句柄。</p>
+
+      <h2>底层原理（REST）</h2>
+      <p>SDK 的 <code>subscribe</code> 会向一个端点打开一条 SSE 连接：</p>
+      <pre><code>GET https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/realtime</code></pre>
+      <p>这是一条 Server-Sent Events 流——响应是 <code>Content-Type: text/event-stream</code>。用你的 <strong>anon key</strong> 或已登录的<strong>用户令牌</strong>来认证（和你做查询时用的是同一个凭证；正是它界定了 RLS 过滤的范围）。一个可选的查询参数用来收窄你会听到哪些表的变更：</p>
+      <pre><code>GET /api/cloud/be/&lt;backend-id&gt;/realtime?table=messages,presence</code></pre>
+      <p><code>?table=</code> 过滤器以逗号分隔，把流限制到那些表。每次变更都作为一个 SSE <code>change</code> 事件到达：</p>
+      <pre><code>event: change
+data: {"table":"messages","type":"INSERT","row":{"id":42,"body":"hi"}}</code></pre>
+      <p>这条流还会<strong>大约每 25&nbsp;秒发一次心跳</strong>，以穿过代理和空闲超时、保持连接存活。SDK 会替你处理好这一切——这个端点摆在这里，是为了让你能看清订阅到底在做什么，或者直接从一个非 JS 客户端去消费它。</p>
+
+      <h2>实时订阅是什么——又不是什么</h2>
+      <p>实时订阅流式传输的是<strong>你表里的行变更</strong>。这就是它的全部范围。它有意<em>不是</em>：</p>
+      <ul>
+        <li><strong>不是通用的 pub/sub 或广播总线。</strong>没有「向一个频道发布任意消息」这种原语。</li>
+        <li><strong>不是在线状态服务。</strong>没有内置的「谁连着」信息流。</li>
+      </ul>
+      <p>好消息是你很少需要把它们当作独立系统。要做任意的服务器&rarr;客户端消息传递，<strong>写一张表并订阅它</strong>——插入一行来发送，每个订阅者都会收到这次变更。同样的招数也能给你在线状态：保留一张 <code>presence</code> 表，写入一行心跳，并订阅它。</p>
+
+      <div class="warn-box">
+        <strong>始终保留取消订阅句柄并调用它。</strong><code>subscribe</code> 把一个函数交给你是有原因的——在视图消失时调用它。一个没关闭的订阅就是一条持续占用连接的打开的流。在组件框架里，从你 effect 的清理函数里返回 <code>off</code>；在纯 JS 里，在你的销毁路径里调用它。
+      </div>
+
+      <div class="tutorial-next">
+        <h2>下一步</h2>
+        <div class="tutorial-next-grid">
+          <a href="/zh/docs/cloud/database.html">
+            <h4>数据库 →</h4>
+            <p>表、链式查询构造器、迁移与 RLS——也就是你的订阅所反映的那份数据。</p>
+          </a>
+          <a href="/zh/docs/cloud/auth.html">
+            <h4>认证 →</h4>
+            <p>让用户登录，这样他们的用户令牌会把实时订阅界定到只属于他们被允许看到的那些行。</p>
+          </a>
+          <a href="/zh/docs/cloud/api-reference.html">
+            <h4>API 参考 →</h4>
+            <p>完整的 SDK 接口，以及每一个 <code>/api/cloud/be/&lt;id&gt;/…</code> REST 端点及其结构。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

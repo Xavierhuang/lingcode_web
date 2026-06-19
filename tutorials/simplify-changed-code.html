@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simplify changed code with /simplify</title>
+  <meta name="description" content="A diff that compiles, passes tests, and matches the requirement can still be twice as long as it should be. /simplify is LingCode's focused review pass for reuse, quality, and efficiency — it names the smells and rewrites them.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/simplify-changed-code.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/simplify-changed-code.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/simplify-changed-code.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/simplify-changed-code.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Simplify changed code with /simplify",
+  "description": "A diff that compiles, passes tests, and matches the requirement can still be twice as long as it should be — missed reuse opportunities, over-abstraction, defensive code for impossible cases. /simplify is a focused review pass that names those specific smells and rewrites them. R",
+  "url": "https://lingcode.dev/tutorials/simplify-changed-code.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/simplify-changed-code.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Simplify changed code with /simplify"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Tips & tricks",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Simplify changed code",
+      "item": "https://lingcode.dev/tutorials/simplify-changed-code.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/simplify-changed-code.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Tips &amp; tricks</a>
+      <span>/</span>
+      <span>Simplify changed code</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Simplify changed code with /simplify</h1>
+      <p class="intro">A diff that compiles, passes tests, and matches the requirement can still be twice as long as it should be — missed reuse opportunities, over-abstraction, defensive code for impossible cases. <code>/simplify</code> is a focused review pass that names those specific smells and rewrites them. Run it before code review, not after.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>"Done" and "minimal" are different bars</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>When an agent finishes a feature, the natural stopping condition is "tests pass and it does the thing." That's the <em>functional</em> bar. The <em>quality</em> bar — minimal, idiomatic, no dead weight — usually isn't checked.</p>
+          <p>The result, repeatable across enough projects to be a pattern:</p>
+          <ul>
+            <li>A new helper that duplicates an existing utility three folders over.</li>
+            <li>A four-layer abstraction for a problem with one caller.</li>
+            <li>Guard clauses for inputs that the caller's type system already excludes.</li>
+            <li>Configuration knobs nobody asked for.</li>
+            <li>Comments narrating what the next line does — in English, slower than the code.</li>
+          </ul>
+          <p><code>/simplify</code> is a separate review pass with a checklist for these specific failure modes. It reads the diff, names what's wrong by category, and either rewrites it or proposes the rewrite for your approval. Treat it as a step in the workflow, not an optional polish.</p>
+        </div>
+      </div>
+
+      <h2>When to run it</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>The right moment is after "tests pass," before "open a PR." Earlier and you're simplifying code that's still in flux. Later and the smells are already in review and your reviewer is the one finding them.</p>
+          <ul>
+            <li><strong>After LingCode finishes a feature</strong> — run it on the working tree before committing.</li>
+            <li><strong>After a hand-written change</strong> — your own diff is fair game. The skill doesn't care who wrote the code.</li>
+            <li><strong>Before requesting code review</strong> — preempt the "this is too long" comments by removing the cause.</li>
+          </ul>
+          <div class="warn-box">
+            <strong>Don't run /simplify on code you don't own.</strong> Simplifying someone else's PR in their branch is a great way to invent a 200-line merge conflict. Run it on your own changes only.
+          </div>
+        </div>
+      </div>
+
+      <h2>What it actually looks at</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>The five categories <code>/simplify</code> reviews against, in priority order:</p>
+          <ul>
+            <li><strong>Reuse.</strong> Did this diff add a function that already exists elsewhere in the codebase? LingCode greps for similar shapes before accepting new helpers.</li>
+            <li><strong>Over-abstraction.</strong> Is there a protocol/interface with one conformer, a factory with one product, a generic with one concrete type? Inline it.</li>
+            <li><strong>Defensive code for impossible inputs.</strong> Null checks on a non-nullable type. <code>if (count &lt; 0)</code> on an unsigned int. Catch-and-rethrow that adds nothing. Delete.</li>
+            <li><strong>Dead branches and unused params.</strong> The "I might need this later" parameter that no caller passes. The error case that's never reachable.</li>
+            <li><strong>Comments that narrate code.</strong> <code>// increment counter</code> above <code>counter += 1</code> is noise; <code>// rate-limited to 5/s by upstream</code> is signal. Keep the second kind, drop the first.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Running it</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>In the LingCode chat, type:</p>
+          <pre><code>/simplify</code></pre>
+          <p>With no arguments, it scopes to your current uncommitted changes (<code>git diff HEAD</code>). LingCode reads the diff, runs the checklist, and produces a structured report.</p>
+          <p>To scope explicitly:</p>
+          <pre><code># Just one file.
+/simplify Sources/Auth/LoginViewModel.swift
+
+# A range of commits — useful before a force-push.
+/simplify since main
+
+# A specific PR-shaped scope.
+/simplify HEAD~3..HEAD</code></pre>
+          <p>The report comes back as a list of findings grouped by category, each with a file/line reference and a suggested rewrite. Findings without a confident rewrite are flagged as "consider" rather than "fix."</p>
+        </div>
+      </div>
+
+      <h2>What a typical report looks like</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Edited for shape, with realistic content:</p>
+          <pre><code>### Reuse (1)
+- LoginViewModel.swift:42 — added formatPhoneNumber(). The same
+  function exists at Utilities/PhoneFormatter.swift:18 and is
+  already imported in this file. Replace the local helper with a
+  call to PhoneFormatter.format(_:).
+
+### Over-abstraction (2)
+- AuthService.swift:8 — protocol AuthProviding has one conformer
+  (RealAuthService) and is only injected in one place. Inline:
+  delete the protocol, depend on RealAuthService directly. Re-add
+  the protocol if and when a second conformer arrives.
+- LoginCoordinator.swift:30 — generic NavigationDestination&lt;T&gt;
+  is instantiated only as NavigationDestination&lt;LoginRoute&gt;.
+  Specialize to NavigationDestinationLogin.
+
+### Defensive code (1)
+- LoginViewModel.swift:67 — guard let email = email else { ... }
+  where `email` is typed `String` (non-optional). The branch is
+  unreachable. Delete.
+
+### Consider (1)
+- AuthService.swift:55 — three-argument `login(email:password:
+  remember:)` defaults `remember = false` and no caller passes
+  `true`. Consider dropping the parameter, re-adding when needed.
+
+Apply fixes? [y/N]</code></pre>
+          <p>Categories separate the "obviously delete this" findings from the "judgment call" findings. The "Consider" section is where you push back; the rest is usually safe to apply.</p>
+        </div>
+      </div>
+
+      <h2>Applying the fixes</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Answer <code>y</code> and LingCode rewrites the files. The standard verify-before-claiming-done loop kicks in: it re-runs the test suite after the changes, and reports test status as part of the result.</p>
+          <p>If a fix breaks a test, LingCode reverts that specific fix and tells you which finding was unsafe. The other fixes stay applied. You end up with the diff that simplified cleanly.</p>
+          <div class="tip-box">
+            <strong>Review the rewrite before committing.</strong> /simplify is mechanical pattern-matching on top of judgment — usually right, sometimes overzealous. Skim the resulting diff; you don't have to accept every rewrite.
+          </div>
+        </div>
+      </div>
+
+      <h2>What it doesn't do</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Boundaries worth knowing:</p>
+          <ul>
+            <li><strong>It doesn't change behavior.</strong> Findings are about how the code is shaped, not whether it does the right thing. Use <a href="/tutorials/give-and-receive-code-review-with-lingcode.html">code review</a> for that.</li>
+            <li><strong>It doesn't optimize for performance.</strong> "Efficiency" in the skill description means "no obvious wasted work" — duplicate calls, dead branches — not micro-optimization. Hot paths still need profiling.</li>
+            <li><strong>It doesn't rewrite working code that's just verbose by your taste.</strong> If a 30-line function reads cleanly and has no reuse/abstraction/defensiveness issues, /simplify leaves it alone. Style preferences are not smells.</li>
+            <li><strong>It doesn't touch tests.</strong> Test code follows different rules — duplication is often desirable, defensive setup is often necessary. Different review pass.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Pair with verification</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>The natural workflow:</p>
+          <ol>
+            <li>LingCode implements the feature.</li>
+            <li>Tests pass.</li>
+            <li><code>/simplify</code> — strip the over-build.</li>
+            <li>Tests still pass (verify, don't assume).</li>
+            <li>Commit and request review.</li>
+          </ol>
+          <p>Step 4 is where a lot of "simplification" workflows leak — fixes get applied, no one reruns the suite, regressions ship. /simplify runs the suite itself; if you skip it via manual edits, run the suite by hand. See <a href="/tutorials/verify-before-claiming-done.html">verify before claiming done</a> for the discipline.</p>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Package the workflow as a skill so LingCode applies the right checklist every time you ask it to simplify:</p>
+          <pre><code>---
+name: simplify
+description: Review changed code for reuse, quality, and efficiency, then fix any issues found. Triggers: 'simplify this', 'clean up the code', 'reduce', 'too verbose', 'review my diff', 'is there a simpler way', 'shorter version', 'refactor for clarity'. Actions: scan diff for five categories — missed reuse opportunities, over-abstraction, defensive code for impossible cases, dead branches, narrating comments. Output: structured report + edits. Explicitly NOT: behavior changes, performance optimization, taste rewrites, test changes.
+---
+
+Review the current diff (default: git diff HEAD; or the scope the
+user names) against five categories, in priority order:
+
+1. Reuse — does this diff add code that already exists elsewhere
+   in the codebase? Grep for similar shapes before accepting new
+   helpers. Prefer call-site updates over duplicate utilities.
+
+2. Over-abstraction — protocols with one conformer, factories
+   with one product, generics with one concrete type. Inline.
+   Re-add the abstraction when a second use case appears.
+
+3. Defensive code for impossible inputs — guard clauses on
+   non-nullable types, range checks the type system already
+   enforces, catch-and-rethrow that adds nothing. Delete.
+
+4. Dead branches and unused parameters — error cases that can't
+   reach, params no caller passes, "for future use" knobs.
+   Delete.
+
+5. Comments that narrate code — "// increment counter" above
+   "counter += 1" is noise. Keep comments that explain *why* (a
+   constraint, a non-obvious invariant), drop comments that
+   describe *what*.
+
+Group findings by category. For each, give file:line, the smell,
+and a concrete rewrite. Use a "Consider" bucket for judgment
+calls.
+
+After applying fixes, re-run the test suite. Revert any fix that
+breaks a test; keep the rest.
+
+Do not change behavior. Do not optimize for performance. Do not
+rewrite working code that's just verbose by taste. Do not touch
+test files.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/simplify/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/give-and-receive-code-review-with-lingcode.html" class="tutorial-next-card">
+            <h3>Give and receive code review</h3>
+            <p>Once the diff is simplified, the next pass is correctness — that's a different review with a different checklist</p>
+          </a>
+          <a href="/tutorials/verify-before-claiming-done.html" class="tutorial-next-card">
+            <h3>Verify before claiming done</h3>
+            <p>Every simplify pass ends with re-running the tests. Make verification a reflex, not an afterthought</p>
+          </a>
+          <a href="/tutorials/finish-a-development-branch.html" class="tutorial-next-card">
+            <h3>Finish a development branch</h3>
+            <p>Simplify → verify → finish is the canonical "I'm done with this branch" sequence</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

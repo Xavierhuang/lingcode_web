@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add a favicon to a /try project — LingCode Tutorials</title>
+  <meta name="description" content="Favicons are usually a /static folder full of PNGs. /try projects don't have a static folder — assets live inline. Learn the inline-SVG and base64-data-URL workarounds, the four favicon variants worth shipping, and the one-line PWA upgrade.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/add-a-favicon-to-a-try-project.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/add-a-favicon-to-a-try-project.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/add-a-favicon-to-a-try-project.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605171400">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-17T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/add-a-favicon-to-a-try-project.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Add a favicon to a /try project",
+  "description": "A favicon is usually a folder full of PNGs that the browser fetches as separate files. /try projects are a chat-driven sandbox — they don't have a static-asset folder you can upload binaries into. The workaround is one extra line of HTML: an inline SVG or base64 data URL that shi",
+  "url": "https://lingcode.dev/tutorials/add-a-favicon-to-a-try-project.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-17",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/add-a-favicon-to-a-try-project.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Add a favicon to a /try project"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Add a favicon to a /try project",
+      "item": "https://lingcode.dev/tutorials/add-a-favicon-to-a-try-project.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/add-a-favicon-to-a-try-project.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Native Mac IDE</a>
+      <span>/</span>
+      <span>Add a favicon to a /try project</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-17</span>
+      </div>
+      <h1>Add a favicon to a /try project</h1>
+      <p class="intro">A favicon is usually a folder full of PNGs that the browser fetches as separate files. /try projects are a chat-driven sandbox — they don't have a static-asset folder you can upload binaries into. The workaround is one extra line of HTML: an inline SVG or base64 data URL that ships inside the document. Learn what to ship, why, and the one prompt that gets the agent to do it.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p><a href="/try.html">/try</a> is LingCode's web prototyping playground — you describe a site, the agent writes the HTML/CSS/JS, the preview updates live, and a "Publish" button deploys it to a public URL. The project's contents are the agent's code output, not a folder you fill with files. That's lovely for prose-driven iteration and a small constraint when you want a real favicon. This tutorial covers the constraint and the three-line fix.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Why /try doesn't accept favicon.ico file uploads (and what it does accept)</li>
+        <li>The four favicon variants browsers actually look for in 2026</li>
+        <li>How to ship a usable favicon with inline SVG (the modern approach)</li>
+        <li>The data-URL fallback for browsers that don't take SVG yet</li>
+        <li>The one-line upgrade to PWA-installable</li>
+      </ul>
+
+      <h2>Step 1: The constraint</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>/try ships code, not binaries</h3>
+          <p>A traditional favicon setup looks like this: drop <code>favicon.ico</code>, <code>apple-touch-icon.png</code>, and <code>icon-192.png</code> into a <code>/static</code> folder; reference them from your <code>&lt;head&gt;</code>. The browser fetches each as a separate HTTP request.</p>
+          <p>/try projects don't have a <code>/static</code> folder you can populate from outside the chat. The project is whatever HTML/CSS/JS the agent has produced — image attachments you've sent into the chat get inlined into the agent's code as data URLs, not published as standalone files. That means the <em>conventional</em> favicon pipeline (drop a .ico, reference it) doesn't apply.</p>
+          <p>The good news: every modern browser supports a favicon as an inline SVG or base64 data URL. You don't need a separate file at all. One line in the <code>&lt;head&gt;</code> does the same job, and that line is well within what /try can ship.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: What browsers actually look for</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Four variants is the full set in 2026</h3>
+          <p>If you read older favicon advice, you'll see lists of 10–14 sizes for "complete browser support." Most of those targeted browsers and devices that no longer exist. In 2026 the realistic set is four:</p>
+          <table>
+            <thead>
+              <tr><th>Variant</th><th>Used by</th><th>Format</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>icon</code></td>
+                <td>Desktop browser tabs, bookmarks</td>
+                <td>SVG (preferred) or 32×32 PNG</td>
+              </tr>
+              <tr>
+                <td><code>apple-touch-icon</code></td>
+                <td>iOS Safari "Add to Home Screen"</td>
+                <td>180×180 PNG, no transparency</td>
+              </tr>
+              <tr>
+                <td><code>manifest</code></td>
+                <td>Android Chrome "Add to Home Screen", PWAs</td>
+                <td>192×192 + 512×512 PNGs referenced from a <code>manifest.json</code></td>
+              </tr>
+              <tr>
+                <td><code>theme-color</code></td>
+                <td>Mobile browser chrome (URL bar color)</td>
+                <td>A single hex color in a <code>&lt;meta&gt;</code> tag</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>You can ship a v0 site with just the first one. The other three are upgrades for specific scenarios (iOS users saving to home screen, PWA installability, branded mobile chrome).</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Ship a v0 SVG favicon</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>One line, no separate file</h3>
+          <p>The simplest workable favicon for a /try site is an inline SVG. Add this to the <code>&lt;head&gt;</code> of your <code>index.html</code>:</p>
+          <pre><code>&lt;link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'&gt;&lt;text y='26' font-size='28'&gt;🚀&lt;/text&gt;&lt;/svg&gt;"&gt;</code></pre>
+          <p>That's a 32×32 SVG rendering a rocket emoji as your favicon — no separate file, no upload, works in every Chromium, Firefox, and Safari released in the last three years. Swap the emoji or replace the <code>&lt;text&gt;</code> with a <code>&lt;circle&gt;</code> or <code>&lt;path&gt;</code> for a real logo. The URL-encoded SVG can be as complex as you want; modern browsers parse it inline.</p>
+          <p>For a non-emoji logo, ask the agent in the /try chat:</p>
+          <pre><code>Add a favicon to this site. Use an inline SVG showing the letter "L"
+in white on a #5B6CFF circle. Put the link tag in &lt;head&gt;.</code></pre>
+          <p>You'll see the favicon appear in your /try preview's tab within a second of the agent's edit landing. If it doesn't, hard-refresh the preview iframe (the tab caches favicons aggressively).</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Why SVG over base64 PNG for the v0 case.</strong> Inline SVG is human-editable in the HTML — when you want to change the color or shape, you edit one character. Base64 PNG is opaque; to change anything you regenerate the PNG, re-encode, and replace a long string. For an iterating-fast prototype, SVG wins. Switch to base64 PNG only when you need a specific raster look (photo-style, gradient that's hard to do in SVG).
+      </div>
+
+      <div class="tip-box">
+        <strong>Don't want to design the SVG yourself? /try generates images for you.</strong> The /try agent has a built-in <code>generate_image</code> tool wired to Pollinations AI (free, no key required). Ask "<em>generate a favicon-style image: minimalist purple rocket, flat design, square, 512×512</em>" and the agent returns a hosted image URL it embeds directly into your HTML. For a tab favicon specifically, the URL works as <code>&lt;link rel="icon" href="https://image.pollinations.ai/...."&gt;</code> — though for production, ask the agent to download and inline the result as base64 so your favicon doesn't depend on a third-party service staying up.
+      </div>
+
+      <h2>Step 4: Add apple-touch-icon for iOS</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>One more line, base64 PNG this time</h3>
+          <p>iOS Safari ignores SVG favicons for "Add to Home Screen." It wants a 180×180 PNG with no transparency. Since /try can't host the PNG as a separate file, encode it as a data URL:</p>
+          <pre><code>&lt;link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgo...[long string]..."&gt;</code></pre>
+          <p>Generating the base64 by hand is painful. Ask the agent:</p>
+          <pre><code>Add an apple-touch-icon for iOS. 180×180, white "L" on a #5B6CFF
+background, no transparency. Encode as a base64 data URL and add the
+link tag.</code></pre>
+          <p>The agent will produce a base64 string and inject the <code>&lt;link&gt;</code> for you. The resulting HTML gets larger (a 180×180 PNG base64-encodes to ~10–20KB of text), but that's a one-time payload, not a per-request asset fetch.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Upgrade to PWA-installable</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Inline manifest, no separate JSON file</h3>
+          <p>For "Add to Home Screen" on Android (and to make Chrome show an install prompt), you need a web manifest. The conventional setup references a <code>/manifest.json</code> file. In /try, inline it as a data URL on the link tag:</p>
+          <pre><code>&lt;link rel="manifest" href='data:application/json,{"name":"My Site","short_name":"MySite","start_url":"/","display":"standalone","background_color":"%23ffffff","theme_color":"%235B6CFF","icons":[{"src":"data:image/svg+xml,&lt;svg ...&gt;","sizes":"any","type":"image/svg+xml"}]}'&gt;
+&lt;meta name="theme-color" content="#5B6CFF"&gt;</code></pre>
+          <p>That's the minimum viable PWA manifest: a name, a start URL, standalone display mode, and one icon. The <code>%23</code> in the data URL is just a URL-encoded <code>#</code> for the color values. Once this is in place, Chrome on Android will offer "Install app" from its menu, and iOS Safari users get a properly-titled home-screen icon.</p>
+          <p>This is the kind of thing the agent does well — paste the requirement, get the encoding right on the first try:</p>
+          <pre><code>Make this site PWA-installable. Add an inline web manifest in the
+&lt;head&gt; with name "My Site", standalone display mode, theme color
+#5B6CFF, and the existing SVG favicon as the manifest icon. Also add
+a theme-color meta tag.</code></pre>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't reference external favicon services from a /try project.</strong> "Use icons8.com" or "use a CDN favicon" works locally but fails on Publish — many of those hotlink-protect or rate-limit. The published URL gets traffic patterns the original site didn't anticipate, and your "<em>it worked yesterday</em>" favicon stops loading. Inline everything that's load-bearing for your published site.
+      </div>
+
+      <h2>Step 6: Verify on the published URL</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Three checks in 30 seconds</h3>
+          <p>After clicking Publish, run these three checks on the public URL:</p>
+          <ol>
+            <li><strong>Open the published URL in an incognito tab</strong> and look at the favicon in the tab strip. If it's the default globe icon, the link tag didn't make it into the published HTML — re-check your edit landed before publishing.</li>
+            <li><strong>iOS only:</strong> open the URL in Safari on a phone, tap the share sheet, tap "Add to Home Screen." Confirm your apple-touch-icon shows in the preview (not the screenshot of the page).</li>
+            <li><strong>Chrome DevTools → Application → Manifest:</strong> confirms the manifest parsed correctly. If you see "<em>Site cannot be installed</em>," there's a syntax error in the inline JSON — usually a missing quote or an unencoded character. The agent will fix it if you paste the DevTools error back.</li>
+          </ol>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/create-an-ios-or-mac-app-icon.html" class="tutorial-next-card">
+            <h3>Create an iOS or Mac app icon</h3>
+            <p>If your /try prototype graduates to a native app, the icon flow is different</p>
+          </a>
+          <a href="/tutorials/create-an-android-adaptive-icon.html" class="tutorial-next-card">
+            <h3>Create an Android adaptive icon</h3>
+            <p>Same graduation, Android side</p>
+          </a>
+          <a href="/tutorials/create-a-custom-sf-symbol.html" class="tutorial-next-card">
+            <h3>Create a custom SF Symbol</h3>
+            <p>For in-app icons on Apple platforms</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

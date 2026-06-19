@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I connect a managed backend to my project? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Connect a LingCode Cloud managed backend to your project from the Mac IDE. Per-project Postgres + auth + storage + realtime + vector search — no external services, no extra credentials.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-a-managed-backend.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/connect-a-managed-backend.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-a-managed-backend.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-31T00:00:00Z">
+  <meta name="article:published_time" content="2026-05-31T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/connect-a-managed-backend.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Connect a managed backend to your project",
+  "description": "LingCode Cloud gives each project its own managed Postgres backend — built-in auth, file storage, realtime, and vector search, with zero external services or credentials. Connect it from the Mac IDE and the agent provisions and builds against it.",
+  "url": "https://lingcode.dev/tutorials/connect-a-managed-backend.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-05-31",
+  "dateModified": "2026-05-31",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/tutorials/connect-a-managed-backend.html" },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Connect a managed backend to your project"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Search", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "Backend integrations", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Connect a managed backend", "item": "https://lingcode.dev/tutorials/connect-a-managed-backend.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/connect-a-managed-backend.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Connect a managed backend</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-31</span>
+      </div>
+      <h1>How do I connect a managed backend to my project?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> In the Mac IDE, open your project folder and pick <strong>Account → LingCode Cloud → Connect Backend to This Project</strong>. That writes <code>.mcp.json</code> and provisions a private Postgres backend (auth, storage, realtime, vector search) for that project. Start a new <strong>Claude (Native)</strong> session and ask for something that needs data or accounts — the agent creates tables and reads/writes through the <code>lingcode-cloud</code> tools. Manage it at <a href="/backends.html">lingcode.dev/backends</a>. No external services, no extra credentials.</p>
+      <p class="intro">Most apps need a backend the moment they need to <em>remember</em> anything — a saved note, a logged-in user, an uploaded file. The usual path is to go sign up for Supabase or Firebase, create a project, copy a URL and a couple of keys, paste them somewhere, and hope you didn't leak them. LingCode Cloud removes that whole detour: every project gets its own managed backend, created from a single prompt, with zero credentials to juggle.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Think about what a backend actually <em>is</em> for a typical app: a database to store rows, a way for users to sign in, somewhere to put files, and ideally live updates so two browser tabs stay in sync. None of that is conceptually hard — but wiring it up traditionally means standing up a service, managing its credentials, and keeping those credentials out of your git history and your client bundle. For a prototype that might never ship, that ceremony is pure friction.</p>
+      <p>LingCode Cloud's answer is a <strong>managed backend per project</strong>. "Managed" means LingCode runs the Postgres, the auth, the storage, and the email — you never create an account on a third-party service or copy a secret key. "Per project" means each folder you connect gets its own isolated database (a private Postgres schema with row-level security), so two projects can't see each other's data even though they share the same infrastructure.</p>
+      <p>The connection itself is deliberately small: it teaches your project's agent how to reach the backend. After that, you talk to the agent in plain language — "let users sign up and save their notes" — and it provisions tables and writes the code. This tutorial explains what "connect" really does, walks the steps, and shows where to manage the result.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>What the <strong>Connect Backend</strong> action actually does (and what it doesn't)</li>
+        <li>How a backend is tied to a project — and why reopening the folder reuses it</li>
+        <li>What you get out of the box: database, auth, storage, realtime, vector search</li>
+        <li>How to drive it from a prompt, and how to manage it in the web console</li>
+        <li>Disconnecting, reconnecting, and the one gotcha to avoid</li>
+      </ul>
+
+      <h2>What "Connect Backend" really does</h2>
+      <p>Two things happen when you connect a project, and it's worth knowing them separately because they fail and succeed independently:</p>
+      <ul>
+        <li><strong>It writes <code>.mcp.json</code> in your project folder.</strong> That file registers a <code>lingcode-cloud</code> MCP server — the bridge the agent uses to talk to your backend. It carries your account token and a <em>project key</em> (a stable hash of the folder's path), so the agent's calls are scoped to <em>this</em> project's backend.</li>
+        <li><strong>It provisions the backend.</strong> Connecting eagerly creates the managed Postgres backend for the project right then, so it shows up in your console immediately. (If that network call hiccups, it's not fatal — the agent will provision on first use instead.)</li>
+      </ul>
+      <p>The project key is the important idea. Because it's derived from the folder path, <strong>reopening the same folder and reconnecting reuses the same backend</strong> — your data is still there. Move or rename the folder and the key changes, so LingCode treats it as a new project (the old backend isn't deleted; this project just no longer points at it).</p>
+
+      <div class="info-box">
+        <h3>Sign in to the same account on both sides</h3>
+        <p>The backend is owned by whichever LingCode account the <em>IDE</em> is signed into. If the IDE is one account and your browser (<a href="/backends.html">lingcode.dev/backends</a>) is another, you'll provision under one and look at the other — and wonder where your backend went. Use the same account in both places.</p>
+      </div>
+
+      <h2>Connect it, step by step</h2>
+      <ol>
+        <li><strong>Sign in</strong> to your LingCode account in the Mac IDE (the account menu in the activity bar). The backend is created under this account.</li>
+        <li><strong>Open your project folder</strong> — any local folder. The backend attaches to this folder's path.</li>
+        <li>Choose <strong>Account → LingCode Cloud → Connect Backend to This Project</strong>. You'll get a confirmation that a managed backend was created and <code>.mcp.json</code> was written. (Connecting again later just refreshes the token — it's safe and idempotent.)</li>
+        <li>Open a <strong>new Claude (Native)</strong> session (new, so it re-reads <code>.mcp.json</code> and picks up the <code>lingcode-cloud</code> tools).</li>
+        <li>Ask for something that needs persistence or accounts, for example:
+          <br><em>"Build a notes app where users sign up and each person only sees their own notes. Use lingcode-cloud for the backend."</em></li>
+      </ol>
+      <p>From there the agent calls <code>provision_backend</code> (ensuring the backend exists), <code>apply_migration</code> (creating the tables your app needs), and then writes the app against the backend's data API. You don't paste any keys — the tools are already authenticated through the connection.</p>
+
+      <h2>What you get out of the box</h2>
+      <p>A connected backend is not just a database. Every project backend ships with:</p>
+      <ul>
+        <li><strong>Postgres with row-level security</strong> — real SQL tables, with per-user isolation so a signed-in user only reads and writes their own rows.</li>
+        <li><strong>Built-in auth</strong> — email/password, passwordless magic-link, email one-time codes, and social login (Google, GitHub, with Apple available). Nothing to configure for the managed providers.</li>
+        <li><strong>File storage</strong> — upload and serve files with a public URL.</li>
+        <li><strong>Realtime</strong> — subscribe to a table and get live <code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code> events (RLS-filtered), so chat, collaborative lists, and dashboards update without polling.</li>
+        <li><strong>Vector search (pgvector)</strong> — store embeddings and rank rows by similarity, for "search my notes by meaning", RAG, and recommendations.</li>
+        <li><strong>Transactional email</strong> — send mail with no API key or sender setup.</li>
+      </ul>
+      <p>The agent knows about all of these and will reach for the right one — it'll subscribe to realtime instead of polling, add a vector column when you ask for semantic search, and so on.</p>
+
+      <h2>Manage it in the console</h2>
+      <p>Everything the agent provisions is visible (and editable) at <a href="/backends.html">lingcode.dev/backends</a>, signed in with the same account. The console gives you a project switcher and, per backend:</p>
+      <ul>
+        <li><strong>Database</strong> — browse tables, sort and page through rows, and insert / edit / delete rows directly (the owner view bypasses RLS, like a table editor).</li>
+        <li><strong>Authentication</strong> — see who has signed up; remove a user.</li>
+        <li><strong>SQL</strong> — run read-only queries, or apply a migration to change the schema.</li>
+        <li><strong>Settings</strong> — rename the project, copy the connection details, or delete the backend.</li>
+      </ul>
+      <p>The connection details here (the data URL and the anon key) are also what you'd paste into another MCP client — Claude Desktop or Cursor — to reach the same backend from outside the IDE.</p>
+
+      <h2>Disconnect, reconnect, and the gotcha</h2>
+      <p><strong>Account → LingCode Cloud → Disconnect Backend</strong> removes the <code>lingcode-cloud</code> entry from <code>.mcp.json</code>. It does <em>not</em> delete the backend or its data — reconnecting the same folder later picks the same backend right back up (remember: the project key is the folder path). To actually destroy a backend and its data, use <strong>Delete backend</strong> in the console's Settings.</p>
+      <p>The one gotcha worth repeating: the backend belongs to the account the IDE is signed into, keyed by the folder path. If a project's backend "disappears", check (1) that the IDE and the web console are the same account, and (2) that the folder hasn't moved. Both are easy to verify and both explain the most common "where did it go" moment.</p>
+
+      <div class="warn-box">
+        <strong>Credentials note:</strong> The point of a managed backend is that <em>you</em> hold no backend credentials — LingCode does. The only secret in the loop is your LingCode account token inside <code>.mcp.json</code>, which is per-machine. If you commit <code>.mcp.json</code> to a shared repo, treat it like any token: prefer keeping it out of version control, since anyone with it can reach your project's backend.</p>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>Connect an MCP server</h3>
+            <p>The transport behind lingcode-cloud — how tools reach the agent</p>
+          </a>
+          <a href="/tutorials/manage-database-migrations.html" class="tutorial-next-card">
+            <h3>Manage database migrations</h3>
+            <p>How schema changes flow through apply_migration safely</p>
+          </a>
+          <a href="/tutorials/pick-a-baas-firebase-vs-supabase.html" class="tutorial-next-card">
+            <h3>Firebase vs Supabase</h3>
+            <p>How a managed BaaS compares — and when you'd still bring your own</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

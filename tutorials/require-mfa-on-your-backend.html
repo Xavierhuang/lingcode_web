@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I add multi-factor auth (MFA) to my LingCode Cloud backend? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Add TOTP multi-factor authentication to your LingCode Cloud backend's users, with rotating refresh tokens. Flip 'Require MFA' in the console, enroll a factor with the SDK, and the data API enforces it.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/require-mfa-on-your-backend.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/require-mfa-on-your-backend.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/require-mfa-on-your-backend.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-02T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-02T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/require-mfa-on-your-backend.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Require MFA on your backend",
+  "description": "Add TOTP multi-factor authentication and rotating refresh tokens to a LingCode Cloud backend's users — toggle it in the console, enroll factors via the SDK, and the data API enforces the assurance level.",
+  "url": "https://lingcode.dev/tutorials/require-mfa-on-your-backend.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-02",
+  "dateModified": "2026-06-02",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/tutorials/require-mfa-on-your-backend.html" },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Require MFA on your backend"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Search", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "Backend integrations", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Require MFA on your backend", "item": "https://lingcode.dev/tutorials/require-mfa-on-your-backend.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/require-mfa-on-your-backend.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Require MFA on your backend</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-06-02</span>
+      </div>
+      <h1>How do I add multi-factor auth (MFA) to my backend?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> In the console (<a href="/backends.html">lingcode.dev/backends</a> → <strong>Authentication</strong>) turn on <strong>Require MFA for all signed-in users</strong>. In your app, after sign-in call <code>client.auth.enrollMfa()</code> (show the returned <code>otpauthUrl</code> as a QR for an authenticator app), then <code>client.auth.verifyMfa({ code })</code>. Once required, the data API rejects un-verified sessions until they pass a TOTP code. Access tokens are short-lived and the SDK refreshes them automatically.</p>
+      <p class="intro">A password alone is one stolen credential away from a breach. MFA adds a second factor — a rotating 6-digit code from an authenticator app (TOTP) — so a leaked password isn't enough. On most stacks that means bolting on an auth vendor; on a LingCode Cloud backend the users system already supports it, and turning it on is a toggle plus two SDK calls.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>This builds on a <a href="/tutorials/connect-a-managed-backend.html">connected managed backend</a> whose users sign in with email/password, magic link, OTP, or social login. MFA layers a TOTP second factor on top, and the backend tracks an <em>assurance level</em> per session: <code>aal1</code> after a normal sign-in, <code>aal2</code> once a TOTP code is verified.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>How to require MFA for a backend, and what that enforces</li>
+        <li>The enroll → verify flow in the SDK (and the QR step)</li>
+        <li>How short-lived tokens + automatic refresh work, so sessions stay secure without surprise logouts</li>
+      </ul>
+
+      <h2>Step 1 — require it (console)</h2>
+      <p>In <a href="/backends.html">lingcode.dev/backends</a> → <strong>Authentication</strong>, toggle <strong>Require MFA for all signed-in users</strong>. With it on, the data API rejects any request from a user session that hasn't reached <code>aal2</code>, returning a <code>mfa_required</code> error — your app catches that and walks the user through enrollment/verification. (Leave it off and MFA is opt-in: users can still enroll, but it isn't enforced.) The public anon key is unaffected — this gates <em>user</em> sessions, not anonymous reads governed by your RLS.</p>
+
+      <h2>Step 2 — enroll a factor (app)</h2>
+      <p>After the user signs in, offer "Enable two-factor." Enrolling returns a shared secret and an <code>otpauth://</code> URL — render that URL as a QR code (any small QR library) so the user can add it to Google Authenticator, 1Password, etc.:</p>
+      <pre><code class="mono">const { data } = await client.auth.enrollMfa();
+// data.otpauthUrl → render as a QR; data.secret → manual-entry fallback
+</code></pre>
+
+      <h2>Step 3 — verify (and you're at aal2)</h2>
+      <p>Ask for the 6-digit code the app shows and verify it. The first successful verify completes enrollment and returns an <code>aal2</code> session, which the SDK stores:</p>
+      <pre><code class="mono">const { error } = await client.auth.verifyMfa({ code: userTypedCode });
+// no error → session is now aal2; data calls succeed
+</code></pre>
+      <p>On a later visit (or after a token refresh drops back to <code>aal1</code>), a protected call returns <code>mfa_required</code>; call <code>client.auth.challengeMfa()</code> to see the user's verified factors, prompt for a code, and <code>verifyMfa</code> again.</p>
+
+      <div class="info-box">
+        <h3>Tokens refresh themselves</h3>
+        <p>Sessions use a short-lived access token plus a rotating refresh token. The SDK refreshes transparently when the access token expires — and if a refresh token is ever replayed (a sign of theft), the whole token family is revoked. You don't manage any of this; it's why a user stays signed in without you shipping a long-lived token to the browser.</p>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>Connect a managed backend</h3>
+            <p>The users + auth system MFA sits on top of</p>
+          </a>
+          <a href="/tutorials/scan-your-backend-with-advisors.html" class="tutorial-next-card">
+            <h3>Scan with Advisors</h3>
+            <p>Catch tables left without row-level security</p>
+          </a>
+          <a href="/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>Social sign-in</h3>
+            <p>Add Google/GitHub login alongside MFA</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col"><h4>Product</h4><ul><li><a href="/try.html">Web (/try)</a></li><li><a href="/cli.html">CLI</a></li><li><a href="/features.html">Mac IDE</a></li><li><a href="/pricing.html">Pricing</a></li><li><a href="/changelog.html">Changelog</a></li></ul></div>
+    <div class="footer-col"><h4>Developers</h4><ul><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li><li><a href="/getting-started.html">Getting started</a></li><li><a href="/cli.html">CLI reference</a></li><li><a href="/why-not-cursor.html">Why not Cursor</a></li></ul></div>
+    <div class="footer-col"><h4>Community</h4><ul><li><a href="/community.html">Friday workshops</a></li><li><a href="/community.html">For universities</a></li><li><a href="/examples.html">Showcase</a></li><li><a href="/blog.html">Blog</a></li><li><a href="/support.html">Support</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="/manifesto.html">Manifesto</a></li><li><a href="/pitch.html">Pitch</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/signin.html">Sign in</a></li><li><a href="/signup.html">Sign up</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>存储 —— 公开与私有存储桶、内联上传与直传对象存储 | LingCode Cloud 文档</title>
+  <meta name="description" content="LingCode Cloud 中的文件存储：S3 兼容的公开（CDN 分发）与私有（按用户隔离）存储桶，针对 GB 级文件自动选择内联或直传对象存储的预签名上传，按套餐分级的限额，以及完整的 SDK 与 REST 接口。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/storage.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/storage.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/storage.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/storage.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/storage.html">
+  <meta property="og:title" content="LingCode Cloud —— 存储">
+  <meta property="og:description" content="公开与私有存储桶、内联上传，以及面向 GB 级文件的直传对象存储预签名 PUT —— 附带 SDK 与 REST 参考。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .limit-table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.9rem; }
+    .limit-table th, .limit-table td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .limit-table th { font-family: "Geist Mono", monospace; font-size: 0.72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--signal); font-weight: 500; }
+    .limit-table td:first-child { font-weight: 600; color: var(--text); }
+    .limit-table code { font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>存储</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● 文件</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>存储</h1>
+      <p class="tldr"><strong>一句话：</strong>每个 LingCode Cloud 后端都自带文件存储，底层是 S3 兼容的对象存储（可选配 CDN）。一共两个存储桶：<code>public</code>（由 CDN 分发，全世界可读）和 <code>private</code>（按用户隔离，需要已登录用户的令牌）。你用 <code>lingcode.storage.from('public').upload(path, file)</code> 上传，SDK 会自动把小文件走内联、把大文件通过预签名直传（presigned PUT）直接送到对象存储——所以 GB 级的视频和音频开箱即用。</p>
+      <p class="intro">大多数应用都需要一个放文件的地方：头像、照片上传、生成的 PDF、音频片段。存储就是后端里保管这些字节的那部分。设计上的问题几乎总是同一个——这个文件是全世界凭 URL 就能看到的，还是只属于某一个用户的？LingCode 用两个存储桶回答这个问题，本指南余下的内容就是教你选对那一个，并且上传时根本不用操心文件大小。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>为什么是两个存储桶</h2>
+      <p>文件的可见性是<em>你把它放在哪儿</em>的属性，而不是你事后逐次请求才决定的事。这让规则保持简单，也不可能在不知不觉中弄错：</p>
+      <ul>
+        <li><strong><code>public</code></strong>——经 CDN 分发，全世界可读。任何拿到 URL 的人都能取到这个文件。它用于你打算凭 URL 嵌入的资源：头像、公开图片、营销素材，凡是你乐意丢进 <code>&lt;img&gt;</code> 标签的东西。公开对象有一个稳定 URL，你可以用 <code>getPublicUrl(path)</code> 同步算出来。</li>
+        <li><strong><code>private</code></strong>——按用户隔离。读取私有对象需要已登录用户的令牌；没有公开 URL。它用于按用户隔离的文档——上传的合同、私人照片，凡是绝不能靠猜 URL 泄露的东西。用用户令牌加上所有权来守门读取，方式和你为私有数据库行守门时一模一样。</li>
+      </ul>
+      <p>你通过文件在<strong>存储桶内的路径</strong>来寻址——例如 <code>public</code> 存储桶里的 <code>avatars/me.png</code>。对象键在服务端按后端、按存储桶各自加了命名空间，任何路径穿越（<code>.</code> / <code>..</code>）都会被剥除，所以你够不到另一个后端的文件。</p>
+
+      <div class="info-box">
+        <h3>公开 vs. 私有——一行判断法则</h3>
+        <p>如果你会凭 URL 嵌入它、也不介意任何人取到它，就用 <code>public</code> 并渲染 <code>getPublicUrl(path)</code>。如果它属于某一个用户、读取必须经过认证，就用 <code>private</code>，并在指向它的那些行上配上 RLS 风格的所有权检查。拿不准时，默认选 <code>private</code>——你随时可以再复制一份到公开桶。</p>
+      </div>
+
+      <h2>SDK 接口</h2>
+      <p>调用 <code>lingcode.storage.from(bucket)</code> 拿到一个存储桶句柄，其中 <code>bucket</code> 是 <code>'public'</code> 或 <code>'private'</code>。每个方法都返回和 SDK 其余部分相同的 <code>{ data, error }</code> Result 结构（<code>getPublicUrl</code> 除外——它是同步的，返回一个普通字符串）。</p>
+      <pre><code>const bucket = lingcode.storage.from('public');
+
+// upload(path, file, { contentType? }) -> { data: { bucket, path, bytes, url }, error }
+//   file 可以是 Blob | File | ArrayBuffer | string
+await bucket.upload('avatars/me.png', file, { contentType: 'image/png' });
+
+// download(path) -> { data: Blob, error }
+const { data: blob } = await bucket.download('avatars/me.png');
+
+// getPublicUrl(path) -> string   （同步；只对 public 存储桶有意义）
+const url = bucket.getPublicUrl('avatars/me.png');
+
+// remove(path) -> { data: { removed: boolean }, error }
+await bucket.remove('avatars/me.png');</code></pre>
+
+      <h2>上传的故事：小文件 vs. 大文件</h2>
+      <p>你永远只调用一个方法——<code>upload()</code>——SDK 会根据大小决定怎么搬这些字节。这是关于存储最重要的一点，因为正是它让同一行调用既能处理 40 KB 的头像，也能处理 2 GB 的屏幕录制。</p>
+      <ul>
+        <li><strong>小文件（≤ 约 5 MB）</strong>走<strong>内联</strong>，经由数据网关。字节被 base64 编码，随请求体一起带过去。简单、一次往返、没有额外环节。</li>
+        <li><strong>较大的文件</strong>通过<strong>预签名直传（presigned PUT）URL</strong>，<strong>直接上传到对象存储</strong>。SDK 向后端要一个短时有效的上传 URL，把字节直接 PUT 到对象存储（所以它们绝不经过你的应用服务器），然后做 finalize 登记这个对象。正是这一招让 GB 级媒体——视频、音频——在不拖垮网关的前提下变得可行。</li>
+      </ul>
+      <p>SDK 把这个分流完全藏了起来。如果你自己调 REST，大文件这条路是刻意的两步走：<code>create-upload-url</code> → 向返回的 URL 发 <code>PUT</code> → <code>finalize</code>（下文有详述）。对超大媒体，只要调 <code>upload()</code>，让 SDK 自动走预签名那条路。</p>
+
+      <div class="info-box">
+        <h3>为什么预签名上传很重要</h3>
+        <p>把一个 2 GB 文件推过你的应用服务器，意味着那台服务器得缓冲并流转 2 GB——又慢、又吃内存、还容易超时。预签名 PUT 把服务器整个绕开：浏览器通过一个只对你那个特定对象、且只在短窗口内有效的 URL，直接和对象存储对话。你不花一分气力就拿到 GB 级上传，网关连字节都碰不到。</p>
+      </div>
+
+      <h2>按套餐分级的限额</h2>
+      <p>存储在四个维度上计量，上限取决于你的套餐档位。超过任一上限会返回 <strong>HTTP 402 <code>quota_exceeded</code></strong>。后端在你存储配额的 <strong>80%</strong> 处发出警告，在 <strong>95%</strong> 处标记为严重，所以你会在撞墙之前就看到压力。</p>
+      <table class="limit-table">
+        <thead>
+          <tr>
+            <th>限额</th>
+            <th>它限制的对象</th>
+            <th>Free</th>
+            <th>Pro</th>
+            <th>Max Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>maxObjectBytes</code></td>
+            <td>内联上传，单个对象</td>
+            <td>1 MB</td>
+            <td>5 MB</td>
+            <td>10 MB</td>
+          </tr>
+          <tr>
+            <td><code>maxUploadBytes</code></td>
+            <td>预签名直传 PUT，单个对象</td>
+            <td>50 MB</td>
+            <td>1 GB</td>
+            <td>5 GB</td>
+          </tr>
+          <tr>
+            <td><code>maxStorageBytes</code></td>
+            <td>每个后端的总存储字节数</td>
+            <td>500 MB</td>
+            <td>5 GB</td>
+            <td>20 GB</td>
+          </tr>
+          <tr>
+            <td><code>maxObjects</code></td>
+            <td>每个后端的对象数量</td>
+            <td>50</td>
+            <td>1,000</td>
+            <td>10,000</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>单次 PUT 的上限是 5 GB，与档位无关——这是一次预签名直传 PUT 能写入的最大对象。完整数字以及其余套餐限额都在<a href="/pricing.html">定价页</a>上。</p>
+
+      <div class="warn-box">
+        <strong>402 是配额信号，不是 bug。</strong>如果 <code>upload()</code> 返回 <code>error.code === 'quota_exceeded'</code>，说明你撞上了四个上限之一——对象太多、总字节太多，或者单个对象超过了你档位的每对象限额。把它呈现给用户（或者用 <code>remove()</code> 清掉旧对象），而不是一味重试。
+      </div>
+
+      <h2>实战示例</h2>
+
+      <h3>上传一个头像到 public 并渲染它</h3>
+      <p>头像是 <code>public</code> 的教科书式场景——你想要一个能塞进图片标签的稳定 URL。上传，然后同步读回这个公开 URL（或者干脆用上传返回的那个 <code>url</code>）。</p>
+      <pre><code>const file = document.querySelector('#avatar-input').files[0];
+
+const { data, error } = await lingcode.storage
+  .from('public')
+  .upload(`avatars/${user.id}.png`, file, { contentType: file.type });
+
+if (error) {
+  console.error('upload failed', error);
+} else {
+  // data = { bucket, path, bytes, url }
+  document.querySelector('#avatar').src = data.url;
+}
+
+// 或者随后任意时刻算出这个稳定 URL，无需重新上传：
+const url = lingcode.storage.from('public').getPublicUrl(`avatars/${user.id}.png`);</code></pre>
+
+      <h3>上传一个私有文档</h3>
+      <p>用户的私有文件放进 <code>private</code> 存储桶。没有公开 URL——读取需要已登录用户的令牌，所以确保你已登录（见<a href="/zh/docs/cloud/auth.html">认证指南</a>）。用 <code>download()</code> 把它取回来，它返回一个 <code>Blob</code>。</p>
+      <pre><code>// 上传——按已登录用户隔离
+const { error } = await lingcode.storage
+  .from('private')
+  .upload(`docs/${user.id}/contract.pdf`, pdfFile, {
+    contentType: 'application/pdf',
+  });
+
+// 随后读回来（需要用户令牌）
+const { data: blob, error: dlErr } = await lingcode.storage
+  .from('private')
+  .download(`docs/${user.id}/contract.pdf`);
+
+if (!dlErr) {
+  const objectUrl = URL.createObjectURL(blob);
+  window.open(objectUrl); // 在新标签页里打开 PDF
+}</code></pre>
+      <p>把 <code>path</code> 存到一个用户拥有的数据库行上，让 RLS 来守门谁能看到那一行——这就是你把「谁能读这个文件」变成你已经在数据上用的同一套所有权检查的方式。</p>
+
+      <h3>上传大媒体——只管调 upload()</h3>
+      <p>对大文件你不用做任何特殊处理。SDK 看到大小后会自行切换到预签名那条路。</p>
+      <pre><code>const video = document.querySelector('#video-input').files[0]; // 例如 1.4 GB
+
+// 同一个调用。SDK 通过预签名 PUT 把它直传到对象存储。
+const { data, error } = await lingcode.storage
+  .from('private')
+  .upload(`recordings/${user.id}/${Date.now()}.mp4`, video, {
+    contentType: 'video/mp4',
+  });</code></pre>
+
+      <h3>删除一个文件</h3>
+      <pre><code>const { data, error } = await lingcode.storage
+  .from('public')
+  .remove(`avatars/${user.id}.png`);
+
+// data = { removed: true }</code></pre>
+
+      <h2 id="rest">底层原理（REST）</h2>
+      <p>SDK 只是一层薄薄的包装，底下是一小撮 HTTP 端点。只有当你在 JavaScript 之外工作，或想自己掌控大文件上传那几步时，才会用到它们。基址是 <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code>。用 anon key（匿名密钥，作为 <code>Bearer</code> 令牌或 <code>?apikey=</code>）或用户令牌认证；<code>bucket</code> 省略时取默认值。对象键按后端、按存储桶加了命名空间，<code>.</code>/<code>..</code> 路径穿越会被剥除。</p>
+
+      <h3>内联上传（小文件）</h3>
+      <pre><code>POST /storage/upload
+Authorization: Bearer &lt;anon-or-user-token&gt;
+Content-Type: application/json
+
+{ "bucket": "public", "path": "avatars/me.png",
+  "content_type": "image/png", "data_b64": "&lt;base64-bytes&gt;" }
+
+-> { "bucket": "public", "path": "avatars/me.png", "bytes": 40213, "url": "https://..." }</code></pre>
+
+      <h3>读取一个对象</h3>
+      <pre><code>GET /storage/object?bucket=public&amp;path=avatars/me.png
+Authorization: Bearer &lt;anon-or-user-token&gt;
+
+-> 文件字节（对公开对象会 302 重定向到 CDN URL）</code></pre>
+
+      <h3>删除一个对象</h3>
+      <pre><code>POST /storage/remove
+
+{ "bucket": "public", "path": "avatars/me.png" }
+
+-> { "removed": true }</code></pre>
+
+      <h3>直传对象存储（大文件），分三步</h3>
+      <p>这就是 SDK 对超过内联上限的文件自动做的事。第一步，要一个预签名上传 URL：</p>
+      <pre><code>POST /storage/create-upload-url
+
+{ "bucket": "private", "path": "recordings/big.mp4",
+  "content_type": "video/mp4" }
+
+-> { "uploadUrl": "https://...", "method": "PUT",
+     "headers": { ... }, "bucket": "private", "path": "recordings/big.mp4" }</code></pre>
+      <p>第二步，用返回的 <code>method</code> 和 <code>headers</code> 把字节直接 PUT 到 <code>uploadUrl</code>——这些字节去往对象存储，而非你的应用服务器：</p>
+      <pre><code>PUT &lt;uploadUrl&gt;
+&lt;headers from the previous response&gt;
+
+&lt;raw file bytes&gt;</code></pre>
+      <p>第三步，做 finalize 登记这个对象，让它计入你的后端并变得可读：</p>
+      <pre><code>POST /storage/finalize
+
+{ "bucket": "private", "path": "recordings/big.mp4" }
+
+-> { "bucket": "private", "path": "recordings/big.mp4", "bytes": 1490233856, "url": "https://..." }</code></pre>
+
+      <div class="info-box">
+        <h3>我的上传会走哪条路？</h3>
+        <p>如果你的对象小于你档位的内联每对象上限（<code>maxObjectBytes</code>——1 / 5 / 10 MB），一个 <code>POST /storage/upload</code> 就够了。再大一点就走三步走的预签名流程，受 <code>maxUploadBytes</code>（50 MB / 1 GB / 5 GB）和 5 GB 单次 PUT 上限的约束。SDK 的 <code>upload()</code> 替你挑选；只有你自己直接调 REST 时才需要亲自摆弄这几步。</p>
+      </div>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/database.html">
+            <h3>数据库 →</h3>
+            <p>把上传返回的 path 存到一行上，用你在数据上同样用的 RLS 所有权来守门文件访问。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/functions.html">
+            <h3>函数 →</h3>
+            <p>在服务端处理上传——生成缩略图、转码媒体，或者在文件落地后触发后续工作。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/api-reference.html">
+            <h3>API 参考 →</h3>
+            <p>完整的 SDK 接口和每一个 REST 端点，包含存储及其他能力的请求与响应结构。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

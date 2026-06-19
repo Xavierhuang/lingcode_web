@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why Cursor Can't Do What LingCode Does | The Electron Ceiling</title>
+  <meta name="description" content="Five structural reasons Cursor can't match LingCode on Mac: no pre-edit work protection, agent can't see live build/debugger state, mandatory cloud proxy, no real local-model support, and no in-process iOS toolchain. Plus the Electron ceiling that's underneath all of them.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/why-not-cursor.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/why-not-cursor.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/why-not-cursor.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/why-not-cursor.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/why-not-cursor.html">
+  <meta property="og:title" content="Why Cursor Can't Do What LingCode Does">
+  <meta property="og:description" content="Five structural problems Cursor can't fix on Mac: no pre-edit work protection, agent can't see live build/debugger state, mandatory cloud proxy, no real local-model support, no in-process iOS toolchain. The full honest comparison.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Why Cursor Can't Do What LingCode Does">
+  <meta name="twitter:description" content="Five structural reasons Cursor can't match LingCode on Mac — trust, IDE-awareness, no proxy, local models, iOS toolchain. Plus the Electron ceiling underneath.">
+  <meta name="article:modified_time" content="2026-05-22T00:00:00Z">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Why Cursor Can't Do What LingCode Does",
+    "description": "Five structural reasons Cursor can't match LingCode on Mac — pre-edit work protection, IDE-aware agent, no mandatory cloud proxy, real local-model support, and in-process iOS toolchain. Plus the Electron ceiling underneath.",
+    "image": "https://lingcode.dev/og-image.png",
+    "datePublished": "2026-02-01",
+    "dateModified": "2026-05-22",
+    "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+    "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/why-not-cursor.html" },
+    "url": "https://lingcode.dev/why-not-cursor.html",
+    "keywords": "LingCode vs Cursor, Cursor alternative, native Mac IDE, Electron ceiling, Swift AI editor, iOS development AI"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+      { "@type": "ListItem", "position": 2, "name": "Why not Cursor", "item": "https://lingcode.dev/why-not-cursor.html" }
+    ]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .blog-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.875rem; }
+    .blog-content pre code { background: none; padding: 0; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">The honest comparison</p>
+        <h1>Why Cursor can't do what LingCode does</h1>
+        <p>Cursor is genuinely good at cross-platform AI coding. It also has five structural problems on a Mac that no amount of feature work can solve — because each one is rooted in decisions Cursor cannot reverse without rebuilding the product. This page walks through all five, then the architectural reason underneath them.</p>
+        <p style="font-size: 0.875rem; margin-top: 14px;"><a href="#trust" style="color: var(--signal); text-decoration: none;">Trust</a> · <a href="#ide-aware" style="color: var(--signal); text-decoration: none;">IDE-aware</a> · <a href="#no-proxy" style="color: var(--signal); text-decoration: none;">No proxy</a> · <a href="#local-models" style="color: var(--signal); text-decoration: none;">Local models</a> · <a href="#apple-intelligence" style="color: var(--signal); text-decoration: none;">Apple Intelligence</a> · <a href="#ios-ide" style="color: var(--signal); text-decoration: none;">iOS IDE</a> · <a href="#electron-ceiling" style="color: var(--signal); text-decoration: none;">Electron ceiling</a></p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2 id="at-a-glance">At a glance — LingCode vs Cursor on Mac</h2>
+      <p>Skim before reading. Each row is one of the structural differences the rest of the page explains. If you only have one minute, this is enough.</p>
+      <table class="compare-table">
+        <thead>
+          <tr><th>What it does</th><th>LingCode</th><th>Cursor</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pre-edit snapshots of project files (<code>.pbxproj</code>, <code>Info.plist</code>, <code>build.gradle</code>)</td><td>Yes</td><td>No</td></tr>
+          <tr><td>Per-hunk review before AI edits hit disk</td><td>Yes</td><td>No</td></tr>
+          <tr><td>Semantic time-travel undo across AI turns</td><td>Yes</td><td>Git-only</td></tr>
+          <tr><td>Agent reads live editor state (selection, breakpoint, build output)</td><td>Yes</td><td>Files + LSP only</td></tr>
+          <tr><td>API requests bypass vendor cloud proxy</td><td>Yes — direct to provider</td><td>No — proxied through Cursor</td></tr>
+          <tr><td>Keys live in macOS Keychain</td><td>Yes</td><td>Vendor-stored</td></tr>
+          <tr><td>Works fully offline with local Ollama / llama.cpp</td><td>Yes</td><td>No</td></tr>
+          <tr><td>Apple Intelligence (on-chip, zero network)</td><td>Yes</td><td>No</td></tr>
+          <tr><td>iOS Simulator hosted in-editor</td><td>Yes</td><td>Shell out only</td></tr>
+          <tr><td>Type-aware Swift refactoring via SourceKit</td><td>Yes</td><td>LSP text-only</td></tr>
+          <tr><td>Android emulator without Android Studio</td><td>Yes</td><td>No</td></tr>
+          <tr><td>Native rendering (120 Hz, no Chromium tax)</td><td>Yes — Swift/SwiftUI</td><td>Electron</td></tr>
+          <tr><td>Cross-platform desktop IDE</td><td>macOS only (CLI on Linux/Windows)</td><td>macOS, Linux, Windows</td></tr>
+          <tr><td>Multi-provider switchable mid-conversation</td><td>13 providers + BYO</td><td>Vendor curated</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="trust">The real reason to switch: your project can't be destroyed</h2>
+      <p>Before the architecture argument, the practical one. Cursor's agent can overwrite <code>project.pbxproj</code>, flatten an <code>Info.plist</code>, or corrupt a Gradle config in a single tool call — and its recovery story is "hope you committed recently." There is no pre-edit snapshot of project-critical files, no separate semantic undo for multi-file AI edits, no worktree isolation you can send a risky experiment into. If the agent does something wrong in a cross-file refactor, you're rewinding 40 files by hand.</p>
+      <p>LingCode treats every AI edit as reversible <em>before the fact</em>. Pre-edit snapshots of <code>project.pbxproj</code>, <code>Info.plist</code>, <code>build.gradle</code>, <code>AndroidManifest.xml</code>, and <code>*.entitlements</code> hit disk before the agent writes a byte. Per-hunk diff cards let you accept or revert each change independently, not all-or-nothing. A separate multi-file undo stack for AI operations rewinds cross-file refactors in one step. A read-before-write rule prevents blind overwrites. See the <a href="/#work-protection">trust model on the homepage</a> or the <a href="/features.html#work-protection">full list in the features page</a>.</p>
+      <p>That's the first reason to switch. The architectural reasons follow.</p>
+
+      <h2 id="ide-aware">IDE-aware. Not IDE-adjacent.</h2>
+      <p>Ask Cursor's agent what your build log says and it runs <code>xcodebuild</code> in a shell, parses stdout, and hopes the format didn't change. Ask about a runtime crash and it greps the console. Ask it to set a breakpoint and it can't — the debugger session lives inside a GUI it can't touch. Cursor's agent is <em>IDE-adjacent</em>: it sits next to your IDE and shells out through a keyhole.</p>
+      <p>LingCode's agent is <em>IDE-aware</em>. It calls <code>BuildLogService</code>, <code>RunConsoleService</code>, <code>EditorViewModel</code>, the <code>LLDBDebugger</code>, and <code>SimulatorController</code> <strong>directly, in-process, as Swift method calls</strong>. It reads your live build errors — not a cached stdout dump. It sees simulator logs as they stream. It can set breakpoints, step through frames, inspect variables, and resume the debugger from chat. No subprocess, no RPC, no stale state between the model and what you're looking at.</p>
+      <p>This is why "ship this to TestFlight" actually works in one message in LingCode. The agent reads the build state, picks the scheme, signs with your team, archives, uploads, and tails the Apple response — because all of those are native tool calls, not shell scripts glued to string parsing.</p>
+
+      <h2 id="no-proxy">Your keys. Your compute. No proxy.</h2>
+      <p>Cursor's editor runs locally, but the <em>intelligence</em> doesn't. Agent orchestration, model routing, context retrieval, and codebase-index embeddings all transit Cursor's servers — even when the underlying model is Claude or GPT. You're paying $20/month for their proxy layer, and every prompt, every file snippet, and every embedding passes through infrastructure that isn't yours and isn't the model provider's.</p>
+      <p>LingCode calls Anthropic, OpenAI, and Google <strong>directly</strong>. Your API keys live in the macOS Keychain. Your prompts go from the app to the model provider's API — nothing in between. No intermediate account, no rate-limit pool you share with strangers, no index of your repo sitting on a third-party server, no telemetry. If you want to switch providers, change one setting and keep working. If you want to audit what leaves your machine, open Console and watch the TLS session go straight to <code>api.anthropic.com</code>.</p>
+      <p>Three practical consequences:</p>
+      <ul>
+        <li><strong>Price.</strong> You pay the model provider's rates, not Cursor's markup. Bring your existing Anthropic or OpenAI credits.</li>
+        <li><strong>Privacy.</strong> Your codebase index is built and stored locally. No embeddings leave your Mac unless you explicitly send a file to the model.</li>
+        <li><strong>Control.</strong> Rotate keys, swap providers, run on a fresh model the day it launches. No waiting for Cursor to support it.</li>
+      </ul>
+
+      <h2 id="local-models">Offline with local models. Cursor can't.</h2>
+      <p>LingCode ships with one-click Ollama integration. Flip a setting, pick a local model (Llama, Mistral, CodeLlama, Qwen), and the whole IDE — chat, agent, edits, everything — runs on your Mac with zero network traffic. On a flight, in a SCIF, on a train with no signal, at a client who won't let code leave the room — LingCode keeps working.</p>
+      <p>Cursor can't do this, and it's not a product-roadmap question. Their Tab completion is a proprietary fine-tuned model hosted on their servers. Their codebase index lives in their infrastructure. Their agent orchestration runs server-side. Pull the network cable and the product stops being itself — you lose Tab, agent, retrieval, and most of what you're paying for. They've added limited "custom OpenAI-compatible endpoint" settings for chat, but the core loop still needs their cloud. Their architecture <em>is</em> their moat; opening it up would be opening the vault.</p>
+      <p>LingCode's agent orchestration, context management, and tool execution all run in the Mac app. Swap Claude for a local 70B Llama with one setting change. The build runs. The debugger attaches. The tests pass or fail. Your code never touches a server that isn't yours.</p>
+
+      <h2 id="apple-intelligence">Apple Intelligence: On your chip. No proxy.</h2>
+      <p>LingCode ships Apple Intelligence integration — commit messages, error explanation, test generation, SQL optimization, and code review all powered by Apple Neural Engine on your chip. Zero data leaves your Mac, not even a loopback request. No API key to manage, no quota to watch, no Cursor proxy in between.</p>
+      <p>Cursor's agent can't do this. Their Tab completion, agent orchestration, and codebase indexing run on Cursor's servers — even when the underlying model is Claude or GPT-4. Pull the network cable and the product stops being itself. LingCode's Apple Intelligence works offline because it runs entirely on Apple Silicon, via the same on-device frameworks that power Siri and the system keyboard.</p>
+      <p>Requires macOS 15 (Sequoia) and Apple Silicon. Intel Macs and earlier macOS versions can still use Claude, Codex, DeepSeek, Gemini, or any compatible provider — just with a network round-trip.</p>
+
+      <h2 id="ios-ide">Cursor's terminal can run <code>xcodebuild</code>. That's not the same as being an iOS IDE.</h2>
+      <p>A common misconception: "Cursor has a terminal, so it can do iOS." The terminal's not the problem. <code>xcrun simctl boot</code>, <code>xcodebuild archive</code>, <code>xcrun altool</code> — all of it runs in any shell. The missing piece is everything <em>around</em> the shell command.</p>
+      <ul>
+        <li><strong>No native destination picker.</strong> A real iOS IDE needs a SwiftUI/AppKit control that lists your simulators and physical devices, boots them, and targets the next build — the same picker Xcode has. Electron can't draw it without reimplementing Xcode's UI in HTML.</li>
+        <li><strong>No Keychain access for signing.</strong> Code signing reads identities and provisioning profiles from the macOS Keychain. Electron apps can't link against the Security framework, so Cursor can't pick your team, toggle automatic signing, or manage entitlements from a native panel. The shell can <code>codesign</code>; it can't show you which identity it used and let you change it in one click.</li>
+        <li><strong>No in-process debugger.</strong> LLDB as a CLI is one thing; a debugger UI with breakpoints, step-through, frame inspection, and variable watches backed by a DAP session attached to the Simulator process is another. That's native work.</li>
+        <li><strong>No agent integration.</strong> Cursor's agent can <code>spawn("xcodebuild …")</code> and scrape stdout. LingCode's agent calls <code>BuildLogService</code> and <code>SimulatorController</code> as Swift method calls and <em>reads the structured build output directly</em> — no string parsing, no stale cache. "Ship this to TestFlight" works because every step is a native API call, not a shell script glued to a regex.</li>
+      </ul>
+      <p>It's also a strategic choice. Cursor is cross-platform; most of their users are on Linux and Windows, so Mac-only iOS tooling doesn't move their revenue. LingCode is Mac-only on purpose — the whole point is that an IDE built around the Apple toolchain can do things a cross-platform IDE never will.</p>
+
+      <h2 id="electron-ceiling">The Electron ceiling</h2>
+      <p>Cursor is an Electron app. Electron is Chromium for the UI and Node.js for the runtime. Chromium is sandboxed away from the operating system by design. Node can shell out to other processes, but it can't link against Apple frameworks. That boundary is the ceiling.</p>
+      <p>Things that live above the ceiling — meaning Electron genuinely can't reach them, not "hasn't gotten to them yet":</p>
+      <ul>
+        <li>SwiftUI and AppKit for the UI itself</li>
+        <li>SourceKit-LSP linked as a first-class language server</li>
+        <li>macOS Keychain for credential storage</li>
+        <li>FSEvents, the kernel-coalesced file-watching API</li>
+        <li>UserNotifications, with action buttons and Focus Filter integration</li>
+        <li>Carbon <code>RegisterEventHotKey</code> for system-wide hotkeys that don't require Accessibility permission</li>
+        <li>AppIntents and Shortcuts / Siri</li>
+        <li>Handoff via <code>NSUserActivity</code></li>
+        <li>Touch Bar (<code>NSTouchBar</code>) and <code>NSServices</code> (the Finder Quick Actions menu)</li>
+        <li><code>NSUbiquitousKeyValueStore</code> for iCloud settings sync</li>
+        <li>In-process tool execution — LingCode's AI calls native Swift services directly (<code>BuildLogService</code>, <code>RunConsoleService</code>, <code>EditorViewModel</code>) with no subprocess, no RPC, no stale state between the agent and the IDE</li>
+      </ul>
+      <p>You can fake some of these with helper processes or web shims. You can't link them into the editor as first-class citizens unless the editor itself is native.</p>
+
+      <h2>What native unlocks in LingCode</h2>
+
+      <h3>iOS Simulator, for real</h3>
+      <p>LingCode runs your iOS app in the Simulator the same way Xcode does. A SwiftUI run-destination picker talks to <code>xcrun simctl</code>, installs the <code>.app</code> bundle, launches it by bundle ID, attaches LLDB with <code>process attach -n &lt;exe&gt; -w</code> so the debugger is ready before the app wakes up, and activates <code>Simulator.app</code> through <code>NSWorkspace</code>. It's Xcode's flow, not a Node script wrapping <code>simctl</code>.</p>
+
+      <h3>Type-aware Swift refactoring</h3>
+      <p>When you rename a symbol in LingCode, the rename goes through <code>sourcekit-lsp</code> — the same language server the Swift compiler team ships. It understands types, not string patterns. Renaming <code>User</code> won't silently rewrite a <code>User</code> in a comment or an unrelated module. Electron-based editors can run the binary, but they can't wire its results into a native refactor UI that knows about your Xcode project's module graph.</p>
+
+      <h3>Android on a Mac — without Android Studio</h3>
+      <p>The same native-integration story applies to the Android toolchain. LingCode resolves Gradle classpaths for the Kotlin LSP, boots AVDs through the real <code>emulator</code> binary, installs APKs via <code>adb</code>, streams <code>logcat</code> into the Run Console with tag filtering, and attaches a JDWP-backed DAP session for Kotlin breakpoints. It's the same destination picker, the same Debug panel, the same build log as iOS — just pointed at a different toolchain. Cursor can't reach the Android SDK this way for the same reason it can't reach Xcode: the IDE itself has to own the process control and debug protocol, not defer to a shell script.</p>
+
+      <h3>Mac-native ergonomics</h3>
+      <p>The things that make a Mac app feel like a Mac app aren't shippable from a web view:</p>
+      <ul>
+        <li>Global hotkey <code>⌃⌥Space</code> to summon LingCode from anywhere — registered via Carbon, so no Accessibility permission prompt.</li>
+        <li>API keys stored in the Keychain, not a plaintext config file.</li>
+        <li>Handoff — start on your MacBook, pick the project up on your iMac from the Dock.</li>
+        <li>Shortcuts and Siri intents for opening projects and running agent tasks.</li>
+        <li>Focus Filter to mute agent notifications while you're in Do Not Disturb.</li>
+        <li>Touch Bar controls for Save, Run, Push, and agent toggle.</li>
+        <li>Finder Quick Action: right-click any folder, "Open in LingCode."</li>
+      </ul>
+      <p>The full list is on the <a href="/features.html">features page</a>.</p>
+
+      <h2>"Couldn't Cursor just add a simulator?"</h2>
+      <p>It's the fair question. Here's the honest answer, in three parts.</p>
+
+      <p><strong>Technically yes, for the surface.</strong> A Node helper can call <code>xcrun simctl list --json</code>, show the results in a dropdown, and run <code>simctl boot</code>. That's a weekend.</p>
+
+      <p><strong>But the surface isn't the product.</strong> What a Mac developer actually feels when they run a build is a stack of native pieces: a scheme and destination model tied to the Xcode project, PTY-backed LLDB attach for breakpoints, build settings written back to <code>.pbxproj</code>, Simulator.app activation at the right moment, crash log surfacing, code signing identities pulled from the Keychain, an entitlements editor that knows the plist format. Each of those is a native Mac subsystem, not a subprocess call. Stitching them together is weeks of platform-specific engineering — the kind of work that doesn't port.</p>
+
+      <p><strong>And it wouldn't close the gap.</strong> Simulator is one bullet. SourceKit, Keychain, Handoff, global hotkey, Touch Bar, Focus Filter, Shortcuts, FSEvents, UserNotifications, NSServices, iCloud KV sync, SwiftUI <code>#Preview</code> compilation — each is a native framework with no Electron equivalent. A team shipping a cross-platform editor to hundreds of thousands of Windows and Linux users will not rewrite their runtime for one platform. The market math doesn't work, and even if it did, the answer isn't "add Mac APIs to Electron." The answer is "ship a Mac app," which is the decision we made.</p>
+
+      <h2>The trade-off, stated honestly</h2>
+      <p>LingCode isn't better than Cursor at everything. Cursor runs on Windows and Linux; LingCode doesn't. Cursor has a larger team and a longer head start on pure AI-editor features. If you code Rust on Ubuntu, Cursor is the right tool.</p>
+      <p>But if you ship Apple apps — Swift, SwiftUI, iOS, macOS — the ceiling Cursor hits is the ceiling <em>you</em> hit. LingCode is native the whole way down, which is why the Simulator works, why refactors are type-aware, why API keys live in the Keychain, and why the editor feels like a Mac app instead of a webpage that remembers you're on a Mac.</p>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">See what native gets you.</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">Browse the <a href="/features.html">complete feature list</a>, or read about the <a href="/blog.html">25+ slash commands</a> that make day-to-day AI work feel native too.</p>
+        <a href="/">Download LingCode for Mac</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

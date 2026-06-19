@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publish a plugin to a marketplace — LingCode Tutorials</title>
+  <meta name="description" content="A marketplace is a directory of plugins users install with one command. Author a marketplace.json, host it, and your team's tools become two keystrokes away.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/publish-a-plugin-to-a-marketplace.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/publish-a-plugin-to-a-marketplace.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/publish-a-plugin-to-a-marketplace.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/publish-a-plugin-to-a-marketplace.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Publish a plugin to a marketplace",
+  "description": "Sharing a plugin by git URL works once. Publishing it to a marketplace makes \"install the team's standard tooling\" a single keystroke that anyone on your team can run, and that the next new hire runs on day one without asking.",
+  "url": "https://lingcode.dev/tutorials/publish-a-plugin-to-a-marketplace.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/publish-a-plugin-to-a-marketplace.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Publish a plugin to a marketplace"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Publish a plugin to a marketplace",
+      "item": "https://lingcode.dev/tutorials/publish-a-plugin-to-a-marketplace.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/publish-a-plugin-to-a-marketplace.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Publish a plugin to a marketplace</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Publish a plugin to a marketplace</h1>
+      <p class="intro">Sharing a plugin by git URL works once. Publishing it to a marketplace makes "install the team's standard tooling" a single keystroke that anyone on your team can run, and that the next new hire runs on day one without asking.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Plugins are most useful when shared. The reason isn't grand — it's just that the same hook that's worth writing for yourself is worth writing for your team, and once it's worth writing for your team, the friction of "okay, clone this repo, run this command, copy this folder there" becomes the actual bottleneck. People who would happily install a polished plugin won't bother with one that requires five terminal steps to set up.</p>
+      <p>A marketplace is the directory layer that closes that gap. It's a small JSON manifest listing one or more plugins, hosted somewhere your team can reach. Once a user adds your marketplace (one command, one URL), every plugin in it becomes installable by short name. <code>lingcode plugin install tdd</code> instead of <code>lingcode plugin install git+https://github.com/yourorg/lingcode-plugins/tree/main/tdd</code>. The first form is the kind of thing teammates actually run.</p>
+      <p>The trade-off worth understanding: marketplaces are install-time snapshots. When a user runs <code>marketplace add</code>, LingCode reads the manifest as it was that moment. There's no auto-update flow — to refresh, you remove and re-add the marketplace. This is deliberate (auto-pulling plugin changes from a remote feed would be a security risk), but it shapes how you operate one.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The marketplace.json schema</li>
+        <li>How to host the marketplace (and what hosting actually means)</li>
+        <li>The user-side <code>marketplace add</code> and <code>plugin install</code> flow</li>
+        <li>Why there's no update flow — and how to live with that</li>
+        <li>Versioning conventions for plugins inside a marketplace</li>
+      </ul>
+
+      <h2>Step 1: Author the marketplace manifest</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>One JSON file lists the plugins</h3>
+          <p>Create <code>marketplace.json</code> at the root of your distribution location:</p>
+          <pre><code>{
+  "name": "acme",
+  "description": "Internal LingCode plugins for the Acme engineering team.",
+  "plugins": [
+    {
+      "name": "tdd",
+      "description": "Acme's TDD workflow: write the failing test first.",
+      "source": "git+https://github.com/acme/lingcode-plugins.git",
+      "subpath": "tdd"
+    },
+    {
+      "name": "deploy-staging",
+      "description": "Deploy the current branch to Acme's staging environment.",
+      "source": "git+https://github.com/acme/lingcode-plugins.git",
+      "subpath": "deploy-staging"
+    }
+  ]
+}</code></pre>
+          <p>The schema is small: a marketplace has a name, a description, and a list of plugins. Each plugin entry has its own name, description, source (where to clone from), and subpath (folder within the source). LingCode uses the source+subpath to fetch the actual plugin when a user installs.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Host the manifest</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Anywhere it can be fetched</h3>
+          <p>"Hosting" a marketplace is hosting one JSON file plus the plugin folders it points at. Two natural choices:</p>
+          <ul>
+            <li><strong>A git repo.</strong> Put <code>marketplace.json</code> at the root, plugins in subfolders, push to GitHub. Users add the marketplace by git URL; LingCode reads the manifest from the default branch.</li>
+            <li><strong>A static file at a stable URL.</strong> Drop <code>marketplace.json</code> on a CDN or static host, point plugin <code>source</code> URLs at git URLs separately. Useful if you want the marketplace metadata decoupled from the plugin code.</li>
+          </ul>
+          <p>For most teams the git-repo approach is simpler: one repository contains both the marketplace and all its plugins, and updating either is a normal commit. Make the repo private if the plugins reference internal things.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: User adds the marketplace</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>One command, one URL</h3>
+          <p>Your teammates run, once:</p>
+          <pre><code>lingcode plugin marketplace add https://github.com/acme/lingcode-plugins</code></pre>
+          <p>LingCode reads the <code>marketplace.json</code> at that location, snapshots it into <code>~/.claude/marketplaces/acme/</code>, and from then on knows every plugin the marketplace advertises.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: User installs plugins by short name</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The payoff</h3>
+          <p>With the marketplace registered, installing plugins is now:</p>
+          <pre><code>lingcode plugin install tdd
+lingcode plugin install deploy-staging</code></pre>
+          <p>No URLs, no subpaths, no copying. LingCode looks up <code>tdd</code> across registered marketplaces, finds it in <code>acme</code>, fetches and installs. <code>lingcode plugin search</code> lists every available plugin if a user wants to browse.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>For onboarding:</strong> add the <code>marketplace add</code> command to your team's "new developer setup" doc, alongside the steps for cloning the main repo. Two minutes, one command, every plugin the team uses is in scope.
+      </div>
+
+      <h2>Step 5: Live with the no-update model</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Snapshots, not subscriptions</h3>
+          <p>Once a user has added your marketplace, their snapshot is frozen. New plugins you add to the manifest don't appear in their <code>plugin search</code> output until they re-add the marketplace. This is the trade-off for security: auto-pulling plugin metadata from a remote feed would mean trusting that remote forever.</p>
+          <p>Two patterns that work well with this constraint:</p>
+          <ul>
+            <li><strong>Announce in chat or docs.</strong> When you add a new plugin, post a note: "new plugin available, run <code>marketplace remove acme &amp;&amp; marketplace add &lt;url&gt;</code> to refresh." Most teams will do it.</li>
+            <li><strong>Version your marketplace.</strong> Each plugin entry can carry a <code>version</code> field; users running <code>lingcode plugin update &lt;name&gt;</code> get the latest from the marketplace they have registered. They still don't see <em>new</em> plugins without re-adding, but they get newer versions of plugins they already have.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 6: Conventions worth adopting early</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Three habits that compound</h3>
+          <ul>
+            <li><strong>Versioning.</strong> Tag your marketplace repo with semver-style tags (<code>v0.3.0</code>) every time you change a plugin meaningfully. Even if no tooling consumes the tags, future-you reads them and orients.</li>
+            <li><strong>Per-plugin README.</strong> Every plugin folder gets its own README explaining what it does, what it changes, and (for hooks) what it blocks. Users who installed without reading get a place to look back to.</li>
+            <li><strong>A CHANGELOG.</strong> At the marketplace level. One line per change. Saves five re-investigations later.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Plugins with hooks trigger consent.</strong> When a user runs <code>plugin install tdd</code>, if the plugin contains <code>hooks/hooks.json</code> or executable scripts, LingCode prompts before installing. Your marketplace doesn't bypass that — and shouldn't. The consent prompt is part of the security model, not a UX wart.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>Install and configure plugins</h3>
+            <p>The consume side of the same flow</p>
+          </a>
+          <a href="/tutorials/author-your-own-mcp-server.html" class="tutorial-next-card">
+            <h3>Author your own MCP server</h3>
+            <p>The other way to give the agent capabilities; marketplaces can bundle MCP configs too</p>
+          </a>
+          <a href="/tutorials/write-a-custom-skill.html" class="tutorial-next-card">
+            <h3>Write a custom skill</h3>
+            <p>The simplest thing to bundle in a plugin you'd publish</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

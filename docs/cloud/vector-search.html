@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vector search — pgvector similarity, managed embeddings, and hybrid ranking | LingCode Cloud Docs</title>
+  <meta name="description" content="Search rows by meaning, not keywords. Store embeddings in a pgvector column, let LingCode Cloud generate them for you, and rank by similarity with client.vector.embed and client.vector.search — plus hybrid full-text + semantic ranking for RAG.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/vector-search.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/vector-search.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/vector-search.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/vector-search.html">
+  <meta property="og:title" content="Vector search — LingCode Cloud">
+  <meta property="og:description" content="Store embeddings in a pgvector column, generate them with managed embeddings, and rank rows by meaning — plus hybrid full-text + semantic ranking for RAG.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .docs-step { counter-increment: docstep; position: relative; padding-left: 44px; margin: 22px 0; }
+    .docs-step::before { content: counter(docstep); position: absolute; left: 0; top: -2px; width: 30px; height: 30px; border-radius: 50%; background: var(--signal); color: #fff; font-weight: 600; display: grid; place-items: center; font-size: 0.95rem; }
+    .docs-steps { counter-reset: docstep; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Vector search</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● AI</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Vector search</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Vector search finds rows by <strong>meaning</strong>, not exact keywords — the basis for semantic search and RAG. You store an <em>embedding</em> (a vector of numbers) next to each row, then rank rows by how close their embedding is to a query embedding. LingCode Cloud runs Postgres with the <strong>pgvector</strong> extension and can generate the embeddings for you (<strong>managed embeddings</strong>), so you never ship an embedding-model key in your app. Add a <code>vector(N)</code> column, embed text with <code>lingcode.vector.embed()</code>, and rank with <code>lingcode.vector.search()</code>.</p>
+      <p class="intro">If you've only ever used <code>LIKE '%term%'</code> or full-text search, vector search is a different idea worth understanding before you reach for it. Keyword search asks "which rows contain this word?" Vector search asks "which rows <em>mean</em> roughly the same thing?" That difference is what makes "find similar", "answer from my docs", and "search that survives synonyms and typos" possible. This page covers what an embedding is and why it works, how to set up a column, the two SDK calls you'll actually write, and a small RAG example end-to-end.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>Why meaning beats keywords</h2>
+      <p>An <strong>embedding</strong> is a list of numbers — a vector — that an AI model produces from a piece of text. The model is trained so that texts with similar meaning land at nearby points in that vector space, and unrelated texts land far apart. "How do I reset my password?" and "I forgot my login credentials" share almost no words, but their embeddings sit close together, because they mean the same thing.</p>
+      <p>That's the whole trick. Once every row carries an embedding, "find rows like this query" becomes "find the rows whose vectors are closest to the query's vector." Keyword search can't do that — it only matches the words you typed. Vector search matches the <em>idea</em>, so it survives synonyms, paraphrases, and typos, and it's what powers semantic search and retrieval-augmented generation (RAG): pull the most relevant rows, then hand them to a model to write an answer.</p>
+
+      <div class="info-box">
+        <h3>Managed embeddings: no model key in your app</h3>
+        <p>Producing an embedding normally means calling an embedding model, which means an API key. With LingCode Cloud's <strong>managed embeddings</strong>, <code>lingcode.vector.embed()</code> generates the vector server-side for you — your app never holds an embedding-model key and never talks to a model vendor directly. You send text, you get a vector back. (Need to bring your own model instead? You can still pass pre-computed vectors straight to <code>search</code>.)</p>
+      </div>
+
+      <h2>Set up a vector column</h2>
+      <p>Embeddings live in a column of type <code>vector(N)</code>, where <code>N</code> is the embedding's <strong>dimension</strong> — the length of the number array the model produces (for example <code>1536</code>). You add the column in a <strong>migration</strong>, the same way you add any column. See the <a href="/docs/cloud/database.html">Database guide</a> for how to run migrations.</p>
+      <pre><code>create table docs (
+  id         bigint generated always as identity primary key,
+  title      text not null,
+  text       text not null,
+  embedding  vector(1536)
+);</code></pre>
+      <p>For large datasets, add an appropriate <strong>vector index</strong> so similarity queries stay fast as the table grows — without one, search has to scan every row.</p>
+
+      <div class="warn-box">
+        <strong>Dimensions must match — everywhere.</strong> The <code>N</code> in <code>vector(N)</code>, the vector you store, and the query vector you search with must all be the same length. Mixing dimensions (storing 1536-d vectors and querying with a 768-d one) is the single most common vector-search bug. Embed your stored text and your queries with the same model so the numbers line up.
+      </div>
+
+      <h2>The two SDK calls</h2>
+      <p>Everything you do lives under <code>lingcode.vector.*</code>. Like every SDK call, both return <code>{ data, error }</code>.</p>
+
+      <h3><code>vector.embed(input)</code> — turn text into a vector</h3>
+      <p><code>input</code> is a <strong>string</strong> or a <strong>string array</strong>. Use it in two places: to populate your column at <em>write</em> time, and to embed the user's query at <em>search</em> time.</p>
+      <pre><code>const { data, error } = await lingcode.vector.embed('How do I reset my password?');
+// data = {
+//   embedding:   number[],     // the vector for a single string input
+//   embeddings:  number[][],   // one vector per item, for array input
+//   model:       string,       // the embedding model used
+//   dimensions:  number        // length of each vector
+// }</code></pre>
+
+      <h3><code>vector.search({ table, column, embedding, limit?, metric? })</code> — rank by closeness</h3>
+      <p>Pass the table and the vector column to search, plus the query embedding. Results come back as rows, ranked by distance (closest first).</p>
+      <pre><code>const { data, error } = await lingcode.vector.search({
+  table:     'docs',
+  column:    'embedding',
+  embedding: data.embedding,   // the query vector from vector.embed()
+  limit:     5,                // 1–200
+  metric:    'cosine'          // 'cosine' (default) | 'l2' | 'ip'
+});
+// data = rows[], ranked by distance</code></pre>
+      <p>Results are <a href="/docs/cloud/database.html">row-level-security filtered</a> exactly like a normal query — users only ever rank over rows they're allowed to see.</p>
+
+      <h2>The typical flow</h2>
+      <p>Two phases: embed once on write, then embed-and-search on query. Do the embedding at write time so search itself is just a fast lookup.</p>
+
+      <div class="docs-steps">
+        <div class="docs-step">
+          <h3>On write — embed and store</h3>
+          <p>When a document arrives, embed its text and store the vector in the row's <code>embedding</code> column.</p>
+          <pre><code>const { data } = await lingcode.vector.embed(doc.text);
+
+await lingcode.from('docs').insert({
+  title:     doc.title,
+  text:      doc.text,
+  embedding: data.embedding
+});</code></pre>
+        </div>
+        <div class="docs-step">
+          <h3>On query — embed the question, then search</h3>
+          <p>Embed the user's query the same way, then rank your rows against it.</p>
+          <pre><code>const { data: q } = await lingcode.vector.embed(userQuery);
+
+const { data: hits } = await lingcode.vector.search({
+  table:     'docs',
+  column:    'embedding',
+  embedding: q.embedding,
+  limit:     5
+});</code></pre>
+        </div>
+      </div>
+
+      <h2>A small RAG example</h2>
+      <p>Retrieval-augmented generation is just: <strong>embed the question → search for the most relevant rows → feed those rows to a model to write the answer.</strong> The search step is the part this page covers; the answer step is an ordinary model call.</p>
+      <pre><code>async function answer(userQuery) {
+  // 1. Embed the question.
+  const { data: q } = await lingcode.vector.embed(userQuery);
+
+  // 2. Retrieve the closest rows by meaning.
+  const { data: hits } = await lingcode.vector.search({
+    table:     'docs',
+    column:    'embedding',
+    embedding: q.embedding,
+    limit:     5
+  });
+
+  // 3. Hand the top rows to a model as context to write the answer.
+  const context = hits.map(r =&gt; r.text).join('\n\n');
+  // ...call your answer model with `context` + `userQuery`...
+  return context;
+}</code></pre>
+      <p>Because retrieval is meaning-based, the user can ask in their own words and still pull the right rows — that's what separates a RAG answer from a keyword lookup.</p>
+
+      <h2>Choosing a distance metric</h2>
+      <p>The <code>metric</code> decides how "closeness" between two vectors is measured. Pick the one your embedding model recommends; if you're unsure, <strong>cosine</strong> is the safe default.</p>
+      <ul>
+        <li><strong><code>cosine</code></strong> (default) — compares the <em>direction</em> of the vectors, ignoring their length. The most common choice for text embeddings.</li>
+        <li><strong><code>l2</code></strong> — straight-line (Euclidean) distance between the two points.</li>
+        <li><strong><code>ip</code></strong> — inner (dot) product. Use it when your model's documentation calls for it.</li>
+      </ul>
+
+      <h2>When to reach for hybrid search</h2>
+      <p>Semantic search is great at meaning but can miss exact tokens — a product SKU, a username, a specific error code. Keyword (full-text) search is the opposite: precise on exact terms, blind to synonyms. <strong>Hybrid search</strong> fuses both with reciprocal-rank fusion, so a query like "Aurora Pro won't connect over Bluetooth" matches both the literal product name <em>and</em> the meaning of the complaint. Reach for it whenever queries mix a specific term with a fuzzy description.</p>
+
+      <h2>Under the hood (REST)</h2>
+      <p>The SDK calls map to these endpoints under your backend's base URL, <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code>. Authenticate with your <strong>anon key</strong> or a signed-in <strong>user token</strong>; results are row-level-security filtered like any other query.</p>
+
+      <h3>Embeddings & vector search</h3>
+      <pre><code>POST /vector/embed
+  { input }
+  → { embedding, embeddings, model, dimensions }
+
+POST /vector/search
+  { table, column, embedding, limit?, metric? }
+  → ranked rows</code></pre>
+
+      <h3>Keyword (full-text) search</h3>
+      <pre><code>POST /search/text
+  { table, column, query, is_tsvector?, limit? }
+  → matching rows</code></pre>
+
+      <h3>Hybrid search (full-text + semantic)</h3>
+      <p>Fuses keyword and meaning rankings with reciprocal-rank fusion. You pass both the raw <code>query</code> text (for full-text) and its <code>embedding</code> (for semantic); the weights tune how much each side contributes.</p>
+      <pre><code>POST /search/hybrid
+  {
+    table,
+    text_column,
+    vector_column,
+    query,
+    embedding,
+    id_column?,
+    text_is_tsvector?,
+    metric?,
+    limit?,
+    full_text_weight?,
+    semantic_weight?,
+    rrf_k?
+  }
+  → fused, ranked rows</code></pre>
+
+      <div class="info-box">
+        <h3>Quick checklist</h3>
+        <ul>
+          <li>Keep <strong>dimensions consistent</strong> between stored vectors and query vectors — same model, same <code>N</code>.</li>
+          <li><strong>Embed at write time</strong> so search is just a query, not a model round-trip per row.</li>
+          <li>Add a <strong>vector index</strong> once the table is large.</li>
+          <li>Default to <strong><code>cosine</code></strong> unless your model says otherwise.</li>
+          <li>Use <strong>hybrid search</strong> when a query carries both an exact term and a description.</li>
+        </ul>
+      </div>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/database.html">
+            <span class="card-eyebrow">Data</span>
+            <h3>Database</h3>
+            <p>Run the migration that adds your <code>vector(N)</code> column, plus the query builder, RLS, and indexes.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/functions.html">
+            <span class="card-eyebrow">Compute</span>
+            <h3>Functions</h3>
+            <p>Run the answer step of RAG server-side, where you can read vendor keys from the secrets vault.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">Reference</span>
+            <h3>API reference</h3>
+            <p>The full SDK surface and every <code>/api/cloud/be/&lt;id&gt;/…</code> REST endpoint, with shapes.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

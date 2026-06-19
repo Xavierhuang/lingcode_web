@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Install and configure plugins — LingCode Tutorials</title>
+  <meta name="description" content="Extend LingCode with Claude Code-format plugins. Skills, agents, hooks, and MCP servers — installed per-user or per-project, namespaced to avoid collisions.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/install-and-configure-plugins.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/install-and-configure-plugins.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/install-and-configure-plugins.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/install-and-configure-plugins.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Install and configure plugins",
+  "description": "Plugins bundle the small habits and capabilities you want every project to have — a \"tdd\" skill, a \"lint-before-push\" hook, an MCP server that talks to Linear. Install one; the agent picks it up automatically next turn.",
+  "url": "https://lingcode.dev/tutorials/install-and-configure-plugins.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/install-and-configure-plugins.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Install and configure plugins"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Install and configure plugins",
+      "item": "https://lingcode.dev/tutorials/install-and-configure-plugins.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/install-and-configure-plugins.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Install and configure plugins</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Install and configure plugins</h1>
+      <p class="intro">Plugins bundle the small habits and capabilities you want every project to have — a "tdd" skill, a "lint-before-push" hook, an MCP server that talks to Linear. Install one; the agent picks it up automatically next turn.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Out of the box, LingCode ships a working agent. But every developer ends up wanting the same kind of small modifications: a skill that knows your team's TDD style, a hook that runs your linter before any commit, an MCP server that lets the agent query your Linear or PagerDuty. You could paste these instructions into every project's <code>CLAUDE.md</code>, but they don't belong there — they're <em>your</em> habits, not the project's. The right answer is a plugin: a small directory of skills, agents, hooks, and MCP configs that installs once and applies everywhere you want it to apply.</p>
+      <p>LingCode follows the Claude Code plugin spec, which means a plugin is just a folder with a <code>.claude-plugin/plugin.json</code> manifest at the top and the components arranged underneath in conventional subdirectories. There's no build step, no runtime, no compilation. The agent sees the plugin's contents at load time, namespaces what's in it, and treats it like any other context.</p>
+      <p>This tutorial covers the two install scopes (per-user and per-project), the silent-failure that catches first-timers (the missing <code>plugin.json</code>), and the consent prompt you'll see when a plugin includes anything that could run shell — which is most of the useful ones.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>What lives inside a plugin (skills, agents, hooks, MCP configs)</li>
+        <li>The two install locations and when to use each</li>
+        <li>How namespacing keeps two plugins from colliding</li>
+        <li>The consent prompt for plugins that include hooks or executables</li>
+        <li>How to disable a plugin's model-facing surfaces without uninstalling it</li>
+      </ul>
+
+      <h2>Step 1: What's actually in a plugin</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>A folder with a manifest</h3>
+          <p>A plugin is a directory with this shape:</p>
+          <pre><code>my-plugin/
+├── .claude-plugin/
+│   └── plugin.json         ← required; this is what makes it a plugin
+├── skills/
+│   └── &lt;name&gt;/SKILL.md     ← optional; one folder per skill
+├── agents/
+│   └── &lt;name&gt;.md           ← optional; subagent definitions
+├── hooks/
+│   └── hooks.json          ← optional; UserPromptSubmit / PreToolUse / etc.
+├── commands/
+│   └── &lt;name&gt;.md           ← optional; slash commands
+└── mcp/
+    └── *.json              ← optional; MCP server configs
+</code></pre>
+          <p>None of the subdirectories are required. The only mandatory file is <code>.claude-plugin/plugin.json</code> — its presence is what tells LingCode "this folder is a plugin." A bare folder without the manifest is silently ignored, which is the #1 reason a freshly-installed plugin "doesn't show up."</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Pick an install scope</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>User-wide or project-local</h3>
+          <p>LingCode walks two paths looking for plugins:</p>
+          <ul>
+            <li><strong>User-wide:</strong> <code>~/.claude/plugins/&lt;plugin-name&gt;/</code> — applies to every project on this machine. The right place for your personal habits (a "tdd" style, a personal lint hook).</li>
+            <li><strong>Project-local:</strong> <code>.claude/plugins/&lt;plugin-name&gt;/</code> in any ancestor of the project's root — applies only when you're in that project (or anything inside it). The right place for project-specific tooling (a "deploy-staging" command, a Linear MCP scoped to this product).</li>
+          </ul>
+          <p>Either way, drop the plugin folder there. No registration step, no restart required.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Install via the CLI</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>One command, copies (not symlinks)</h3>
+          <p>If you have the <a href="/tutorials/install-and-use-the-lingcode-cli.html">CLI installed</a>, the canonical install command is:</p>
+          <pre><code>lingcode plugin install &lt;name-or-url-or-git-spec&gt;</code></pre>
+          <p>You can pass: a marketplace plugin name (looked up across registered marketplaces), a git URL (cloned and copied), or a local filesystem path. LingCode copies the plugin into <code>~/.claude/plugins/&lt;name&gt;/</code> — it doesn't symlink. The reason matters: symlinks dangle when the source is a temp dir from a git clone, and you'd lose the plugin the next time disk got cleaned.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Marketplaces:</strong> A marketplace is a curated list of plugins published in <code>~/.claude/marketplaces/&lt;name&gt;/.claude-plugin/marketplace.json</code>. Run <code>lingcode plugin search</code> to see what's available across the marketplaces you've added. Note: there's no update flow — <code>marketplace add</code> snapshots at install time. To refresh, remove and re-add.
+      </div>
+
+      <h2>Step 4: Approve the consent prompt</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Why plugins ask permission</h3>
+          <p>If the plugin contains <code>hooks/hooks.json</code> or a <code>bin/</code> directory, it can run shell commands as part of the agent's normal flow — that's the whole point. LingCode prompts before installing any such plugin, because "I dropped this plugin in" should not be the same threat model as "I copied this script into <code>~/.local/bin</code>."</p>
+          <p>Interactive shells get a Y/N prompt with a summary of what the plugin will do. Non-interactive (CI, scripts) refuses to install unless you pass <code>--yes</code>. This is deliberate friction — the kind that exists because the alternative is plugins quietly installing keyloggers.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Namespacing — how collisions are prevented</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Plugin-loaded items vs. project-local items</h3>
+          <p>Two plugins can each ship a skill called <code>tdd</code> and not collide. Plugin-loaded skills surface as <code>&lt;plugin&gt;:&lt;skill&gt;</code> — so one becomes <code>jane:tdd</code> and the other <code>acme:tdd</code>, and the agent picks the right one from context.</p>
+          <p>One exception: skills defined directly in your project (<code>.claude/skills/&lt;name&gt;/SKILL.md</code>, not nested under a plugin) keep their bare name. A project-local <code>tdd</code> shadows any plugin's <code>tdd</code>. This is intentional: project-local always wins, because the project author knows best.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Disable model-facing surfaces without uninstalling</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>The <code>disable-model-invocation</code> escape hatch</h3>
+          <p>Sometimes you want a skill to be available as a user-typed slash command but not auto-invoked by the model. Add <code>disable-model-invocation: true</code> to the SKILL.md frontmatter. The model stops seeing the skill in its system prompt; you still see it in the slash menu and can invoke it manually.</p>
+          <p>This is the right tool for "I want this skill on hand but I don't trust the model to pick the right moment to use it" — common for skills that involve outbound calls, irreversible actions, or third-party APIs you'd rather audit before each run.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Uninstalling cleanly:</strong> <code>lingcode plugin uninstall &lt;name&gt;</code> removes the plugin directory and any registrations. If you installed it manually (just dropped a folder), <code>rm -rf</code> the folder — there's no DB to clean up.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>Connect an MCP server</h3>
+            <p>Most useful plugins bundle one — here's the protocol up close</p>
+          </a>
+          <a href="/tutorials/install-and-use-the-lingcode-cli.html" class="tutorial-next-card">
+            <h3>Install and use the lingcode CLI</h3>
+            <p>The plugin commands all live there</p>
+          </a>
+          <a href="/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>Permission modes</h3>
+            <p>Understand the consent system that gates plugin-installed hooks</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

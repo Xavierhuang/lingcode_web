@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>重新上传 Android 应用到 Play Console — LingCode 教程</title>
+  <meta name="description" content="适合新手的 Android 应用发布全流程：安装 Android Studio、更新 versionCode、构建签名 AAB、上传到 Play Console。所有下载链接一网打尽。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/reupload-an-android-app.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/reupload-an-android-app.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/reupload-an-android-app.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/reupload-an-android-app.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "重新上传 Android 应用到 Play Console",
+  "description": "向 Google Play 发布新版本的 Android 应用。更新版本号、构建签名应用包、上传并选择发布轨道。教程涵盖所有必备工具的安装——附 Mac、Windows、Linux 下载链接。",
+  "url": "https://lingcode.dev/zh/tutorials/reupload-an-android-app.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/reupload-an-android-app.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "构建签名 AAB",
+      "url": "https://lingcode.dev/zh/tutorials/reupload-an-android-app.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "打开 Play Console",
+      "url": "https://lingcode.dev/zh/tutorials/reupload-an-android-app.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "选择发布轨道",
+      "url": "https://lingcode.dev/zh/tutorials/reupload-an-android-app.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "创建发布版本",
+      "url": "https://lingcode.dev/zh/tutorials/reupload-an-android-app.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "添加测试人员（仅首次）",
+      "url": "https://lingcode.dev/zh/tutorials/reupload-an-android-app.html#step-5"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "name": "为正式版使用分阶段推出",
+      "url": "https://lingcode.dev/zh/tutorials/reupload-an-android-app.html#step-6"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "重新上传 Android 应用到 Play Console",
+      "item": "https://lingcode.dev/zh/tutorials/reupload-an-android-app.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/reupload-an-android-app.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>重新上传 Android 应用到 Play Console</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>重新上传 Android 应用到 Play Console</h1>
+      <p class="intro">向 Google Play 发布新版本的 Android 应用。更新版本号、构建签名应用包、上传并选择发布轨道。教程涵盖所有必备工具的安装——附 Mac、Windows、Linux 下载链接。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>准备工作（一次性）</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>如果是第一次操作，请先完成以下安装。已经装好的可以跳过。</p>
+          <ul>
+            <li><strong>Android Studio</strong> — 官方 IDE，包含 Android SDK 和构建工具。下载地址：
+              <ul>
+                <li><a href="https://developer.android.com/studio" target="_blank" rel="noopener">Android Studio 下载页面 ↗</a>（自动识别你的操作系统）</li>
+                <li><a href="https://redirector.gvt1.com/edgedl/android/studio/install/2024.2.1.12/android-studio-2024.2.1.12-mac.dmg" target="_blank" rel="noopener">Mac（Intel）直接下载 ↗</a> ·
+                  <a href="https://redirector.gvt1.com/edgedl/android/studio/install/2024.2.1.12/android-studio-2024.2.1.12-mac_arm.dmg" target="_blank" rel="noopener">Mac（Apple Silicon）直接下载 ↗</a> ·
+                  <a href="https://redirector.gvt1.com/edgedl/android/studio/install/2024.2.1.12/android-studio-2024.2.1.12-windows.exe" target="_blank" rel="noopener">Windows 直接下载 ↗</a> ·
+                  <a href="https://redirector.gvt1.com/edgedl/android/studio/install/2024.2.1.12/android-studio-2024.2.1.12-linux.tar.gz" target="_blank" rel="noopener">Linux 直接下载 ↗</a>
+                </li>
+              </ul>
+            </li>
+            <li><strong>JDK（Java）</strong> — 通常已随 Android Studio 捆绑安装，无需单独下载。如果确实需要独立安装，请参考：<a href="https://adoptium.net/temurin/releases/?version=17" target="_blank" rel="noopener">Eclipse Temurin JDK 17 ↗</a>。</li>
+            <li><strong>Google Play 开发者账号</strong> — 一次性注册费 $25，用于发布应用。<a href="https://play.google.com/console/signup" target="_blank" rel="noopener">注册 Play Console ↗</a>。</li>
+            <li><strong>你的应用项目</strong> — 一个已有的 Android 项目。如果你使用 LingCode，也可以直接在 IDE 中运行 Android 构建；详见<a href="/zh/tutorials/create-and-run-your-first-avd.html">创建并运行你的第一个 Android 模拟器</a>。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>更新版本号</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Google Play 会拒绝 <code>versionCode</code> 相同的重复上传。打开应用的 <code>build.gradle</code>（或 <code>build.gradle.kts</code>）——通常位于项目的 <code>app/build.gradle</code>——然后更新版本号：</p>
+          <pre><code>android {
+    defaultConfig {
+        versionCode 42       // bump this — must be unique &amp; always increasing
+        versionName "1.2.1"  // user-visible; bump on real changes (e.g. 1.2.0 → 1.2.1)
+    }
+}</code></pre>
+          <p>两个字段的含义：</p>
+          <ul>
+            <li><strong><code>versionCode</code></strong> — Google 内部使用的整数，每次上传必须递增，例如 1、2、3……42、43。</li>
+            <li><strong><code>versionName</code></strong> — 用户在 Play Store 看到的字符串（如"1.2.1"）。有实质性更新时递增；小补丁可以不变。</li>
+          </ul>
+          <p><a href="https://developer.android.com/studio/publish/versioning" target="_blank" rel="noopener">Android 版本管理文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>构建签名 AAB</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Google Play 要求上传 <strong>AAB</strong>（Android App Bundle），不再接受旧版 APK 格式。<a href="https://developer.android.com/guide/app-bundle" target="_blank" rel="noopener">了解 AAB ↗</a>。</p>
+          <p><strong>方式 A — Android Studio 图形界面：</strong> <em>Build → Generate Signed Bundle / APK → Android App Bundle → Next → 选择 keystore → Release → Finish</em>。完成后界面会显示输出路径。</p>
+          <p><strong>方式 B — 终端命令：</strong></p>
+          <pre><code>./gradlew bundleRelease</code></pre>
+          <p>输出文件位于 <code>app/build/outputs/bundle/release/app-release.aab</code>。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>首次操作——创建 keystore。</strong> Keystore 是应用的加密身份标识。可在 Android Studio 中通过 <em>Build → Generate Signed Bundle / APK → Create new…</em> 创建，也可在终端运行 <code>keytool -genkey -v -keystore release.keystore -alias my-app -keyalg RSA -keysize 2048 -validity 10000</code>（<a href="https://docs.oracle.com/en/java/javase/17/docs/specs/man/keytool.html" target="_blank" rel="noopener">keytool 文档 ↗</a>）。务必将文件和密码妥善保存。<strong>一旦丢失 keystore，该应用将永远无法再发布更新。</strong>
+      </div>
+
+      <div class="tip-box">
+        <strong>推荐使用 Play 应用签名。</strong> 让 Google 托管你的正式签名密钥——在首次上传时一次性注册即可。即使上传密钥丢失，Google 也可以为你重置。<a href="https://developer.android.com/studio/publish/app-signing#enroll" target="_blank" rel="noopener">注册文档 ↗</a>。
+      </div>
+
+      <h2>打开 Play Console</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>用注册开发者账号时使用的 Google 账号登录 <a href="https://play.google.com/console" target="_blank" rel="noopener">Google Play Console ↗</a>，然后从列表中选择你的应用。</p>
+        </div>
+      </div>
+
+      <h2>选择发布轨道</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>在左侧边栏的<strong>测试</strong>和<strong>正式版</strong>下，共有四个发布轨道：</p>
+          <ul>
+            <li><strong>内部测试</strong> — 最多 100 名指定测试人员；几分钟内即可使用；已上架应用通常无需人工审核。<strong>建议从这里开始。</strong></li>
+            <li><strong>封闭测试</strong> — 指定群组；需 Google 审核（约 1–7 天）。</li>
+            <li><strong>开放测试</strong> — 任何持有链接的用户均可加入；需审核。</li>
+            <li><strong>正式版</strong> — 公开发布；完整审核（1–7 天）。</li>
+          </ul>
+          <p>日常迭代时，点击<strong>内部测试</strong>即可。</p>
+        </div>
+      </div>
+
+      <h2>创建发布版本</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>点击<strong>创建新版本</strong>，将 <code>app-release.aab</code> 拖入上传区域，等待 Play Console 处理（约 30 秒）。</p>
+          <p>填写<strong>版本说明</strong>（向测试人员说明本次变更内容），然后依次点击<strong>下一步 → 保存 → 发送审核</strong>。对于内部测试，这一步几乎是即时生效的。</p>
+        </div>
+      </div>
+
+      <h2>添加测试人员（仅首次）</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>在内部测试页面，点击<strong>测试人员</strong>。可选择以下任一方式：</p>
+          <ul>
+            <li><strong>创建电子邮件列表</strong> — 粘贴测试人员邮箱（每行一个）。</li>
+            <li><strong>复制页面底部的加入链接</strong> — 分享给测试人员，他们点击即可加入。</li>
+          </ul>
+          <p>测试人员接受邀请后，便可像下载正常应用一样通过 Play Store 下载测试版。</p>
+        </div>
+      </div>
+
+      <h2>等待审核</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>审核时间因发布轨道而异：</p>
+          <ul>
+            <li><strong>内部测试：</strong>约几分钟，通常无需人工审核。</li>
+            <li><strong>封闭测试 / 开放测试：</strong>首个版本约 1–7 天；后续版本通常更快。</li>
+            <li><strong>正式版：</strong>1–7 天。新应用或重大变更可能更久。</li>
+          </ul>
+          <p>状态变更时 Google 会发送邮件通知。也可在 Play Console 的<strong>发布概览</strong>中实时跟踪。</p>
+        </div>
+      </div>
+
+      <h2>晋升到更高轨道（时机成熟后）</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>内部测试稳定后，无需重新上传，直接晋升到更广的发布轨道：</p>
+          <p>Play Console → 当前发布轨道 → <strong>晋升版本</strong> → 选择目标轨道（封闭测试 / 开放测试 / 正式版）→ 确认变更 → 提交。每次晋升都会经过目标轨道的审核流程。</p>
+        </div>
+      </div>
+
+      <h2>为正式版使用分阶段推出</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>正式版发布时，不要一开始就向所有用户推送。建议使用<strong>分阶段推出</strong>：</p>
+          <ul>
+            <li>从 10% 或 25% 的用户开始。</li>
+            <li>在 <a href="https://play.google.com/console" target="_blank" rel="noopener">Android Vitals ↗</a> 中监控崩溃率。</li>
+            <li>在几天内逐步扩大至 50%，再到 100%。</li>
+            <li>如果 Vitals 显示性能回退，立即暂停推出。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>可选：使用 fastlane 自动化上传</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>如需在 CI 流水线（GitHub Actions 等）中自动上传，推荐使用 <a href="https://docs.fastlane.tools/" target="_blank" rel="noopener">fastlane ↗</a>。安装方式：</p>
+          <pre><code>brew install fastlane            # macOS
+# or: sudo gem install fastlane (Linux/Windows)</code></pre>
+          <p>在 Play Console 中生成服务账号 JSON 文件（<strong>设置 → API 访问权限 → 创建新服务账号</strong>），为该服务账号授予应用的<strong>版本管理员</strong>权限，然后运行：</p>
+          <pre><code>fastlane supply --aab app-release.aab \
+  --track internal \
+  --json_key path/to/service-account.json</code></pre>
+          <p>参考文档：<a href="https://docs.fastlane.tools/actions/upload_to_play_store/" target="_blank" rel="noopener">fastlane supply ↗</a> · <a href="https://developers.google.com/android-publisher" target="_blank" rel="noopener">Play Developer API ↗</a>。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>常见被拒原因：</strong>缺少必要的权限说明 · 目标 SDK 版本过低（Google 每年会提高最低要求——<a href="https://developer.android.com/google/play/requirements/target-sdk" target="_blank" rel="noopener">查看当前要求 ↗</a>）· 数据安全表单填写不完整 · Google 自动测试时登录流程出错。大多数问题无需重新上传，更新元数据即可解决。
+      </div>
+
+      <h2>官方参考资料</h2>
+      <ul>
+        <li><a href="https://developer.android.com/studio/publish" target="_blank" rel="noopener">发布你的应用 — Android 开发者文档 ↗</a></li>
+        <li><a href="https://support.google.com/googleplay/android-developer" target="_blank" rel="noopener">Play Console 帮助 ↗</a></li>
+        <li><a href="https://developer.android.com/studio/publish/upload-bundle" target="_blank" rel="noopener">构建并上传 AAB ↗</a></li>
+        <li><a href="https://developer.android.com/studio/publish/app-signing" target="_blank" rel="noopener">应用签名密钥 ↗</a></li>
+        <li><a href="https://support.google.com/googleplay/android-developer/answer/9844679" target="_blank" rel="noopener">内部测试轨道 ↗</a></li>
+        <li><a href="https://developer.android.com/games/playgames/quickstart" target="_blank" rel="noopener">Play Games 快速入门 ↗</a>（如果你发布的是游戏）</li>
+      </ul>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/reupload-an-ios-build-to-testflight.html" class="tutorial-next-card">
+            <h3>重新上传 iOS 构建到 TestFlight</h3>
+            <p>流程相同，苹果平台版本</p>
+          </a>
+          <a href="/zh/tutorials/create-and-run-your-first-avd.html" class="tutorial-next-card">
+            <h3>创建并运行你的第一个 Android 模拟器</h3>
+            <p>上传前先在本地测试你的构建</p>
+          </a>
+          <a href="/zh/tutorials/redeploy-a-website.html" class="tutorial-next-card">
+            <h3>重新部署网站</h3>
+            <p>Web 等效操作——比移动端审核快得多</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和追求专业工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资说明</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

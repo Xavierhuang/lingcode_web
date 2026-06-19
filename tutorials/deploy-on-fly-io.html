@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I deploy on Fly.io from LingCode? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Fly.io runs your app as Docker containers near your users — 30+ regions, machine-level granularity, one CLI. The right tier between 'managed PaaS' and 'raw VPS'.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-on-fly-io.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-on-fly-io.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-on-fly-io.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/deploy-on-fly-io.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Deploy on Fly.io",
+  "description": "Fly.io is what happens when a Docker container can live in 30 cities at once. You bring an image; fly deploy places it near your users. Less work than a VPS, more control than a typical PaaS — and the only mainstream option that makes \"global by default\" cheap.",
+  "url": "https://lingcode.dev/tutorials/deploy-on-fly-io.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/deploy-on-fly-io.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Deploy on Fly.io"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Deploy on Fly.io",
+      "item": "https://lingcode.dev/tutorials/deploy-on-fly-io.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/deploy-on-fly-io.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Deploy on Fly.io</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I deploy on Fly.io from LingCode?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Run <code>fly auth login</code> once, run <code>fly launch</code> to scaffold a <code>fly.toml</code> in your project, then <code>fly deploy</code> ships it. Fly.io places your Docker container in 30+ regions automatically — pay per-CPU-second.</p>
+      <p class="intro">Fly.io is what happens when a Docker container can live in 30 cities at once. You bring an image; <code>fly deploy</code> places it near your users. Less work than a VPS, more control than a typical PaaS — and the only mainstream option that makes "global by default" cheap.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The traditional cloud picks one trade. Heroku/Render/Railway hide the infrastructure: simple to deploy, but you don't pick what runs where. A raw VPS at DigitalOcean exposes everything: you pick the machine and the city, but you're now responsible for OS, processes, restarts, scaling. Either model is fine for plenty of projects, but neither is quite right for "I want my app close to users in Sydney, São Paulo, and Frankfurt without learning Kubernetes."</p>
+      <p>Fly.io's model is "containers as primitives." You give them a Docker image (or a Dockerfile they'll build for you). They run it on lightweight Firecracker VMs they call "Machines," in any of 30+ regions, billable by the second. You pick which regions to deploy in; Fly's <code>fly-replay</code> header lets a request hit one region and bounce to another if needed. Apps that would have been one box in one city become "a small process per region the moment a user shows up there."</p>
+      <p>The catch is that this is more conceptual machinery than most PaaS. You write a <code>fly.toml</code>. You think about Machine sizes and scaling rules. You configure volumes if you need state. The pricing is per-second compute plus storage plus bandwidth — predictable but with more variables than a flat monthly Render plan. For projects that benefit from global reach or container-level control, the trade is worth it. For "I want to deploy a Next.js site and stop thinking," Vercel is simpler.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The Fly model: apps, machines, regions, volumes</li>
+        <li>Installing flyctl and signing up</li>
+        <li>The minimal <code>fly launch</code> flow</li>
+        <li>Scaling and adding regions</li>
+        <li>When to skip Fly for a simpler PaaS</li>
+      </ul>
+
+      <h2>Step 1: Install flyctl</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>One command on Mac</h3>
+          <pre><code>brew install flyctl
+# or:
+curl -L https://fly.io/install.sh | sh</code></pre>
+          <p>Then sign up + auth in one command:</p>
+          <pre><code>fly auth signup    # or: fly auth login if you have an account</code></pre>
+          <p>A browser window opens for the OAuth flow. Once authorized, your local CLI holds a token. Fly requires a payment method on file before deploying anything (even on their generous free-credit tier) — add one in the dashboard.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Make sure your app is Docker-able</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>If it runs in Docker locally, Fly runs it in production</h3>
+          <p>The unit of deployment on Fly is a container image. You can:</p>
+          <ul>
+            <li><strong>Have a Dockerfile</strong> — Fly builds it for you on deploy.</li>
+            <li><strong>Bring a pre-built image</strong> — point Fly at <code>ghcr.io/you/myapp:latest</code> or similar.</li>
+            <li><strong>Use a buildpack</strong> — <code>fly launch</code> can detect common stacks (Node, Python, Go, Rails) and generate a Dockerfile.</li>
+          </ul>
+          <p>For most projects, write a <code>Dockerfile</code> alongside your code. If the app runs with <code>docker run my-image</code> locally on the right port, Fly can deploy it.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: fly launch</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>The interactive first-deploy</h3>
+          <p>From your project root:</p>
+          <pre><code>fly launch</code></pre>
+          <p>The wizard asks: app name (must be globally unique), primary region (pick closest to you for dev), org (defaults to your personal one), and whether you want a Postgres or Redis instance alongside. For a first app, decline the database extras; you can add them later.</p>
+          <p>Fly creates a <code>fly.toml</code> in your project, builds an image (if needed), and offers to deploy. Say yes. A minute later, your app is live at <code>https://&lt;app-name&gt;.fly.dev</code>.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>The <code>fly.toml</code> file</strong> is your deployment config: app name, primary region, build settings, env vars, services and their ports, scaling parameters. It's checked into git; teammates running <code>fly deploy</code> get the same config you did.
+      </div>
+
+      <h2>Step 4: Deploy iterations</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Standard cadence</h3>
+          <p>Subsequent deploys are one command:</p>
+          <pre><code>fly deploy</code></pre>
+          <p>This rebuilds your image (or pushes a fresh one if you specified a remote image), creates new Machines with the new image, swaps traffic to them, kills the old Machines. Default deploy strategy is "rolling" — zero downtime for stateless apps.</p>
+          <p>Watch deploys with <code>fly status</code> and stream logs with <code>fly logs</code>. For app shells, <code>fly ssh console</code> opens a shell on a running Machine.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Add regions</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>"Make this global" in one command</h3>
+          <p>Your initial deploy put one Machine in your primary region. Add more:</p>
+          <pre><code>fly scale count 3 --region iad,fra,syd
+# 3 machines, one each in Ashburn / Frankfurt / Sydney</code></pre>
+          <p>Fly's anycast routing sends each user to the nearest healthy Machine. For stateless apps (most web servers, most APIs), this works out of the box. For stateful apps, you need to think about which region has the writable database — Fly's <code>fly-replay</code> header is the canonical answer.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Bind a custom domain</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Two records and a Fly command</h3>
+          <pre><code>fly certs create mydomain.com</code></pre>
+          <p>Fly shows the DNS records you need to add — usually an A or AAAA pointing at a Fly anycast IP, plus an <code>_acme-challenge</code> CNAME for validation. Add them at your <a href="/tutorials/connect-domain-to-server-with-dns.html">DNS provider</a>. Within a few minutes, Fly validates the domain, issues a Let's Encrypt cert, and your app is reachable at the custom name with HTTPS.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: When NOT to use Fly</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Three honest cases</h3>
+          <ul>
+            <li><strong>You want a one-command deploy with zero config.</strong> Vercel for Next.js, Railway for whatever — both have less setup than even a small <code>fly.toml</code>. Fly's complexity is only worth it when you actually use the features.</li>
+            <li><strong>You don't need multi-region.</strong> Most apps are fine in one region. If yours is, Fly's geographic edge is unused — and DigitalOcean's predictable monthly billing is simpler.</li>
+            <li><strong>Your app isn't Docker-friendly.</strong> If you can't get a working Dockerfile, Fly will be painful. Use Render or Railway, both of which handle non-Docker stacks better.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>State is harder than stateless.</strong> Fly's Machines have local volumes, but they're region-pinned — a Machine in Sydney can't reach a volume in Ashburn. For databases, use Fly Postgres (their managed offering) or, more commonly, point at an external managed DB (Neon, Supabase, PlanetScale). Don't try to build your own multi-region storage on top of raw volumes unless you really know what you're doing.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/deploy-on-railway.html" class="tutorial-next-card">
+            <h3>Deploy on Railway</h3>
+            <p>Easier onboarding, less control — pick when "just ship it" matters more than geography</p>
+          </a>
+          <a href="/tutorials/deploy-on-render.html" class="tutorial-next-card">
+            <h3>Deploy on Render</h3>
+            <p>Heroku-shaped, predictable monthly pricing</p>
+          </a>
+          <a href="/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-next-card">
+            <h3>Buy a server from DigitalOcean</h3>
+            <p>If you want raw control instead of containers</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

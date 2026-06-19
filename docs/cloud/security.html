@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security &amp; Row-Level Security — LingCode Cloud | Docs</title>
+  <meta name="description" content="How LingCode Cloud keeps data safe: the public anon key is made safe by Postgres Row-Level Security, not by hiding keys. Learn the threat model, the core RLS pattern, copy-paste policy SQL, and the advisors that catch mistakes.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/security.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/security.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/security.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/security.html">
+  <meta property="og:title" content="Security &amp; Row-Level Security — LingCode Cloud">
+  <meta property="og:description" content="Row-Level Security is what makes the public anon key safe to ship in the browser. The threat model, the core RLS pattern, copy-paste policy SQL, and the advisors that catch mistakes.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Security &amp; RLS</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Read before you ship</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Security &amp; Row-Level Security</h1>
+      <p class="tldr"><strong>TL;DR:</strong> The public <strong>anon key</strong> in your browser bundle is made safe by <strong>Row-Level Security (RLS)</strong> — Postgres policies enforced on the server, not by hiding the key. Every table the anon key can reach should have RLS enabled <em>and</em> a policy. Enable it once, write owner-only policies that check <code>current_setting('app.user_id', true)</code>, test as a signed-in user, and run the <a href="/tutorials/scan-your-backend-with-advisors.html">advisors</a> before every ship.</p>
+      <p class="intro">This is the page to read before you put a backend in front of real users. It starts with the threat model — why a public key is fine and what actually protects your data — then gives you the one RLS pattern that covers most apps, copy-paste SQL for the common recipes, and the safety net that catches the mistakes everyone makes the first time. Lead thought: access is decided by policies you write in SQL, evaluated by Postgres on every query. Get those right and the rest follows.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>Why this matters: the threat model</h2>
+      <p>When you wire up the SDK you ship two values into the browser: a <strong>data URL</strong> and a public <strong>anon key</strong>. The anon key is not a secret. It travels in your client bundle, it's visible in every request, and anyone can read it. That is by design.</p>
+      <p>Security does <em>not</em> come from hiding the key. It comes from <strong>Row-Level Security</strong> — policies, written as ordinary Postgres SQL, that the database evaluates on the server for every single query before any row is returned. The key just identifies which backend you're talking to; the policies decide what that request is allowed to see and change.</p>
+      <p>This is why the rule is simple and absolute: <strong>every table the anon key can reach should have RLS enabled, with policies.</strong> A table is in exactly one of three states:</p>
+      <ul>
+        <li><strong>RLS off</strong> — the table is <em>fully open</em>. Any request with the anon key can read and write every row. This is almost never what you want for user data.</li>
+        <li><strong>RLS on, no policy</strong> — the table is <em>fully closed</em>. No row is visible or writable through the data gateway (the owner console still sees it). Safe, but useless until you add a policy.</li>
+        <li><strong>RLS on, with policies</strong> — access is exactly what your policies allow. This is the target state for every user-facing table.</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>The anon key is public by design — never rely on it being secret.</strong> Anything a signed-out visitor shouldn't see must be blocked by a policy, not by the key being "hard to find." And never put a <em>private</em> vendor key (Stripe secret, third-party API keys) in a table or in the client — those go in the <a href="/docs/cloud/secrets.html">Secrets vault</a> and are read only from server-side <a href="/docs/cloud/functions.html">functions</a>.
+      </div>
+
+      <h2>How enforcement works</h2>
+      <p>The mechanism behind the policies is worth understanding, because it's what makes the SQL you write correct.</p>
+      <ul>
+        <li>Every app query runs as a <strong>low-privilege Postgres role</strong> scoped to your backend's own schema. It cannot reach any other backend's schema — isolation is structural, not just policy-based.</li>
+        <li>The signed-in user's id is exposed to your policies as <code>current_setting('app.user_id', true)</code>. It's a <strong>TEXT</strong> value, and it is <strong>NULL when the request is signed out</strong> — the SDK only sets it after sign-in. Cast it to your column's type in the policy (<code>::uuid</code>, <code>::text</code>, and so on).</li>
+        <li>Policies are ordinary Postgres SQL. You write them in <strong>migrations</strong> — the console's SQL tab, or by letting the agent call <code>apply_migration</code> — never as runtime calls.</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>The owner console and migrations run as admin and BYPASS RLS.</strong> When you query from the console you see everything, regardless of policies — so the console is the wrong place to test access rules. <strong>Always test policies as a signed-in app user</strong> (and as a signed-out one), never from the console, or you'll convince yourself a broken policy works.
+      </div>
+
+      <h2>The core pattern</h2>
+      <p>This is the pattern that covers most apps: a table where each row belongs to one user, and only that user can see or change it. Two steps — enable RLS, then add the policy.</p>
+      <pre><code>-- 1) Enable RLS. WITHOUT THIS, policies do nothing.
+ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
+
+-- 2) Owner-only: a row is visible/editable only to the user who owns it.
+CREATE POLICY "todos are private to their owner" ON todos
+  USING (user_id = current_setting('app.user_id', true)::uuid)
+  WITH CHECK (user_id = current_setting('app.user_id', true)::uuid);</code></pre>
+      <p>Two clauses are doing two different jobs, and the distinction matters:</p>
+      <ul>
+        <li><strong><code>USING</code></strong> decides which <em>existing</em> rows are visible — it filters <code>SELECT</code>, and gates which rows an <code>UPDATE</code> or <code>DELETE</code> is allowed to touch.</li>
+        <li><strong><code>WITH CHECK</code></strong> validates the rows you're allowed to write <em>to</em> — it gates the new or changed row on <code>INSERT</code> and <code>UPDATE</code>. Without it a user could insert a row stamped with someone else's <code>user_id</code>.</li>
+      </ul>
+      <p>Note the cast: <code>current_setting('app.user_id', true)</code> returns TEXT, so you cast it to the column's type — <code>::uuid</code> here. And note what happens when the request is signed out: <code>current_setting</code> returns <strong>NULL</strong>, the comparison <code>user_id = NULL</code> is never true, <strong>no row matches</strong>, and access is denied. Signed-out safety is automatic.</p>
+
+      <div class="info-box">
+        <h3>Why USING and WITH CHECK both appear</h3>
+        <p>A common first mistake is writing only <code>USING</code>. That makes existing rows private — but an <code>INSERT</code> has no existing row to filter, so without <code>WITH CHECK</code> a client can create rows with any <code>user_id</code> it likes, including someone else's. For owner-only tables, write both clauses with the same condition. When they should differ (public read, owner write), use per-command policies — see the recipes below.</p>
+      </div>
+
+      <h2>Recipes</h2>
+
+      <h3>Auto-stamp the owner (so clients can't spoof it)</h3>
+      <p>Instead of trusting the client to send the right <code>user_id</code>, give the column a default that fills it from the signed-in user. The client never sets it at all:</p>
+      <pre><code>ALTER TABLE todos
+  ALTER COLUMN user_id SET DEFAULT current_setting('app.user_id', true)::uuid;</code></pre>
+      <p>Now <code>insert({ title: 'Buy milk' })</code> with no <code>user_id</code> lands a row owned by whoever is signed in. Pair this with the owner-only policy above and there is no way for a client to claim a row it doesn't own.</p>
+
+      <h3>Public read, owner write</h3>
+      <p>For things like a blog or a public feed, anyone may read every row, but only the owner may create, change, or delete their own. Because the commands differ, write a separate policy per command with <code>FOR SELECT</code> / <code>FOR INSERT</code> / <code>FOR UPDATE</code> / <code>FOR DELETE</code>:</p>
+      <pre><code>ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "anyone can read" ON posts
+  FOR SELECT USING (true);
+
+CREATE POLICY "owner can insert" ON posts
+  FOR INSERT WITH CHECK (user_id = current_setting('app.user_id', true)::uuid);
+
+CREATE POLICY "owner can modify" ON posts
+  FOR UPDATE USING (user_id = current_setting('app.user_id', true)::uuid);
+
+CREATE POLICY "owner can delete" ON posts
+  FOR DELETE USING (user_id = current_setting('app.user_id', true)::uuid);</code></pre>
+      <p>The <code>FOR SELECT</code> policy with <code>USING (true)</code> makes every row publicly readable. The write policies each scope a single command to the owner. Splitting per command is the tool you reach for any time read access and write access aren't the same — scope each command exactly as tightly as it needs to be.</p>
+
+      <h2>The safety net: advisors</h2>
+      <p>You will get a policy wrong at some point — everyone does. The backend ships an <strong>advisors</strong> scanner that reads your schema and flags the real RLS mistakes before they reach users. Among what it catches:</p>
+      <ul>
+        <li><strong>Policies exist but RLS is off.</strong> A table has policies that do nothing because <code>ENABLE ROW LEVEL SECURITY</code> was never run — so the table is wide open despite looking protected. Fix: <code>ALTER TABLE … ENABLE ROW LEVEL SECURITY;</code>.</li>
+        <li><strong>Tables reachable by the anon key with no RLS or policy.</strong> The fully-open case — user data anyone can read or write.</li>
+        <li><strong>A mutable function <code>search_path</code></strong> — a security warning on functions whose search path can be manipulated.</li>
+      </ul>
+      <p><strong>Run the advisors before every ship.</strong> It's the fastest way to catch the gap between "I wrote a policy" and "the policy is actually enforced." See <a href="/tutorials/scan-your-backend-with-advisors.html">Scan your backend with advisors</a>.</p>
+
+      <div class="info-box">
+        <h3>Realtime respects the same policies</h3>
+        <p>RLS isn't only for one-shot queries. <a href="/docs/cloud/realtime.html">Realtime</a> change events are re-checked against the <em>same</em> policies before they're delivered, so a subscriber only ever receives rows it could have read with a normal <code>select()</code>. You don't write separate rules for realtime — get the table policy right and live updates inherit it.</p>
+      </div>
+
+      <h2>Putting it together: a ship checklist</h2>
+      <ul>
+        <li>For every user-facing table: <code>ENABLE ROW LEVEL SECURITY</code> <em>and</em> at least one policy.</li>
+        <li>Owner-only tables: one policy with both <code>USING</code> and <code>WITH CHECK</code>, casting <code>current_setting('app.user_id', true)</code> to the column type.</li>
+        <li>Auto-stamp <code>user_id</code> with a column default so clients can't spoof ownership.</li>
+        <li>Mixed access: split into <code>FOR SELECT</code> / <code>INSERT</code> / <code>UPDATE</code> / <code>DELETE</code> policies.</li>
+        <li>Test as a signed-in user and a signed-out user — <strong>not</strong> from the console (it bypasses RLS).</li>
+        <li>Private vendor keys go in the <a href="/docs/cloud/secrets.html">Secrets vault</a>, never a table or the client.</li>
+        <li>Run the <a href="/tutorials/scan-your-backend-with-advisors.html">advisors</a> and clear every RLS finding before deploying.</li>
+      </ul>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/database.html">
+            <span class="card-eyebrow">Data</span>
+            <h3>Database</h3>
+            <p>Tables, migrations, the query builder, and where RLS policies live alongside indexes and constraints.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/auth.html">
+            <span class="card-eyebrow">Identity</span>
+            <h3>Authentication</h3>
+            <p>How users sign in — and how <code>app.user_id</code> gets set so your policies have someone to check against.</p>
+          </a>
+          <a class="tutorial-next-card" href="/tutorials/scan-your-backend-with-advisors.html">
+            <span class="card-eyebrow">Tutorial</span>
+            <h3>Scan with advisors</h3>
+            <p>Run the scanner that flags RLS-off tables, open tables, and other security gaps before you ship.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

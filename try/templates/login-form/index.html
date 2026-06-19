@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in — Helix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };</script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-stone-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-8">
+        <div class="inline-flex h-10 w-10 rounded-xl bg-indigo-600 text-white items-center justify-center font-semibold mb-3">⌬</div>
+        <h1 class="text-2xl font-semibold tracking-tight">Welcome back</h1>
+        <p class="text-sm text-slate-500 mt-1">Sign in to continue to Helix</p>
+      </div>
+
+      <div id="alert" class="hidden mb-4 px-3 py-2 rounded-md text-sm border"></div>
+
+      <div id="signed-in" class="hidden text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+        <div class="inline-flex h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 items-center justify-center text-xl mb-3">✓</div>
+        <h2 class="font-semibold">Signed in</h2>
+        <p class="text-sm text-slate-500 mt-1" id="signed-in-email">—</p>
+        <button id="sign-out" class="mt-5 text-sm border border-slate-300 dark:border-slate-700 px-4 py-2 rounded-md font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Sign out</button>
+      </div>
+
+      <form id="signin-form" class="space-y-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+        <button type="button" id="google-btn" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-md border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium">
+          <svg viewBox="0 0 24 24" class="h-4 w-4"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A10.99 10.99 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.07H2.18A10.99 10.99 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.83z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A10.99 10.99 0 0 0 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+          Continue with Google
+        </button>
+
+        <div class="flex items-center gap-2 my-1">
+          <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
+          <span class="text-xs text-slate-500">or</span>
+          <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
+        </div>
+
+        <label class="block">
+          <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Email</span>
+          <input id="email" type="email" autocomplete="email" required class="mt-1 w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-sm" placeholder="you@example.com" />
+        </label>
+
+        <label class="block">
+          <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Password</span>
+          <input id="password" type="password" autocomplete="current-password" required minlength="6" class="mt-1 w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 text-sm" placeholder="••••••••" />
+        </label>
+
+        <button id="submit-btn" type="submit" class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-2.5 rounded-md font-medium hover:bg-slate-700 dark:hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm">Sign in</button>
+
+        <p class="text-xs text-center text-slate-500 mt-2">
+          New here?
+          <button type="button" id="toggle-mode" class="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white underline">Create an account</button>
+        </p>
+      </form>
+
+      <p class="mt-6 text-center text-xs text-slate-500">
+        Auto-wired to <code class="bg-slate-200 dark:bg-slate-800 rounded px-1 py-0.5">window.SUPABASE_URL</code> when you connect Supabase in /try.
+      </p>
+    </div>
+
+    <script>
+      let mode = 'signin'; // 'signin' | 'signup'
+      let supabase = null;
+      let session = null;
+
+      const alertBox = document.getElementById('alert');
+      const form = document.getElementById('signin-form');
+      const signedIn = document.getElementById('signed-in');
+      const submitBtn = document.getElementById('submit-btn');
+      const toggleBtn = document.getElementById('toggle-mode');
+      const googleBtn = document.getElementById('google-btn');
+      const signOutBtn = document.getElementById('sign-out');
+
+      function showAlert(kind, msg) {
+        alertBox.textContent = msg;
+        alertBox.className = 'mb-4 px-3 py-2 rounded-md text-sm border ' + (kind === 'error'
+          ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20'
+          : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20');
+      }
+      function hideAlert() { alertBox.className = 'hidden'; }
+
+      function renderMode() {
+        submitBtn.textContent = mode === 'signin' ? 'Sign in' : 'Create account';
+        toggleBtn.textContent = mode === 'signin' ? 'Create an account' : 'Sign in';
+        document.querySelector('h1').textContent = mode === 'signin' ? 'Welcome back' : 'Create your account';
+      }
+      function renderSession(sess) {
+        session = sess;
+        if (sess?.user) {
+          form.classList.add('hidden');
+          signedIn.classList.remove('hidden');
+          document.getElementById('signed-in-email').textContent = sess.user.email || sess.user.id;
+        } else {
+          form.classList.remove('hidden');
+          signedIn.classList.add('hidden');
+        }
+      }
+
+      async function ensureClient() {
+        if (supabase) return supabase;
+        if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+          showAlert('error', 'Connect Supabase in /try first — auth needs SUPABASE_URL + SUPABASE_ANON_KEY.');
+          return null;
+        }
+        // Lazy-load the SDK from a CDN.
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+        supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        const { data: { session: existing } } = await supabase.auth.getSession();
+        renderSession(existing);
+        supabase.auth.onAuthStateChange((_event, s) => renderSession(s));
+        return supabase;
+      }
+
+      toggleBtn.addEventListener('click', () => { mode = mode === 'signin' ? 'signup' : 'signin'; renderMode(); hideAlert(); });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideAlert();
+        const client = await ensureClient();
+        if (!client) return;
+        submitBtn.disabled = true;
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        try {
+          const { error } = mode === 'signin'
+            ? await client.auth.signInWithPassword({ email, password })
+            : await client.auth.signUp({ email, password });
+          if (error) throw error;
+          if (mode === 'signup') showAlert('success', 'Check your inbox to confirm your email.');
+        } catch (err) {
+          showAlert('error', err.message || 'Sign-in failed');
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+
+      googleBtn.addEventListener('click', async () => {
+        hideAlert();
+        const client = await ensureClient();
+        if (!client) return;
+        try {
+          const { error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+          if (error) throw error;
+        } catch (err) { showAlert('error', err.message); }
+      });
+
+      signOutBtn.addEventListener('click', async () => {
+        const client = await ensureClient();
+        if (!client) return;
+        await client.auth.signOut();
+      });
+
+      renderMode();
+      ensureClient();
+    </script>
+    <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

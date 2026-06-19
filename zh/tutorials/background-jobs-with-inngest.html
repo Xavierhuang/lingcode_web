@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 Inngest 处理后台任务 — LingCode 教程</title>
+  <meta name="description" content="在响应返回后继续执行代码。注册账号、安装 SDK、定义函数、发送事件。内置持久化重试、定时任务、多步骤工作流——无需管理队列。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/background-jobs-with-inngest.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/background-jobs-with-inngest.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/background-jobs-with-inngest.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/background-jobs-with-inngest.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Inngest 处理后台任务",
+  "description": "当服务器需要"稍后执行某项操作"时，过去你需要搭建 Redis、BullMQ、一个 worker 进程以及一整套部署方案。Inngest 用一个函数和一个事件取代了这一切。内置持久化重试，无需管理基础设施，支持 serverless。",
+  "url": "https://lingcode.dev/zh/tutorials/background-jobs-with-inngest.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/background-jobs-with-inngest.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "注册 + 创建应用",
+      "url": "https://lingcode.dev/zh/tutorials/background-jobs-with-inngest.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "安装 SDK",
+      "url": "https://lingcode.dev/zh/tutorials/background-jobs-with-inngest.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "发送事件",
+      "url": "https://lingcode.dev/zh/tutorials/background-jobs-with-inngest.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "使用开发服务器在本地运行",
+      "url": "https://lingcode.dev/zh/tutorials/background-jobs-with-inngest.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "连接到生产环境",
+      "url": "https://lingcode.dev/zh/tutorials/background-jobs-with-inngest.html#step-5"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 Inngest 处理后台任务",
+      "item": "https://lingcode.dev/zh/tutorials/background-jobs-with-inngest.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/background-jobs-with-inngest.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>使用 Inngest 处理后台任务</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 Inngest 处理后台任务</h1>
+      <p class="intro">当服务器需要"稍后执行某项操作"时，过去你需要搭建 Redis、BullMQ、一个 worker 进程以及一整套部署方案。Inngest 用一个函数和一个事件取代了这一切。内置持久化重试，无需管理基础设施，支持 serverless。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>它取代了什么</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>这些操作应该在用户请求返回<em>之后</em>执行：</p>
+          <ul>
+            <li>注册后发送欢迎邮件。</li>
+            <li>生成 PDF 报告。</li>
+            <li>处理视频上传。</li>
+            <li>向多个收件人广播通知。</li>
+            <li>将数据同步到第三方 API，失败时自动重试。</li>
+          </ul>
+          <p>传统方案：Redis + BullMQ + worker 进程。现代 serverless 方案：Inngest、<a href="https://trigger.dev/" target="_blank" rel="noopener">Trigger.dev ↗</a> 或 <a href="https://temporal.io/" target="_blank" rel="noopener">Temporal ↗</a>。本教程选用 Inngest，因为它的开发者体验对初学者最友好。</p>
+        </div>
+      </div>
+
+      <h2>注册 + 创建应用</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>前往 <a href="https://app.inngest.com/sign-up" target="_blank" rel="noopener">app.inngest.com ↗</a> 注册。免费套餐：每月 10 万次事件 + 1K 并发运行——对早期项目来说完全够用。</p>
+          <p>控制台 → <strong>Apps</strong> → 首次连接时会自动创建你的应用。后面我们会回到这里。</p>
+        </div>
+      </div>
+
+      <h2>安装 SDK</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <pre><code>npm install inngest</code></pre>
+          <p>其他运行时：<a href="https://www.inngest.com/docs/sdk/overview" target="_blank" rel="noopener">Python ↗</a>、<a href="https://www.inngest.com/docs/sdk/go" target="_blank" rel="noopener">Go ↗</a>。以下示例使用 JS。</p>
+        </div>
+      </div>
+
+      <h2>定义第一个函数</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Inngest 函数就是普通的异步函数，由命名事件触发。</p>
+          <pre><code>// inngest/functions.js
+import { Inngest } from "inngest";
+
+export const inngest = new Inngest({ id: "my-app" });
+
+export const sendWelcomeEmail = inngest.createFunction(
+  { id: "send-welcome-email" },
+  { event: "user/signed-up" },
+  async ({ event, step }) =&gt; {
+    const { email } = event.data;
+
+    // Each `step.run` is durable — retried independently on failure
+    const customer = await step.run("create-customer", async () =&gt; {
+      return createStripeCustomer(email);
+    });
+
+    await step.run("send-email", async () =&gt; {
+      return sendResendEmail({
+        to: email,
+        subject: "Welcome",
+        body: `Hi! Customer ID: ${customer.id}`,
+      });
+    });
+  }
+);</code></pre>
+        </div>
+      </div>
+
+      <h2>挂载处理器</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>添加一个 HTTP 端点，让 Inngest 调用你的函数。各框架写法如下：</p>
+          <p><strong>Next.js（App Router）：</strong></p>
+          <pre><code>// app/api/inngest/route.ts
+import { serve } from "inngest/next";
+import { inngest, sendWelcomeEmail } from "@/inngest/functions";
+
+export const { GET, POST, PUT } = serve({
+  client: inngest,
+  functions: [sendWelcomeEmail],
+});</code></pre>
+          <p><strong>Express：</strong></p>
+          <pre><code>import { serve } from "inngest/express";
+import express from "express";
+
+const app = express();
+app.use(express.json());
+app.use("/api/inngest", serve({
+  client: inngest,
+  functions: [sendWelcomeEmail],
+}));</code></pre>
+          <p>完整框架列表：<a href="https://www.inngest.com/docs/learn/serving-inngest-functions" target="_blank" rel="noopener">Serving functions ↗</a>。Vercel、Cloudflare Workers、Hono、Fastify、Remix、Astro、NestJS、AWS Lambda——均已支持。</p>
+        </div>
+      </div>
+
+      <h2>发送事件</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>在应用的任意位置调用——API 路由、webhook 处理器、cron 任务都行：</p>
+          <pre><code>import { inngest } from "@/inngest/functions";
+
+await inngest.send({
+  name: "user/signed-up",
+  data: { email: "user@example.com" },
+});</code></pre>
+          <p>立即返回，只需几毫秒。用户请求快速响应，后续执行交给 Inngest。</p>
+        </div>
+      </div>
+
+      <h2>使用开发服务器在本地运行</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Inngest 内置本地开发服务器——无需 Docker，直接在终端运行：</p>
+          <pre><code>npx inngest-cli@latest dev</code></pre>
+          <p>访问 <code>http://localhost:8288</code>。开发服务器会自动发现你的 <code>/api/inngest</code> 端点，列出所有函数，支持从 UI 触发事件，并以步骤为单位展示执行追踪和重试行为。全程不离开本机，实时调试。</p>
+        </div>
+      </div>
+
+      <h2>连接到生产环境</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>部署应用后，在 Inngest 控制台 → <strong>Apps → Sync new app</strong> → 粘贴以 <code>/api/inngest</code> 结尾的生产 URL。Inngest 会自动探测并发现你的函数，随后开始路由事件。</p>
+          <p>在生产环境添加以下环境变量：</p>
+          <pre><code>INNGEST_EVENT_KEY=...    # for inngest.send() to authenticate
+INNGEST_SIGNING_KEY=...  # for Inngest to verify it's calling YOUR app</code></pre>
+          <p>两个密钥均可在控制台的 <strong>Settings → Keys</strong> 中查看。</p>
+        </div>
+      </div>
+
+      <h2>进阶模式（省去你自己手搓的功夫）</h2>
+
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p><strong>休眠 / 延迟。</strong>在函数内等待数小时甚至数天；等待期间 Inngest 不会让你的服务器保持常驻。</p>
+          <pre><code>await step.sleep("wait-a-day", "24h");
+await step.run("send-reminder", () =&gt; sendEmail(...));</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p><strong>等待事件。</strong>暂停执行，直到特定事件到达。适合"用户 24 小时内未确认则发送提醒"的场景。</p>
+          <pre><code>const confirmation = await step.waitForEvent("wait-for-confirm", {
+  event: "user/email-confirmed",
+  timeout: "24h",
+  match: "data.userId",
+});
+
+if (!confirmation) {
+  await step.run("send-nudge", () =&gt; sendNudgeEmail(...));
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p><strong>定时任务（cron）。</strong></p>
+          <pre><code>export const dailyDigest = inngest.createFunction(
+  { id: "daily-digest" },
+  { cron: "0 8 * * *" },     // every day at 08:00 UTC
+  async ({ step }) =&gt; {
+    await step.run("send-digest", () =&gt; sendDigestToAllUsers());
+  }
+);</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p><strong>广播（Fan-out）。</strong>一个事件触发 N 个并行函数：</p>
+          <pre><code>// Two functions, both listening for the same event
+export const a = inngest.createFunction({ id: "a" }, { event: "order/paid" }, ...);
+export const b = inngest.createFunction({ id: "b" }, { event: "order/paid" }, ...);
+
+// One send triggers both
+await inngest.send({ name: "order/paid", data: {...} });</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <p><strong>并发限制 + 限流。</strong>限制同时执行的运行数量（例如针对有速率限制的第三方 API）：</p>
+          <pre><code>inngest.createFunction(
+  {
+    id: "process-image",
+    concurrency: { limit: 5 },                  // at most 5 at once globally
+    throttle: { limit: 100, period: "1m" },     // and no more than 100/min
+  },
+  { event: "image/uploaded" },
+  async ({ event, step }) =&gt; { /* ... */ }
+);</code></pre>
+        </div>
+      </div>
+
+      <h2>重试是自动的</h2>
+      <div class="step">
+        <div class="step-num">13</div>
+        <div class="step-body">
+          <p>如果某个 <code>step.run</code> 抛出异常，Inngest 会以指数退避方式自动重试（默认 4 次，约 10 分钟内完成）。已成功的步骤不会重新执行——只有失败的步骤才会重试。可按函数配置：</p>
+          <pre><code>inngest.createFunction(
+  { id: "syncs", retries: 10 },
+  { event: "user/created" },
+  async ({ event, step }) =&gt; { ... }
+);</code></pre>
+          <p>抛出 <code>NonRetriableError</code> 可立即终止，不再重试（例如输入无效——重试也没有意义）。</p>
+        </div>
+      </div>
+
+      <h2>常见坑</h2>
+      <div class="step">
+        <div class="step-num">14</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>忘记用 <code>step.run</code> 包裹</strong>——在 <code>step.run</code> 外部的代码每次重试都会重新执行。数据库写入、API 调用等副作用必须放在 step 内部。</li>
+            <li><strong>事件 payload 过大</strong>——事件有大小限制（通常为 512 KB）。大数据请存到 S3/R2，只传 URL。</li>
+            <li><strong>Vercel 上的长耗时步骤</strong>——Vercel 会在 10–60 秒后（取决于套餐）终止函数。Inngest 步骤遵循这一限制——将任务拆分成更小的 <code>step.run</code>，Inngest 会将它们作为独立调用执行。</li>
+            <li><strong>忘记挂载处理器</strong>——事件可以正常流入 Inngest，但在 Inngest 能调用你的端点之前，函数无法执行。开发服务器在无法访问时会打印友好的错误提示。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Inngest 对"事件即名词/动词"的模式有明确约定。</strong>推荐使用 <code>user/signed-up</code>、<code>order/paid</code>、<code>image/uploaded</code> 这样的事件命名。函数响应事件，事件就是 API。这种思维方式便于推理，但需要一点时间内化。<a href="https://www.inngest.com/docs/events" target="_blank" rel="noopener">事件指南 ↗</a>。
+      </div>
+
+      <h2>定价实际情况</h2>
+      <div class="step">
+        <div class="step-num">15</div>
+        <div class="step-body">
+          <p>免费套餐：每月 10 万次事件 + 1K 并发运行，早期项目绰绰有余。付费版起价 $50/月。<a href="https://www.inngest.com/pricing" target="_blank" rel="noopener">Inngest 定价 ↗</a>。</p>
+          <p>自托管：Inngest 开源了<a href="https://www.inngest.com/docs/self-hosting" target="_blank" rel="noopener">社区版 ↗</a>。生产环境自托管需要一定运维投入。</p>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <ul>
+        <li><a href="https://www.inngest.com/docs" target="_blank" rel="noopener">Inngest 文档 ↗</a></li>
+        <li><a href="https://www.inngest.com/docs/learn/serving-inngest-functions" target="_blank" rel="noopener">各框架函数挂载方式 ↗</a></li>
+        <li><a href="https://www.inngest.com/docs/reference/functions/create" target="_blank" rel="noopener">createFunction 参考 ↗</a></li>
+        <li><a href="https://www.inngest.com/docs/local-development" target="_blank" rel="noopener">本地开发服务器 ↗</a></li>
+      </ul>
+
+      <h2>接下来学什么</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/set-up-stripe-webhooks.html" class="tutorial-next-card">
+            <h3>设置 Stripe Webhooks</h3>
+            <p>从 Stripe webhook 处理器触发 Inngest 事件——实现简洁的广播模式</p>
+          </a>
+          <a href="/zh/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h3>使用 Resend 发送事务性邮件</h3>
+            <p>Inngest 第一个示例中展示的"稍后发送邮件"模式</p>
+          </a>
+          <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>设置 Sentry 错误追踪</h3>
+            <p>在 Sentry 中捕获 Inngest 函数内的失败</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速交付的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资材料</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

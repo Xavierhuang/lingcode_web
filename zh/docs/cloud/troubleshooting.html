@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode Cloud 错误与排错 —— 每个错误码及其修复办法 | 文档</title>
+  <meta name="description" content="LingCode Cloud 完整错误参考：来自数据、认证、存储、函数、密钥、托管与向量检索接口的每一个 JSON 错误码，它的含义，以及一行修复办法。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/troubleshooting.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/troubleshooting.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/troubleshooting.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/troubleshooting.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/troubleshooting.html">
+  <meta property="og:title" content="LingCode Cloud 错误与排错">
+  <meta property="og:description" content="LingCode Cloud 的每一个 JSON 错误码——数据、认证、存储、函数、密钥、托管、向量——附含义与一行修复办法。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .err-table { width: 100%; border-collapse: collapse; margin: 18px 0 8px; font-size: 0.9rem; }
+    .err-table th, .err-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--border); line-height: 1.5; }
+    .err-table th { font-family: "Geist Mono", monospace; font-size: 0.72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--signal); border-bottom: 1px solid var(--border); }
+    .err-table td:first-child { white-space: nowrap; font-family: "Geist Mono", monospace; font-size: 0.82rem; color: var(--text); }
+    .err-table td code { white-space: nowrap; }
+    @media (max-width: 720px) { .err-table td:first-child { white-space: normal; } }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>排错</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● 错误</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>错误与排错</h1>
+      <p class="tldr"><strong>一句话：</strong>LingCode Cloud 的每一个 API 错误都以一个简短的 JSON <strong>code（错误码）</strong>返回。在 SDK 里，一次失败的调用会解析为 <code>{ data: null, error }</code>，其中 <code>error.code</code> 是字符串错误码，<code>error.status</code> 是 HTTP 状态码。在 REST 上，错误形如 <code>{ ok: false, error: "&lt;code&gt;", message: "…" }</code>。在下面找到对应的错误码，看它的含义以及如何修复。</p>
+      <p class="intro">本页是一张查询表，不是操作教程。错误按抛出它的产品分组——数据、认证、存储、函数、密钥、托管、向量检索，外加少数几个通用的临时性错误。按 <code>code</code> 字符串匹配；message 是给人看的，但稳定的是 code。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>错误的形态</h2>
+      <p>你永远不必去解析散文。两种传输方式携带的都是同一个机器可读的错误码：</p>
+      <pre><code>// SDK
+const { data, error } = await lingcode.from('todos').update({ done: true });
+if (error) {
+  console.log(error.code);   // 例如 "where_required"
+  console.log(error.status); // 例如 400
+}
+
+// REST
+// HTTP 400
+// { "ok": false, "error": "where_required", "message": "update requires a filter" }</code></pre>
+      <p>在下面的表里查 <code>error.code</code>。</p>
+
+      <h2>数据</h2>
+      <p>由表读取、写入和 SQL 查询编辑器抛出。完整指南：<a href="/zh/docs/cloud/database.html">数据库</a>。</p>
+      <table class="err-table">
+        <thead><tr><th>错误码</th><th>含义</th><th>修复办法</th></tr></thead>
+        <tbody>
+          <tr><td>where_required</td><td><code>update()</code>/<code>delete()</code> 在没有过滤器的情况下运行了。</td><td>加一个过滤器（<code>.eq</code>/<code>.match</code>）来限定行范围。</td></tr>
+          <tr><td>table_not_found <span style="color:var(--text-dim)">(404)</span></td><td>表名写错了，或者该表还没创建。</td><td>核对表名；运行创建它的迁移。</td></tr>
+          <tr><td>invalid_request <span style="color:var(--text-dim)">(400)</span></td><td>缺少必填字段或格式有误（表/过滤器/行结构不对）。</td><td>修正表名、过滤器或行结构。</td></tr>
+          <tr><td>not_provisioned <span style="color:var(--text-dim)">(409)</span></td><td>后端尚未就绪（仍在开通中）。</td><td>稍后重试，或轮询后端状态。</td></tr>
+          <tr><td>read_only_violation</td><td>控制台的 SQL 查询编辑器只运行只读语句（<code>SELECT</code>/<code>WITH</code>/<code>TABLE</code>/<code>EXPLAIN</code>/<code>SHOW</code>）。</td><td>写入和 DDL 请走迁移。</td></tr>
+          <tr><td>quota_exceeded <span style="color:var(--text-dim)">(402)</span></td><td>触及了套餐上限（表数、行数等）。</td><td>腾出空间或<a href="/pricing.html">升级</a>。</td></tr>
+        </tbody>
+      </table>
+
+      <h2>认证</h2>
+      <p>由注册、登录、OTP/魔法链接、MFA 和 OAuth 抛出。完整指南：<a href="/zh/docs/cloud/auth.html">认证</a>。</p>
+      <table class="err-table">
+        <thead><tr><th>错误码</th><th>含义</th><th>修复办法</th></tr></thead>
+        <tbody>
+          <tr><td>unauthorized <span style="color:var(--text-dim)">(401)</span></td><td>缺少或无效的令牌。</td><td>发送匿名密钥（<code>Bearer</code> 或 <code>?apikey=</code>）或已登录的用户令牌。</td></tr>
+          <tr><td>forbidden <span style="color:var(--text-dim)">(403)</span></td><td>RLS 策略拒绝了它——该行不属于此用户，或该表没有授予访问权限的策略。</td><td>检查你的<a href="/zh/docs/cloud/security.html">策略</a>。</td></tr>
+          <tr><td>invalid_code / invalid_or_expired / too_many_attempts</td><td>一次性验证码或魔法链接错误、过期，或重试过于频繁。</td><td>重新申请一个。</td></tr>
+          <tr><td>mfa_required</td><td>后端要求 MFA，而当前会话尚未达到 AAL2。</td><td>完成 MFA 验证步骤。</td></tr>
+          <tr><td>state_secret_missing / invalid_redirect</td><td>OAuth 未完全配置，或重定向 URL 不在允许列表中。</td><td>在控制台配置提供方，并使用允许的重定向地址。</td></tr>
+        </tbody>
+      </table>
+
+      <h2>存储</h2>
+      <p>由存储桶的上传、下载和删除抛出。完整指南：<a href="/zh/docs/cloud/storage.html">存储</a>。</p>
+      <table class="err-table">
+        <thead><tr><th>错误码</th><th>含义</th><th>修复办法</th></tr></thead>
+        <tbody>
+          <tr><td>object_not_found <span style="color:var(--text-dim)">(404)</span></td><td>该存储桶/路径下没有对象。</td><td>核对存储桶和路径。</td></tr>
+          <tr><td>object_too_large / value_too_large</td><td>文件超过了单对象内联上传上限。</td><td>改用预签名直传路径（SDK 会自动处理）或升级套餐。</td></tr>
+          <tr><td>direct_upload_unavailable</td><td>该后端不支持预签名直传对象存储的路径。</td><td>对小文件回退到内联上传。</td></tr>
+          <tr><td>quota_exceeded <span style="color:var(--text-dim)">(402)</span></td><td>后端的总存储上限已达到。</td><td>腾出空间或<a href="/pricing.html">升级</a>。</td></tr>
+        </tbody>
+      </table>
+
+      <h2>函数</h2>
+      <p>由内置和自定义无服务器函数调用抛出。完整指南：<a href="/zh/docs/cloud/functions.html">函数</a>。</p>
+      <table class="err-table">
+        <thead><tr><th>错误码</th><th>含义</th><th>修复办法</th></tr></thead>
+        <tbody>
+          <tr><td>unknown_function <span style="color:var(--text-dim)">(404)</span></td><td>slug 写错了——是<em>名字</em>不对，而不是函数功能不可用。</td><td>核对函数 slug。</td></tr>
+          <tr><td>functions_runtime_unavailable <span style="color:var(--text-dim)">(503)</span></td><td>该服务器未安装 Deno 运行时，因此自定义函数无法运行（内置函数仍可用）。</td><td>改用内置函数，或联系运维安装运行时。</td></tr>
+          <tr><td>function_error</td><td>你的函数抛出了异常。</td><td>查看返回的 <code>logs</code> 字段获取错误信息。</td></tr>
+          <tr><td>source_too_large</td><td>自定义函数源码超过 256&nbsp;KB。</td><td>精简代码。</td></tr>
+          <tr><td>missing_secret</td><td>函数需要一个未设置的保险库密钥。</td><td>在控制台<a href="/zh/docs/cloud/secrets.html">密钥</a>里添加它。</td></tr>
+          <tr><td>timeout</td><td>函数超过了套餐的墙钟时间限制（free 3s / pro 10s / max_pro 30s）。message：<code>Function timed out after Xms</code>。</td><td>让它更快，或把耗时工作挪到别处。</td></tr>
+        </tbody>
+      </table>
+
+      <h2>密钥</h2>
+      <p>由密钥保险库抛出。完整指南：<a href="/zh/docs/cloud/secrets.html">密钥保险库</a>。</p>
+      <table class="err-table">
+        <thead><tr><th>错误码</th><th>含义</th><th>修复办法</th></tr></thead>
+        <tbody>
+          <tr><td>too_many_secrets</td><td>一个后端最多允许 32 个密钥。</td><td>先删除一个未使用的密钥。</td></tr>
+          <tr><td>value_too_large</td><td>密钥值超过 16&nbsp;KB。</td><td>存一个更短的值，或存一个指向数据的引用。</td></tr>
+          <tr><td>vault_not_configured</td><td>服务器的保险库密钥未设置（运维/基础设施问题，不是你的应用问题）。</td><td>联系运维。</td></tr>
+        </tbody>
+      </table>
+
+      <h2>托管与部署</h2>
+      <p>由应用部署和自定义域名绑定抛出。完整指南：<a href="/zh/docs/cloud/hosting.html">应用托管</a>。</p>
+      <table class="err-table">
+        <thead><tr><th>错误码</th><th>含义</th><th>修复办法</th></tr></thead>
+        <tbody>
+          <tr><td>no_build_config</td><td>构建没有产出 <code>dist/server/wrangler.json</code>（Cloudflare Vite 插件没有运行）。</td><td>用正确的适配器重新构建。</td></tr>
+          <tr><td>bundle_too_large</td><td>Worker 打包产物超过 60&nbsp;MB。</td><td>精简依赖和资源文件。</td></tr>
+          <tr><td>cap_reached</td><td>你已达到托管 Worker 应用数量上限（10 个）。</td><td>删除一个旧的或升级。</td></tr>
+          <tr><td>rate_limited</td><td>部署过于频繁（每小时 12 次）。</td><td>稍后重试。</td></tr>
+          <tr><td>custom_domain_failed / domain_taken / reserved_domain / invalid_domain</td><td>自定义域名绑定问题——DNS 未指向边缘节点、域名已绑定到别处、被保留，或格式有误。</td><td>把 DNS 指向边缘节点，释放或改名域名，并使用合法的主机名。</td></tr>
+        </tbody>
+      </table>
+
+      <h2>向量检索</h2>
+      <p>由语义检索抛出。完整指南：<a href="/zh/docs/cloud/vector-search.html">向量检索</a>。</p>
+      <table class="err-table">
+        <thead><tr><th>错误码</th><th>含义</th><th>修复办法</th></tr></thead>
+        <tbody>
+          <tr><td>embeddings_not_configured / embeddings_failed</td><td>托管向量化不可用或失败。</td><td>把它配置好，或向 <code>vector.search</code> 传入你自己预先计算好的向量。</td></tr>
+        </tbody>
+      </table>
+
+      <h2>通用</h2>
+      <p>任何端点都可能返回的临时性和限流错误。</p>
+      <table class="err-table">
+        <thead><tr><th>错误码</th><th>含义</th><th>修复办法</th></tr></thead>
+        <tbody>
+          <tr><td>server_error / cloud_error</td><td>临时性服务器问题。</td><td>重试；若持续出现，联系<a href="/support.html">支持</a>。</td></tr>
+          <tr><td>too_many_inflight</td><td>同时进行的并发请求过多。</td><td>退避后重试。</td></tr>
+          <tr><td>rate_limited</td><td>你发送请求的速度太快。</td><td>放慢速度。</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box">
+        <h3>还是卡住了？</h3>
+        <p>针对 schema 和 RLS 问题运行 <a href="/zh/tutorials/scan-your-backend-with-advisors.html">advisors</a>，在控制台查看后端的 <strong>Logs</strong> 找到底层错误，并参见<a href="/support.html">支持</a>。</p>
+      </div>
+
+      <div class="tutorial-next">
+        <h2>接下来</h2>
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/security.html">
+            <span class="card-eyebrow">安全</span>
+            <h3>行级安全</h3>
+            <p>为什么大多数 <code>forbidden</code> 错误都能追溯到缺失的策略——以及如何写出正确的那一条。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">参考</span>
+            <h3>API 参考</h3>
+            <p>完整的 SDK 接口和每一个 REST 端点，附请求与响应结构。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/">
+            <span class="card-eyebrow">从这里开始</span>
+            <h3>LingCode Cloud</h3>
+            <p>回到文档首页——五分钟上手以及每一份产品指南。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

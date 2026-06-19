@@ -1,0 +1,57 @@
+# queries.yaml — custom postgres_exporter queries (PG_EXPORTER_EXTEND_QUERY_PATH).
+# Built-in collectors already cover connections, replication (pg_stat_replication),
+# bgwriter, locks, etc. These add what they don't: a pg_stat_statements summary
+# (top slow statements) and replication-slot retained-WAL (for the
+# max_slot_wal_keep_size guard).
+
+pg_stat_statements_top:
+  query: |
+    SELECT
+      queryid::text AS queryid,
+      left(regexp_replace(query, '\s+', ' ', 'g'), 80) AS query,
+      calls,
+      total_exec_time AS total_ms,
+      mean_exec_time AS mean_ms,
+      rows
+    FROM pg_stat_statements
+    ORDER BY total_exec_time DESC
+    LIMIT 25
+  master: true
+  metrics:
+    - queryid:
+        usage: "LABEL"
+        description: "Statement id"
+    - query:
+        usage: "LABEL"
+        description: "Normalized statement (truncated)"
+    - calls:
+        usage: "COUNTER"
+        description: "Number of times executed"
+    - total_ms:
+        usage: "COUNTER"
+        description: "Total execution time in ms"
+    - mean_ms:
+        usage: "GAUGE"
+        description: "Mean execution time in ms"
+    - rows:
+        usage: "COUNTER"
+        description: "Total rows retrieved or affected"
+
+pg_replication_slot_retained:
+  query: |
+    SELECT
+      slot_name,
+      active::int AS active,
+      coalesce(pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn), 0) AS retained_bytes
+    FROM pg_replication_slots
+  master: true
+  metrics:
+    - slot_name:
+        usage: "LABEL"
+        description: "Replication slot name"
+    - active:
+        usage: "GAUGE"
+        description: "1 if a standby is consuming the slot"
+    - retained_bytes:
+        usage: "GAUGE"
+        description: "WAL bytes the slot is pinning on the primary"

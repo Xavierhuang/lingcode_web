@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect your domain to a server with DNS — LingCode Tutorials</title>
+  <meta name="description" content="How DNS records actually map a name to a server. A records, CNAMEs, propagation, and the three checks that tell you whether it worked.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-domain-to-server-with-dns.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/connect-domain-to-server-with-dns.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-domain-to-server-with-dns.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/connect-domain-to-server-with-dns.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Connect your domain to a server with DNS",
+  "description": "You have a domain. You have a server (or a host) with an IP address. DNS is the small set of records that makes \"type the name, reach the IP\" actually work. Three record types do nearly everything; understanding them once is the difference between \"it just doesn't work\" and \"I kn",
+  "url": "https://lingcode.dev/tutorials/connect-domain-to-server-with-dns.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/connect-domain-to-server-with-dns.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Connect your domain to a server with DNS"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Connect your domain to a server with DNS",
+      "item": "https://lingcode.dev/tutorials/connect-domain-to-server-with-dns.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/connect-domain-to-server-with-dns.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Connect your domain to a server with DNS</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Connect your domain to a server with DNS</h1>
+      <p class="intro">You have a domain. You have a server (or a host) with an IP address. DNS is the small set of records that makes "type the name, reach the IP" actually work. Three record types do nearly everything; understanding them once is the difference between "it just doesn't work" and "I know what's broken."</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The reason DNS feels like a black box is that nothing about it is visible while it's working. You type a URL, the page loads. You type a URL the day after a config change, sometimes the page loads, sometimes it doesn't, and the difference depends on which server in which city happened to answer your computer's lookup. None of that is intuitive. The mental model that's missing — and the only one that matters — is what DNS actually <em>does</em>.</p>
+      <p>DNS is a globally-distributed lookup table. Names go in, answers come out. Your domain — say, <code>mybrand.com</code> — has an entry that says "when someone asks for me, route them to IP X." Subdomains (<code>www.mybrand.com</code>, <code>api.mybrand.com</code>) can have their own entries with different answers. The records that hold these answers come in a handful of types. You write them at your registrar (or wherever you delegated DNS to). Then you wait for the world's DNS caches to catch up — that's "propagation," and it's the part that makes the system feel slow.</p>
+      <p>This tutorial covers the three record types that handle 95% of real domains, how to set them up correctly the first time, and the three checks that tell you whether DNS is actually working before you spend an hour debugging an app that's fine.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The three record types you'll touch: A, CNAME, and (less often) AAAA</li>
+        <li>How to point your root domain (<code>mybrand.com</code>) vs. a subdomain</li>
+        <li>What TTLs do and how to set them sensibly</li>
+        <li>Propagation: what's happening, how long it takes, when to worry</li>
+        <li>Three commands that verify DNS is working — before you blame the app</li>
+      </ul>
+
+      <h2>Step 1: Know what kind of address your server has</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>IP address or hostname — different records</h3>
+          <p>Before opening the DNS dashboard, know what your destination looks like:</p>
+          <ul>
+            <li><strong>An IPv4 address</strong> like <code>198.51.100.42</code> — common for VPSs (DigitalOcean droplet, Hetzner server, etc.). Use an <strong>A record</strong>.</li>
+            <li><strong>An IPv6 address</strong> like <code>2001:db8::1</code> — increasingly common; some hosts are IPv6-only. Use an <strong>AAAA record</strong>.</li>
+            <li><strong>A hostname</strong> like <code>my-app.vercel.app</code> — what platforms-as-a-service give you. Use a <strong>CNAME record</strong>.</li>
+          </ul>
+          <p>The rule: numeric address gets an A (or AAAA); a name gets a CNAME. Mixing them up is the #1 setup error.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Point the root domain</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>The "apex" — <code>mybrand.com</code> with no subdomain</h3>
+          <p>At your DNS provider (your registrar's panel, or wherever you've delegated DNS):</p>
+          <ul>
+            <li><strong>Pointing to an IP:</strong> Add an A record. Name: <code>@</code> (or leave blank, meaning the root). Value: your server's IP. TTL: 3600 (one hour) is fine.</li>
+            <li><strong>Pointing to a hostname:</strong> Technically, classic DNS doesn't allow a CNAME at the apex. Modern providers (<a href="/tutorials/buy-a-domain-from-cloudflare.html">Cloudflare</a>, Route 53) work around this with "CNAME flattening" or "ALIAS" records. Use whatever your host calls it — at Cloudflare, just add a CNAME at <code>@</code> and it works.</li>
+          </ul>
+          <p>This is the record that makes typing <code>mybrand.com</code> reach your site.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Point the www subdomain</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Most sites want both <code>mybrand.com</code> and <code>www.mybrand.com</code> to work</h3>
+          <p>Add a record for <code>www</code>:</p>
+          <ul>
+            <li><strong>If your root is an A record:</strong> add a CNAME with name <code>www</code>, value <code>mybrand.com</code>. This makes <code>www</code> follow the root.</li>
+            <li><strong>If your root is a CNAME / ALIAS:</strong> just add a second CNAME with name <code>www</code>, same target as the root.</li>
+            <li><strong>Or:</strong> set both root and www to point at the same destination directly. Either works; the indirection-via-CNAME just means you only update one record when the destination changes.</li>
+          </ul>
+          <p>Pick a canonical form ("we want everyone on <code>mybrand.com</code>") and have your host redirect the other to it. <a href="/tutorials/magic-deploy-a-website.html">Magic Deploy</a> and most modern hosts do this automatically.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: TTL — what it actually does</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The "time to live" on a record</h3>
+          <p>TTL is how long, in seconds, DNS servers around the world are allowed to cache your record before re-checking. The default (often 3600 = 1 hour) is fine for steady-state. Two practical rules:</p>
+          <ul>
+            <li><strong>Lower the TTL before a change.</strong> A day or two before you plan to update a record, drop TTL to 300 (five minutes). The world's caches will hold the old value for less time when you actually switch.</li>
+            <li><strong>Raise the TTL after you're stable.</strong> Once the new record has been in place for a day, raise TTL back to 3600 or higher. Lower TTL means more DNS queries, which is fine but not free.</li>
+          </ul>
+          <p>For low-stakes domains, leave it at default and don't think about it.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Propagation — what's actually happening</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>It's not magic; it's expired caches</h3>
+          <p>When you publish a new DNS record, the authoritative server (your registrar / DNS provider) has it instantly. But every DNS resolver in the world — your ISP's resolver, public resolvers like 8.8.8.8 and 1.1.1.1, your laptop's local cache — is holding some cached answer with a TTL. Until that TTL expires, those resolvers happily serve the cached (often old) answer instead of asking again.</p>
+          <p>"Propagation" is the wait for all those caches to expire. In practice:</p>
+          <ul>
+            <li><strong>Most resolvers update in minutes</strong> if TTL was low.</li>
+            <li><strong>Some take hours</strong> regardless of TTL (some ISP resolvers ignore TTL and cache aggressively).</li>
+            <li><strong>"Up to 48 hours" is real but rare.</strong> If something hasn't propagated in 6 hours, it's probably a config error, not slow propagation.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 6: Verify before you debug</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Three commands; one truth</h3>
+          <p>Before suspecting the app, verify DNS itself:</p>
+          <pre><code># 1. What does your local resolver see right now?
+dig mybrand.com +short
+# Expected: your IP. If empty or wrong, the record isn't published or hasn't propagated.
+
+# 2. What does a different resolver see?
+dig @1.1.1.1 mybrand.com +short
+# Asks Cloudflare's public resolver (1.1.1.1) instead of your local one.
+# Different resolver = different cache state. If this agrees with #1,
+# both resolvers updated. If it differs, your local cache is just stale —
+# that's a wait, not a bug. For the truest view (no caches anywhere):
+#     dig +trace mybrand.com
+# walks from the root nameservers down, asking each fresh. Slowest, most honest.
+
+# 3. Are you actually reaching the server?
+curl -I https://mybrand.com
+# Expected: an HTTP response. If you get connection refused or timeout,
+# the IP is wrong, the server isn't listening, or the firewall is blocking.</code></pre>
+          <p>The pattern: if #1 differs from #2, propagation is still happening — wait. If #2 is wrong, the record at your DNS provider is wrong — fix the record. If both are right but #3 fails, DNS is fine; the problem is at the server.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Online checkers (whatsmydns.net, dnschecker.org) show propagation status across many global resolvers.</strong> Useful when "it works for me but my friend says it's broken" — you'll see which regions have updated and which haven't.
+      </div>
+
+      <h2>Step 7: HTTPS — the part the DNS doesn't do</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>DNS routes traffic; TLS encrypts it</h3>
+          <p>Once DNS works, <code>http://mybrand.com</code> reaches your server. <code>https://mybrand.com</code> doesn't, until you set up a TLS certificate. This is a separate step, usually handled by:</p>
+          <ul>
+            <li><strong>Your host</strong> (Vercel, Netlify, Cloudflare Pages) — automatic. Add the domain in their dashboard; they issue a cert. <a href="/tutorials/magic-deploy-a-website.html">Magic Deploy</a> can drive this from the chat panel.</li>
+            <li><strong>Cloudflare's proxy</strong> if your DNS is at Cloudflare and you turn on the orange-cloud icon — automatic.</li>
+            <li><strong>Let's Encrypt + certbot</strong> on your own server — one command on most setups: <code>sudo certbot --nginx -d mybrand.com -d www.mybrand.com --redirect</code>. The <code>--redirect</code> flag rewrites HTTP to HTTPS in the nginx config; certbot also installs a cron job for automatic renewal every 90 days.</li>
+          </ul>
+          <p>Never run a public site without HTTPS. Modern browsers warn loudly; everyone expects it; the cost is zero. The TLS cert is the second layer after DNS, and the two together make the site reachable safely.</p>
+        </div>
+      </div>
+
+      <h2>Step 8: Other records you'll meet eventually</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>A and CNAME are 95%; the rest matter when they matter</h3>
+          <p>None of these are required just to serve a website, but you'll meet them eventually:</p>
+          <ul>
+            <li><strong>AAAA record</strong> — the IPv6 counterpart of A. If your host gives you both an IPv4 and an IPv6 address, publish both: visitors on IPv6-only networks (some mobile carriers, some corporate networks) only resolve AAAA, and visitors on IPv4 only resolve A. Dual-stack is more resilient and free.</li>
+            <li><strong>MX records</strong> — where email for your domain goes. If you want <code>you@mybrand.com</code> to actually receive mail, you point MX records at your email host (Fastmail, Google Workspace, Proton, etc.). The host gives you the exact values — name, priority, target — and you paste them in. MX is independent of A/CNAME, so receiving email at a domain doesn't affect where the website lives.</li>
+            <li><strong>TXT records</strong> — arbitrary text. Two real uses: <strong>SPF / DKIM / DMARC</strong> (anti-spoofing for your email; your email host generates the values, you paste them in), and <strong>domain verification</strong> (<em>"paste this TXT to prove you own the domain"</em> — Vercel, Search Console, Stripe, every host that issues TLS or wants to know you control a domain does this).</li>
+          </ul>
+          <p>The rule of thumb: A/AAAA/CNAME route traffic; MX routes email; TXT proves things. Knowing which type a problem belongs to is half the debugging.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Watch the trailing dot.</strong> Some DNS dashboards display records with a trailing dot (<code>example.com.</code>), some without. They mean the same thing in DNS-land. When you copy/paste a CNAME target between providers, the dot may or may not need to be there; check the provider's docs if a CNAME record looks right but doesn't resolve.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/buy-a-domain-from-cloudflare.html" class="tutorial-next-card">
+            <h3>Buy a domain from Cloudflare Registrar</h3>
+            <p>The registrar that makes DNS management easiest after registration</p>
+          </a>
+          <a href="/tutorials/buy-a-domain-from-namecheap.html" class="tutorial-next-card">
+            <h3>Buy a domain from Namecheap</h3>
+            <p>Flexible registrar that lets you set any nameservers</p>
+          </a>
+          <a href="/tutorials/magic-deploy-a-website.html" class="tutorial-next-card">
+            <h3>Magic Deploy a website</h3>
+            <p>If your "server" is actually a host, Magic Deploy handles half this dance for you</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

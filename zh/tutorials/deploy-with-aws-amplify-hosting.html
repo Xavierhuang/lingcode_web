@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 AWS Amplify Hosting 部署 — LingCode 教程</title>
+  <meta name="description" content="Amplify Hosting 是 AWS 的 git 推送即部署服务。连接仓库、配置构建设置，即可完成部署。它是 AWS 上的 Vercel 替代方案，附带真实的利弊权衡分析。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-with-aws-amplify-hosting.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-with-aws-amplify-hosting.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-with-aws-amplify-hosting.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/deploy-with-aws-amplify-hosting.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 AWS Amplify Hosting 部署",
+  "description": "Amplify Hosting 是 AWS 的"连接 git 仓库即可获得已部署站点"服务。它封装了 S3、CloudFront、ACM 和 CodeBuild——与手动配置所用的基础组件相同，但打包成了单一控制台。结果比原始 S3 + CloudFront 更接近 Vercel，同时带有 AWS 的账单和集成生态。",
+  "url": "https://lingcode.dev/zh/tutorials/deploy-with-aws-amplify-hosting.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/deploy-with-aws-amplify-hosting.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 AWS Amplify Hosting 部署"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "使用 AWS Amplify Hosting 部署",
+      "item": "https://lingcode.dev/zh/tutorials/deploy-with-aws-amplify-hosting.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/deploy-with-aws-amplify-hosting.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>使用 AWS Amplify Hosting 部署</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 AWS Amplify Hosting 部署</h1>
+      <p class="intro">Amplify Hosting 是 AWS 的"连接 git 仓库即可获得已部署站点"服务。它封装了 S3、CloudFront、ACM 和 CodeBuild——与手动配置所用的基础组件相同，但打包成了单一控制台。结果比<a href="/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">原始 S3 + CloudFront</a> 更接近 Vercel，同时带有 AWS 的账单和相应的生态集成。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>"Amplify" 这个名字指代两个不同的东西，常被混淆。<strong>Amplify Hosting</strong> 是本教程的主角：一个 git 驱动的 Web 托管服务，它构建你的站点、部署到 CloudFront 支持的 CDN、提供免费 TLS 证书，并在每次推送时自动重新部署。<strong>Amplify Studio（以及 Amplify 库）</strong>则是另一个产品——一个完整的后端平台，包含生成式 DataStore API、认证流程和 React 组件。两者有关联（Amplify Hosting 可以与 Amplify Studio 配合使用），但 Amplify Hosting 单独也能与任何后端或无后端场景配合工作。本教程只讲 Hosting 部分。</p>
+      <p>说实话：Amplify Hosting 是 AWS 注意到 Vercel 和 Netlify 后的产物。它做的是同样的事——git 连接、分支部署、环境变量、预览 URL、自定义域名。用户体验明显落后于 Vercel；构建日志密密麻麻；CLI 虽然存在，但大多数操作都假设你用控制台。你换来的是：一切都在你的 AWS 账户里——同样的 IAM、同样的账单、同样的 VPC（如果需要的话）、同样的支持合同。对于有"必须在 AWS 上"政策的团队来说，Amplify Hosting 是阻力最小的路径。</p>
+      <p>本教程将介绍"把仓库连接到上线 URL"的完整流程，指出 Amplify 的默认设置会让你意外的地方，并展示第二次部署（也就是你日后反复经历的部署循环）是什么样的。我们还会讲清楚何时应该完全跳过 Amplify Hosting——有几种情况下，手动 S3 + CloudFront 管道反而更干净。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>Amplify Hosting 封装了什么（以及没有封装什么）</li>
+        <li>连接 GitHub / Bitbucket / GitLab / CodeCommit 仓库</li>
+        <li>构建设置：自动检测 vs <code>amplify.yml</code></li>
+        <li>分支部署与预览 URL</li>
+        <li>借助内置 <a href="/zh/tutorials/use-route-53-for-your-domain.html">Route 53</a> 接线配置自定义域名</li>
+        <li>何时手动 S3 + CloudFront 是更好的选择</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前提条件：</strong>一个 AWS 账户、一个包含可构建的静态或 SSR 站点的 git 仓库（Next.js、Vite、Astro、Hugo、纯 HTML 均可——Amplify 能自动检测大多数框架），以及一个自定义域名（可选——Amplify 会提供免费的 <code>*.amplifyapp.com</code> URL）。
+      </div>
+
+      <h2>第 1 步：先确定构建框架</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>自动检测能用，但提前心里有数会更顺畅</h3>
+          <p>Amplify 会在首次连接时尝试检测你的框架。对于常见框架，无需干预即可正常工作——Next.js、Nuxt、Vite、Create React App、Hugo、纯 HTML 都没问题。对于不太常见的框架（SvelteKit edge runtime、Remix、带适配器的 Astro），自动检测选取的默认值未必符合你的配置。</p>
+          <p>连接之前，请确认以下几点：</p>
+          <ul>
+            <li>你的构建命令（<code>npm run build</code>、<code>pnpm build</code>、<code>hugo</code> 等）。</li>
+            <li>输出目录（<code>./dist</code>、<code>./out</code>、<code>./public</code>、<code>./.next</code>）。</li>
+            <li>是否需要服务端渲染（Amplify 支持 Next.js 和 Nuxt 的 SSR；静态导出在所有框架下都更简单）。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第 2 步：连接仓库</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>GitHub 是最顺畅的路径，其他选项也能用</h3>
+          <p>在 AWS 控制台，打开 Amplify → <strong>创建新应用</strong> → <strong>托管 Web 应用</strong>。选择你的 git 提供商：</p>
+          <ul>
+            <li><strong>GitHub：</strong>跳转到 GitHub 进行 OAuth 授权；你授予 Amplify GitHub App 访问特定仓库（或所有仓库）的权限。流程最为完善。</li>
+            <li><strong>Bitbucket / GitLab：</strong>同样通过 OAuth；可以正常工作。</li>
+            <li><strong>AWS CodeCommit：</strong>AWS 自有的 git 托管——使用 IAM，无需 OAuth。只有在你已经在用 CodeCommit 的情况下才值得选；否则 GitHub 更快。</li>
+          </ul>
+          <p>授权后，选择仓库和分支（生产环境通常是 <code>main</code>）。点击"下一步"。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：检查或覆盖构建设置</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Amplify 为你生成的 <code>amplify.yml</code> 文件</h3>
+          <p>Amplify 会展示一个描述构建过程的 YAML 文件。对于自动检测到的 Vite 项目，它看起来像这样：</p>
+          <pre><code>version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*</code></pre>
+          <p>如果检测结果看起来正确，直接接受并继续。如果输出目录有误（最常见的错误——Amplify 猜测是 <code>dist</code>，但你的实际是 <code>build</code>，或者反过来），在这里修改 <code>baseDirectory</code>。你也可以将此文件以 <code>amplify.yml</code> 的形式提交到仓库根目录，以便将构建配置纳入源码管理。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>环境变量放这里，不要放仓库里。</strong>在同一个配置页面，展开<strong>高级设置</strong> → <strong>环境变量</strong>。添加 <code>API_KEY</code>、<code>DATABASE_URL</code> 等变量。它们在构建时（以及对于 SSR 应用，在请求时）都可以使用。永远不要把密钥写进 <code>amplify.yml</code>。
+      </div>
+
+      <h2>第 4 步：首次部署</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>五个阶段，逐一变绿</h3>
+          <p>点击<strong>保存并部署</strong>。Amplify 会执行以下流水线：</p>
+          <ol>
+            <li><strong>Provision（预置）</strong>——启动一个 CodeBuild 容器。</li>
+            <li><strong>Build（构建）</strong>——运行你的构建命令。</li>
+            <li><strong>Deploy（部署）</strong>——将构建产物上传到 CloudFront 支持的 CDN。</li>
+            <li><strong>Verify（验证）</strong>——快速检查部署是否已上线。</li>
+            <li><strong>Test（测试）</strong>——如果已配置则运行端到端测试（默认跳过）。</li>
+          </ol>
+          <p>耗时：小项目 2–5 分钟，依赖包较多时更长。当 Deploy 变绿后，Amplify 会显示上线 URL——<code>https://main.d1234abcde.amplifyapp.com</code>。点击它，你的站点应该可以正常访问。这个 URL 已启用 HTTPS，由 CloudFront 边缘节点缓存，在你绑定自定义域名之前就已经可以用了。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：绑定自定义域名</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>DNS 在 Route 53 则一键搞定；否则需要手动添加 CNAME</h3>
+          <p>App → <strong>域名管理</strong> → <strong>添加域名</strong>。输入 <code>mybrand.com</code>。Amplify 会展示子域名映射关系：</p>
+          <ul>
+            <li><code>mybrand.com</code> → main 分支</li>
+            <li><code>www.mybrand.com</code> → main 分支（可设置重定向到顶级域名，或反过来——选择你的规范域名）</li>
+          </ul>
+          <p>点击<strong>保存</strong>。Amplify 会申请 ACM 证书（在 <code>us-east-1</code> 内部处理，你无需操心）并请求 DNS 验证：</p>
+          <ul>
+            <li><strong>如果 DNS 在同一账户的 Route 53 中：</strong>Amplify 会自动将验证记录写入你的托管区域。等待 5–15 分钟后，域名状态显示为"活跃"。</li>
+            <li><strong>如果 DNS 在其他地方：</strong>Amplify 会展示需要在你的 DNS 提供商处添加的 CNAME 记录。添加完成后等待验证，再回到 Amplify 控制台确认。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第 6 步：分支部署与预览 URL</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>一个分支对应一个 URL</h3>
+          <p>在应用概览页，点击<strong>连接分支</strong>。选择一个功能分支——Amplify 会在 <code>https://&lt;branch-name&gt;.d1234abcde.amplifyapp.com</code> 创建一个独立的部署。向该分支推送代码会触发预览部署，main 分支不受影响。</p>
+          <p>基于 PR 的预览：<strong>应用设置</strong> → <strong>预览</strong> → 启用。Amplify 会监听连接的 GitHub/GitLab 仓库中的未关闭 PR，并为每个 PR 创建临时预览 URL。便于代码评审；PR 关闭后 URL 自动消失。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：日常部署循环</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3><code>git push</code> 就是部署命令</h3>
+          <p>就这么简单。推送到 <code>main</code> → Amplify 构建 → 部署 → 使 CloudFront 缓存失效 → 几分钟内你就能在 <code>mybrand.com</code> 看到新版本。CLI 虽然存在（<code>amplify push</code> 用于 Amplify Studio 侧；<code>amplify pull</code> 用于同步配置），但仅做托管的话你很少会用到它。</p>
+          <p>构建日志在 App → 分支 → 构建编号处查看。构建失败默认会发邮件通知；如需更丰富的告警，可通过<strong>应用设置</strong> → <strong>通知</strong>接入 Slack / Discord。</p>
+        </div>
+      </div>
+
+      <h2>何时 Amplify Hosting 不是正确选择</h2>
+      <p><strong>你原本没有在用 AWS。</strong>Vercel 和 Netlify 的用户体验明显更好，构建冷启动更快（Amplify 的 CodeBuild 容器预热较慢），免费套餐也更友好。Amplify 唯一的优势是 AWS 账户集成——没有这个前提，这笔交易就不划算。</p>
+      <p><strong>你的项目有 Amplify CodeBuild 镜像支持不好的特殊构建步骤。</strong>CodeBuild Linux 镜像是通用型的，但并不全面。如果你的构建需要系统级依赖、自定义 <code>apt-get</code> 包，或者 Amplify 尚未更新支持的特定 Node 版本，你会花大量时间与镜像较劲。使用自有 CI 的<a href="/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html">手动 S3 + CloudFront</a> 方案可以完全掌控构建环境。</p>
+      <p><strong>每月不足 1 美元的静态站点。</strong>Amplify Hosting 从第一分钟构建开始计费——通常为每构建分钟 1 美分，加上 CDN 数据传输和请求费用。部署频率低的静态站点在原始 S3 + CloudFront 上会更便宜，因为省去了构建分钟费用。大约以每月 50 次部署为分界线；低于这个频率，手动 S3 更划算。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html" class="tutorial-next-card">
+            <h3>将静态站点部署到 S3 + CloudFront</h3>
+            <p>本教程的手动版本——控制更多，构建自动化更少</p>
+          </a>
+          <a href="/zh/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-next-card">
+            <h3>在 Lightsail 上运行 Node API</h3>
+            <p>为你刚部署的站点添加真实后端的最简路径</p>
+          </a>
+          <a href="/zh/tutorials/use-route-53-for-your-domain.html" class="tutorial-next-card">
+            <h3>使用 Route 53 管理你的域名</h3>
+            <p>让第 5 步的自定义域名流程自动完成验证</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五研讨会</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">产品定位</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>将 lingcode serve 用作后端服务 — LingCode 教程</title>
+  <meta name="description" content="lingcode serve 命令将与本地聊天面板相同的 agent 循环作为 HTTP API 开放，并支持 Server-Sent Events 流式传输。你可以在此基础上构建自己的 UI、机器人和脚本。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/run-lingcode-serve-as-backend.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/run-lingcode-serve-as-backend.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/run-lingcode-serve-as-backend.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/run-lingcode-serve-as-backend.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "将 lingcode serve 用作后端服务",
+  "description": "LingCode 为自身聊天面板所做的一切——agent 循环、工具调度、流式输出——都可以作为本地 HTTP API 使用。运行 lingcode serve，你就拥有了一个可以在上面构建自己的 UI 和机器人的后端服务。",
+  "url": "https://lingcode.dev/zh/tutorials/run-lingcode-serve-as-backend.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/run-lingcode-serve-as-backend.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "将 lingcode serve 用作后端服务"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "将 lingcode serve 用作后端服务",
+      "item": "https://lingcode.dev/zh/tutorials/run-lingcode-serve-as-backend.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/run-lingcode-serve-as-backend.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">原生 Mac IDE</a>
+      <span>/</span>
+      <span>将 lingcode serve 用作后端服务</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-advanced">● 高级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>将 lingcode serve 用作后端服务</h1>
+      <p class="intro">LingCode 为自身聊天面板所做的一切——agent 循环、工具调度、流式输出——都可以作为本地 HTTP API 使用。运行 <code>lingcode serve</code>，你就拥有了一个可以在上面构建自己的 UI 和机器人的后端服务。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>当你使用 agent 一段时间后，你会开始发现那些希望 agent 能够触及的地方：一个能回答代码库问题的 Slack 机器人、一个接受提示并将回答输送到剪贴板的 Raycast 扩展、一个让朋友针对特定任务访问 agent 的小网页，或者一个让 agent 审阅 PR 的 CI 步骤。agent 很强大，它理应出现在你需要的每一个地方。</p>
+      <p>上述大多数项目并不需要一个全新的 agent 循环。它们需要的是一种<em>调用</em>已有 agent 循环的方式——带鉴权、支持流式传输、像其他服务一样通过网络通信。这正是 <code>lingcode serve</code> 的用途。Swift CLI 将 Mac 应用和 REPL 所使用的三个独立循环——Claude（Anthropic SDK）、DeepSeek 原生、OpenAI 兼容——以 Server-Sent Events API 的形式暴露出来，通过 bearer token 鉴权，监听本地回环地址。</p>
+      <p>选择在本地运行而非作为托管服务的意义在于凭据边界：你的 API 密钥留在 Keychain 里，文件访问权限留在你的机器上。<code>lingcode serve</code> 不会改变这些，它只是让你的其他工具能够通过 HTTP 调用 agent，而无需再生成子进程。本教程涵盖：启动服务器、用 curl 与之通信，以及将本地后端打磨成真正可用产品时需要考虑的关键问题。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>如何启动服务器，以及 bearer token 存放在哪里</li>
+        <li><code>POST /v1/agent/ask</code> 的请求格式及其 SSE 流结构</li>
+        <li>为什么默认配置只允许 localhost 访问，且不可妥协</li>
+        <li>当调用来自不同进程时，密钥与 Keychain 的交互方式</li>
+        <li>两种集成模式：按用户（每个开发者运行自己的实例）vs. 共享（单一服务器，多个客户端）</li>
+      </ul>
+
+      <h2>第 1 步：启动服务器</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>一条命令，前台或后台均可</h3>
+          <p>假设已<a href="/zh/tutorials/install-and-use-the-lingcode-cli.html">安装 CLI</a>，运行以下命令启动：</p>
+          <pre><code>lingcode serve</code></pre>
+          <p>服务器启动后会打印监听地址（本地端口），并读取 <code>~/.lingcode/server.token</code>——若该文件不存在则自动生成。token 文件权限为 <code>chmod 600</code>，请像对待 SSH 密钥一样保管它。可使用 <code>--port &lt;N&gt;</code> 覆盖端口，使用 <code>--token-file &lt;path&gt;</code> 指定其他路径的 token 文件。</p>
+          <p>服务器基于 <code>NWListener</code>——Apple 的原生网络栈，而非第三方 HTTP 框架。默认绑定到 <code>127.0.0.1</code>，在没有显式标志的情况下，它会拒绝绑定到任何其他网络接口，这是有意为之的设计。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：用 curl 与服务器通信</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>一个 POST 请求，一个流式响应</h3>
+          <p>主要端点为 <code>POST /v1/agent/ask</code>。最简请求示例：</p>
+          <pre><code>TOKEN=$(cat ~/.lingcode/server.token)
+curl -N -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"prompt":"What does package.json declare?","provider":"claude"}' \
+     http://127.0.0.1:&lt;port&gt;/v1/agent/ask</code></pre>
+          <p>响应是一个 Server-Sent Events 流。每一行 <code>data:</code> 对应一个事件——文本增量、工具调用、工具结果、最终助手消息。你的客户端读取流后，可以按照自己的方式渲染这些事件。其格式与 Mac 应用聊天面板内部渲染的格式一致。</p>
+          <p><code>-N</code> 标志告诉 curl 不要缓冲——你希望在流到达时即时接收，而不是等到全部完成后再处理。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：SSE 事件类型</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>你的客户端需要处理的事件</h3>
+          <p>流会发出少量几种事件类型：</p>
+          <ul>
+            <li><strong>text_delta</strong> — 助手文本响应的片段。将它们拼接起来即可渲染完整消息。</li>
+            <li><strong>tool_call</strong> — agent 决定调用某个工具，包含工具名称和参数。客户端可在 UI 中显示为"正在用 Y 调用 X……"。</li>
+            <li><strong>tool_result</strong> — 工具的返回值。通常为透明展示而包含，客户端不一定需要处理。</li>
+            <li><strong>message_stop</strong> — 助手本轮对话结束，此请求的流就此关闭。</li>
+            <li><strong>error</strong> — 出现错误，message 字段描述失败原因；流随后关闭。</li>
+          </ul>
+          <p>对于最简 UI，你可以忽略除 <code>text_delta</code> 和 <code>message_stop</code> 之外的所有事件。若要打造更丰富的界面，可内联渲染工具调用。完整格式请参阅服务器在 <code>/openapi.json</code> 暴露的 OpenAPI 规范。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：不要绑定到 0.0.0.0</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>bearer token 的安全强度不足以面向公网</h3>
+          <p>默认绑定到 <code>127.0.0.1</code> 是有意为之的。<code>~/.lingcode/server.token</code> 中的 bearer token 足以约束<em>本地</em>进程——你的工具与你的服务器通信，机器上的其他用户无法访问。但它并非为抵御公网威胁而设计：服务器不做速率限制、不在鉴权失败后锁定、也不拒绝异常格式的请求。</p>
+          <p>如果你需要将 agent 暴露到网络上，请通过真正的反向代理来做，配备 TLS、IP 白名单和速率限制。或者，更实用的做法是：让<em>每位用户</em>在自己的机器上运行 <code>lingcode serve</code>，然后让共享工具在每位开发者的机器上对 <code>localhost</code> 发起调用。这样可以保持 API 密钥的按用户隔离，将攻击面降到最低。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>不要将 token 提交到公开仓库。</strong>请像对待 API 密钥一样保管它。如果不小心提交了，删除 <code>~/.lingcode/server.token</code> 并重启 <code>lingcode serve</code> 即可重新生成一个新 token。
+      </div>
+
+      <h2>第 5 步：密钥的流转方式</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Keychain 是唯一来源</h3>
+          <p>当你的客户端向 <code>/v1/agent/ask</code> 发送带有 <code>provider:"claude"</code> 的请求时，服务器不会从请求中读取 API 密钥——它会从你的 macOS Keychain 中提取。客户端只需说"使用 Claude"，服务器负责完成凭据处理。</p>
+          <p>这意味着：bearer token 用于鉴权<em>请求</em>，而 API 密钥归属于<em>运行 lingcode serve 的账户</em>。如果你和队友都想用自己的密钥访问服务器，就各自运行自己的服务器实例。这里没有密钥委托机制——你无法把 token 交给队友并让它使用他们的 Claude 密钥。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：两种集成模式</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>按用户 vs. 共享</h3>
+          <p><strong>按用户。</strong>每位开发者在自己的机器上运行 <code>lingcode serve</code>。共享工具（Slack 机器人、编辑器扩展）按开发者配置，指向各自的 localhost。每位开发者的 token 归其本人所有，用量归因准确。适合个人生产力工具。</p>
+          <p><strong>共享。</strong>在团队服务器上运行一个 <code>lingcode serve</code>，通过真正的反向代理提供 TLS 和正式鉴权。密钥归属于服务账户，所有用量汇总到该账户。适合团队共享机器人和 CI 集成，费用与速率限制集中管理。</p>
+          <p>根据使用场景选择合适的模式。同一个服务器二进制文件支持两种模式——区别在于部署方式，而非代码本身。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>将其作为 launchd 服务运行：</strong>如果你发现自己每天早上都要手动启动 <code>lingcode serve</code>，不妨编写一个在登录时自动启动的 launchd plist。<code>lingcode serve --background</code> 在完成守护进程分离后退出；配合 launchd 的 keepalive 选项可实现高可用。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/install-and-use-the-lingcode-cli.html" class="tutorial-next-card">
+            <h3>安装并使用 lingcode CLI</h3>
+            <p>更广泛的 CLI 功能面；serve 只是其中一种模式</p>
+          </a>
+          <a href="/zh/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>连接 MCP 服务器</h3>
+            <p>"为 agent 扩展能力"的另一面——接入外部工具，而非对外暴露 API</p>
+          </a>
+          <a href="/zh/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>权限模式</h3>
+            <p>在服务器场景中谨慎选择 tty/deny-all/yolo——无人值守模式下，错误的设置影响更大</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和追求真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/zh/features.html">Mac IDE</a></li>
+        <li><a href="/zh/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/zh/docs.html">文档</a></li>
+        <li><a href="/zh/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · 为发布而生</span>
+    <span>原生 · 快速 · 诚实</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

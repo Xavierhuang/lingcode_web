@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Does LingCode have a Hermes-style self-improving AI agent? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="LingCode brings the Hermes Agent learning loop — persistent memory, agent-proposed skills, and full-text session search — to a native macOS IDE, across multiple AI providers, with a human review step for new skills.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/hermes-style-self-improving-agent.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/hermes-style-self-improving-agent.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/hermes-style-self-improving-agent.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-02T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-02T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/hermes-style-self-improving-agent.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Hermes-style self-improving agent in LingCode",
+  "description": "How LingCode implements the Hermes Agent learning loop — persistent memory, agent-proposed skills, and full-text session search — natively, across AI providers.",
+  "url": "https://lingcode.dev/tutorials/hermes-style-self-improving-agent.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-02",
+  "dateModified": "2026-06-02",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/tutorials/hermes-style-self-improving-agent.html" },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Does LingCode have a Hermes-style self-improving AI agent?"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Search", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "Native Mac IDE", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Hermes-style self-improving agent", "item": "https://lingcode.dev/tutorials/hermes-style-self-improving-agent.html" }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does LingCode use the Hermes Agent codebase?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. LingCode independently implements the same learning-loop concepts — persistent memory, skill creation, and session search — as native tools. Its skill format is compatible with the agentskills.io convention Hermes uses, so skills are portable." }
+    },
+    {
+      "@type": "Question",
+      "name": "Where does LingCode store agent memory?",
+      "acceptedAnswer": { "@type": "Answer", "text": "In a per-project memory file and a cross-project user memory file on your machine, written through a dedicated memory_save tool so the IDE shows the save and applies size limits — rather than the agent free-editing files." }
+    },
+    {
+      "@type": "Question",
+      "name": "Do agent-created skills run automatically?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. LingCode's skill_propose tool writes a draft you review and promote before it activates. This human-in-the-loop step is a deliberate safety difference from fully automatic skill generation." }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the learning loop work with providers other than Claude?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. The memory, skill-proposal, and session-search tools are available to LingCode's native agent loop, so they work when you switch to DeepSeek or an OpenAI-compatible provider — not only with Claude." }
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/hermes-style-self-improving-agent.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html">Native Mac IDE</a>
+      <span>/</span>
+      <span>Hermes-style self-improving agent</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-06-02</span>
+      </div>
+      <h1>Does LingCode have a Hermes-style self-improving agent?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Yes. LingCode implements the same learning loop that made Nous Research's <strong>Hermes Agent</strong> popular — <strong>persistent memory</strong>, <strong>agent-proposed skills</strong>, and <strong>full-text search over past sessions</strong> — but inside a native macOS IDE instead of a headless server, across multiple AI providers, and with a human review step that keeps you in control.</p>
+      <p class="intro">Most AI coding agents are one-shot: they finish a task and forget everything. The Hermes Agent got attention in 2026 because it does the opposite — it learns. LingCode brings that same loop to its built-in agent so every session makes the next one cheaper, without sending your code or memory to someone else's server.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>What the Hermes learning loop is</h2>
+      <p>Hermes describes itself as "the only agent with a built-in learning loop — it creates skills from experience, improves them during use, nudges itself to persist knowledge, searches its own past conversations." That loop has three pillars:</p>
+      <ul>
+        <li><strong>Persistent memory</strong> — the agent remembers preferences, decisions, and recurring problems.</li>
+        <li><strong>Skill creation</strong> — it turns repeated procedures into reusable skills.</li>
+        <li><strong>Session recall</strong> — it searches its own history instead of starting from zero.</li>
+      </ul>
+
+      <h2>How LingCode implements the same loop — natively</h2>
+      <p>Rather than fork Hermes, LingCode brings the same three pillars to its agent as first-class, on-device tools.</p>
+
+      <h3>1. Persistent memory with a self-nudge</h3>
+      <p>The agent has a <code>memory_save</code> tool that writes durable notes to a per-project memory file and a cross-project user memory file. It includes Hermes's self-nudge: after a configurable number of turns without saving (8 by default), LingCode reminds the agent to persist anything notable — a user preference, a non-obvious project decision, a recurring pain point. You can tune or disable the cadence in Settings.</p>
+
+      <h3>2. Skill creation — with a human review gate</h3>
+      <p>When the agent notices it has run the same multi-step procedure more than once, it can call <code>skill_propose</code> to draft a new reusable skill (a slash-command). This is Hermes's "creates skills from experience" — with one deliberate difference: in LingCode the new skill lands as a <strong>draft you review and promote</strong> before it activates. You get compounding capability without an agent silently rewriting its own behavior.</p>
+
+      <h3>3. Session recall with full-text search</h3>
+      <p>LingCode indexes your past agent sessions and exposes a <code>session_search</code> tool backed by SQLite FTS5 full-text search. Ask about "the bug we hit last week" or "did I already fix this in another project," and the agent searches its own transcripts — returning matching snippets, session IDs, and the project each ran in — instead of guessing.</p>
+
+      <div class="info-box">
+        <h3>It's not Claude-only</h3>
+        <p>The memory, skill-proposal, and session tools live in LingCode's agent loop — so when you switch providers (DeepSeek, or any OpenAI-compatible model), the learning loop comes with you. The point of a multi-provider IDE is that capability shouldn't depend on which model you picked today.</p>
+      </div>
+
+      <h2>What makes LingCode's approach different</h2>
+      <table class="tutorial-table">
+        <thead>
+          <tr><th>Capability</th><th>Hermes Agent</th><th>LingCode</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Persistent memory + self-nudge</td><td>Yes</td><td>Yes</td></tr>
+          <tr><td>Agent-created skills</td><td>Yes (auto)</td><td>Yes — proposed as a draft, you approve</td></tr>
+          <tr><td>Session search</td><td>Yes (FTS5)</td><td>Yes (FTS5)</td></tr>
+          <tr><td>Runs where</td><td>Headless server / chat platforms</td><td>Native macOS IDE (and a web tab)</td></tr>
+          <tr><td>Skill format</td><td>agentskills.io frontmatter</td><td>agentskills.io-compatible</td></tr>
+          <tr><td>Models</td><td>Open-weights</td><td>Multi-provider (Claude + switchable)</td></tr>
+        </tbody>
+      </table>
+      <p>The headline distinction: Hermes lives on a server you SSH into; LingCode's learning loop lives inside the editor where you actually write code — with the project tree, build system, simulator, and diffs right there.</p>
+
+      <h2>Why a self-improving agent matters</h2>
+      <p>An agent that forgets is one you re-explain your codebase to every morning. The learning loop changes the economics: memory captures the "why" behind your project, proposed skills capture the "how" of your repeatable workflows, and session search means institutional knowledge doesn't evaporate when a chat ends.</p>
+
+      <h2>Frequently asked questions</h2>
+      <p><strong>Does LingCode use the Hermes Agent codebase?</strong><br>No. LingCode independently implements the same learning-loop concepts as native tools, with a skill format compatible with the agentskills.io convention Hermes uses — so skills are portable.</p>
+      <p><strong>Where does LingCode store agent memory?</strong><br>In a per-project memory file and a cross-project user memory file on your machine, written through a dedicated <code>memory_save</code> tool so the IDE shows the save and applies size limits.</p>
+      <p><strong>Do agent-created skills run automatically?</strong><br>No. <code>skill_propose</code> writes a draft you review and promote — a deliberate safety step.</p>
+      <p><strong>Is the learning loop in the web version?</strong><br>Yes — it's available in both the Claude Code native tab and the web tab, and across LingCode's other providers.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/install-a-skill.html" class="tutorial-next-card">
+            <h3>Install a skill</h3>
+            <p>Add a reusable slash-command to your agent</p>
+          </a>
+          <a href="/tutorials/write-a-custom-skill.html" class="tutorial-next-card">
+            <h3>Write a custom skill</h3>
+            <p>Author your own — the format the agent proposes drafts in</p>
+          </a>
+          <a href="/tutorials/brainstorm-before-you-build.html" class="tutorial-next-card">
+            <h3>Brainstorm before you build</h3>
+            <p>Clarify scope before code exists</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col"><h4>Product</h4><ul><li><a href="/try.html">Web (/try)</a></li><li><a href="/cli.html">CLI</a></li><li><a href="/features.html">Mac IDE</a></li><li><a href="/pricing.html">Pricing</a></li><li><a href="/changelog.html">Changelog</a></li></ul></div>
+    <div class="footer-col"><h4>Developers</h4><ul><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li><li><a href="/getting-started.html">Getting started</a></li><li><a href="/cli.html">CLI reference</a></li><li><a href="/why-not-cursor.html">Why not Cursor</a></li></ul></div>
+    <div class="footer-col"><h4>Community</h4><ul><li><a href="/community.html">Friday workshops</a></li><li><a href="/community.html">For universities</a></li><li><a href="/examples.html">Showcase</a></li><li><a href="/blog.html">Blog</a></li><li><a href="/support.html">Support</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="/manifesto.html">Manifesto</a></li><li><a href="/pitch.html">Pitch</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/signin.html">Sign in</a></li><li><a href="/signup.html">Sign up</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

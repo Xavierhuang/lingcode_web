@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode Cloud 最佳实践 —— 生产环境上线指南 | 文档</title>
+  <meta name="description" content="把 LingCode Cloud 应用送上生产：按表级 CRUD 建模，低成本地分页与计数，为热路径加索引，锁紧 RLS 与密钥，把服务端逻辑放进函数，守住套餐配额，并跑一遍上线前检查清单。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/best-practices.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/best-practices.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/best-practices.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/best-practices.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/best-practices.html">
+  <meta property="og:title" content="LingCode Cloud 最佳实践 —— 生产环境上线指南">
+  <meta property="og:description" content="按表级 CRUD 建模，低成本分页，为热路径加索引，锁紧 RLS 与密钥，把服务端逻辑放进函数，并在上线前守住套餐配额。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/best-practices.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>最佳实践</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● 生产环境指南</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>最佳实践与生产环境指南</h1>
+      <p class="tldr"><strong>一句话：</strong>LingCode Cloud 原型迭代很快，在开发期也很宽容——但有几个习惯，决定了你做出来的是一个 demo，还是一个能真正上线的后端。按「一次读一张表」来做数据建模，分页与计数都别全表扫描，为你用来过滤的列加索引，在 anon key 能触达的每个地方打开行级安全，把私有密钥放进保险库、把服务端逻辑放进<a href="/zh/docs/cloud/functions.html">函数</a>，并守住所在套餐的配额。然后跑一遍<a href="#preship">上线前检查清单</a>。</p>
+      <p class="intro">这些规则大多源自同一个事实：客户端 SDK 对话的是一层轻量的表级 CRUD 网关，而不是直接连 Postgres。正是这一点，决定了你该如何建模、如何读取，以及安全该放在哪里。下面每一节都是一段简短的<em>为什么</em>，加上具体的操作指引，并附上相关指南链接，方便你深入。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>1. 按表级 CRUD 建模</h2>
+      <p>运行时数据 API <strong>一次只操作一张表</strong>——不支持 JOIN，不支持 upsert，每页最多 200 行。如果你设计了一套规范化的 schema，再试图在客户端用扇出请求把它拼回去，那么每个界面都会因为每个关联而多花一次往返。请改为按你的<em>读取路径</em>来建模。</p>
+      <ul>
+        <li><strong>反范式化</strong>——凡是能省下一次往返的地方都这么做：把列表视图需要的那几个字段直接拷到它要渲染的行上，而不是单独再去取父行。</li>
+        <li><strong>创建一个 VIEW（视图）</strong>——把任何真正关系型的东西放进迁移里建成视图，然后像查表一样对它 <code>select()</code>。JOIN 在 Postgres 里执行，客户端看到的是一个扁平结果。</li>
+        <li>使用<strong>稳定的代理键</strong>——<code>bigint generated always as identity</code> 或 <code>uuid</code>——永远不要用可变的自然键。</li>
+        <li>在每一行用户拥有的数据上盖一个 <code>user_id</code> 列，这样 RLS 才有可依据的键。</li>
+      </ul>
+      <pre><code>-- 一个读取路径视图：在数据库里 join 一次，像查表一样 select() 它
+create view order_lines_expanded as
+select l.id, l.order_id, l.qty, p.name as product_name, p.price
+from   order_lines l
+join   products p on p.id = l.product_id;</code></pre>
+      <p>完整的查询构造器接口，以及「不支持 JOIN/upsert」这条规则，见<a href="/zh/docs/cloud/database.html">数据库指南</a>。</p>
+
+      <h2>2. 分页与计数都别全表扫描</h2>
+      <p><code>select()</code> <strong>最多返回 200 行</strong>。早点用上分页——它不是一项优化，而是一道上限。按一个<em>已建索引</em>的列排序，并用 <code>.limit()</code> 和 <code>.range()</code> 翻页。</p>
+      <pre><code>const { data } = await lingcode
+  .from('posts')
+  .order('created_at', { ascending: false })  // 已建索引的列
+  .range(0, 49)                               // 前 50 条
+  .select();</code></pre>
+      <p>计数才是陷阱。<strong>不要</strong>靠把每一页都取回来再把长度加起来来计数——那等于在每个视图上对整张表做一次 O(n) 扫描。应该这样：</p>
+      <ul>
+        <li>维护一个<strong>计数列</strong>，在写入行时同步更新；或者</li>
+        <li>通过在数据库里算好的 <strong>VIEW（视图）</strong>暴露总数和聚合，然后 <code>select()</code> 那一行聚合结果。</li>
+      </ul>
+      <p>关于过滤、排序和范围的更多内容，见<a href="/zh/docs/cloud/database.html">数据库指南</a>。</p>
+
+      <h2>3. 为你过滤和排序的列加索引</h2>
+      <p>没有索引的过滤或排序会扫描整张表。这在 50 行时看不出来，到了 50,000 行就是致命的。在迁移里，为<strong>每一个会在规模上用来过滤或排序的列</strong>，以及每一个<strong>外键列</strong>，都加上索引。</p>
+      <pre><code>create index if not exists idx_posts_author    on posts (author_id);
+create index if not exists idx_posts_created_at on posts (created_at desc);</code></pre>
+      <p><strong>pgvector</strong> 列在表变大后需要一个向量索引——见<a href="/zh/docs/cloud/vector-search.html">向量检索指南</a>。而且你不必靠手工去找这些：<strong>advisors</strong> 扫描器会替你标出缺失的索引和未建索引的外键。上线前先跑一遍——见<a href="/zh/tutorials/scan-your-backend-with-advisors.html">用 advisors 扫描后端</a>。迁移的基础知识见<a href="/zh/docs/cloud/database.html">数据库指南</a>。</p>
+
+      <h2>4. 安全检查清单</h2>
+      <p>anon key 会随你的浏览器打包产物一起发出去，所以<strong>服务端才是安全真正发生的唯一地方</strong>。把数据库当成默认怀有敌意的，让 RLS 对每一次读和写都把关。</p>
+      <ul>
+        <li><strong>在 anon key 能触达的每张表上启用 RLS</strong>，并为每个命令（select / insert / update / delete）写一条策略——RLS 开了却没有策略会拒绝一切；RLS 关着则会暴露一切。</li>
+        <li><strong>anon key 本就是公开的</strong>——这是设计如此，永远不要把它当成密钥，也不要指望靠它不为人知来保护安全。</li>
+        <li>把<strong>私有的厂商密钥放进密钥保险库</strong>，并只在<a href="/zh/docs/cloud/functions.html">函数</a>里读取它们——函数运行在服务端。见<a href="/zh/docs/cloud/secrets.html">密钥指南</a>。</li>
+        <li><strong>每次上线前都跑一遍 advisors</strong>，揪出被遗漏未上锁的表。</li>
+        <li><strong>以登录后的应用用户身份测试策略</strong>，而不是在控制台里测——控制台会绕过 RLS，所以一个在那里能跑通的查询，对真实用户可能仍被拦截（或完全敞开）。</li>
+      </ul>
+      <p>完整的策略模型见<a href="/zh/docs/cloud/security.html">安全指南</a>。</p>
+
+      <h2>5. 服务端逻辑与密钥</h2>
+      <p>如果一次调用需要私有密钥，它就不能跑在浏览器里——任何打开开发者工具的人都能看到那个密钥。厂商 API 调用以及任何携带密钥的逻辑，都该放进读取 <code>ctx.secrets</code> 的<strong>函数</strong>里：</p>
+      <pre><code>// 函数 —— 密钥永远不会到达客户端
+export default async (req, ctx) =&gt; {
+  const key = ctx.secrets.STRIPE_SECRET_KEY;
+  // ...在服务端调用厂商，只返回安全的部分...
+};</code></pre>
+      <p>不过函数是短生命周期的。有两种情况应该放进<strong>托管的 Worker 路由</strong>，而不是函数：</p>
+      <ul>
+        <li>一个<strong>原始请求体的 webhook</strong>（比如 Stripe webhook），它需要未经解析的请求体来做签名验证。</li>
+        <li><strong>请求时 SSR</strong>——作为全栈应用的一部分，在每次请求时渲染。</li>
+      </ul>
+      <p>见<a href="/zh/docs/cloud/functions.html">函数指南</a>和<a href="/zh/docs/cloud/hosting.html">托管指南</a>。</p>
+
+      <h2>6. 配额与成本</h2>
+      <p>每个套餐都有上限，在生产环境里撞上某条上限，比提前规划要难受得多。上线前先弄清你的上限：</p>
+      <ul>
+        <li><strong>表</strong>、<strong>对象</strong>和<strong>总存储</strong>的数量。</li>
+        <li><strong>函数数量</strong>和<strong>函数挂钟时长</strong>——随套餐不同为 <code>3s</code> / <code>10s</code> / <code>30s</code>。</li>
+        <li><strong>每天的邮件数。</strong></li>
+      </ul>
+      <p>后端会在存储达到 <strong>80%</strong> 和 <strong>95%</strong> 时发出告警——盯住这些警告，别等到被硬性截停。又因为函数是短生命周期的（<strong>≤30s</strong>），任何更长的任务都必须卸载出去——拆分它、排队它，或者把它挪到托管的 Worker 上。各套餐上限列在<a href="/pricing.html">定价页</a>。</p>
+
+      <h2>7. 迁移规范</h2>
+      <p>环境之间的 schema 漂移，是「在我的后端上能跑」这句话背后悄无声息的杀手。让迁移成为 schema 变更的<strong>唯一</strong>途径——永远不要临时手点着改结构。</p>
+      <ul>
+        <li>所有 DDL 都通过控制台的 <strong>SQL</strong> 标签页或 <code>apply_migration</code> 执行。</li>
+        <li>写<strong>幂等</strong>的 DDL——<code>create table if not exists</code>、<code>create index if not exists</code>——这样重复执行才安全。</li>
+        <li>把<strong>索引、约束、视图和 RLS 策略</strong>跟它们所属的表放在同一份迁移里，而不是当成一次性的控制台改动。</li>
+      </ul>
+      <pre><code>create table if not exists invites (
+  id         uuid primary key default gen_random_uuid(),
+  email      text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_invites_email on invites (email);</code></pre>
+      <p>迁移的具体机制见<a href="/zh/docs/cloud/database.html">数据库指南</a>。</p>
+
+      <h2>8. 性能</h2>
+      <p>三个习惯能在不增加额外基础设施的前提下让应用保持响应迅速：</p>
+      <ul>
+        <li><strong>订阅，别轮询。</strong>用实时的 <code>subscribe()</code> 通过 SSE 把行变更推送过来，而不是定时去重新拉取——更少的请求，更低的延迟。见<a href="/zh/docs/cloud/realtime.html">实时指南</a>。</li>
+        <li><strong>在写入时就生成向量</strong>，这样检索就只是一次查询，而不是「先向量化再检索」的一来一回。见<a href="/zh/docs/cloud/vector-search.html">向量检索指南</a>。</li>
+        <li><strong>批量上报度量数据</strong>，让它自动刷新，而不是每次交互都发一个事件。见<a href="/zh/docs/cloud/telemetry.html">数据分析指南</a>。</li>
+      </ul>
+
+      <div class="info-box" id="preship">
+        <h3>上线前检查清单</h3>
+        <p>在把一个应用切到生产之前，确认：</p>
+        <ul>
+          <li>anon key 能触达的每张表都<strong>开启了 RLS</strong>，并且<strong>按命令写好了策略</strong>。</li>
+          <li><strong>advisors 跑出来是干净的</strong>——没有缺失的索引，没有未建索引的外键，没有被遗漏未上锁的表。</li>
+          <li><strong>每个热点过滤和排序都有对应的索引</strong>。</li>
+          <li><strong>密钥都在保险库里</strong>——客户端代码里任何地方都没有私有密钥。</li>
+          <li>每个远程配置开关都<strong>设了默认值</strong>，这样缺一个值也绝不会让应用崩掉。</li>
+          <li>在表、对象、存储、函数、函数挂钟时长以及每天邮件数上，你都<strong>在套餐配额之内</strong>。</li>
+        </ul>
+      </div>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/security.html">
+            <span class="card-eyebrow">安全</span>
+            <h3>安全指南</h3>
+            <p>端到端的 RLS：启用它、按命令写策略，并以真实登录用户的身份测试。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/database.html">
+            <span class="card-eyebrow">数据</span>
+            <h3>数据库指南</h3>
+            <p>表、查询构造器、视图、索引、迁移，以及「不支持 JOIN/upsert」这条规则。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/tutorials/scan-your-backend-with-advisors.html">
+            <span class="card-eyebrow">教程</span>
+            <h3>用 advisors 扫描</h3>
+            <p>运行 advisors 扫描器，揪出缺失的索引、未建索引的外键，以及被遗漏未上锁的表。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

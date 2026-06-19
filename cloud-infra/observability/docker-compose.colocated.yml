@@ -1,0 +1,83 @@
+# docker-compose.colocated.yml — single-VM observability, co-located on the
+# data-plane VM. Use this when there's no separate monitoring host yet: it adds
+# exporters + Prometheus + Grafana as ADDITIVE containers next to the existing
+# Postgres, with NO downtime, NO Postgres restart, and NO change to the data
+# path. Attaches to the existing `cloud-infra_default` network so the exporter
+# can reach the live `lingcloud-postgres` container by name.
+#
+# Trade-off vs docker-compose.monitoring.yml (separate host): monitoring shares
+# the box it watches (lose the VM → lose visibility, and it competes for RAM).
+# Fine to start; move to a dedicated host later by switching to the separate
+# monitoring compose.
+#
+# Scope here is what's safe WITHOUT a maintenance window:
+#   - postgres_exporter (built-in collectors; pg_stat_statements deferred to the
+#     restart that loads shared_preload_libraries)
+#   - node_exporter
+#   - prometheus (+ alert rules loaded; routing needs Alertmanager once
+#     ALERT_WEBHOOK is set) and grafana (provisioned dashboard)
+# Deferred: pgbouncer_exporter (no PgBouncer yet), API /metrics scrape, PITR.
+#
+# Bring up (on the VM, from this dir, with .env carrying MONITORING_PASSWORD +
+# GRAFANA_ADMIN_PASSWORD):  docker compose -f docker-compose.colocated.yml up -d
+# Reach Grafana by SSH tunnel:  ssh -L 3001:127.0.0.1:3001 root@<vm>  → :3001
+
+services:
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: lingcloud-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://monitoring:${MONITORING_PASSWORD}@lingcloud-postgres:5432/lingcloud?sslmode=disable"
+    networks: [dataplane]
+    restart: unless-stopped
+
+  node_exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: lingcloud-node-exporter
+    command: ["--path.rootfs=/host"]
+    pid: host
+    volumes:
+      - "/:/host:ro,rslave"
+    networks: [dataplane]
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: lingcloud-prometheus
+    volumes:
+      - ./prometheus.colocated.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prom_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d"
+      - "--storage.tsdb.retention.size=2GB"
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks: [dataplane]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: lingcloud-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3001:3000"
+    networks: [dataplane]
+    restart: unless-stopped
+
+networks:
+  dataplane:
+    external: true
+    name: cloud-infra_default
+
+volumes:
+  prom_data:
+  grafana_data:

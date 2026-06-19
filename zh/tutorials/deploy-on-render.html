@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在 Render 上部署 — LingCode 教程</title>
+  <meta name="description" content="Render 是外形最接近 Heroku 的 PaaS 平台，提供可预测的固定月费。静态站点免费，Web 服务 $7/月，托管 Postgres——账单不会出现意外。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-on-render.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-on-render.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-on-render.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/deploy-on-render.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "在 Render 上部署",
+  "description": "Render 是后 Heroku 时代最像 Heroku 的 PaaS——相同的五种服务类型、相同的固定月费、相同的"连接仓库即部署"流程。与 Railway 相比，自动检测能力稍弱；与 Fly 相比，可用区域较少。优势在于账单价格始终如一，没有意外费用。",
+  "url": "https://lingcode.dev/zh/tutorials/deploy-on-render.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/deploy-on-render.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "在 Render 上部署"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "在 Render 上部署",
+      "item": "https://lingcode.dev/zh/tutorials/deploy-on-render.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/deploy-on-render.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">发布与基础设施</a>
+      <span>/</span>
+      <span>在 Render 上部署</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>在 Render 上部署</h1>
+      <p class="intro">Render 是后 Heroku 时代最接近 Heroku 风格的 PaaS——相同的五种服务类型、固定的月费定价、"连接仓库即部署"的工作流。与 Railway 相比，自动检测能力稍弱；与 Fly 相比，可用区域较少。最大的优势是：账单永远如你所料，没有意外。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>如果你在过去十年里用过 Heroku，Render 的界面会让你感到格外熟悉。Web 服务、后台 Worker、定时任务、静态站点、托管数据库——相同的五种服务模型，相同的每服务配置页面，相同的"此分支自动构建并部署"工作流。正是这种亲切感让 Render 的采用率稳步增长：如果你在 Heroku 上发过布，这里没有什么新东西要学，但 Heroku 让你头疼的那些问题在这里都得到了改善。</p>
+      <p>相比 Heroku，Render 最实质的改进在于定价。Render 的计划按服务按月收费，价格固定——Web 服务 $7，Worker $7，托管 Postgres $7 起，静态站点免费。月末账单和月初一样，既不令人兴奋，也不会有意外，这正是它的意义所在。如果你希望在月初就知道自己要花多少钱，Render 是最友好的选择。</p>
+      <p>权衡是真实存在的，但范围有限。Render 的可用区域比 Fly 少（只有几个，分布在北美、欧洲、亚洲，而非 30+ 个）。技术栈的自动检测能力不如 Railway——你通常需要写一个小小的 <code>render.yaml</code> 或手动指定启动命令。免费套餐的冷启动时间为 30–60 秒，对于偶尔访问的个人项目尚可，但对于有真实用户的服务则完全不可接受。这些都不是致命缺陷，只是"稳定可靠"所付出的代价。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>Render 的五种服务类型及其各自的适用场景</li>
+        <li>从 GitHub 部署的完整流程</li>
+        <li>免费套餐冷启动的取舍</li>
+        <li>如何设置 Postgres 并建立连接</li>
+        <li>什么情况下 Railway 或 Fly 是更好的选择</li>
+      </ul>
+
+      <h2>第 1 步：注册并连接 GitHub</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Render.com，GitHub OAuth</h3>
+          <p>使用你的 GitHub 账户在 <code>render.com</code> 注册。OAuth 流程会请求仓库访问权限——出于安全考虑，建议将权限范围限制在特定仓库，而非选择"全部"。在创建非免费服务之前，无需绑定信用卡。</p>
+          <p>如果你不使用 GitHub，Render 也支持 GitLab 和 Bitbucket。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：选择服务类型</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>五种形态</h3>
+          <p>Render 的服务类型：</p>
+          <ul>
+            <li><strong>Static Site（静态站点）</strong>——从仓库的静态资源构建，完全免费。适合纯 HTML、React/Vue SPA（构建后）、文档站点，通过 CDN 全球分发。</li>
+            <li><strong>Web Service（Web 服务）</strong>——长期运行的 HTTP 服务器，最常用的类型。入门套餐 $7/月，更高规格可按需选择。</li>
+            <li><strong>Background Worker（后台 Worker）</strong>——无 HTTP 端口的长期运行进程，适合任务队列、消息消费者等。$7/月。</li>
+            <li><strong>Cron Job（定时任务）</strong>——按计划运行的脚本，价格较低，按运行次数计费。</li>
+            <li><strong>Private Service（私有服务）</strong>——仅在你的其他 Render 服务内部可访问的 Web 服务，适合内部 API。$7/月。</li>
+          </ul>
+          <p>此外还有托管数据库：Postgres、Redis、Key Value——独立产品，各有独立的月费定价。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：部署 Web 服务</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>最常见的流程</h3>
+          <p>点击 <strong>New + → Web Service</strong>，选择仓库，然后配置以下内容：</p>
+          <ul>
+            <li><strong>Name（名称）：</strong>随意填写；这会成为 URL 的一部分。</li>
+            <li><strong>Region（区域）：</strong>选择离你的用户最近的区域。</li>
+            <li><strong>Branch（分支）：</strong>通常是 <code>main</code>。</li>
+            <li><strong>Build command（构建命令）：</strong>用于构建项目的命令（例如 <code>npm install &amp;&amp; npm run build</code>）。</li>
+            <li><strong>Start command（启动命令）：</strong>用于启动服务器的命令（例如 <code>npm start</code>）。</li>
+            <li><strong>Plan（套餐）：</strong>Free（有冷启动）或 Starter（$7/月，始终在线）。</li>
+          </ul>
+          <p>点击 <strong>Create Web Service</strong>，Render 会完成构建和部署，几分钟后 URL 即可访问。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>免费套餐有冷启动。</strong>免费 Web 服务在 15 分钟内没有收到请求时会被挂起。下一个请求会唤醒它——需要 30–60 秒。对于偶尔访问的个人项目尚可接受，但对有真实用户的服务则完全不行。$7 的 Starter 套餐没有这个问题。
+      </div>
+
+      <h2>第 4 步：添加 Postgres 数据库</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>托管数据库，一键创建</h3>
+          <p>在控制台中，点击 <strong>New + → PostgreSQL</strong>。填写名称、区域（最好与你的服务相同）、套餐（入门版 $7/月，对大多数应用已足够）。Render 会在几分钟内完成托管 Postgres 的配置。</p>
+          <p>连接方式：从 Postgres 控制台复制"Internal Database URL"，将其设置为 Web 服务上的 <code>DATABASE_URL</code> 环境变量。内部 URL 仅在 Render 的网络内部有效——它们是私有的，不经过公网传输。如果需要从 Render 外部连接（例如从本地机器），也有"External Database URL"可用，但服务之间应使用内部 URL。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：环境变量</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>每个服务的 Environment 标签页</h3>
+          <p>每个服务都有一个 <strong>Environment</strong> 标签页，用于设置环境变量。敏感变量会被遮掩，非敏感变量不会。根据需要添加 <code>API_KEY=...</code>、<code>NODE_ENV=production</code> 等。保存更改后 Render 会自动重新部署，无需手动触发。</p>
+          <p>Render 还支持 <strong>Environment Groups（环境变量组）</strong>——可以将一组变量附加到多个服务。当多个服务需要共享密钥时非常有用（例如 Worker 和 Web 服务都需要数据库 URL）。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：自定义域名 + TLS</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>一条 CNAME，TLS 由 Render 负责</h3>
+          <p>服务设置 → <strong>Custom Domains</strong> → Add Custom Domain。Render 会提供一个 CNAME 目标值。在你的 <a href="/zh/tutorials/connect-domain-to-server-with-dns.html">DNS 服务商</a>处添加：</p>
+          <ul>
+            <li>Name：你的子域名（如果你的 DNS 服务商支持顶点 CNAME，也可以填 <code>@</code>）。</li>
+            <li>Value：Render 提供的目标值。</li>
+          </ul>
+          <p>几分钟后，Render 会完成验证并颁发免费的 TLS 证书（底层使用 Let's Encrypt），自动续期，无需你再操心。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：用 render.yaml 实现生产级配置管理</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>基础设施即代码，可选</h3>
+          <p>如果你不想让控制台成为配置的唯一来源，可以在仓库根目录放一个 <code>render.yaml</code>：</p>
+          <pre><code>services:
+  - type: web
+    name: my-api
+    env: node
+    buildCommand: npm install &amp;&amp; npm run build
+    startCommand: npm start
+    plan: starter
+
+databases:
+  - name: my-postgres
+    plan: starter</code></pre>
+          <p>提交它。从此以后，git 中的配置就是唯一真相。Render 的"Blueprints"功能会在你创建项目时读取 <code>render.yaml</code>；对于已有项目，可以通过 Settings 切换到这种方式。</p>
+        </div>
+      </div>
+
+      <h2>第 8 步：什么时候 Render 不是最佳选择</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>三种情况</h3>
+          <ul>
+            <li><strong>你需要全球边缘节点。</strong>Render 的区域有限。<a href="/zh/tutorials/deploy-on-fly-io.html">Fly.io</a> 在多区域方面遥遥领先。</li>
+            <li><strong>你想要最轻松的入门体验。</strong><a href="/zh/tutorials/deploy-on-railway.html">Railway</a> 的自动检测更友好；Render 更频繁地要求你手动指定构建/启动命令。</li>
+            <li><strong>你希望按使用量付费。</strong>Render 的固定套餐意味着即使服务几乎没有流量，每月也要花 $7。Railway 的按量计费对低流量项目更划算。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>免费套餐适合测试，不适合生产环境。</strong>免费 Web 服务有冷启动。免费 Postgres 有 90 天的数据保留限制，到期后会被删除。这两点在文档中有明确说明，但很容易忽视。如果数据对你有价值，从第一天起就使用付费套餐。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/deploy-on-railway.html" class="tutorial-next-card">
+            <h3>在 Railway 上部署</h3>
+            <p>更友好的检测机制，按量计费</p>
+          </a>
+          <a href="/zh/tutorials/deploy-on-fly-io.html" class="tutorial-next-card">
+            <h3>在 Fly.io 上部署</h3>
+            <p>更多控制权，全球边缘节点，原生 Docker 支持</p>
+          </a>
+          <a href="/zh/tutorials/set-up-https-with-lets-encrypt.html" class="tutorial-next-card">
+            <h3>使用 Let's Encrypt 配置 HTTPS</h3>
+            <p>如果你更想自己管理 TLS，而不是交给 PaaS 处理</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要发布产品的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">项目展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资简报</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

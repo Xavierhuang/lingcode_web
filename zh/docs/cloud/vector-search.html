@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>向量检索 —— pgvector 相似度、托管向量化与混合排序 | LingCode Cloud 文档</title>
+  <meta name="description" content="按含义而非关键词检索行——把向量（embedding）存进 pgvector 列，让 LingCode Cloud 替你生成，再用 client.vector.embed 和 client.vector.search 按相似度排序，外加面向 RAG 的全文 + 语义混合排序。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/vector-search.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/vector-search.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/vector-search.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/vector-search.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/vector-search.html">
+  <meta property="og:title" content="向量检索 —— LingCode Cloud">
+  <meta property="og:description" content="把向量（embedding）存进 pgvector 列，用托管向量化生成，再按含义对行排序——外加面向 RAG 的全文 + 语义混合排序。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .docs-step { counter-increment: docstep; position: relative; padding-left: 44px; margin: 22px 0; }
+    .docs-step::before { content: counter(docstep); position: absolute; left: 0; top: -2px; width: 30px; height: 30px; border-radius: 50%; background: var(--signal); color: #fff; font-weight: 600; display: grid; place-items: center; font-size: 0.95rem; }
+    .docs-steps { counter-reset: docstep; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>向量检索</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● AI</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>向量检索</h1>
+      <p class="tldr"><strong>一句话：</strong>向量检索按<strong>含义</strong>而非精确关键词来查找行——这是语义检索和 RAG 的基础。你在每一行旁边存一个<em>向量（embedding）</em>（一串数字），然后按它与查询向量的接近程度对行排序。LingCode Cloud 运行的 Postgres 带有 <strong>pgvector</strong> 扩展，并且可以替你生成这些向量（<strong>托管向量化</strong>），所以你永远不必把向量化模型的密钥塞进应用里。加一列 <code>vector(N)</code>，用 <code>lingcode.vector.embed()</code> 把文本向量化，再用 <code>lingcode.vector.search()</code> 排序。</p>
+      <p class="intro">如果你只用过 <code>LIKE '%term%'</code> 或全文检索，那么向量检索是一种不同的思路，值得在动手用它之前先理解清楚。关键词检索问的是「哪些行包含这个词？」向量检索问的是「哪些行<em>表达</em>的大致是同一个意思？」正是这个差别，让「找相似」「从我的文档里给出答案」以及「能扛住同义词和拼写错误的检索」成为可能。本页讲清楚向量是什么、它为什么有效，如何配置一个列，你真正要写的两个 SDK 调用，以及一个端到端的小型 RAG 示例。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>为什么含义胜过关键词</h2>
+      <p>一个<strong>向量（embedding）</strong>是一串数字——一个向量——由 AI 模型从一段文本生成。模型经过训练，使得含义相近的文本在这个向量空间里落到彼此靠近的位置，而不相关的文本则相距很远。「我怎么重置密码？」和「我忘了我的登录凭证」几乎没有共同的词，但它们的向量却挨得很近，因为它们表达的是同一个意思。</p>
+      <p>这就是全部诀窍。一旦每一行都带上了向量，「找出和这个查询相似的行」就变成了「找出向量与查询向量最接近的那些行」。关键词检索做不到这一点——它只能匹配你输入的那些词。向量检索匹配的是<em>意思</em>，所以它能扛住同义词、换种说法和拼写错误，这也正是语义检索和检索增强生成（RAG）背后的原理：先取出最相关的行，再交给模型来撰写答案。</p>
+
+      <div class="info-box">
+        <h3>托管向量化：应用里不放模型密钥</h3>
+        <p>生成一个向量通常意味着调用一个向量化模型，也就意味着要有一个 API 密钥。有了 LingCode Cloud 的<strong>托管向量化</strong>，<code>lingcode.vector.embed()</code> 会在服务端替你生成向量——你的应用永远不持有向量化模型的密钥，也永远不直接和模型厂商对话。你发文本进去，拿向量出来。（想自带模型？你仍然可以把预先算好的向量直接传给 <code>search</code>。）</p>
+      </div>
+
+      <h2>配置一个向量列</h2>
+      <p>向量存在类型为 <code>vector(N)</code> 的列里，其中 <code>N</code> 是向量的<strong>维度</strong>——模型生成的数字数组的长度（例如 <code>1536</code>）。你在<strong>迁移（migration）</strong>里添加这个列，方式和添加任何其他列一样。运行迁移的方法见<a href="/zh/docs/cloud/database.html">数据库指南</a>。</p>
+      <pre><code>create table docs (
+  id         bigint generated always as identity primary key,
+  title      text not null,
+  text       text not null,
+  embedding  vector(1536)
+);</code></pre>
+      <p>对于大数据集，加一个合适的<strong>向量索引</strong>，让相似度查询在表增大时仍然保持快速——没有它，检索就得扫描每一行。</p>
+
+      <div class="warn-box">
+        <strong>维度必须处处一致。</strong><code>vector(N)</code> 里的 <code>N</code>、你存进去的向量，以及你用来检索的查询向量，三者长度必须相同。混用维度（存 1536 维向量却用 768 维向量来查）是向量检索里最常见的一个 bug。用同一个模型给你存储的文本和查询做向量化，数字才能对得上。
+      </div>
+
+      <h2>两个 SDK 调用</h2>
+      <p>你要做的一切都在 <code>lingcode.vector.*</code> 之下。和每个 SDK 调用一样，这两个都返回 <code>{ data, error }</code>。</p>
+
+      <h3><code>vector.embed(input)</code> —— 把文本变成向量</h3>
+      <p><code>input</code> 是一个<strong>字符串</strong>或一个<strong>字符串数组</strong>。它用在两个地方：在<em>写入</em>时填充你的列，以及在<em>检索</em>时把用户的查询向量化。</p>
+      <pre><code>const { data, error } = await lingcode.vector.embed('How do I reset my password?');
+// data = {
+//   embedding:   number[],     // 单个字符串输入对应的向量
+//   embeddings:  number[][],   // 数组输入时每项一个向量
+//   model:       string,       // 所用的向量化模型
+//   dimensions:  number        // 每个向量的长度
+// }</code></pre>
+
+      <h3><code>vector.search({ table, column, embedding, limit?, metric? })</code> —— 按接近程度排序</h3>
+      <p>传入要检索的表和向量列，再加上查询向量。结果以行的形式返回，按距离排序（最近的在前）。</p>
+      <pre><code>const { data, error } = await lingcode.vector.search({
+  table:     'docs',
+  column:    'embedding',
+  embedding: data.embedding,   // 来自 vector.embed() 的查询向量
+  limit:     5,                // 1–200
+  metric:    'cosine'          // 'cosine'（默认）| 'l2' | 'ip'
+});
+// data = rows[]，按距离排序</code></pre>
+      <p>结果会和普通查询一样经过<a href="/zh/docs/cloud/database.html">行级安全过滤</a>——用户永远只在自己有权看到的行上排序。</p>
+
+      <h2>典型流程</h2>
+      <p>两个阶段：写入时向量化一次，查询时再向量化并检索。把向量化放在写入时做，这样检索本身就只是一次快速查找。</p>
+
+      <div class="docs-steps">
+        <div class="docs-step">
+          <h3>写入时——向量化并存储</h3>
+          <p>当一篇文档到来时，把它的文本向量化，并把向量存进这一行的 <code>embedding</code> 列。</p>
+          <pre><code>const { data } = await lingcode.vector.embed(doc.text);
+
+await lingcode.from('docs').insert({
+  title:     doc.title,
+  text:      doc.text,
+  embedding: data.embedding
+});</code></pre>
+        </div>
+        <div class="docs-step">
+          <h3>查询时——把问题向量化，然后检索</h3>
+          <p>用同样的方式把用户的查询向量化，然后让你的行对它进行排序。</p>
+          <pre><code>const { data: q } = await lingcode.vector.embed(userQuery);
+
+const { data: hits } = await lingcode.vector.search({
+  table:     'docs',
+  column:    'embedding',
+  embedding: q.embedding,
+  limit:     5
+});</code></pre>
+        </div>
+      </div>
+
+      <h2>一个小型 RAG 示例</h2>
+      <p>检索增强生成无非就是：<strong>把问题向量化 → 检索出最相关的行 → 把这些行喂给模型来撰写答案。</strong>检索这一步正是本页所讲的；撰写答案那一步是一次普通的模型调用。</p>
+      <pre><code>async function answer(userQuery) {
+  // 1. 把问题向量化。
+  const { data: q } = await lingcode.vector.embed(userQuery);
+
+  // 2. 按含义取出最接近的行。
+  const { data: hits } = await lingcode.vector.search({
+    table:     'docs',
+    column:    'embedding',
+    embedding: q.embedding,
+    limit:     5
+  });
+
+  // 3. 把最靠前的行作为上下文交给模型来撰写答案。
+  const context = hits.map(r =&gt; r.text).join('\n\n');
+  // ...用 `context` + `userQuery` 调用你的答案模型...
+  return context;
+}</code></pre>
+      <p>因为检索基于含义，用户可以用自己的话来提问，仍然能拉到正确的行——这正是 RAG 答案区别于关键词查找的地方。</p>
+
+      <h2>选择距离度量</h2>
+      <p><code>metric</code> 决定了两个向量之间的「接近程度」如何衡量。选你的向量化模型推荐的那个；如果拿不准，<strong>cosine</strong> 是稳妥的默认值。</p>
+      <ul>
+        <li><strong><code>cosine</code></strong>（默认）—— 比较向量的<em>方向</em>，忽略其长度。文本向量最常用的选择。</li>
+        <li><strong><code>l2</code></strong> —— 两点之间的直线（欧几里得）距离。</li>
+        <li><strong><code>ip</code></strong> —— 内积（点积）。当你的模型文档要求时使用。</li>
+      </ul>
+
+      <h2>何时该用混合检索</h2>
+      <p>语义检索擅长含义，但可能会漏掉精确的词元——一个产品 SKU、一个用户名、一个特定的错误码。关键词（全文）检索正相反：对精确词项很准，但对同义词视而不见。<strong>混合检索</strong>用倒数排名融合（RRF）把两者合在一起，于是像「Aurora Pro 蓝牙连不上」这样的查询，既能匹配字面上的产品名，<em>又</em>能匹配这条抱怨的含义。只要查询里既有一个具体词项又有一段模糊描述，就该用它。</p>
+
+      <h2>底层原理（REST）</h2>
+      <p>这些 SDK 调用映射到你后端基础 URL <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code> 下的这些端点。用你的 <strong>anon key</strong> 或一个已登录的<strong>用户令牌</strong>认证；结果会和任何其他查询一样经过行级安全过滤。</p>
+
+      <h3>向量化与向量检索</h3>
+      <pre><code>POST /vector/embed
+  { input }
+  → { embedding, embeddings, model, dimensions }
+
+POST /vector/search
+  { table, column, embedding, limit?, metric? }
+  → ranked rows</code></pre>
+
+      <h3>关键词（全文）检索</h3>
+      <pre><code>POST /search/text
+  { table, column, query, is_tsvector?, limit? }
+  → matching rows</code></pre>
+
+      <h3>混合检索（全文 + 语义）</h3>
+      <p>用倒数排名融合（RRF）把关键词排名和含义排名融合起来。你既要传原始的 <code>query</code> 文本（用于全文），也要传它的 <code>embedding</code>（用于语义）；权重用来调节每一边各贡献多少。</p>
+      <pre><code>POST /search/hybrid
+  {
+    table,
+    text_column,
+    vector_column,
+    query,
+    embedding,
+    id_column?,
+    text_is_tsvector?,
+    metric?,
+    limit?,
+    full_text_weight?,
+    semantic_weight?,
+    rrf_k?
+  }
+  → fused, ranked rows</code></pre>
+
+      <div class="info-box">
+        <h3>快速检查清单</h3>
+        <ul>
+          <li>让存储向量和查询向量的<strong>维度保持一致</strong>——同一个模型、同一个 <code>N</code>。</li>
+          <li><strong>在写入时向量化</strong>，这样检索就只是一次查询，而不是每行一次模型往返。</li>
+          <li>表变大后就加一个<strong>向量索引</strong>。</li>
+          <li>除非你的模型另有说明，否则默认用 <strong><code>cosine</code></strong>。</li>
+          <li>当查询里既带一个精确词项又带一段描述时，使用<strong>混合检索</strong>。</li>
+        </ul>
+      </div>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/database.html">
+            <span class="card-eyebrow">数据</span>
+            <h3>数据库</h3>
+            <p>运行那个添加 <code>vector(N)</code> 列的迁移，外加查询构造器、RLS 和索引。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/functions.html">
+            <span class="card-eyebrow">计算</span>
+            <h3>函数</h3>
+            <p>在服务端运行 RAG 的撰写答案那一步，那里可以从密钥保险库读取厂商密钥。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">参考</span>
+            <h3>API 参考</h3>
+            <p>完整的 SDK 接口，以及每一个 <code>/api/cloud/be/&lt;id&gt;/…</code> REST 端点及其结构。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

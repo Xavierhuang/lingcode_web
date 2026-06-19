@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>选择 BaaS：Firebase 对比 Supabase — LingCode 教程</title>
+  <meta name="description" content="Firebase、Supabase 以及它们所属的 BaaS 类别——速度背后的权衡、厂商锁定真正的痛点，以及两者各自的可运行 hello-world 示例。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/pick-a-baas-firebase-vs-supabase.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/pick-a-baas-firebase-vs-supabase.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/pick-a-baas-firebase-vs-supabase.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/pick-a-baas-firebase-vs-supabase.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "选择 BaaS：Firebase 对比 Supabase",
+  "description": "Backend-as-a-Service 是一个捆绑包：认证、数据库、存储、函数、实时推送，全部隐藏在一个 SDK 背后。你买的不是数据库，而是永远不必操心底层如何托管的权利。Firebase 和 Supabase 是两个默认选项——数据模型不同，迁出成本不同",
+  "url": "https://lingcode.dev/zh/tutorials/pick-a-baas-firebase-vs-supabase.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/pick-a-baas-firebase-vs-supabase.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "选择 BaaS：Firebase 对比 Supabase"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "选择 BaaS：Firebase 对比 Supabase",
+      "item": "https://lingcode.dev/zh/tutorials/pick-a-baas-firebase-vs-supabase.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/pick-a-baas-firebase-vs-supabase.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">发布与基础设施</a>
+      <span>/</span>
+      <span>选择 BaaS：Firebase 对比 Supabase</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>选择 BaaS：Firebase 对比 Supabase</h1>
+      <p class="intro">Backend-as-a-Service 是一个捆绑包：认证、数据库、存储、函数、实时推送，全部隐藏在一个 SDK 背后。你买的不是数据库，而是永远不必操心底层如何托管的权利。Firebase 和 Supabase 是两个默认选项——数据模型不同，迁出成本不同，定价曲线相近。本文教你如何做出选择。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>"BaaS"——backend-as-a-service——这个类别名称，实际上代表着对应用程序构建方式的一种押注：一个典型的应用需要认证、数据库、文件上传，以及让这些模块通过网络互相通信的机制。传统做法是自己把这些拼起来——Postgres 存数据、Passport / NextAuth 做认证、S3 做存储、一个 API 服务器做粘合，再加三四个配置文件让它们保持同步。BaaS 的押注是：接受某家厂商预先组装好的四合一方案，能让你更快地把同样的产品交付出去。你写的基础设施代码更少，认证开箱即用，SDK 就是你要 import 的一切。代价是：厂商掌控了数据模型和 API 的形态。</p>
+      <p><strong>Firebase</strong>（Google，2011 年创建，2014 年收购）是历史更悠久的选项。它的数据库是 <em>Firestore</em>——一个内置实时同步的 NoSQL 文档存储，你把 JSON 格式的文档写入集合，SDK 会把更新推送到每个正在查看的客户端。<strong>Supabase</strong>（独立公司，2020 年创建）是"Firebase，但用 Postgres"——同样封装了认证、存储、实时推送和函数，但底层数据库是真正的 Postgres，支持 SQL、JOIN 和外键。这个区别看起来不大，却是在这个技术栈上你要做的最重要的决策：Firestore 优化的是"在海量客户端上实时展示符合条件的文档"；Postgres 优化的是"让你在日后想到任何问题时都能查到答案"。选择与你写查询的方式相匹配的数据模型。</p>
+      <p>本教程涵盖决策过程（这是最主要的工作）、真正重要的几个维度（大多数清单都会漏掉它们），以及两者各自可运行的"读取一行数据 + 检查登录状态"hello-world 示例。读完之后，你会知道该选哪个，也会验证基本功能在你的选择下确实可以运行。从 hello-world 到真实应用，之后的工作不过是同一套 SDK 的延伸。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>BaaS 到底捆绑了什么，这个捆绑包与自己搭建有何不同</li>
+        <li>数据模型问题：文档（Firestore）还是关系（Postgres）</li>
+        <li>第一周之后真正重要的几个维度（查询能力、数据迁移、厂商锁定）</li>
+        <li>定价曲线：免费层何时结束，账单会是什么样子</li>
+        <li>Firebase Auth + Firestore 的 hello-world</li>
+        <li>Supabase Auth + Postgres 的 hello-world</li>
+        <li>什么时候两者都不合适，应该<a href="/zh/tutorials/install-postgres-and-redis-on-your-server.html">自己搭建</a></li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前提条件：</strong>你熟悉某个前端框架（React、Vue、Svelte 或原生 JS 均可，两个 SDK 都支持）；尝试 Firebase 需要 Google 账号；尝试 Supabase 需要 GitHub 账号或邮箱注册。hello-world 示例在本地运行，无需部署。
+      </div>
+
+      <h2>第 1 步：你实际上在购买什么</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>五项服务封装在一个 SDK 里</h3>
+          <p>Firebase 和 Supabase 都将相同的五项能力封装在一个 SDK 和一套凭据之后：</p>
+          <ul>
+            <li><strong>认证（Authentication）</strong>——邮箱/密码、Google / Apple / GitHub OAuth、魔法链接、手机 OTP。SDK 让你一行代码就能判断用户是否已登录。</li>
+            <li><strong>数据库（Database）</strong>——应用数据的存储位置。Firebase = Firestore（NoSQL 文档）；Supabase = Postgres（关系型行）。</li>
+            <li><strong>存储（Storage）</strong>——文件上传。头像、附件、用户生成的图片。两者都提供桶状 API；Firebase 底层是 Google Cloud Storage，Supabase 底层是 S3。</li>
+            <li><strong>实时（Realtime）</strong>——数据变更时向客户端推送更新。就是那个"计数器在所有地方同步更新"的演示效果。Firestore 默认对所有读取开启；Supabase 可按表选择开启。</li>
+            <li><strong>函数（Functions）</strong>——由事件或 HTTP 触发的服务端代码。Firebase Cloud Functions（Node）和 Supabase Edge Functions（Deno）。</li>
+          </ul>
+          <p>你在托管费之外真正为之付费的，是<em>所有五项都绑定到同一套用户身份</em>这件事。已登录用户的照片上传（存储）之所以被允许，是因为数据库里有一条行级别的规则，引用了他们的认证令牌（认证）。自己搭建意味着要手动编写这套连接逻辑；用 BaaS，SDK 直接把接好线的版本交给你。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：数据模型问题（这才是关键决策）</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Firestore 为固定形态优化；Postgres 为变化优化</h3>
+          <p>Firebase 和 Supabase 之间最重要的区别就是数据库。选错了，之后每新增一个功能都是在跟 schema 较劲。</p>
+          <p><strong>Firestore（Firebase）——NoSQL 文档。</strong>数据存储在由<em>文档</em>组成的<em>集合</em>中，文档就是 JSON。没有 JOIN，没有外键，没有迁移——schema 只存在于你的代码里。查询很简单（"这个集合中字段 X 等于 Y 的文档"），在大规模场景下非常快，但任何涉及多表的操作（类似 SQL JOIN）要么需要把数据反范式化写进文档，要么在客户端拉取多个集合后自行处理。实时同步默认对所有读取开启，这是 Firebase 的招牌特性。</p>
+          <p><strong>Postgres（Supabase）——关系型行。</strong>数据存储在带有类型列和预定义 schema 的<em>表</em>中。JOIN 存在，外键存在，SQL 是查询语言；Supabase SDK 在上面封装了一个查询构建器，但你也可以在需要时直接写原生 SQL。schema 变更通过迁移文件管理——存放在仓库中的文本文件，负责将数据库从一个形态演变到另一个形态。实时功能需按表选择开启。</p>
+          <p>有一条经验法则出奇地管用：<strong>如果你的应用感觉像"一个有评论和点赞的帖子流"，Firestore 就够了。如果感觉像"用户、项目、任务、分配，加上跨所有数据的报表"，你会跟 Firestore 不断较劲，Postgres 才是赢家。</strong>大多数真实的消费者应用，即便最初看起来像前者，经过一年的迭代都会演变成后者的形态。这种倾向是 2026 年团队将 Supabase 作为默认选择的主要原因。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：第一周之后真正重要的维度</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>两份 SDK 入门教程没有告诉你的事</h3>
+          <table>
+            <thead><tr><th>维度</th><th>Firebase</th><th>Supabase</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>查询能力</strong></td>
+                <td>有限：只能在一个字段上过滤，一个有索引的字段上做等值或范围查询。不支持 <code>JOIN</code>，不支持 <code>GROUP BY</code>。</td>
+                <td>完整 SQL。支持 JOIN、窗口函数、递归 CTE、全文搜索。</td>
+              </tr>
+              <tr>
+                <td><strong>Schema 变更</strong></td>
+                <td>无。随时添加字段；数据是否有效完全取决于应用代码。</td>
+                <td>迁移文件（存放在仓库中的文本文件，应用到数据库）。工作量更大，但更安全。</td>
+              </tr>
+              <tr>
+                <td><strong>认证提供商</strong></td>
+                <td>邮箱、手机、Google、Apple、Facebook、Twitter、GitHub、匿名、自定义 JWT。</td>
+                <td>邮箱/密码、魔法链接、Google、Apple、GitHub、GitLab、Bitbucket、Slack、Discord、Twitter、Microsoft、Notion、Spotify、Twitch、匿名、手机、SAML。</td>
+              </tr>
+              <tr>
+                <td><strong>实时推送</strong></td>
+                <td>默认对所有读取开启，是产品的核心亮点。</td>
+                <td>按表选择开启；底层使用 Postgres 逻辑复制。稳定，但不是默认行为。</td>
+              </tr>
+              <tr>
+                <td><strong>行级别安全</strong></td>
+                <td>Firestore 安全规则——一套小型 DSL。功能强大，但是专有的。</td>
+                <td>Postgres RLS——SQL。功能强大、可移植，是业界标准。</td>
+              </tr>
+              <tr>
+                <td><strong>迁出成本</strong></td>
+                <td>高。数据以 Firestore 专有格式存储；虽然有导出工具，但在其他技术栈上重建应用意味着几乎要重写所有查询。</td>
+                <td>低至中等。数据是 Postgres——<code>pg_dump</code> 后可以在任意地方恢复。认证和存储是厂商专有的，但通常掌握最大筹码的数据库是可移植的。</td>
+              </tr>
+              <tr>
+                <td><strong>本地开发</strong></td>
+                <td>Firebase Emulator Suite——在本地运行 Firestore、Auth、Functions。成熟、文档完善。</td>
+                <td>Supabase CLI——在 Docker 中本地运行 Postgres + Auth + Storage + Studio。成熟、文档完善。</td>
+              </tr>
+              <tr>
+                <td><strong>自托管</strong></td>
+                <td>不支持。Firebase 是仅限 Google 的服务。</td>
+                <td>支持。Supabase 是开源的；你可以在自己的 Postgres + 认证服务器上运行整套系统。大多数人不这么做，但你可以。</td>
+              </tr>
+              <tr>
+                <td><strong>厂商锁定（主观）</strong></td>
+                <td>显著。心智模型和查询方式无法迁移。</td>
+                <td>适中。Postgres 技能和 SQL 可以迁移；Supabase 专有的辅助方法则不能。</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>迁出成本这一行比大多数人预想的更重要。成功的应用会产生当初选择 BaaS 时没有预料到的新需求。用 Supabase，"我需要迁出"意味着"<code>pg_dump</code>，然后让应用连接另一个 Postgres"。用 Firebase，则是一个以月为单位计算的项目。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：定价——关注曲线，不只是标题数字</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>两者都是免费到某个临界点；理解那个悬崖在哪里</h3>
+          <p>两者都有慷慨的免费层，足以支撑个人项目和小型 SaaS。两者都会在超出配额时切换到付费计划，然后在基础计划之上按用量计费。</p>
+          <p><strong>Firebase（Spark → Blaze）。</strong>Spark 计划免费，包含 1 GiB Firestore、1 GB 存储、10 GB 传输、每日 5 万次 Firestore 读取、2 万次写入。超出后切换到 Blaze（按量付费）：每 10 万次 Firestore 读取 $0.06，每 10 万次写入 $0.18，存储 $0.026/GB 每月。那些臭名昭著的"Firebase 账单爆炸"故事，通常是在 Blaze 计划下配置有问题的客户端陷入无限读取循环——计费器不会停。<strong>在上线前务必在 GCP 项目中设置每日预算告警。</strong></p>
+          <p><strong>Supabase 免费层 → Pro。</strong>免费层包含 500 MB Postgres 数据库、1 GB 存储、每月 5 万活跃用户、5 GB 出口流量。Pro 是固定 $25/月加用量——8 GB 数据库、100 GB 存储、10 万 MAU、250 GB 出口流量。Pro 以上是企业定价。定价更偏向"订阅制"而非 Firebase 的纯按量计费；账单不会意外暴涨，但计划升级需要主动操作。</p>
+          <p>对于约 1 万月活用户、数据量适中的真实应用：两者在入门付费计划下都在 $25–60/月左右。曲线在此之上开始分叉——Firebase 随流量平滑扩展；Supabase 在计划边界有阶梯式变化（Pro → Team → Enterprise）。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Firebase 账单失控的问题是真实存在的。</strong>因为 Blaze 对每次操作计费，且默认没有消费上限，一个有 bug 的客户端在无限循环中反复读取，可以在一夜之间累积四位数的账单。缓解措施：在 GCP Billing 控制台设置 $5 / $20 / $100 的预算告警，编写限制每用户读取次数的 Firestore 安全规则，以及在部署全新客户端之前务必加上速率限制。Google 有时会退款处理最严重的情况，但你不能指望这一点。
+      </div>
+
+      <h2>第 5 步：hello-world——Firebase</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>用 Google 登录，读取一个文档</h3>
+          <p>一次性配置：打开 <a href="https://console.firebase.google.com" target="_blank" rel="noopener">Firebase 控制台</a> → <strong>添加项目</strong>。进入项目后：<strong>构建 → Authentication</strong> → 启用 Google。<strong>构建 → Firestore Database</strong> → 在测试模式下创建。从项目设置中复制 Web 配置对象（包含一个 <code>apiKey</code> 和若干 ID）。</p>
+          <p>在你的项目中：</p>
+          <pre><code>npm i firebase</code></pre>
+          <p>创建 <code>src/firebase.js</code>：</p>
+          <pre><code>import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+
+const app = initializeApp({
+  apiKey: "AIza...",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project",
+  // ...rest of config
+});
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const signInWithGoogle = () =&gt;
+  signInWithPopup(auth, new GoogleAuthProvider());
+
+export async function getProfile(uid) {
+  const snap = await getDoc(doc(db, "profiles", uid));
+  return snap.exists() ? snap.data() : null;
+}</code></pre>
+          <p>在你的组件中：</p>
+          <pre><code>import { useEffect, useState } from "react";
+import { auth, signInWithGoogle, getProfile } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() =&gt; onAuthStateChanged(auth, async (u) =&gt; {
+    setUser(u);
+    if (u) setProfile(await getProfile(u.uid));
+  }), []);
+
+  if (!user) return &lt;button onClick={signInWithGoogle}&gt;Sign in&lt;/button&gt;;
+  return &lt;div&gt;Hi {user.displayName} — profile: {JSON.stringify(profile)}&lt;/div&gt;;
+}</code></pre>
+          <p>运行它。点击登录按钮，弹出 Google OAuth 授权窗口；授权后，页面会用你的名字向你打招呼。在 Firestore 控制台中向 <code>profiles/&lt;your-uid&gt;</code> 写入一个文档；刷新页面，数据就出现了。这就是 30 行代码里的整个捆绑包。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：hello-world——Supabase</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>同样的事，换成 Postgres 的方式</h3>
+          <p>一次性配置：打开 <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">Supabase 控制台</a> → <strong>新建项目</strong>。等待约 90 秒让 Postgres 实例启动。在 <strong>Authentication → Providers</strong> 中启用 Google（粘贴来自 GCP 的 Google OAuth 客户端 ID 和密钥）。在 <strong>SQL Editor</strong> 中创建一个 profiles 表：</p>
+          <pre><code>create table profiles (
+  id uuid primary key references auth.users on delete cascade,
+  display_name text,
+  created_at timestamptz default now()
+);
+alter table profiles enable row level security;
+create policy "own profile" on profiles for select using (auth.uid() = id);</code></pre>
+          <p>从项目设置中复制 <code>SUPABASE_URL</code> 和 <code>SUPABASE_ANON_KEY</code>。</p>
+          <p>在你的项目中：</p>
+          <pre><code>npm i @supabase/supabase-js</code></pre>
+          <p>创建 <code>src/supabase.js</code>：</p>
+          <pre><code>import { createClient } from "@supabase/supabase-js";
+
+export const supabase = createClient(
+  "https://&lt;PROJECT&gt;.supabase.co",
+  "eyJ...ANON_KEY"
+);
+
+export const signInWithGoogle = () =&gt;
+  supabase.auth.signInWithOAuth({ provider: "google" });
+
+export async function getProfile(userId) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .single();
+  return error ? null : data;
+}</code></pre>
+          <p>在你的组件中：</p>
+          <pre><code>import { useEffect, useState } from "react";
+import { supabase, signInWithGoogle, getProfile } from "./supabase";
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() =&gt; {
+    supabase.auth.getSession().then(({ data }) =&gt; setUser(data.session?.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, session) =&gt; {
+      const u = session?.user ?? null;
+      setUser(u);
+      if (u) setProfile(await getProfile(u.id));
+    });
+    return () =&gt; sub.subscription.unsubscribe();
+  }, []);
+
+  if (!user) return &lt;button onClick={signInWithGoogle}&gt;Sign in&lt;/button&gt;;
+  return &lt;div&gt;Hi {user.email} — profile: {JSON.stringify(profile)}&lt;/div&gt;;
+}</code></pre>
+          <p>运行它。流程完全相同：点击登录，Google OAuth 弹窗，页面向你打招呼。将你的 <code>auth.users.id</code> 作为主键插入一行到 <code>profiles</code> 表中；刷新，数据出现。结构与 Firebase 几乎相同，底层数据库换成了 Postgres。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：如何在两者之间做出选择</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>覆盖大多数情况的三个简短答案</h3>
+          <ul>
+            <li><strong>现在就要选，还不知道应用会变成什么样：</strong>选 Supabase。迁出成本更低，数据模型能处理更多形态，SQL 技能也是通用的。</li>
+            <li><strong>你的应用本质上是一个实时同步产品</strong>（聊天、协作编辑器、实时游戏状态、多设备在线状态）：选 Firebase。Firestore 的实时无处不在模型在这个场景下确实优于 Supabase 的按需实时。</li>
+            <li><strong>你的应用需要对数据做 JOIN、报表或分析：</strong>选 Supabase。跟 Firestore 较劲解决这个问题是好几个月的工程量；Postgres 用一行 SQL 就能搞定。</li>
+          </ul>
+          <p>"两者都用"是罕见但合理的选择——用 Firebase Auth + Firestore 处理应用的实时侧，用 Supabase Postgres 处理关系型数据侧。大多数团队发现这样的复杂度得不偿失，最终还是选择一个。</p>
+        </div>
+      </div>
+
+      <h2>什么时候两者都不合适</h2>
+      <p><strong>你不需要实时功能，不需要认证即服务，数据结构也很简单。</strong>一个部署在 Vercel 上、连接 Neon Postgres 和 NextAuth 的 Next.js 应用，比任何一个 BaaS 都简单得多。"五项能力合一 SDK"的前提假设是你全都需要；但实际上你往往不需要。</p>
+      <p><strong>你已经深度使用 AWS 或 Azure。</strong>AWS Cognito + RDS + S3（或 Azure AD B2C + Cosmos + Blob）能实现同样的功能，而且使用你已有的提供商集成。引入 Firebase 或 Supabase 意味着多一家供应商的账单，以及多一个故障半径。</p>
+      <p><strong>你无法接受两者的数据驻留位置或合规姿态。</strong>Firebase 运行在 Google Cloud 上；Supabase Cloud 运行在 AWS 上（Team 及以上版本支持多区域）。对于严格的本地部署需求，两者都不是正确答案；自托管 Supabase 或自建服务器上的 Postgres 模式（参见<a href="/zh/tutorials/install-postgres-and-redis-on-your-server.html">在服务器上安装 Postgres 和 Redis</a>）才是。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/install-postgres-and-redis-on-your-server.html" class="tutorial-next-card">
+            <h3>在服务器上安装 Postgres 和 Redis</h3>
+            <p>当两个 BaaS 都不合适时的"自己搭建"路径——同样是 Postgres，不同的运维方式</p>
+          </a>
+          <a href="/zh/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>使用 Google OAuth 登录</h3>
+            <p>如果你想要认证功能但不想绑定 BaaS，这是单独的认证方案</p>
+          </a>
+          <a href="/zh/tutorials/magic-deploy-a-website.html" class="tutorial-next-card">
+            <h3>一键部署网站</h3>
+            <p>前端部署；与 Supabase 或 Firebase 配合使用作为后端</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速交付的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

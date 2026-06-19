@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product analytics with PostHog — LingCode Tutorials</title>
+  <meta name="description" content="Track user events, run feature flags, watch session replays. Sign up, drop the snippet, identify users. One tool for behavior analytics and feature rollouts.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/product-analytics-with-posthog.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/product-analytics-with-posthog.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/product-analytics-with-posthog.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/product-analytics-with-posthog.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Product analytics with PostHog",
+  "description": "Track what users do, run feature flags, watch session replays — one tool, one signup. Free tier covers 1M events/month + 5K replays. The default analytics stack for indie products.",
+  "url": "https://lingcode.dev/tutorials/product-analytics-with-posthog.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/product-analytics-with-posthog.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Sign up + create a project",
+      "url": "https://lingcode.dev/tutorials/product-analytics-with-posthog.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Install — web",
+      "url": "https://lingcode.dev/tutorials/product-analytics-with-posthog.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Install — backend / mobile",
+      "url": "https://lingcode.dev/tutorials/product-analytics-with-posthog.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Build a funnel",
+      "url": "https://lingcode.dev/tutorials/product-analytics-with-posthog.html#step-4"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Product analytics with PostHog",
+      "item": "https://lingcode.dev/tutorials/product-analytics-with-posthog.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/product-analytics-with-posthog.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Backend integrations</a>
+      <span>/</span>
+      <span>Product analytics with PostHog</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Product analytics with PostHog</h1>
+      <p class="intro">Track what users do, run feature flags, watch session replays — one tool, one signup. Free tier covers 1M events/month + 5K replays. The default analytics stack for indie products.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>What PostHog gives you</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Product analytics</strong> — track named events ("upload_started", "checkout_completed"), build funnels, see retention cohorts. Like Mixpanel or Amplitude.</li>
+            <li><strong>Session replay</strong> — video-like playback of real user sessions. Privacy-aware (auto-masks inputs).</li>
+            <li><strong>Feature flags</strong> — gradually roll out new features to N% of users, A/B test variants.</li>
+            <li><strong>Surveys</strong> — in-app NPS or feedback prompts.</li>
+            <li><strong>Heatmaps</strong> — see where users click on a page.</li>
+          </ul>
+          <p>Alternatives: <a href="https://plausible.io/" target="_blank" rel="noopener">Plausible ↗</a> (lighter, privacy-first, page-view focused), <a href="https://mixpanel.com/" target="_blank" rel="noopener">Mixpanel ↗</a>, <a href="https://amplitude.com/" target="_blank" rel="noopener">Amplitude ↗</a>. PostHog wins on "single tool covers everything" and a generous free tier.</p>
+        </div>
+      </div>
+
+      <h2>Sign up + create a project</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Sign up at <a href="https://app.posthog.com/signup" target="_blank" rel="noopener">app.posthog.com ↗</a>. Pick the US Cloud or EU Cloud region (matters for GDPR). Create a project; name it after your app.</p>
+          <p>Copy your <strong>Project API Key</strong> (looks like <code>phc_xxxxxxxxxxxxxxxx</code>). Visible at <strong>Settings → Project → General</strong>. Safe to ship to browsers — it's a write-only key with no access to your data.</p>
+        </div>
+      </div>
+
+      <h2>Install — web</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p><strong>Easiest: snippet in HTML</strong> (works for any web app):</p>
+          <pre><code>&lt;script&gt;
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&amp;&amp;(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&amp;&amp;(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n&lt;o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init("phc_YOUR_KEY_HERE", { api_host: "https://us.i.posthog.com" });
+&lt;/script&gt;</code></pre>
+          <p><strong>npm version (React/Next.js/Vue):</strong></p>
+          <pre><code>npm install posthog-js</code></pre>
+          <pre><code>import posthog from "posthog-js";
+
+if (typeof window !== "undefined") {
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
+    api_host: "https://us.i.posthog.com",
+  });
+}</code></pre>
+          <p>The snippet auto-captures: page views, clicks, form fills, page-leave events. You'll see them appear in PostHog within seconds of loading the page.</p>
+        </div>
+      </div>
+
+      <h2>Install — backend / mobile</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Node</strong> — <a href="https://posthog.com/docs/libraries/node" target="_blank" rel="noopener">posthog-node ↗</a></li>
+            <li><strong>Python</strong> — <a href="https://posthog.com/docs/libraries/python" target="_blank" rel="noopener">posthog-python ↗</a></li>
+            <li><strong>iOS</strong> — <a href="https://posthog.com/docs/libraries/ios" target="_blank" rel="noopener">posthog-ios ↗</a></li>
+            <li><strong>Android</strong> — <a href="https://posthog.com/docs/libraries/android" target="_blank" rel="noopener">posthog-android ↗</a></li>
+            <li><strong>React Native</strong> — <a href="https://posthog.com/docs/libraries/react-native" target="_blank" rel="noopener">posthog-react-native ↗</a></li>
+            <li><strong>Flutter</strong> — <a href="https://posthog.com/docs/libraries/flutter" target="_blank" rel="noopener">posthog-flutter ↗</a></li>
+          </ul>
+          <p>All libraries follow the same pattern: <code>init</code>, <code>capture</code>, <code>identify</code>.</p>
+        </div>
+      </div>
+
+      <h2>Capture your first custom event</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <pre><code>// Web / React
+posthog.capture("upload_started", {
+  file_type: "image/png",
+  file_size_bytes: 12345,
+});</code></pre>
+          <p>Naming convention worth adopting: <code>noun_verb</code> with snake_case. <code>upload_started</code>, <code>checkout_completed</code>, <code>tutorial_finished</code>. Consistent names make funnels and dashboards readable a year from now.</p>
+          <p>See it in PostHog → <strong>Activity → Live Events</strong>. Latency to dashboard is usually under 5 seconds.</p>
+        </div>
+      </div>
+
+      <h2>Identify your users</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Right after sign-in, tell PostHog who this anonymous person actually is:</p>
+          <pre><code>posthog.identify(user.id, {
+  email: user.email,
+  plan: user.plan,
+  signed_up_at: user.created_at,
+});</code></pre>
+          <p>From now on, every event from this browser is associated with that user. PostHog stitches the anonymous pre-sign-in events to the identified user — so the funnel "landed on page → signed up → purchased" stays intact.</p>
+          <p>On sign-out, reset:</p>
+          <pre><code>posthog.reset();   // clears identity, generates a new anonymous ID</code></pre>
+        </div>
+      </div>
+
+      <h2>Build a funnel</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>PostHog → <strong>Product analytics → Funnels → New funnel</strong>. Pick a sequence of events:</p>
+          <ol>
+            <li><code>page_view</code> (on landing page)</li>
+            <li><code>sign_up_started</code></li>
+            <li><code>sign_up_completed</code></li>
+            <li><code>upload_started</code></li>
+          </ol>
+          <p>PostHog shows conversion at each step. The biggest drop-off is your highest-leverage UX problem. <a href="https://posthog.com/docs/product-analytics/funnels" target="_blank" rel="noopener">Funnels docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Turn on session replay</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>PostHog → <strong>Session replay → Settings</strong> → toggle on. (Or pass <code>session_recording: { recordCrossOriginIframes: false }</code> in init.)</p>
+          <p>Sensitive inputs (passwords, credit cards) are auto-masked. For specific elements, add <code>data-ph-no-capture</code>:</p>
+          <pre><code>&lt;input data-ph-no-capture type="text" name="ssn"&gt;</code></pre>
+          <p>Replays are scoped to events — you can click any event in PostHog and watch the session that contained it. Useful for "this user signed up but then bounced; what happened?"</p>
+        </div>
+      </div>
+
+      <h2>Feature flags</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Roll out a feature to N% of users without redeploying. PostHog → <strong>Feature flags → New feature flag</strong>. Pick a key (e.g., <code>new-checkout</code>), set rollout to 10%, save.</p>
+          <p>In your app:</p>
+          <pre><code>// After init
+posthog.onFeatureFlags(() =&gt; {
+  if (posthog.isFeatureEnabled("new-checkout")) {
+    renderNewCheckout();
+  } else {
+    renderOldCheckout();
+  }
+});</code></pre>
+          <p>Bump the percentage as confidence grows. Stop the rollout if metrics go bad. <a href="https://posthog.com/docs/feature-flags" target="_blank" rel="noopener">Feature flags docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>A/B test variants</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Feature flags can have multiple variants:</p>
+          <pre><code>const variant = posthog.getFeatureFlag("checkout-button-color");
+// returns "control" | "blue" | "green" — randomized per user
+
+if (variant === "green") renderGreenButton();
+else if (variant === "blue") renderBlueButton();
+else renderControlButton();</code></pre>
+          <p>PostHog records which variant each user saw. Run for a week, look at conversion per variant. <a href="https://posthog.com/docs/experiments" target="_blank" rel="noopener">Experiments docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Privacy and GDPR</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>Three knobs that matter:</p>
+          <ul>
+            <li><strong>EU region</strong> — pick during signup if your users are in the EU. Data stays in Frankfurt.</li>
+            <li><strong>Opt-out</strong> — for users who've declined analytics in your cookie banner, call <code>posthog.opt_out_capturing()</code>. <code>opt_in_capturing()</code> to re-enable.</li>
+            <li><strong>Anonymize IPs</strong> — Settings → Project → toggle <strong>Discard client IPs</strong>. Reduces PII surface.</li>
+          </ul>
+          <p><a href="https://posthog.com/docs/privacy" target="_blank" rel="noopener">Privacy docs ↗</a> · <a href="https://posthog.com/handbook/growth/marketing/legal" target="_blank" rel="noopener">PostHog legal ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Self-hosted if you need it</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p>PostHog is open-source. You can <a href="https://posthog.com/docs/self-host" target="_blank" rel="noopener">self-host ↗</a> via Docker Compose or Kubernetes. Production self-hosting is real work — Kafka, ClickHouse, Postgres, Redis, MinIO. Most projects don't bother and use PostHog Cloud.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Don't capture every micro-interaction.</strong> Event quotas burn fast when you track every mouse-move. Capture events that map to product decisions: page view, sign up, key feature use, drop-off, conversion. Use session replay for the "what happened in that interaction" view; events are for "how many times did this happen."
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <p>Free tier: 1M events + 5K session recordings + 1M feature flag requests per month. Real for early stage. Pricing scales linearly past that. <a href="https://posthog.com/pricing" target="_blank" rel="noopener">PostHog pricing ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://posthog.com/docs" target="_blank" rel="noopener">PostHog docs ↗</a></li>
+        <li><a href="https://posthog.com/docs/libraries" target="_blank" rel="noopener">All SDK libraries ↗</a></li>
+        <li><a href="https://posthog.com/docs/product-analytics" target="_blank" rel="noopener">Product analytics guide ↗</a></li>
+        <li><a href="https://posthog.com/docs/session-replay" target="_blank" rel="noopener">Session Replay ↗</a></li>
+        <li><a href="https://posthog.com/docs/feature-flags" target="_blank" rel="noopener">Feature flags ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>Set up Sentry error tracking</h3>
+            <p>PostHog tells you what users did; Sentry tells you when it crashed</p>
+          </a>
+          <a href="/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>Set up Supabase (database + auth)</h3>
+            <p>Identify users in PostHog with their Supabase user ID</p>
+          </a>
+          <a href="/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>Sign in with Google (OAuth)</h3>
+            <p>Identify the user the moment they sign in</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

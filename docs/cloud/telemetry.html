@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics & telemetry — LingCode Cloud | Docs</title>
+  <meta name="description" content="First-party analytics and error reporting built into the LingCode Cloud SDK: log events, screen views, performance traces, and caught errors, optionally tied to a user id. Events buffer on the client and flush to your own backend — no third-party analytics library, your data stays with you.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/telemetry.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/telemetry.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/telemetry.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/telemetry.html">
+  <meta property="og:title" content="Analytics & telemetry — LingCode Cloud">
+  <meta property="og:description" content="Log events, screen views, performance traces, and caught errors with the built-in SDK telemetry. Events buffer on the client and flush to your own backend.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Analytics</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Telemetry</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Analytics &amp; telemetry</h1>
+      <p class="tldr"><strong>TL;DR:</strong> The SDK ships with first-party analytics and error reporting — <code>logEvent</code>, <code>logScreen</code>, <code>trace</code>, and <code>recordError</code>, optionally tied to a real <code>setUserId</code>. Events buffer on the client and flush to <em>your</em> backend, so there's no third-party analytics library to add and the data never leaves your control.</p>
+      <p class="intro">Most apps reach for a hosted analytics SDK on day one, and within a week they're shipping user behaviour to someone else's servers and wiring a second account into the build. LingCode Cloud folds the basics — events, screen views, timing, and caught errors — into the same client you already use for data and auth. You call a method, the SDK batches it, and it lands in your own backend. This page covers why that split matters and exactly how to use each call.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>Why it's built in</h2>
+      <p>Analytics and crash reporting are the two things almost every app needs and almost every app outsources. Outsourcing them means a third dependency in your bundle, another vendor with a copy of your users' behaviour, and one more dashboard to log into. The SDK's <code>telemetry</code> surface removes all three: the events you record are sent to the same backend that holds your data, batched and flushed by the client, with no extra library to install.</p>
+      <p>The model is deliberately small. You record four kinds of signal — events, screen views, performance traces, and errors — and you can optionally attach a real user id so the data segments by who did what. Everything else (buffering, batching, retry-on-flush) is handled for you.</p>
+
+      <div class="info-box">
+        <h3>Where the data goes</h3>
+        <p>Telemetry is first-party. Events accumulate in a small client-side buffer and are posted to your backend's telemetry endpoint — they do not transit any third-party analytics service. Because the destination is your own LingCode Cloud backend, the analytics data stays exactly where the rest of your app's data lives.</p>
+      </div>
+
+      <h2>The telemetry surface</h2>
+      <p>Everything hangs off <code>client.telemetry</code>. Throughout the samples below the client is named <code>lingcode</code> — inside <a href="/try.html">/try</a> and the Mac preview that's already <code>window.lingcode</code>; in your own app it's whatever <code>LingCode.createClient(...)</code> returned.</p>
+
+      <ul>
+        <li><code>logEvent(name, params?)</code> → <code>void</code> — record a named event. <code>params</code> is an optional record of scalar values (<code>string | number | boolean</code>), at most <strong>25 keys</strong>.</li>
+        <li><code>logScreen(name)</code> → <code>void</code> — convenience for a <code>screen_view</code> event.</li>
+        <li><code>trace(name, ms)</code> → <code>void</code> — record a custom performance measurement, in milliseconds.</li>
+        <li><code>recordError(err)</code> → <code>void</code> — report a caught error. <code>err</code> can be an <code>Error</code>, a <code>{ message?, stack? }</code> object, or a string. <strong>Flushes immediately.</strong></li>
+        <li><code>setUserId(id)</code> → <code>void</code> — tie analytics to a real app user id (opt-in). Pass <code>null</code> or <code>''</code> to clear it (e.g. on sign-out).</li>
+        <li><code>setUserProperties(props)</code> → <code>void</code> — set segmentation properties; they're merged, persisted, and attached to events.</li>
+        <li><code>flush()</code> → <code>Promise&lt;Result&gt;</code> — force-send buffered events now.</li>
+      </ul>
+
+      <h2>Track an action</h2>
+      <p>The workhorse is <code>logEvent</code>. Give it a name, and optionally a flat bag of scalar params for context:</p>
+      <pre><code>lingcode.telemetry.logEvent('checkout_started', { plan: 'pro', amount: 29 });</code></pre>
+      <p>Params are for slicing later — plan tier, item count, the variant a user saw. Keep them scalar (<code>string</code>, <code>number</code>, or <code>boolean</code>) and keep the count at or under 25 keys; nested objects and overflowing keys don't belong in an event.</p>
+
+      <h2>Track a screen</h2>
+      <p>Screen views get their own shorthand so you don't have to remember an event-name convention:</p>
+      <pre><code>lingcode.telemetry.logScreen('Pricing');</code></pre>
+      <p>That's exactly equivalent to a <code>screen_view</code> event for the <code>Pricing</code> screen — call it from each route or view as the user navigates.</p>
+
+      <h2>Tie analytics to a user</h2>
+      <p>By default events aren't attached to a person. Once someone signs in, opt in by handing the telemetry layer their app user id; clear it again when they sign out so the next session starts clean:</p>
+      <pre><code>// after a successful sign-in
+lingcode.telemetry.setUserId(user.id);
+
+// on sign-out
+lingcode.telemetry.setUserId(null);</code></pre>
+      <p>For segmentation — plan tier, locale, cohort — set user properties. They're merged with whatever you set before, persisted on the client, and attached to subsequent events:</p>
+      <pre><code>lingcode.telemetry.setUserProperties({ plan: 'pro', locale: 'en-US', cohort: '2026-Q2' });</code></pre>
+
+      <h2>Capture errors</h2>
+      <p>Reach for <code>recordError</code> in your global error handler and in any <code>catch</code> block worth knowing about. It accepts an <code>Error</code>, a plain <code>{ message?, stack? }</code> object, or a bare string:</p>
+      <pre><code>// a global handler
+window.addEventListener('error', (e) =&gt; {
+  lingcode.telemetry.recordError(e.error ?? e.message);
+});
+
+// or in a catch block
+try {
+  await doRiskyThing();
+} catch (err) {
+  lingcode.telemetry.recordError(err);
+}</code></pre>
+      <p>Unlike the other calls, <code>recordError</code> <strong>flushes immediately</strong> — a crash that takes the page down with it shouldn't take its own report along too.</p>
+
+      <h2>Measure timing</h2>
+      <p>Use <code>trace</code> to record a custom performance measurement in milliseconds — how long an image took to load, how long a query ran, how long a screen took to become interactive:</p>
+      <pre><code>const start = performance.now();
+await loadHeroImage();
+lingcode.telemetry.trace('image_load', performance.now() - start);
+
+// or pass a measurement you already have
+lingcode.telemetry.trace('image_load', 320);</code></pre>
+
+      <div class="info-box">
+        <h3>How buffering and flushing work</h3>
+        <p>Events batch and flush automatically — you don't normally call <code>flush()</code> yourself. The two cases where it earns its keep: before a <strong>hard navigation</strong> (a full-page redirect or close) where you need delivery guaranteed, and any moment you want buffered events sent right now. <code>recordError</code> already flushes on its own, so crash reports aren't lost. Keep event params scalar and within 25 keys, and lean on <code>setUserProperties</code> for the segmentation you'll filter by — plan tier, locale, cohort.</p>
+      </div>
+
+      <h2>Flush on the way out</h2>
+      <p><code>flush()</code> returns a promise so you can await delivery before the page goes away:</p>
+      <pre><code>// guarantee buffered events are sent before a hard navigation
+await lingcode.telemetry.flush();
+window.location.href = '/checkout';</code></pre>
+
+      <h2>Under the hood (REST)</h2>
+      <p>The SDK posts batched events to your backend's telemetry endpoint. You rarely call this directly, but it's here for non-JS clients and debugging:</p>
+      <pre><code>POST https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/telemetry
+Content-Type: application/json
+
+{
+  "events": [
+    { "name": "checkout_started", "params": { "plan": "pro", "amount": 29 }, "timestamp": 1718064000000 }
+  ]
+}</code></pre>
+      <p>A failed send surfaces as <code>telemetry_failed</code>.</p>
+
+      <div class="warn-box">
+        <strong>Telemetry is opt-in for identity.</strong> Events are anonymous until you call <code>setUserId</code>. Only attach a real user id once you have a basis to — a signed-in session and whatever consent your app requires — and clear it with <code>setUserId(null)</code> on sign-out so a shared device doesn't blend two people's analytics.
+      </div>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/config.html">
+            <span class="card-eyebrow">Setup</span>
+            <h3>Configuration</h3>
+            <p>Point the client at your backend's URL and anon key, and tune client behaviour before you record a thing.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">Reference</span>
+            <h3>API reference</h3>
+            <p>The full SDK surface and every <code>/api/cloud/be/&lt;id&gt;/…</code> REST endpoint, telemetry included.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/">
+            <span class="card-eyebrow">Overview</span>
+            <h3>LingCode Cloud</h3>
+            <p>Back to the home for the managed backend — database, auth, storage, functions, and hosting.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I connect a custom domain to my LingCode Cloud app? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Point your own domain at an app deployed to LingCode Cloud. Add one DNS record (CNAME or A), and HTTPS is issued automatically — no certificate setup. Covers apex + www, registrar steps, and the Cloudflare DNS-only gotcha.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-a-custom-domain.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/connect-a-custom-domain.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-a-custom-domain.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-31T00:00:00Z">
+  <meta name="article:published_time" content="2026-05-31T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/connect-a-custom-domain.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Connect a custom domain to your LingCode Cloud app",
+  "description": "Serve an app you deployed to LingCode Cloud on your own domain. Attach the domain in the Mac IDE, add one DNS record (CNAME to apps.lingcode.dev or an A record), and HTTPS is issued automatically on the first request.",
+  "url": "https://lingcode.dev/tutorials/connect-a-custom-domain.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-05-31",
+  "dateModified": "2026-05-31",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/tutorials/connect-a-custom-domain.html" },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Connect a custom domain to your LingCode Cloud app"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Search", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "Shipping & infrastructure", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Connect a custom domain", "item": "https://lingcode.dev/tutorials/connect-a-custom-domain.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/connect-a-custom-domain.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Connect a custom domain</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-31</span>
+      </div>
+      <h1>How do I connect a custom domain to my LingCode Cloud app?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Deploy your app to LingCode Cloud from the Mac IDE (the <strong>Cloud</strong> button in the toolbar). In the success panel, expand <strong>Custom domain</strong>, type <code>app.yoursite.com</code>, and click <strong>Attach</strong>. Then at your domain registrar add <em>one</em> record — a <code>CNAME</code> to <code>apps.lingcode.dev</code>, or an <code>A</code> record to <code>138.197.107.228</code> for a root domain. HTTPS is issued automatically on the first visit. The IDE shows <strong>Pending DNS → Verified ✓</strong> when it's live.</p>
+      <p class="intro">You shipped something to LingCode Cloud and it lives at a <code>lingcode.dev/apps/&lt;id&gt;/</code> URL. (Haven't deployed yet? Start with <a href="/tutorials/deploy-to-lingcode-cloud.html">Deploy your app to LingCode Cloud</a> — the one-click Cloud button — then come back here.) That's fine for testing, but a real product wants <code>yourbrand.com</code>. The good news: putting your own domain in front of a Cloud app is a two-minute job, and you never touch a TLS certificate — LingCode's edge issues and renews HTTPS for you the moment your DNS points at it.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>A "custom domain" is just a friendly front door. Your app already runs on LingCode's infrastructure; attaching a domain tells the edge "when a request arrives for <code>yourbrand.com</code>, serve <em>this</em> app." Everything that makes the app work — the HTML, the hashed JavaScript chunks, client-side routes — is served on your domain exactly as it is on the default URL, just under your name and with your padlock.</p>
+      <p>There are two halves to it, and they're worth keeping separate because they happen in two different places: <strong>attaching</strong> the domain (in the IDE — tells LingCode the domain is yours) and <strong>pointing</strong> the domain (at your registrar — tells the internet where the domain lives). Both have to be true before the site loads. This tutorial walks each, explains the DNS choices, and covers the two things that trip people up.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>How a custom domain reaches your Cloud app — and why HTTPS is automatic</li>
+        <li>The exact steps: attach in the IDE, then add one DNS record</li>
+        <li>When to use a <code>CNAME</code> vs an <code>A</code> record (subdomain vs root)</li>
+        <li>Adding both the root and <code>www</code> in one step</li>
+        <li>The Cloudflare "orange cloud" gotcha that breaks certificate issuance</li>
+        <li>Reading the <strong>Pending → Verified</strong> status and detaching a domain</li>
+      </ul>
+
+      <h2>How it works (the 30-second version)</h2>
+      <p>LingCode runs an edge in front of your apps. When you attach a domain, LingCode records that <code>yourbrand.com</code> belongs to your app. When a browser then asks for <code>yourbrand.com</code>, the edge checks that the domain is registered, requests a free Let's Encrypt certificate <em>on demand</em>, and serves your app over HTTPS — including every <code>/assets/…</code> file and any deep link your single-page app uses. You never generate, upload, or renew a certificate.</p>
+      <p>That "on demand" detail is why the order matters a little: the certificate is issued the first time someone hits the domain <em>after</em> DNS points at LingCode. So you attach, you point DNS, and the first visit a few minutes later is what flips it live.</p>
+
+      <h2>Step 1 — Attach the domain in the IDE</h2>
+      <ol>
+        <li><strong>Sign in</strong> to your LingCode account in the Mac IDE — the app is owned by this account.</li>
+        <li><strong>Deploy the app</strong> if you haven't: open your project, click the <strong>Cloud</strong> button (<span aria-hidden="true">⛅︎</span>) in the toolbar, set the build command and output directory, and Deploy. You'll get a live <code>lingcode.dev/apps/&lt;id&gt;/</code> URL.</li>
+        <li>In the success panel, expand <strong>Custom domain</strong>, type your domain (for example <code>app.yourbrand.com</code> or <code>yourbrand.com</code>), and click <strong>Attach</strong>.</li>
+        <li>If you typed a root domain or a <code>www</code> one, leave <strong>"Also add &lt;the other&gt;"</strong> checked to register both at once.</li>
+      </ol>
+      <p>The IDE then shows the DNS record you need and a per-domain status dot — orange (<strong>Pending DNS</strong>) until your records resolve, green (<strong>Verified</strong>) once they point at LingCode.</p>
+
+      <h2>Step 2 — Point the domain at LingCode</h2>
+      <p>Go to wherever your domain's DNS lives (your registrar, or whoever runs your nameservers) and add <strong>one</strong> of these records. The IDE shows both; pick the one that fits:</p>
+      <ul>
+        <li><strong>Subdomain</strong> (like <code>app.yourbrand.com</code>) → a <code>CNAME</code> record pointing to <code>apps.lingcode.dev</code>. This is the preferred option — it tracks our edge automatically if the IP ever changes.</li>
+        <li><strong>Root / apex domain</strong> (like <code>yourbrand.com</code>, with no subdomain) → an <code>A</code> record pointing to <code>138.197.107.228</code>. Apex domains can't use a <code>CNAME</code>, which is why the <code>A</code> record exists.</li>
+      </ul>
+      <p>If you attached both the root and <code>www</code>, add the matching record for each: an <code>A</code> record on the root and a <code>CNAME</code> on <code>www</code> (pointing to <code>apps.lingcode.dev</code>) is the typical pairing.</p>
+
+      <div class="info-box">
+        <h3>Not sure where your DNS is?</h3>
+        <p>It's usually at whoever you bought the domain from. We have step-by-step guides for the common registrars — <a href="/tutorials/buy-a-domain-from-namecheap.html">Namecheap</a>, <a href="/tutorials/buy-a-domain-from-cloudflare.html">Cloudflare</a>, <a href="/tutorials/buy-a-domain-from-godaddy.html">GoDaddy</a>, <a href="/tutorials/buy-a-domain-from-porkbun.html">Porkbun</a>, and more — plus a general walkthrough in <a href="/tutorials/connect-domain-to-server-with-dns.html">connecting a domain with DNS</a>. The record type and target are the same wherever you add them.</p>
+      </div>
+
+      <h2>Step 3 — Wait for it to go live</h2>
+      <p>DNS changes take anywhere from a minute to (rarely) an hour to spread. The IDE's status dot turns green when your records resolve to LingCode's edge; from that point the first visit issues the certificate and the site is live over HTTPS. You can also just open <code>https://yourbrand.com</code> in a browser — the first load may take a beat while the certificate is minted, then it's instant.</p>
+
+      <div class="warn-box">
+        <strong>Cloudflare users — the one real gotcha:</strong> if your DNS is on Cloudflare, set the record to <strong>DNS only</strong> (grey cloud), <em>not</em> Proxied (orange cloud). A proxied record makes Cloudflare terminate TLS itself, so LingCode's edge never sees the request it needs to issue your certificate — and the site shows a TLS error. Grey-cloud the record and it works. (If you specifically <em>want</em> Cloudflare in front, that's a different setup — see <a href="/tutorials/put-cloudflare-in-front-of-any-host.html">putting Cloudflare in front of any host</a>.)
+      </div>
+
+      <h2>Managing domains later</h2>
+      <p>Reopen the <strong>Custom domain</strong> section any time to see the domains attached to an app, each with its live status. To remove one, click the <strong>✕</strong> next to it — that detaches it immediately (your app keeps running on its default URL and any other domains). Re-deploying the app with the same project does <em>not</em> disturb attached domains: the deploy updates the files in place, and the domain keeps pointing at the same app.</p>
+      <p>A few things worth knowing: a domain can be attached to only one app at a time (attaching one that's already in use is rejected), <code>*.lingcode.dev</code> names are reserved, and the domain belongs to the same LingCode account the IDE is signed into.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>Connect a managed backend</h3>
+            <p>Give the app a database, auth, and storage — no credentials to juggle</p>
+          </a>
+          <a href="/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>Connect a domain with DNS</h3>
+            <p>The general mental model for A, CNAME, and nameserver records</p>
+          </a>
+          <a href="/tutorials/magic-deploy-a-website.html" class="tutorial-next-card">
+            <h3>Magic Deploy a website</h3>
+            <p>Prefer your own server? Deploy over SSH instead of Cloud hosting</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

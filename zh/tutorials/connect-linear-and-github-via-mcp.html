@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何通过 MCP 将 Linear 和 GitHub 连接到 LingCode？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="通过 MCP 将 Linear 工单和 GitHub 仓库接入 Agent。完整的双服务配置流程——凭证获取、配置文件编写、首次工具调用。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/connect-linear-and-github-via-mcp.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-linear-and-github-via-mcp.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-linear-and-github-via-mcp.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/connect-linear-and-github-via-mcp.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "通过 MCP 连接 Linear 和 GitHub",
+  "description": "面向日常工程工作最实用的两个 MCP 服务：GitHub 和 Linear。完成本教程后，"找到限速器相关的工单"、"为这些改动开一个 PR"、"本 sprint 还剩哪些任务"——每个需求只需一句提示词。",
+  "url": "https://lingcode.dev/zh/tutorials/connect-linear-and-github-via-mcp.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/connect-linear-and-github-via-mcp.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "通过 MCP 连接 Linear 和 GitHub"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "通过 MCP 连接 Linear 和 GitHub",
+      "item": "https://lingcode.dev/zh/tutorials/connect-linear-and-github-via-mcp.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/connect-linear-and-github-via-mcp.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>通过 MCP 连接 Linear 和 GitHub</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何通过 MCP 将 Linear 和 GitHub 连接到 LingCode？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>Linear 和 GitHub 均提供官方 MCP 服务端。通过 <code>npm i -g @linear/mcp-server</code>（GitHub 同理）安装后，在 <code>~/.lingcode/mcp.json</code> 中添加对应条目并填入 API 令牌，Agent 即可直接搜索 Issue、开 PR、读取工单上下文。</p>
+      <p class="intro">GitHub 和 Linear 是日常工程工作中最实用的两个真实 MCP 服务。完成本教程后，"找到限速器相关的工单"、"为这些改动开一个 PR"、"本 sprint 还剩哪些任务"——每个需求只需一句提示词。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>MCP 协议的抽象介绍请参阅<a href="/zh/tutorials/connect-an-mcp-server.html">连接 MCP 服务器</a>教程，本教程聚焦于具体操作。大多数工程师的日常工作都与两个 LingCode 原本不了解的服务紧密相连：Issue 跟踪系统（本例以 Linear 为代表——Jira、Asana 等结构相同）和代码托管平台（本例以 GitHub 为代表——GitLab、Bitbucket 同理）。Agent 在没有这些连接的情况下也能正常工作，但有了它们之后，每次"看看工单，决定要做什么"只需一句提示词，而不是三步操作。</p>
+      <p>Linear 和 GitHub 都以 npm 包的形式发布了 MCP 服务端，配置方式完全相同：安装包、生成个人 API 令牌、将令牌粘贴到 <code>mcp.json</code>，重启对话。麻烦之处在于凭证配置，而非 MCP 接线本身——每个服务只需配置一次，之后永远不用再动。</p>
+      <p>之所以将两者合为一个教程——而不是分开写——是因为它们的工作流可以组合使用。既能读 Linear 工单又能开 GitHub PR 的 Agent，与只能做其中一件事的 Agent 有本质区别。"实现这张工单要求的功能，然后开一个 PR 并附上工单链接"可以成为一句提示词，这就是最终的价值所在。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>如何生成 Linear 个人 API 密钥（以及它拥有哪些权限）</li>
+        <li>如何生成具有正确权限范围的 GitHub 个人访问令牌</li>
+        <li>如何为两个服务编写 <code>mcp.json</code> 条目</li>
+        <li>首次调用时的权限提示以及如何审批</li>
+        <li>如何组合使用两者：从工单到 PR，一气呵成</li>
+      </ul>
+
+      <h2>第一步：生成 Linear API 密钥</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Linear → Settings → API → Personal API keys</h3>
+          <p>登录 Linear，点击头像 → <strong>Settings</strong> → <strong>API</strong> → <strong>Personal API keys</strong>，点击 <strong>Create key</strong>，填写名称（如 "LingCode"）并选择权限范围。</p>
+          <p>该密钥继承你的用户权限。若你是管理员，密钥也具有管理员权限；若你对某些工作区只有只读权限，密钥同样受此约束。权限在用户层级控制，而非密钥层级。</p>
+          <p>复制密钥——它只显示一次。格式为 <code>lin_api_…</code>。</p>
+        </div>
+      </div>
+
+      <h2>第二步：生成 GitHub 个人访问令牌</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>细粒度令牌优于经典令牌</h3>
+          <p>前往 GitHub → Settings → Developer settings → Personal access tokens → <strong>Fine-grained tokens</strong>，生成新令牌。关键字段如下：</p>
+          <ul>
+            <li><strong>有效期（Expiration）：</strong>90 天较为合理。足够长，不会频繁续期；足够短，不会让遗忘的旧令牌成为长期风险。</li>
+            <li><strong>仓库访问范围（Repository access）：</strong>选择"Only select repositories"，只勾选你实际需要 Agent 操作的仓库。"All repositories"虽然可行，但影响范围远大于必要。</li>
+            <li><strong>权限（Permissions）：</strong>Repository → Contents（读+写）、Pull requests（读+写）、Issues（读+写）、Metadata（只读）。除非有明确需求，跳过 Actions、Secrets、Administration。</li>
+          </ul>
+          <p>复制令牌——格式为 <code>github_pat_…</code>。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>为何选细粒度令牌而非经典令牌：</strong>经典令牌在用户层级授权，覆盖你所有的仓库。细粒度令牌可以指定"此令牌只能操作这三个仓库"。对于 Agent 驱动的工具而言，权限范围越小越好。
+      </div>
+
+      <h2>第三步：将两个服务端添加到 mcp.json</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>一个文件，两条配置</h3>
+          <p>在 <code>~/.claude/mcp.json</code> 中添加（用户级配置正合适——这些是个人账号令牌）：</p>
+          <pre><code>{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "github_pat_..."
+      }
+    },
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-linear"],
+      "env": {
+        "LINEAR_API_KEY": "lin_api_..."
+      }
+    }
+  }
+}</code></pre>
+          <p>两者均使用 stdio 传输，均通过 <code>npx</code> 启动（无需全局安装——npx 会自动拉取并运行）。令牌放在各自服务端的 <code>env</code> 字段中，切勿写入公共的 shell 配置文件。</p>
+        </div>
+      </div>
+
+      <h2>第四步：首次工具调用——审批权限提示</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>你会看到什么</h3>
+          <p>打开对话，输入："有哪些 Linear 工单分配给了我？"Agent 选择工具后，会弹出权限提示，显示即将调用的 <code>mcp__linear__list_issues</code> 及其参数。点击批准。</p>
+          <p>每个服务端的首次调用需要预热：<code>npx</code> 下载包（仅一次），服务端启动并注册工具，然后执行调用。同一会话内的后续调用速度很快。</p>
+          <p>GitHub 同理：输入 "列出 <code>org/repo</code> 上开放的 PR"，出现提示时批准。之后两个服务端都处于就绪状态。</p>
+        </div>
+      </div>
+
+      <h2>第五步：组合使用——从工单到 PR</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>一句提示词，四次工具调用</h3>
+          <p>同时连接两个服务的价值在于组合能力。试试：</p>
+          <blockquote style="margin: 0; padding-left: 16px; border-left: 3px solid var(--signal, #00d084);"><em>"读取 Linear 工单 ACME-1234，查看相关代码，实现工单描述的功能，然后开一个草稿 PR 并附上工单链接。"</em></blockquote>
+          <p>Agent 会调用 Linear 读取工单、调用本地文件工具查看并修改代码、调用 GitHub 开 PR——在一次对话轮次中完成四个工具族的调用，每次调用都有结构化参数和结构化结果。PR 描述中会引用 Linear 工单；根据你的 Linear 设置，合并 PR 还可以自动更新工单状态。</p>
+          <p>你本来需要在三个工具之间来回切换十分钟，现在什么都不用做。</p>
+        </div>
+      </div>
+
+      <h2>第六步：常见问题</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>初次配置的三个易错点</h3>
+          <ul>
+            <li><strong>令牌权限范围过窄。</strong>GitHub 令牌若只有 <em>Contents: read</em>，则无法开 PR。Agent 的工具调用会返回 403 错误，此时需要重新生成一个权限更宽的令牌。</li>
+            <li><strong>Linear 工作区 ID 混淆。</strong>如果你有多个 Linear 工作区，密钥只对其中一个有效。操作前先问 Agent 当前读取的是哪个工作区，不要想当然。</li>
+            <li><strong>工具描述已过时。</strong>更新 MCP 包后若工具签名有变化，当前对话的工具列表会停留在旧版本。更新服务端后请开启新对话。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>请勿共享这些令牌。</strong>拥有管理员权限的 Linear 密钥可以删除 Issue；拥有写权限的 GitHub 令牌可以强制推送。一旦泄露，任意一个令牌造成的损害都相当严重。请像对待 SSH 私钥一样妥善保管存有这些令牌的文件。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/author-your-own-mcp-server.html" class="tutorial-next-card">
+            <h3>编写自己的 MCP 服务器</h3>
+            <p>适用于没有官方服务端的情况——你的内部管理后台、自定义队列等</p>
+          </a>
+          <a href="/zh/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>连接 MCP 服务器</h3>
+            <p>协议层面的抽象介绍；在完成本篇实操后阅读，有助于加深理解</p>
+          </a>
+          <a href="/zh/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>安装和配置插件</h3>
+            <p>将 Linear+GitHub MCP 配置打包为插件，方便与团队共享</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速交付的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

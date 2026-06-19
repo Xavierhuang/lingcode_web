@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>为什么 Cursor 做不到 LingCode 能做的事 | Electron 天花板</title>
+  <meta name="description" content="Cursor 的 AI 编程很出色，但 Electron 无法触及 LingCode 所依赖的 Mac 框架——SwiftUI、SourceKit、iOS 模拟器、Keychain、Handoff 等等。">
+  <meta name="keywords" content="Cursor 替代, Electron 局限, 原生 Mac IDE, SwiftUI, SourceKit, iOS 模拟器, Keychain, Handoff, 原生 AI 编辑器, Swift IDE">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/why-not-cursor.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/why-not-cursor.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/why-not-cursor.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/why-not-cursor.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/why-not-cursor.html">
+  <meta property="og:title" content="为什么 Cursor 做不到 LingCode 能做的事">
+  <meta property="og:description" content="为什么 Cursor 不能只加一个 iOS 模拟器就追上——Electron 在 Mac 上碰到的架构天花板，以及原生 Swift 应用如何突破。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="为什么 Cursor 做不到 LingCode 能做的事">
+  <meta name="twitter:description" content="Electron 在 Mac 上碰到的架构天花板，以及原生 Swift 应用如何突破。">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "为什么 Cursor 做不到 LingCode 能做的事",
+    "description": "Electron 在 Mac 上碰到的架构天花板，以及原生 Swift 应用如何突破。",
+    "author": { "@type": "Organization", "name": "HainanMandi Tech" },
+    "publisher": { "@type": "Organization", "name": "LingCode" },
+    "url": "https://lingcode.dev/zh/why-not-cursor.html",
+    "inLanguage": "zh-CN"
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .blog-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.875rem; }
+    .blog-content pre code { background: none; padding: 0; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <header class="nav-bar">
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-hidden="true">
+    <div class="nav-inner">
+      <a href="/zh/" class="nav-logo">灵码</a>
+      <label for="nav-toggle" class="nav-burger" aria-label="切换菜单">
+        <span class="nav-burger-line" aria-hidden="true"></span>
+        <span class="nav-burger-line" aria-hidden="true"></span>
+        <span class="nav-burger-line" aria-hidden="true"></span>
+      </label>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="/zh/#demos">演示</a>
+        <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+        <a href="/zh/blog.html">技能参考</a>
+        <a href="/why-not-cursor.html" class="nav-cta">English</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">坦诚对比</p>
+        <h1>为什么 Cursor 做不到 LingCode 能做的事</h1>
+        <p>Cursor 在跨平台 AI 编程上确实做得不错。但它在 Mac 上有五个结构性问题——再多的功能迭代也解决不了，因为每一个都源于 Cursor 无法在不重做产品的前提下调整的决策。本页逐一讲这五个，再讲底下那个架构原因。</p>
+        <p style="font-size: 0.875rem; margin-top: 14px;"><a href="#trust" style="color: var(--signal); text-decoration: none;">信任</a> · <a href="#ide-aware" style="color: var(--signal); text-decoration: none;">IDE 感知</a> · <a href="#no-proxy" style="color: var(--signal); text-decoration: none;">无代理</a> · <a href="#local-models" style="color: var(--signal); text-decoration: none;">本地模型</a> · <a href="#ios-ide" style="color: var(--signal); text-decoration: none;">iOS IDE</a> · <a href="#electron-ceiling" style="color: var(--signal); text-decoration: none;">Electron 天花板</a></p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2 id="trust">真正该换工具的理由：项目不会被毁掉</h2>
+      <p>架构论证之前，先讲实用那一面。Cursor 的 Agent 可以在一次工具调用里覆写 <code>project.pbxproj</code>、把 <code>Info.plist</code> 拍扁、或搞乱一个 Gradle 配置——而它的恢复方案是"希望你最近提交过"。它没有对项目关键文件的编辑前快照，也没有针对多文件 AI 编辑的独立语义撤销栈，也没有可以给 Agent 用来跑风险实验的 worktree 隔离。如果 Agent 在一次跨文件重构中出错，你要手动回滚 40 个文件。</p>
+      <p>LingCode 把每一次 AI 编辑都当作<em>事先</em>可恢复来处理。<code>project.pbxproj</code>、<code>Info.plist</code>、<code>build.gradle</code>、<code>AndroidManifest.xml</code> 和 <code>*.entitlements</code> 的编辑前快照在 Agent 落笔前就已落盘。每个文件的 diff 卡片让你按 hunk 接受或还原，不再是"全部通过"。专为 AI 操作维护的多文件撤销栈能一步回退跨文件重构。读前写规则防止盲写。详见<a href="/zh/#work-protection">首页上的信任模型</a>或 <a href="/zh/features.html#work-protection">功能页的完整列表</a>。</p>
+      <p>这是第一个换工具的理由。架构上的理由随后展开。</p>
+
+      <h2 id="ide-aware">IDE 感知。而不是 IDE 旁观。</h2>
+      <p>问 Cursor 的 Agent 你的构建日志里说了什么，它会在一个 Shell 里跑 <code>xcodebuild</code>，解析 stdout，并祈祷输出格式没变。问它一个运行时崩溃，它只能 grep 控制台。让它设一个断点，它做不到——调试器会话住在一个它碰不到的 GUI 里。Cursor 的 Agent 是 <em>IDE 旁观</em>：坐在你 IDE 边上，从一个锁眼里 shell-out。</p>
+      <p>LingCode 的 Agent 是 <em>IDE 感知</em>。它把 <code>BuildLogService</code>、<code>RunConsoleService</code>、<code>EditorViewModel</code>、<code>LLDBDebugger</code> 和 <code>SimulatorController</code> <strong>当作进程内 Swift 方法调用来使用</strong>。它读的是实时构建错误——不是缓存下来的 stdout。它看到的模拟器日志是流式的。它能设断点、走帧、查变量、从聊天里恢复调试器。没有子进程、没有 RPC、模型和你看到的东西之间没有陈旧状态。</p>
+      <p>这就是为什么"ship 到 TestFlight"在 LingCode 真的能一条消息搞定。Agent 读取构建状态、选择 Scheme、用你的团队签名、归档、上传、并等待 Apple 的响应——因为这些每一步都是原生工具调用，不是用字符串解析粘起来的 Shell 脚本。</p>
+
+      <h2 id="no-proxy">你的 Key。你的算力。没有代理。</h2>
+      <p>Cursor 的编辑器跑在本地，但<em>智能</em>部分不在。Agent 编排、模型路由、上下文检索、代码库索引的 embeddings——全部经由 Cursor 的服务器——即使底层模型是 Claude 或 GPT。你每月掏 $20 付的是他们的代理层费用，而你每一个 Prompt、每一段文件片段、每一份 embedding 都要穿过一个既不属于你、也不属于模型供应商的基础设施。</p>
+      <p>LingCode 直接调用 Anthropic、OpenAI 和 Google。你的 API Key 住在 macOS Keychain 里。你的 Prompt 从应用走到模型供应商的 API——中间什么都没有。没有中转账户，没有和陌生人共享的限流池，没有你仓库的索引存在第三方服务器上，也没有遥测。想换供应商，改一个设置就能继续工作。想审计什么东西离开了你的机器，打开 Console 看 TLS 会话直接去往 <code>api.anthropic.com</code>。</p>
+      <p>三条实用后果：</p>
+      <ul>
+        <li><strong>价格。</strong>你按模型供应商的价格付费，没有 Cursor 的加价。用你现有的 Anthropic 或 OpenAI 额度。</li>
+        <li><strong>隐私。</strong>代码库索引在本地构建与存储。除非你显式把一个文件发给模型，没有 embeddings 离开你的 Mac。</li>
+        <li><strong>掌控。</strong>旋转密钥、换供应商、新模型发布当天就能用——不用等 Cursor 支持。</li>
+      </ul>
+
+      <h2 id="local-models">离线跑本地模型。Cursor 做不到。</h2>
+      <p>LingCode 自带一键 Ollama 集成。设置里装好 Ollama（我们可以帮你装），选一个本地模型（Qwen 2.5 Coder、Llama 3、Mistral、CodeLlama、DeepSeek），整个 IDE——聊天、Agent、编辑、记忆、Skills、规则——都跑在 <code>localhost:11434</code> 上，零网络流量。</p>
+      <p>适用场景：飞机上、没有信号的火车上、SCIF 里、不能把代码带出房间的甲方现场、气隔网络、以及对隐私敏感的项目。离线时 IDE 不会丢功能——编辑、Git、LSP、构建、调试、测试本来就不靠网络。</p>
+      <p>Cursor 做不到这个——而且不是 Roadmap 问题。它的 Tab 补全是一个跑在它服务器上的专有微调模型。它的代码库索引在它的基础设施里。它的 Agent 编排在服务端跑。拔掉网线，Cursor 的大部分价值主张就停止工作了。</p>
+
+      <h2 id="ios-ide">Cursor 的终端能跑 <code>xcodebuild</code>。这不等于它就是 iOS IDE。</h2>
+      <p>有一个常见误解："Cursor 有终端，所以能做 iOS。"问题不在终端。<code>xcrun simctl boot</code>、<code>xcodebuild archive</code>、<code>xcrun altool</code> 这些在任何 Shell 里都能跑。缺失的是 Shell 命令<em>周围</em>的一切。</p>
+      <ul>
+        <li><strong>没有原生的目的地选择器。</strong>一个真正的 iOS IDE 需要一个列出模拟器和物理设备、启动它们、并把它们指定为下一次构建目标的 SwiftUI/AppKit 控件——就是 Xcode 那个选择器。Electron 画不出来，除非把 Xcode 的 UI 用 HTML 再做一遍。</li>
+        <li><strong>无法访问 Keychain 来签名。</strong>代码签名要从 macOS Keychain 里读身份和配置文件。Electron 应用不能链接 Security 框架，所以 Cursor 不能在一个原生面板里选团队、切换自动/手动签名、或者管理 Entitlements。Shell 可以 <code>codesign</code>；它没法告诉你用的是哪一个身份，也没法让你一键切换。</li>
+        <li><strong>没有进程内的调试器。</strong>LLDB 作为 CLI 是一回事；一个拥有断点、单步、栈帧检查、变量监视、DAP 会话附加到 Simulator 进程的调试器 UI 是另一回事。这是原生工作。</li>
+        <li><strong>Agent 没办法集成。</strong>Cursor 的 Agent 只能 <code>spawn("xcodebuild …")</code> 然后抓 stdout。LingCode 的 Agent 把 <code>BuildLogService</code> 和 <code>SimulatorController</code> 当 Swift 方法来调用，<em>直接读结构化的构建输出</em>——没有字符串解析、没有陈旧缓存。"ship 到 TestFlight"之所以能用，是因为每一步都是原生 API 调用，不是用正则粘起来的 Shell 脚本。</li>
+      </ul>
+      <p>这也是一个战略选择。Cursor 是跨平台的；大多数用户在 Linux 和 Windows 上，所以 Mac-only 的 iOS 工具不会推动它的营收。LingCode 是 Mac-only 的——就是为了让一个围绕 Apple 工具链构建的 IDE 能做跨平台 IDE 永远做不到的事。</p>
+
+      <h2 id="electron-ceiling">Electron 的天花板</h2>
+      <p>Cursor 是一款 Electron 应用。Electron 的 UI 是 Chromium，运行时是 Node.js。Chromium 从设计上就被沙箱隔离于操作系统之外。Node 可以调用其他进程，但无法链接 Apple 框架。这条边界就是天花板。</p>
+      <p>位于天花板之上的东西——不是"还没做"，而是 Electron 真的做不到：</p>
+      <ul>
+        <li>SwiftUI 与 AppKit 来构建 UI 本身</li>
+        <li>SourceKit-LSP 作为一等公民的语言服务器直接链接</li>
+        <li>macOS Keychain 存放凭证</li>
+        <li>FSEvents——内核合并的文件监视 API</li>
+        <li>UserNotifications——带有操作按钮、可与专注模式过滤器联动</li>
+        <li>Carbon <code>RegisterEventHotKey</code>——无需辅助功能权限的系统级全局快捷键</li>
+        <li>AppIntents 与快捷指令 / Siri</li>
+        <li>基于 <code>NSUserActivity</code> 的 Handoff</li>
+        <li>Touch Bar (<code>NSTouchBar</code>) 和 <code>NSServices</code>（Finder 快速操作菜单）</li>
+        <li><code>NSUbiquitousKeyValueStore</code>——iCloud 设置同步</li>
+        <li>进程内工具执行——LingCode 的 AI 直接调用原生 Swift 服务（<code>BuildLogService</code>、<code>RunConsoleService</code>、<code>EditorViewModel</code>），没有子进程、没有 RPC、Agent 和 IDE 之间也没有任何陈旧状态</li>
+      </ul>
+      <p>这些里有一部分可以用辅助进程或 Web 垫片糊弄过去。但你没法把它们当作一等公民链接进编辑器——除非编辑器本身是原生的。</p>
+
+      <h2>原生让 LingCode 解锁了什么</h2>
+
+      <h3>货真价实的 iOS 模拟器</h3>
+      <p>LingCode 用和 Xcode 一样的方式在模拟器里跑 iOS 应用。SwiftUI 的运行目的地选择器对接 <code>xcrun simctl</code>，安装 <code>.app</code> 包，用 Bundle ID 启动，用 <code>process attach -n &lt;exe&gt; -w</code> 附加 LLDB——这样调试器在应用醒来之前就已就位——然后通过 <code>NSWorkspace</code> 激活 <code>Simulator.app</code>。这是 Xcode 的完整流程，不是 Node 脚本套一层 <code>simctl</code>。</p>
+
+      <h3>类型感知的 Swift 重构</h3>
+      <p>在 LingCode 里重命名一个符号时，重命名走的是 <code>sourcekit-lsp</code>——Swift 编译器团队维护的那个语言服务器。它理解类型，而不是字符串。重命名 <code>User</code> 不会悄悄改掉注释里或别的模块里那个 <code>User</code>。基于 Electron 的编辑器能跑这个二进制，却没法把它的结果接入一个懂 Xcode 项目模块图的原生重构 UI。</p>
+
+      <h3>在 Mac 上做 Android——不用 Android Studio</h3>
+      <p>同样的原生集成逻辑也适用于 Android 工具链。LingCode 为 Kotlin LSP 解析 Gradle 的 classpath，通过真正的 <code>emulator</code> 二进制启动 AVD，用 <code>adb</code> 安装 APK，把 <code>logcat</code> 推进运行控制台并带标签过滤，再通过 JDWP 支持的 DAP 会话附上 Kotlin 断点。同一个目的地选择器、同一个调试面板、同一个构建日志——只是指向另一套工具链。Cursor 接触不到 Android SDK，原因和接触不到 Xcode 一样：IDE 必须自己掌握进程控制与调试协议，而不是交给 Shell 脚本。</p>
+
+      <h3>Mac 原生的人机工程学</h3>
+      <p>让 Mac 应用感觉像 Mac 应用的那些东西，Web 视图搬不出来：</p>
+      <ul>
+        <li>全局快捷键 <code>⌃⌥Space</code> 随处唤起 LingCode——经由 Carbon 注册，不弹辅助功能权限。</li>
+        <li>API Key 存在 Keychain 里，不是明文配置文件。</li>
+        <li>Handoff——在 MacBook 上开始，从 iMac 的 Dock 把项目接起来。</li>
+        <li>快捷指令与 Siri 可打开项目、运行 Agent 任务。</li>
+        <li>专注模式过滤器——在"勿扰"时静音 Agent 通知。</li>
+        <li>Touch Bar 上的保存、运行、推送、Agent 切换按钮。</li>
+        <li>Finder 快速操作：右键任意文件夹，"在 LingCode 中打开"。</li>
+      </ul>
+      <p>完整清单在 <a href="/zh/features.html">功能页面</a>。</p>
+
+      <h2>"Cursor 不能直接加一个模拟器吗？"</h2>
+      <p>这是个合理的问题。三部分坦诚回答。</p>
+
+      <p><strong>表面上，技术上可以。</strong> Node 辅助进程可以调用 <code>xcrun simctl list --json</code>，把结果显示在下拉菜单里，然后跑 <code>simctl boot</code>。一个周末就能搞定。</p>
+
+      <p><strong>但表面不是产品。</strong> Mac 开发者真正期待的体验是一摞原生部件：绑定 Xcode 项目的 Scheme 和 Destination 模型、PTY 驱动的 LLDB 附加以便断点、写回 <code>.pbxproj</code> 的构建设置、在正确时机激活 Simulator.app、崩溃日志采集、从 Keychain 读取的代码签名身份、懂 plist 格式的 Entitlements 编辑器。其中每一项都是原生 Mac 子系统，而不是一次子进程调用。把它们缝合起来是几周的平台工程——这种工作没法"移植"。</p>
+
+      <p><strong>而且这样还补不上差距。</strong> 模拟器只是一项。SourceKit、Keychain、Handoff、全局快捷键、Touch Bar、专注过滤器、快捷指令、FSEvents、UserNotifications、NSServices、iCloud KV 同步、SwiftUI <code>#Preview</code> 编译——每一个都是没有 Electron 等价物的原生框架。一个为几十万 Windows 和 Linux 用户交付跨平台编辑器的团队，不会为一个平台重写运行时。市场账算不过来；就算算得过，答案也不是"往 Electron 里塞 Mac API"，而是"做一个 Mac 原生应用"——我们做的就是这个决定。</p>
+
+      <h2>坦诚说说取舍</h2>
+      <p>LingCode 不是在每件事上都比 Cursor 强。Cursor 跑在 Windows 和 Linux 上，LingCode 不行。Cursor 有更大的团队和更长的纯 AI 编辑器功能先发时间。如果你在 Ubuntu 上写 Rust，Cursor 就是对的选择。</p>
+      <p>但如果你交付 Apple 应用——Swift、SwiftUI、iOS、macOS——Cursor 碰到的天花板就是 <em>你</em> 会碰到的天花板。LingCode 一路原生到底：模拟器好用、重构类型感知、API Key 存在 Keychain 里、整个编辑器感觉像一个 Mac 应用，而不是一个记得"你在 Mac 上"的网页。</p>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">看看原生能带来什么。</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">浏览 <a href="/zh/features.html">完整功能列表</a>，或者读一读让日常 AI 工作也感觉像原生的 <a href="/zh/blog.html">30+ 斜杠命令</a>。</p>
+        <a href="/zh/">下载 LingCode Mac 版</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-logo">灵码</span>
+      <nav class="footer-links">
+        <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+        <a href="/zh/blog.html">技能参考</a>
+        <a href="/zh/claude-sessions.html">Claude 会话</a>
+        <a href="/zh/remote-control.html">远程控制</a>
+        <a href="/zh/support.html">支持</a>
+        <a href="/LingCode-v2.7.0-Installer.dmg" download>下载 Mac 版</a>
+        <a href="https://apps.apple.com/us/app/lingcode/id6757243830" rel="noopener noreferrer">App Store</a>
+      </nav>
+      <span class="footer-copy">100% Swift · 无 Electron · 为 Mac 打造</span>
+    </div>
+  </footer>
+
+  <script src="../nav.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

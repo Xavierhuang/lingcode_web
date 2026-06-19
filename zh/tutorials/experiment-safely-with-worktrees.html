@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何在 LingCode 中使用 git worktree 安全实验？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="在隔离的 git worktree 中运行高风险 AI 提示。LingCode 的工作区面板让你 fork 项目、让代理自由实验，然后只合并你想要的结果。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/experiment-safely-with-worktrees.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/experiment-safely-with-worktrees.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/experiment-safely-with-worktrees.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/experiment-safely-with-worktrees.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 worktree 安全实验",
+  "description": "当你想让代理尝试一些试探性操作——重写、复杂迁移、"只是看看能不能跑通"的改动——不要让它在主分支上随意发挥。fork 一个 worktree，让它自由实验，然后只合并你想要的部分。",
+  "url": "https://lingcode.dev/zh/tutorials/experiment-safely-with-worktrees.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/experiment-safely-with-worktrees.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 worktree 安全实验"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "使用 worktree 安全实验",
+      "item": "https://lingcode.dev/zh/tutorials/experiment-safely-with-worktrees.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/experiment-safely-with-worktrees.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">原生 Mac IDE</a>
+      <span>/</span>
+      <span>使用 worktree 安全实验</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何在 LingCode 中使用 git worktree 安全实验？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>运行 <em>Source Control → New Worktree</em>（或 <code>git worktree add ../experiment-X feature-X</code>）来创建一个隔离的工作副本并切换到对应分支。让代理在 worktree 中操作；如果实验失败，直接删除该 worktree——你的主分支完全不受影响。</p>
+      <p class="intro">当你想让代理尝试一些试探性操作——重写、复杂迁移、"只是看看能不能跑通"的改动——不要让它在主分支上随意发挥。fork 一个 worktree，让它自由实验，然后只合并你想要的部分。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>AI 代理最有价值的地方，在于它能替你尝试你自己不会动手写的东西——试探性重构、复杂迁移、"就看看能不能跑通"的探索。问题在于：直接在你的实时工作树上做这些操作风险很高。一旦代理跑偏，它改动的那些文件正是你准备发布的文件。构建可能崩溃，编辑器里打开的对话窗口也会对"当前哪个版本才是真实代码"感到困惑。</p>
+      <p>直觉上的答案是"用分支"——这没错，但实际上并没有真正隔离什么。在主 checkout 里切换分支，会把你未提交的改动一并带走，重置 IDE 状态，还会强迫 AI 对话进行上下文切换。分支只是一串提交的名字，不是一个独立的"地方"。你没办法同时处于两个分支。</p>
+      <p><em>worktree</em> 才是 git 对"我想同时存在于两个地方"这个需求的真正答案。它是你仓库的第二个物理 checkout，指向不同的分支，但共享同一个 <code>.git</code> 存储。两棵树，一段历史。你可以让代理在树 B 里重写某些东西，同时你继续在树 A 里编辑——独立的窗口，独立的文件，互不干扰。本教程讲的就是：在风险足够高、值得隔离的时候如何使用这个方法，以及实验成功后如何有选择地合并回来。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>什么时候该用 worktree 而不是普通分支</li>
+        <li>如何打开工作区面板</li>
+        <li>从新分支、已有分支或 PR 创建 worktree</li>
+        <li>让代理在隔离模式下工作</li>
+        <li>查看差异并有选择地合并</li>
+      </ul>
+
+      <h2>第 1 步：了解 worktree 比分支好在哪里</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>分支并不能隔离工作区</h3>
+          <p>在主 checkout 里切换分支，会把你正在进行的工作一并带走——未保存的文件跟着走，IDE 状态重置，AI 打开的对话标签页突然在讨论另一套代码。做个快速修复还好，但对于高风险实验来说，这种摩擦就太多了。</p>
+          <p>worktree 是你仓库的第二个物理 checkout，指向不同的分支，共享同一个 <code>.git</code> 存储。两棵树，一段历史。你可以让代理在树 B 里重写某些东西，同时你继续在树 A 里编辑。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>以下情况适合用 worktree：</strong>提示词是"把这个改成 async/await"、"从 CoreData 迁移到 SwiftData"、"把这些 UIKit 视图转成 SwiftUI"——凡是你想看到结果、但还不想真的提交到主线的改动。
+      </div>
+
+      <h2>第 2 步：打开工作区面板</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>从侧边栏进入</h3>
+          <p>在左侧边栏点击 <strong>Workspaces</strong> 标签页。你会看到当前项目及其活跃分支，顶部有一个 <strong>+ New Worktree</strong> 按钮。</p>
+          <p>Workspaces 面板也是影子 worktree 的显示位置——代理在想要执行工具调用但不触碰你实际文件时，会隐式创建这些隔离树（详见下文）。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：选择 worktree 模式</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>四种 fork 方式</h3>
+          <p>点击 <strong>+ New Worktree</strong> 并选择一种模式：</p>
+          <ul>
+            <li><strong>New branch</strong>——从当前 HEAD fork 一个你命名的新分支。最常用于"试试这个想法"。</li>
+            <li><strong>Existing branch</strong>——checkout 一个已有分支。适合在不离开自己工作的情况下查看队友的代码。</li>
+            <li><strong>Pull request</strong>——将远程 PR 的最新提交拉取到 worktree 中，非常适合借助代理进行代码审查。</li>
+            <li><strong>Linear issue</strong>——如果已关联 Linear，会自动创建以对应 issue 命名的 worktree，开箱即用。</li>
+          </ul>
+          <p>本教程选择 <strong>New branch</strong>，名字可以取 <code>try-async-await</code> 之类的。LingCode 会在底层执行 <code>git worktree add</code>，并在新窗口中打开这棵新树。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：让代理放手去试</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>高风险提示已被隔离</h3>
+          <p>在新窗口中，AI 面板操作的是 worktree 中的文件。现在可以给它那个试探性的提示了："把 NetworkManager 全部改成 async/await，不用 completion handler。"无论它改了什么，都只在这棵树里。你的主分支完全不受影响。</p>
+          <p>你也可以在这里把权限模式切换为 <code>acceptEdits</code> 而不用担心——当范围被限定在 worktree 内时，自动接受其实安全得多。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>影子 worktree：</strong>代理有时会自己创建一个更深层隔离的<em>影子</em> worktree 来执行构建或测试，以免触碰编辑器的文件缓冲区。在没有 worktree 的情况下，它会使用 APFS 写时复制技术，几乎零成本。你会在 Workspaces 面板里看到带虚线图标的影子工作区。
+      </div>
+
+      <h2>第 5 步：查看差异</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>与主分支对比</h3>
+          <p>代理完成后，在 Workspaces 面板中打开差异视图——右键点击该 worktree，选择 <strong>Compare with main</strong>。你会看到实验改动过的每一个文件。</p>
+          <p>仔细过一遍这些差异。有些改动会很好，有些会很奇怪。这完全正常——这正是在 worktree 里先做实验的意义所在。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：有选择地合并</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>只挑你想要的部分</h3>
+          <p>两种方式：</p>
+          <ul>
+            <li><strong>全部满意：</strong>在 worktree 中提交改动，切回主窗口，将实验分支合并进来。</li>
+            <li><strong>只想要部分：</strong>在差异视图中，勾选你想要的每个代码块旁边的复选框，然后点击 <strong>Apply to main</strong>。被选中的代码块会作为一个新提交落在你的主分支上；其余 worktree 的改动则被丢弃。</li>
+          </ul>
+          <p>这正是 git 命令行让人头疼而 LingCode 让人一目了然的地方——你可以吸取代理的好想法，而不必继承它的烂主意。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：清理</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>完成后删除 worktree</h3>
+          <p>在面板中右键点击该 worktree，选择 <strong>Remove worktree</strong>。LingCode 会执行 <code>git worktree remove</code>，删除工作文件，但如果你有提交过，分支仍然保留在 git 历史中。如果你也想删除分支，再选择 <strong>Delete branch</strong>。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>不要删除含有你想保留的未提交改动的 worktree。</strong>LingCode 在删除前会发出警告，但一旦你确认，这些改动就永久消失了——它们只存在于那棵树里。
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/undo-bad-ai-edits.html" class="tutorial-next-card">
+            <h3>撤销错误的 AI 编辑</h3>
+            <p>基于快照的恢复方案，适用于你没有提前 fork worktree 的情况</p>
+          </a>
+          <a href="/zh/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>通过对话上传至 TestFlight</h3>
+            <p>分支稳定后，让代理帮你打包并发布</p>
+          </a>
+          <a href="/zh/tutorials/running-across-all-providers.html" class="tutorial-next-card">
+            <h3>跨所有提供商运行</h3>
+            <p>用多个 AI 提供商运行同一实验，对比结果</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演讲</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

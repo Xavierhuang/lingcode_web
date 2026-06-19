@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support - LingCode</title>
+  <meta name="description" content="LingCode support and FAQ — 26 detailed, educational answers on privacy (direct-to-provider, no proxy, Keychain-stored keys), work protection (pre-edit snapshots, semantic undo, worktree isolation), IDE-aware agent (live build log, debugger, simulator), local models (Ollama, offline), and LingCode vs Cursor / Xcode / Android Studio / Copilot.">
+  <link rel="canonical" href="https://lingcode.dev/support.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/support.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/support.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/support.html">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/support.html">
+  <meta property="og:title" content="LingCode Support — Help, FAQ &amp; Bug Reports">
+  <meta property="og:description" content="26 detailed FAQ answers covering privacy, work protection, IDE-aware agent, local models, and how LingCode compares to Cursor, Xcode, Android Studio, and Copilot.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="LingCode Support">
+  <meta name="twitter:description" content="26 educational FAQ answers: privacy, work protection, IDE-aware agent, local models, and LingCode vs every other AI editor.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I set up my API key?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Open Settings (Cmd + ,) and go to the AI / Providers section. Paste your API key from Anthropic, OpenAI, DeepSeek, Gemini, Kimi (global or China), Qwen, or point LingCode at your local Ollama server. Keys are stored in the macOS Keychain, which means they're encrypted at rest and, if iCloud Keychain is on, synced to your other Macs securely. Keys never leave your machine except to go directly to the provider you chose." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is LingCode free?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. The LingCode app is free to download and use, including for commercial work. You pay the AI provider directly for inference (your Anthropic, OpenAI, or Gemini API costs) or you run a local model via Ollama for zero per-token cost. LingCode does not charge a subscription, take a markup on API calls, or sell a Pro tier." }
+      },
+      {
+        "@type": "Question",
+        "name": "What are the system requirements?",
+        "acceptedAnswer": { "@type": "Answer", "text": "macOS 14 (Sonoma) or later. Apple Silicon (M1 and newer) or Intel. About 120 MB of disk space for the app, plus whatever your Ollama models take if you use local inference. No Rosetta needed on Apple Silicon — the app is fully native ARM64." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is my code sent to LingCode's servers?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. LingCode is direct-to-provider: prompts and file snippets go from your Mac straight to Anthropic, OpenAI, Gemini, or your local Ollama endpoint over TLS. There is no LingCode proxy, no intermediate cache, no embedding server, and no telemetry. You can verify this with Activity Monitor's network tab or running `nettop -J bytes_in,bytes_out -p LingCode` — every outbound connection goes to api.anthropic.com, api.openai.com, etc., not to any LingCode-owned domain." }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you train models on my code or prompts?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. LingCode has no training pipeline and collects no data of any kind. Whatever privacy terms apply to your prompts are the provider's terms — Anthropic, OpenAI, or Google — since your prompts go directly to them with your API key. Most providers offer enterprise or zero-retention modes if you need stricter guarantees; configure those in your provider console and LingCode will respect them automatically." }
+      },
+      {
+        "@type": "Question",
+        "name": "Where are my API keys stored?",
+        "acceptedAnswer": { "@type": "Answer", "text": "In the macOS Keychain, encrypted at rest by the OS. LingCode never writes keys to a plaintext file, never syncs them through a cloud service of ours, and never logs them. If you enable iCloud Keychain, the keys sync to your other Macs via Apple's end-to-end encrypted channel — again, LingCode is not involved. Electron-based editors like Cursor cannot use the Keychain (it's a native framework) and have to fall back to encrypted files on disk." }
+      },
+      {
+        "@type": "Question",
+        "name": "What telemetry does LingCode collect?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Zero. No analytics, no usage pings, no error reporting, no A/B experiments. If you opt in to Apple's MetricKit crash reporting at the OS level, those reports go to Apple (not to us) and only fire on crashes. The zero-telemetry posture is intentional — it's why we publish every outbound connection LingCode makes as predictable HTTPS traffic to named AI provider APIs only." }
+      },
+      {
+        "@type": "Question",
+        "name": "What happens if the AI agent corrupts my project.pbxproj or Info.plist?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Nothing is lost. Before the agent edits project-critical files (project.pbxproj, Info.plist, build.gradle, AndroidManifest.xml, *.entitlements, *.xcscheme), LingCode copies the original to ~/Library/Application Support/LingCode/WorkProtection/ with a timestamp. Open the Recovery panel three ways: press Control-Command-R, choose View → Work Protection Recovery… from the menu, or click the Recover toolbar button (shield icon; add it via right-click → Customize Toolbar… if not visible). The panel shows all snapshots with timestamps, previews, and a Restore button on each. This is independent of git, so it works even if you hadn't committed before the change." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I undo a multi-file refactor the agent did?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Use semantic time-travel undo. LingCode maintains a separate undo stack for AI operations — Cmd-Z in the chat panel rewinds one full agent step (which may span 40 files) in a single action, independent of the editor's per-keystroke undo. This means you can keep typing after the agent finishes, and still rewind just the agent's changes without losing your own edits. Much safer and more precise than `git reset`." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can the agent work on risky experiments without touching my main code?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes — use worktree isolation. Ask the agent 'create a worktree for this and try the migration there' and it spins up an isolated git worktree, works against that branch, and leaves your main checkout untouched. When the experiment is done, you can merge, keep the branch for later, or discard it entirely with one click. Great for framework migrations, dependency upgrades, and any prompt where you're not sure how the agent will handle it." }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I have to accept every AI edit in bulk, or can I review them piece by piece?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Every AI edit renders as a per-file diff card with syntax-highlighted hunks. Each hunk has its own accept and revert buttons, so you can keep four good changes and reject the fifth without touching the others. This is the opposite of one-big-apply workflows — the per-hunk view is what makes large AI refactors actually reviewable." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can the AI agent really see my live build errors?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. LingCode's agent calls BuildLogService directly as an in-process Swift method — it reads the structured build output as it streams, not a scraped stdout dump. Ask 'why did the last build fail?' and the agent reads the actual errors, warnings, and file paths from the build log service, then points to the offending code. Cursor and other Electron-based editors can only `spawn xcodebuild` and parse text, which misses structured error data and lags behind the live log." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does the agent actually drive the debugger?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. LLDB is exposed as an agent tool. Ask 'set a breakpoint where this crashes and step through' and the agent sets the breakpoint, runs the app, pauses at the frame, reads variables, and reports back in a single chat turn. Same for Android via the JDWP-backed Kotlin debugger. This only works because the debugger session lives in-process with the agent — cloud agents that sit outside the IDE can't reach a DAP session running in a native UI." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does LingCode have the iOS Simulator built in?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Full simctl integration: boot simulators, install .app bundles, launch by bundle ID, stream live logs into the Run Console, and attach LLDB with process-attach-by-name so the debugger is ready before the app wakes up. The run-destination picker is native SwiftUI — pick from running simulators, booted devices, or your physical iPhone connected by USB. This is the full Xcode flow, not a Node script wrapping simctl." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does LingCode have the Android Emulator built in?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. List available AVDs via avdmanager, boot the emulator via the real emulator binary, install APKs with adb, and stream logcat into the Run Console with tag filtering. Kotlin debugging works via a JDWP-backed DAP session with breakpoints, frame inspection, and variable watches — same UX as iOS, pointed at a different toolchain. You do not need Android Studio installed, only the Android SDK command-line tools." }
+      },
+      {
+        "@type": "Question",
+        "name": "What actually happens when I tell the agent 'ship this to TestFlight'?",
+        "acceptedAnswer": { "@type": "Answer", "text": "The agent sequences six real steps: (1) detect the active scheme and target, (2) invoke xcodebuild archive with your scheme, (3) read your team ID and signing identity from Keychain, (4) re-sign the archive if needed, (5) upload to App Store Connect via xcrun altool, (6) tail the processing status and report back when Apple accepts the build. All of this is native tool calls, not shell scripts. The agent surfaces sign-in errors, missing profiles, or rejected binaries with specific diagnostics." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I run LingCode offline with a local model?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. LingCode ships with Ollama integration. Install Ollama (one click from Settings), pick a local model (Qwen 2.5 Coder, Llama 3, Mistral, CodeLlama), and every AI feature — chat, agent, edits, memory, skills — runs against localhost:11434 with zero network traffic. Good for flights, SCIFs, client work where code cannot leave the room, and privacy-sensitive projects. Cursor cannot do this because its Tab completion, codebase index, and agent orchestration all live on their servers." }
+      },
+      {
+        "@type": "Question",
+        "name": "Which local models work best for coding?",
+        "acceptedAnswer": { "@type": "Answer", "text": "For Swift and general coding on an M-series Mac with 32+ GB of unified memory: Qwen 2.5 Coder 32B is currently the strongest open model for code — close to GPT-4-class on some tasks. Llama 3.1 70B is a good generalist. CodeLlama 34B and DeepSeek Coder are reasonable fallbacks on 16 GB machines. For agent workflows (tool use, structured output), larger models are better — 32B+ recommended. On M1/M2 with less RAM, Qwen 2.5 Coder 7B is a decent everyday model with fast responses." }
+      },
+      {
+        "@type": "Question",
+        "name": "How is LingCode different from Cursor?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Four structural differences. (1) Trust: LingCode snapshots project-critical files before AI edits so nothing is one-way; Cursor has no pre-edit snapshot. (2) IDE-aware: LingCode's agent calls native services (BuildLogService, LLDB, SimulatorController) directly in-process; Cursor's agent shells out and scrapes stdout. (3) No proxy: LingCode calls AI providers directly with your keys; Cursor routes all AI traffic through their servers at $20/month. (4) Local models: LingCode runs fully offline via Ollama; Cursor's core features (Tab, agent, indexing) require their cloud. Plus LingCode is a native SwiftUI Mac app with iOS Simulator and Android Emulator built in, while Cursor is an Electron VS Code fork without a real iOS story." }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I still need Xcode installed?",
+        "acceptedAnswer": { "@type": "Answer", "text": "You need the Xcode command-line tools and the Xcode toolchain (SDK, Simulator runtime, signing infrastructure), but you do not need to open Xcode.app for day-to-day work. LingCode wraps xcodebuild, simctl, xcrun, altool, and LLDB, and ships a native run-destination picker, signing panel, scheme editor, and debugger UI. Many developers keep Xcode installed just for the Simulator runtimes and never open its UI after switching." }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I still need Android Studio installed?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. LingCode talks to the Android SDK command-line tools (gradle, adb, emulator, avdmanager) directly — you only need the Android SDK, not the Android Studio IDE. Gradle builds, AVD management, APK installation, logcat streaming, and Kotlin debugging all happen inside LingCode via the same native destination picker used for iOS. If you install the SDK standalone, LingCode detects it automatically." }
+      },
+      {
+        "@type": "Question",
+        "name": "How does LingCode compare to GitHub Copilot?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Different category. Copilot is an extension that lives inside VS Code, JetBrains IDEs, or Xcode; LingCode is the IDE itself. Copilot's value is tab completion and chat; LingCode's value is agent mode, IDE-aware tools, work protection, and an all-in-one Mac/iOS/Android toolchain with three AI agents (Claude Code, Codex, Gemini CLI) built in. If you love Copilot in VS Code and only want tab completion, LingCode isn't necessarily a replacement for Copilot — it's a replacement for VS Code, Xcode, Android Studio, and Cursor as separate apps." }
+      },
+      {
+        "@type": "Question",
+        "name": "Why can't I run terminal commands?",
+        "acceptedAnswer": { "@type": "Answer", "text": "LingCode's terminal uses a login shell by default (/bin/zsh -l), so it inherits your shell profile's PATH. If a command works in Terminal.app but not in LingCode, the command's directory is probably missing from PATH in your ~/.zshrc or ~/.zprofile. You can override the shell in Settings > Terminal. Homebrew users on Apple Silicon should ensure /opt/homebrew/bin is exported in both .zprofile and .zshrc." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I control Claude Code from my phone?",
+        "acceptedAnswer": { "@type": "Answer", "text": "See the Remote Control guide. The setup is SSH + Tailscale + tmux: Tailscale gives your Mac a private IP over any network, SSH into it from the LingCode iPad/iPhone app, and attach to a tmux session running claude. You get full chat control from anywhere, no cloud relay needed." }
+      }
+    ]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .support-hero { padding: 140px 32px 60px; text-align: center; }
+    .support-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .support-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; }
+    .support-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .support-content h2 { font-size: 1.375rem; margin: 40px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .support-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .support-content h3 { font-size: 1rem; margin: 0 0 8px; color: var(--signal); }
+    .support-content p { margin: 0 0 12px; line-height: 1.7; color: var(--text-muted); }
+    .support-content ul, .support-content ol { margin: 0 0 16px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .support-content li { margin-bottom: 4px; }
+    .support-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .support-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+    .support-card a { color: var(--signal); text-decoration: none; }
+    .support-card a:hover { text-decoration: underline; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="support-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Get Help</p>
+        <h1>Support</h1>
+        <p>Report bugs, ask questions, or get in touch. We aim to respond within 48 hours.</p>
+      </div>
+    </section>
+
+    <article class="support-content">
+      <h2>Report Issues</h2>
+      <div class="support-card">
+        <h3>Bug reports & feature requests</h3>
+        <p>Open an issue on GitHub:</p>
+        <p><a href="https://github.com/Xavierhuang/LingCode/issues" rel="noopener noreferrer">github.com/Xavierhuang/LingCode/issues</a></p>
+        <p>Please include: macOS version, LingCode version, steps to reproduce, and any error messages.</p>
+      </div>
+
+      <h2>Documentation</h2>
+      <div class="support-card">
+        <h3>README & guides</h3>
+        <p><a href="https://github.com/Xavierhuang/LingCode/blob/main/README.md" rel="noopener noreferrer">View README</a> for installation and usage. <a href="/blog.html">Skills guide</a> for slash commands.</p>
+        <p>Product overview and download: <a href="/">LingCode home</a>. Full <a href="/features.html">Features</a> page (Mac and iPad). <a href="/claude-sessions.html">Multiple Claude Code sessions</a> and <a href="/remote-control.html">iPad remote control</a>.</p>
+      </div>
+
+      <h2>Discussions</h2>
+      <div class="support-card">
+        <h3>Questions & community</h3>
+        <p><a href="https://github.com/Xavierhuang/LingCode/discussions" rel="noopener noreferrer">GitHub Discussions</a> for questions, ideas, and sharing.</p>
+      </div>
+
+      <h2 id="faq">FAQ</h2>
+      <p style="color: var(--text-muted); line-height: 1.7;">Detailed answers to the questions people actually ask before and after trying LingCode. Each section is a short education on how the feature works and why it matters — not just "yes/no" responses. Jump to <a href="#faq-getting-started">Getting started</a> · <a href="#faq-privacy">Privacy &amp; data</a> · <a href="#faq-work-protection">Work protection</a> · <a href="#faq-ide-aware">What the agent sees and does</a> · <a href="#faq-local">Local models &amp; offline</a> · <a href="#faq-vs">LingCode vs other tools</a> · <a href="#faq-troubleshooting">Troubleshooting</a>.</p>
+
+      <h2 id="faq-getting-started">Getting started</h2>
+
+      <div class="support-card">
+        <h3>How do I set up my API key?</h3>
+        <p>On first launch, LingCode prompts you to pick a provider and paste a key. You can also open <strong>Settings</strong> (⌘,) and go to <strong>AI &amp; Providers</strong> at any time. Supported providers include <a href="https://console.anthropic.com/settings/keys" rel="noopener noreferrer">Anthropic</a>, <a href="https://platform.openai.com/api-keys" rel="noopener noreferrer">OpenAI</a>, DeepSeek, Gemini, Kimi (global or China), Qwen — or a local Ollama endpoint for zero-cost offline inference.</p>
+        <p>Keys are stored in the <strong>macOS Keychain</strong>, encrypted at rest by the OS. If you have iCloud Keychain enabled, keys will sync to your other Macs automatically over Apple's end-to-end encrypted channel. LingCode never writes keys to a plaintext file and never routes them through our servers — they go straight from Keychain to the provider's API over HTTPS.</p>
+        <p>If you have multiple providers configured, you can switch between them per chat session, per model, or set a default. You can also run different AI agents (Claude Code, Codex, Gemini CLI) in separate tabs, each pointing at its own provider.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Is LingCode free? Can I use it commercially?</h3>
+        <p>Yes to both. The LingCode app is free to download and use for any purpose — personal, commercial, at work, for clients, in production. There's no Pro tier, no seat license, no "free for open source only" clause.</p>
+        <p>You pay the AI provider directly for inference (your Anthropic, OpenAI, or Gemini API bill), or $0 if you run Ollama locally. We don't take a cut, mark up API calls, or cache your prompts for resale. This is structurally different from Cursor's $20/month subscription model — LingCode is free because the business model doesn't depend on an AI proxy layer.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>What are the system requirements?</h3>
+        <p><strong>OS:</strong> macOS 14 (Sonoma) or later. <strong>CPU:</strong> Apple Silicon (M1 and newer) or Intel. <strong>Disk:</strong> about 120 MB for the app itself, plus whatever your Ollama models take if you use local inference (Qwen 2.5 Coder 32B is about 20 GB quantized; smaller models are 4–10 GB). <strong>RAM:</strong> 8 GB minimum for cloud-only use, 16 GB comfortable, 32 GB+ if you plan to run 30B+ local models.</p>
+        <p>No Rosetta is needed on Apple Silicon — LingCode is fully native ARM64. The app is notarized and signed with Developer ID, so Gatekeeper lets it launch without warnings.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Where are keyboard shortcuts, and can I change them?</h3>
+        <p>Open <strong>Settings</strong> (⌘,) and go to <strong>Keyboard shortcuts</strong>. You can customize shortcuts for the main menu and toolbar actions; saving applies immediately, no restart needed. If two commands share a shortcut (for example Quick Open and Print on ⌘P), change one to avoid conflicts.</p>
+        <p>Built-in defaults (before you customize):</p>
+        <ul>
+          <li><strong>File &amp; navigation:</strong> Open folder ⌘⇧O, Open file ⌘O, Save ⌘S, Save as ⌘⇧S, New window ⌘⇧N, Quick open ⌘P, Global search ⌘⇧F</li>
+          <li><strong>Editor:</strong> Find ⌘F, Find &amp; replace ⌥⌘F, Go to line ⌃G, Go to definition ⌘D, Find references ⌘⇧R, Back / Forward after jumps ⌃- / ⌃⇧-</li>
+          <li><strong>Panels &amp; AI:</strong> Toggle bottom panel ⌘J, Toggle AI panel ⌘⇧L, Command palette ⌘⇧P, Agent mode ⌘I, AI inline edit ⌘K, Refactor ⌘⇧E</li>
+          <li><strong>Integrations:</strong> Claude Code open ⌥⌘L, New Claude session ⇧⌥⌘L; Codex ⌥⌘X / ⇧⌥⌘X; New terminal ⇧⌃`</li>
+        </ul>
+      </div>
+
+      <h2 id="faq-privacy">Privacy &amp; data</h2>
+
+      <div class="support-card">
+        <h3>Is my code sent to LingCode's servers?</h3>
+        <p><strong>No.</strong> LingCode is direct-to-provider: prompts and file snippets go from your Mac straight to Anthropic, OpenAI, Gemini, or your local Ollama endpoint over TLS. There is no LingCode proxy, no intermediate cache, no embedding server, and no telemetry.</p>
+        <p>You can verify this yourself: open Activity Monitor's Network tab while using the agent, or run <code>nettop -J bytes_in,bytes_out -p LingCode</code> in Terminal. Every outbound TLS connection goes to a named provider API (<code>api.anthropic.com</code>, <code>api.openai.com</code>, <code>generativelanguage.googleapis.com</code>, etc.), not to any LingCode-owned domain.</p>
+        <p>This is an architectural choice. Because we don't run a proxy, we have no infrastructure to be hacked, subpoenaed, or accidentally log your prompts to. Your code only ever transits networks you chose (your ISP → the provider).</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Do you train models on my code or prompts?</h3>
+        <p><strong>No.</strong> LingCode has no training pipeline, no dataset collection, and no analytics of any kind. We don't see your prompts because they never touch our servers.</p>
+        <p>Whatever privacy terms apply to your prompts are the <strong>provider's</strong> terms. Anthropic does not train on API inputs by default. OpenAI does not train on API inputs by default (different from ChatGPT consumer). Gemini's API has its own policy. Most providers offer enterprise or zero-retention modes for stricter guarantees — configure those in your provider console and LingCode will use them automatically, since it calls the same API endpoints.</p>
+        <p>If you want zero data retention anywhere: use Ollama with a local model. Prompts stay on your Mac and do not cross any network.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Where are my API keys stored?</h3>
+        <p>In the <strong>macOS Keychain</strong>, encrypted at rest by the OS and accessible only to LingCode. We never write keys to a plaintext file, never sync them through a cloud service of ours, and never log them.</p>
+        <p>If you enable iCloud Keychain, keys sync to your other Macs via Apple's end-to-end encrypted channel — LingCode is not involved in that sync. This is one of the specific things Electron-based editors like Cursor cannot do: the Keychain is a native macOS framework that requires linking against Security.framework, which Electron apps can't.</p>
+        <p>To revoke: delete the key in Settings → AI &amp; Providers (removes from Keychain) and rotate it in the provider console. Takes 30 seconds.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>What telemetry does LingCode collect?</h3>
+        <p><strong>Zero.</strong> No analytics, no usage pings, no feature flags phoning home, no crash telemetry, no A/B experiments. The app does not make any outbound connection that isn't either (a) an AI provider API you configured or (b) a software update check to our notarized update feed.</p>
+        <p>If you opt in to Apple's MetricKit at the OS level, Apple may collect crash and performance reports and share them with developers — those go to Apple (not to us) and only fire on crashes. This is transparent and controllable in System Settings → Privacy &amp; Security → Analytics &amp; Improvements.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Is there a proxy layer between me and the AI provider?</h3>
+        <p>No. Your prompt goes from LingCode's process memory, through macOS's TLS stack, directly to the provider's public API. No intermediate server, no rewrites, no prompt injection, no shared rate-limit pool, no cached embeddings.</p>
+        <p>This is structurally different from Cursor and similar products, which route all AI traffic through their own servers (their "Cursor API") that sits in front of Anthropic/OpenAI. Their proxy lets them do useful things (fast retrieval, Tab completion tuning, context packing) but also means your code transits a third party's infrastructure and your prompts are subject to their retention policy, not just the model provider's.</p>
+      </div>
+
+      <h2 id="faq-work-protection">Work protection — what if the agent breaks something?</h2>
+
+      <div class="support-card">
+        <h3>What happens if the agent corrupts my project.pbxproj or Info.plist?</h3>
+        <p><strong>Nothing is lost.</strong> Before the agent writes a byte to project-critical files (<code>project.pbxproj</code>, <code>Info.plist</code>, <code>build.gradle</code>, <code>AndroidManifest.xml</code>, <code>*.entitlements</code>, <code>*.xcscheme</code>), LingCode copies the original to <code>~/Library/Application Support/LingCode/WorkProtection/</code> with a timestamp.</p>
+        <p>Three ways to open the Recovery panel, pick whichever fits your flow:</p>
+        <ol>
+          <li><strong>Keyboard shortcut:</strong> <kbd>⌃⌘R</kbd> from anywhere in the app. Remappable in Settings → Keyboard shortcuts.</li>
+          <li><strong>Menu:</strong> <strong>View → Work Protection Recovery…</strong></li>
+          <li><strong>Toolbar button:</strong> the shield icon labeled "Recover". It ships available-but-not-default so the toolbar stays uncluttered — right-click the toolbar → <strong>Customize Toolbar…</strong> and drag it in if you want it one click away.</li>
+        </ol>
+        <p>Any of the three opens the panel as a sheet showing all snapshots with timestamps, previews of the saved file, and a <strong>Restore</strong> button on each. Because snapshots are independent of git, this works even if you had not committed before the agent edited.</p>
+        <p>Why we built this: Xcode project files and Android manifests are notorious for breaking silently under generated edits. The agent might introduce a trailing comma, a mis-nested dict, or a duplicate UUID that doesn't surface until your next build fails in CI. Pre-edit snapshots let you time-travel out of those problems without hunting through git history.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>How do I undo a multi-file refactor the agent did?</h3>
+        <p>Use <strong>semantic time-travel undo</strong>. LingCode maintains a separate undo stack for AI operations, independent of the editor's per-keystroke undo. <kbd>Cmd</kbd>-<kbd>Z</kbd> in the chat panel rewinds one full agent step — which may span 40 files — in a single action.</p>
+        <p>The practical consequence: you can keep typing after the agent finishes, and still rewind just the agent's changes without losing your own edits since then. Regular editor undo would roll everything back in keystroke order and lose your work. Semantic undo is scoped to the agent operation, not your cursor position.</p>
+        <p>For even larger rewinds, the worktree isolation workflow (next question) is a better fit.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Can the agent work on risky experiments without touching my main code?</h3>
+        <p>Yes — <strong>worktree isolation</strong>. Ask the agent something like <em>"create a worktree for this and try the Swift 6 concurrency migration there"</em> and it will:</p>
+        <ol>
+          <li>Create an isolated git worktree off your current branch</li>
+          <li>Work against that worktree — all edits happen in a separate directory on disk</li>
+          <li>Run tests, builds, and verifications inside the worktree</li>
+          <li>Report back with a summary when done</li>
+        </ol>
+        <p>Your main checkout stays untouched. You can then: <strong>merge</strong> the branch into your current one, <strong>keep</strong> the branch for later review, or <strong>discard</strong> it entirely — all with one click.</p>
+        <p>When to use: framework migrations, dependency upgrades, experimental refactors, and anything where you want the agent to try something bold but aren't sure how it'll land.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Do I have to accept every AI edit in bulk?</h3>
+        <p>No. Every AI edit appears as a <strong>per-file diff card</strong> with syntax-highlighted hunks. Each hunk has its own <strong>Accept</strong> and <strong>Revert</strong> buttons. You can keep four changes in a file and reject the fifth without touching the others.</p>
+        <p>This is the opposite of one-big-apply workflows. The per-hunk view is what makes large AI refactors actually reviewable — it's easier to scan 40 small changes than to compare two versions of a 2000-line file.</p>
+        <p>There's also a <strong>read-before-write</strong> rule: the agent cannot edit a file it hasn't read first. This prevents "blind overwrite" bugs where an agent edits a file based on a filename alone.</p>
+      </div>
+
+      <h2 id="faq-ide-aware">What the agent can see and do</h2>
+
+      <div class="support-card">
+        <h3>Can the AI agent really see my live build errors?</h3>
+        <p><strong>Yes</strong> — as structured data, not scraped stdout. LingCode's agent calls <code>BuildLogService</code> directly as an in-process Swift method. It reads the current build log's errors, warnings, and diagnostic objects with file paths and line numbers, straight from the build system.</p>
+        <p>Ask <em>"why did the last build fail?"</em> and the agent reads the actual error list and points at the offending code. No copy-pasting stdout into a chatbot, no "paste the error and I'll help." The agent already has it.</p>
+        <p>Why this matters: Electron-based agents (Cursor, Continue) can only <code>spawn("xcodebuild …")</code> and regex-parse stdout. That misses structured error codes, strips file paths, lags the live log, and breaks when Apple changes the output format. In-process access gives the agent the same view the IDE has.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Does the agent actually drive the debugger?</h3>
+        <p><strong>Yes.</strong> LLDB is exposed to the agent as a first-class tool with breakpoints, stepping, variable inspection, and REPL evaluation. Same for Android via a JDWP-backed Kotlin debugger.</p>
+        <p>Useful prompt patterns:</p>
+        <ul>
+          <li><em>"Set a breakpoint where this crashes and run to it."</em></li>
+          <li><em>"Step into the next call and tell me what <code>self.user</code> is."</em></li>
+          <li><em>"Print the view hierarchy when this renders wrong."</em></li>
+          <li><em>"Attach to the Simulator process and break on <code>NSException</code>."</em></li>
+        </ul>
+        <p>The agent sets the breakpoint, runs the app, pauses at the frame, reads the variables, and reports back in one chat turn. This is not possible in cloud-agent IDEs because the debugger session lives inside a native UI they can't reach.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Does LingCode have the iOS Simulator built in?</h3>
+        <p><strong>Yes.</strong> Full <code>simctl</code> integration: boot simulators, install .app bundles, launch by bundle ID, and stream live logs into the Run Console. The run-destination picker is native SwiftUI — pick from running simulators, booted devices, or your physical iPhone connected by USB.</p>
+        <p>When you hit Run, LingCode does exactly what Xcode does: invoke <code>xcrun simctl</code> to install and launch, attach LLDB with <code>process attach -n &lt;exe&gt; -w</code> (so the debugger is ready before the app wakes up), and activate Simulator.app via <code>NSWorkspace</code>. It's the Xcode flow, not a Node script wrapping simctl.</p>
+        <p>You need Xcode installed for the SDK and Simulator runtimes, but you don't need to open Xcode.app. Many developers keep Xcode installed purely as a runtime dependency after switching.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Does LingCode have the Android Emulator built in?</h3>
+        <p><strong>Yes.</strong> Full integration with the Android SDK command-line tools: list AVDs via <code>avdmanager</code>, boot the emulator, install APKs via <code>adb</code>, stream <code>logcat</code> into the Run Console with tag filtering, and attach a JDWP-backed DAP session for Kotlin debugging with breakpoints, frame inspection, and variable watches.</p>
+        <p>You do <strong>not</strong> need Android Studio installed. LingCode works with a standalone Android SDK install. Gradle builds, APK/AAB output, signed release builds, and Google Play deploy all happen inside LingCode.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>What actually happens when I say "ship this to TestFlight"?</h3>
+        <p>Six real steps, all as native tool calls:</p>
+        <ol>
+          <li><strong>Detect</strong> the active scheme, target, and bundle ID</li>
+          <li><strong>Archive</strong> via <code>xcodebuild archive</code> for Generic iOS Device</li>
+          <li><strong>Read</strong> your team ID and signing identity from the macOS Keychain</li>
+          <li><strong>Re-sign</strong> the archive for distribution if needed</li>
+          <li><strong>Upload</strong> to App Store Connect via <code>xcrun altool</code></li>
+          <li><strong>Tail</strong> the processing status and report back when Apple accepts the build</li>
+        </ol>
+        <p>The agent surfaces specific diagnostics if something fails: missing provisioning profile, expired signing identity, rejected binary, build errors. You can tell the agent to fix what it can ("regenerate the provisioning profile and retry") and it will.</p>
+        <p>This works because every step is an in-process native call — not shell scripts glued to stdout parsing. Magic Deploy uses the same architecture for Google Play, web hosts, and other targets.</p>
+      </div>
+
+      <h2 id="faq-local">Local models &amp; offline</h2>
+
+      <div class="support-card">
+        <h3>Can I run LingCode offline with a local model?</h3>
+        <p><strong>Yes.</strong> LingCode ships with one-click Ollama integration. Install Ollama from Settings (we can install it for you if it's not present), pick a local model (Qwen 2.5 Coder, Llama 3, Mistral, CodeLlama, DeepSeek), and every AI feature — chat, agent, edits, memory, skills, rules — runs against <code>localhost:11434</code> with zero network traffic.</p>
+        <p>Use cases: flights, trains with no signal, SCIFs, client engagements where code cannot leave the room, air-gapped networks, and privacy-sensitive projects. The IDE doesn't lose any features when offline — editing, Git, LSP, build, debug, test all work because they don't depend on the network in the first place.</p>
+        <p>Cursor cannot do this, and it's not a roadmap question. Their Tab completion is a proprietary fine-tuned model on their servers. Their codebase index lives in their infrastructure. Their agent orchestration runs server-side. Pull the network cable and most of Cursor's value proposition stops working.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>How do I set up Ollama in LingCode?</h3>
+        <ol>
+          <li>Open <strong>Settings</strong> (⌘,) and go to <strong>AI &amp; Providers → Local Models</strong></li>
+          <li>Click <strong>Install Ollama</strong> if it's not detected (LingCode can install it for you, or you can install manually from <a href="https://ollama.com" rel="noopener noreferrer">ollama.com</a>)</li>
+          <li>Click <strong>Download Model</strong> and pick one. <code>qwen2.5-coder:32b</code> is the current strongest open model for code; <code>qwen2.5-coder:7b</code> is faster and good enough for everyday use on smaller Macs</li>
+          <li>In any AI panel, select the Ollama provider and the downloaded model</li>
+        </ol>
+        <p>You can have Ollama and cloud providers configured simultaneously and switch per-session. Some users use cloud models (Claude Sonnet) for heavy agent work and a local model for quick edits or sensitive files.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Which local models work best for coding?</h3>
+        <p>Rough guidance as of 2026, for Swift / Kotlin / general coding:</p>
+        <ul>
+          <li><strong>Qwen 2.5 Coder 32B</strong> — currently the strongest open code model. Close to GPT-4-class on some tasks. Needs ~20 GB RAM quantized. Recommended if you have 32+ GB unified memory on an M-series Mac.</li>
+          <li><strong>Llama 3.1 70B</strong> — strong generalist, needs 40+ GB RAM. Good for reasoning-heavy tasks.</li>
+          <li><strong>CodeLlama 34B</strong> — older but solid code model, 20 GB.</li>
+          <li><strong>DeepSeek Coder 33B</strong> — strong for code, 20 GB.</li>
+          <li><strong>Qwen 2.5 Coder 7B</strong> — fast, fits comfortably on 16 GB Macs, quality is noticeably lower than 32B but acceptable for everyday edits.</li>
+        </ul>
+        <p>For <strong>agent workflows</strong> (tool use, structured output, multi-step reasoning), larger models are much better — 32B+ recommended. Small models can chat but struggle with complex tool orchestration.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Do all features work with local models?</h3>
+        <p>Chat, agent mode, file edits, structured memory, skills, slash commands, rules (<code>.mdc</code>, <code>CLAUDE.md</code>, <code>.cursorrules</code>), and tool calling all work with Ollama. Agent quality depends on the model's ability to follow tool-use schemas — newer Qwen Coder and Llama 3.1 models handle this well; older or smaller models may struggle.</p>
+        <p>Tab completion is a mixed story: it depends on the model's speed at low-latency completions. 7B-class models are usable; larger ones are too slow on most Macs for inline tab completion. For best Tab completion, a cloud provider is still faster.</p>
+      </div>
+
+      <h2 id="faq-vs">LingCode vs other tools</h2>
+
+      <div class="support-card">
+        <h3>How is LingCode different from Cursor?</h3>
+        <p>Four structural differences, covered in detail on <a href="/why-not-cursor.html">Why not Cursor?</a>:</p>
+        <ol>
+          <li><strong>Trust.</strong> LingCode snapshots project-critical files before AI edits, so nothing is one-way. Cursor has no pre-edit snapshot and no semantic multi-file undo.</li>
+          <li><strong>IDE-aware.</strong> LingCode's agent calls native services (<code>BuildLogService</code>, <code>LLDB</code>, <code>SimulatorController</code>) directly in-process. Cursor's agent shells out and scrapes stdout.</li>
+          <li><strong>No proxy.</strong> LingCode calls AI providers directly with your keys. Cursor routes all AI traffic through their servers for $20/month.</li>
+          <li><strong>Local models.</strong> LingCode runs fully offline via Ollama. Cursor's core features (Tab, agent, indexing) require their cloud.</li>
+        </ol>
+        <p>Plus: LingCode is a native SwiftUI Mac app with iOS Simulator, Android Emulator, LLDB, and Keychain-backed signing. Cursor is an Electron VS Code fork without a real iOS or Android story.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Do I still need Xcode installed?</h3>
+        <p>You need the <strong>Xcode toolchain</strong> (SDKs, Simulator runtimes, signing infrastructure, command-line tools) but you do not need to open Xcode.app for day-to-day work. LingCode wraps <code>xcodebuild</code>, <code>simctl</code>, <code>xcrun</code>, <code>altool</code>, and LLDB, and ships native UIs for the run-destination picker, signing panel, scheme editor, and debugger.</p>
+        <p>Many developers keep Xcode installed purely as a runtime dependency after switching — Xcode.app itself rarely gets opened.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Do I still need Android Studio installed?</h3>
+        <p><strong>No.</strong> LingCode talks to the Android SDK command-line tools (<code>gradle</code>, <code>adb</code>, <code>emulator</code>, <code>avdmanager</code>) directly — you only need the standalone Android SDK, not the Android Studio IDE. Gradle builds, AVD management, APK/AAB output, <code>logcat</code> streaming, and Kotlin debugging all happen inside LingCode via the same native destination picker used for iOS.</p>
+        <p>Install the SDK via <code>brew install android-commandlinetools</code> or from Google's downloads page, point LingCode at it in Settings, done.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>How does LingCode compare to GitHub Copilot?</h3>
+        <p>Different category. Copilot is an <strong>extension</strong> that lives inside VS Code, JetBrains, or Xcode. LingCode is <strong>the IDE itself</strong>.</p>
+        <p>Copilot's core value is tab completion and chat inside your existing editor. LingCode ships tab completion too — Copilot-style ghost text with FIM (Fill-in-Middle) support against your cloud or local model — so you're not giving that up by switching. The broader value is agent mode, IDE-aware tools, work protection, three AI providers (Claude Code, Codex, Gemini CLI) in tabs, and an all-in-one iOS + macOS + Android toolchain.</p>
+        <p>If you love Copilot inside VS Code, LingCode is a replacement for both Copilot and VS Code — plus Xcode, Android Studio, and Cursor as four more separate apps you can stop running.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>Can I migrate my Cursor settings and rules?</h3>
+        <p>Yes. LingCode reads <code>.cursorrules</code>, <code>.cursor/rules/</code>, and <code>.cursor/skills/</code> directly with no migration step. Drop your Cursor project into LingCode and your existing rules and skills just work. <code>WORKSPACE.md</code> and <code>CLAUDE.md</code> files are also read as rules, so anything you've written for Claude Code projects transfers too.</p>
+      </div>
+
+      <h2 id="faq-troubleshooting">Troubleshooting</h2>
+
+      <div class="support-card">
+        <h3>Why can't I run terminal commands?</h3>
+        <p>LingCode's terminal uses a login shell by default (<code>/bin/zsh -l</code>), which inherits your profile's PATH. If a command works in Terminal.app but not in LingCode, it almost always means the command's directory is missing from PATH in the shell file LingCode actually sourced.</p>
+        <p><strong>Fix:</strong></p>
+        <ol>
+          <li>Run <code>echo $PATH</code> in LingCode's terminal and compare to Terminal.app</li>
+          <li>If Homebrew paths (<code>/opt/homebrew/bin</code> on Apple Silicon, <code>/usr/local/bin</code> on Intel) are missing, add <code>eval "$(/opt/homebrew/bin/brew shellenv)"</code> to <code>~/.zprofile</code></li>
+          <li>Restart the terminal tab</li>
+        </ol>
+        <p>You can override the shell in Settings → Terminal (use <code>/bin/bash -l</code> or a custom path).</p>
+      </div>
+
+      <div class="support-card">
+        <h3>How do I control Claude Code from my phone?</h3>
+        <p>See the <a href="/remote-control.html">Remote Control guide</a>. The setup is <strong>SSH + Tailscale + tmux</strong>:</p>
+        <ol>
+          <li><strong>Tailscale</strong> gives your Mac a stable private IP reachable from anywhere, over any network, with no port forwarding</li>
+          <li><strong>SSH</strong> from the LingCode iPad/iPhone app into your Mac's Tailscale IP</li>
+          <li><strong>tmux</strong> on the Mac runs a persistent <code>claude</code> session you can attach and detach</li>
+        </ol>
+        <p>Result: full chat control from anywhere — bed, coffee shop, airport — with no cloud relay and no exposed ports.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>LingCode won't launch, or crashes on open</h3>
+        <p>First: check Console.app for crash reports (filter by "LingCode"). Common causes:</p>
+        <ul>
+          <li><strong>macOS too old.</strong> Minimum is macOS 14 (Sonoma). Earlier releases will refuse to launch.</li>
+          <li><strong>Quarantine bit from download.</strong> If you see "cannot be opened because the developer cannot be verified" despite the app being notarized, run <code>xattr -d com.apple.quarantine /Applications/LingCode.app</code></li>
+          <li><strong>Corrupted preferences.</strong> Rarely, the preferences plist gets corrupted. Move <code>~/Library/Preferences/dev.lingcode.LingCode.plist</code> aside and relaunch.</li>
+          <li><strong>Keychain access denial.</strong> If you denied Keychain access on first launch, reset it in System Settings → Privacy &amp; Security → Keychain.</li>
+        </ul>
+        <p>If none of these apply, send the Console.app crash report to <a href="mailto:hhuangweijia@gmail.com">hhuangweijia@gmail.com</a>.</p>
+      </div>
+
+      <div class="support-card">
+        <h3>The AI agent seems stuck or stopped responding</h3>
+        <p>Check the <strong>bottom panel</strong> for the agent status row — it shows the last tool the agent called and how long it's been running. Most "stuck" cases are actually the agent waiting for a long build, a network-slow model response, or an unresponsive Ollama server.</p>
+        <p>If the agent is genuinely hung, click <strong>Cancel</strong> in the chat panel to stop the current step. The conversation history is preserved; you can reword the prompt and continue. Cancelling does not undo edits the agent has already accepted — use semantic undo if you want to rewind them too.</p>
+      </div>
+
+      <h2>Contact</h2>
+      <div class="support-card">
+        <h3>Direct contact</h3>
+        <ul style="list-style: none; padding-left: 0;">
+          <li>Email: <a href="mailto:hhuangweijia@gmail.com">hhuangweijia@gmail.com</a></li>
+          <li>Phone: <a href="tel:+16465671456">(646) 567-1456</a></li>
+        </ul>
+      </div>
+
+      <div class="support-card">
+        <h3>GitHub</h3>
+        <ul>
+          <li><a href="https://github.com/Xavierhuang/LingCode" rel="noopener noreferrer">Repository</a></li>
+          <li><a href="https://github.com/Xavierhuang/LingCode/issues" rel="noopener noreferrer">Issues</a></li>
+          <li><a href="https://github.com/Xavierhuang/LingCode/discussions" rel="noopener noreferrer">Discussions</a></li>
+        </ul>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

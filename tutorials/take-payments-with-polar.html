@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Take payments with Polar (merchant of record) — LingCode Tutorials</title>
+  <meta name="description" content="Polar handles sales tax, VAT, GST, and chargebacks for you. The Stripe alternative for indie SaaS that doesn't want to register in 50 jurisdictions.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/take-payments-with-polar.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/take-payments-with-polar.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/take-payments-with-polar.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/take-payments-with-polar.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Take payments with Polar (merchant of record)",
+  "description": "Polar handles sales tax, VAT, GST, and chargebacks for you. Stripe doesn't. If you're shipping a global SaaS solo and don't want to register in 50 jurisdictions, this is the trade-off worth knowing.",
+  "url": "https://lingcode.dev/tutorials/take-payments-with-polar.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/take-payments-with-polar.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Create a product",
+      "url": "https://lingcode.dev/tutorials/take-payments-with-polar.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Create a checkout from your app",
+      "url": "https://lingcode.dev/tutorials/take-payments-with-polar.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Wire up webhooks for fulfillment",
+      "url": "https://lingcode.dev/tutorials/take-payments-with-polar.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Test locally with the CLI",
+      "url": "https://lingcode.dev/tutorials/take-payments-with-polar.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Check entitlement on every request",
+      "url": "https://lingcode.dev/tutorials/take-payments-with-polar.html#step-5"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Take payments with Polar",
+      "item": "https://lingcode.dev/tutorials/take-payments-with-polar.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/take-payments-with-polar.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Take payments with Polar</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Take payments with Polar (merchant of record)</h1>
+      <p class="intro"><a href="https://polar.sh/" target="_blank" rel="noopener">Polar</a> handles sales tax, VAT, GST, and chargebacks for you. Stripe doesn't. If you're shipping a global SaaS solo and don't want to register in 50 jurisdictions, this is the trade-off worth knowing.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why merchant-of-record matters</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Stripe</strong> processes the card and hands you the money. You are the merchant — <em>you</em> owe sales tax in California, VAT in Germany, GST in India, etc. EU VAT alone has 27 country-specific rates.</li>
+            <li><strong>Polar (and <a href="https://lemonsqueezy.com/" target="_blank" rel="noopener">Lemon Squeezy</a>, <a href="https://paddle.com/" target="_blank" rel="noopener">Paddle</a>)</strong> are merchants of record — they sell the product to your customer, you sell to them. They handle every tax compliance obligation; you get a single payout in your currency.</li>
+            <li><strong>Cost of MoR</strong> — ~5–6% per transaction vs. Stripe's ~2.9% + 30¢. You're paying for tax-compliance-as-a-service. For an indie SaaS doing &lt;$1M/yr globally, this is the right trade.</li>
+            <li><strong>Pick Polar when</strong> — you want the most developer-first MoR (open source, GitHub-style auth, ergonomic APIs). Pick Lemon Squeezy if you want more polish; Paddle if you want enterprise features.</li>
+            <li><strong>Sign up</strong> — <a href="https://polar.sh/login" target="_blank" rel="noopener">polar.sh/login</a>. GitHub login. Approval takes 1–3 business days (KYC).</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Create a product</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Dashboard → <strong>Products → New product</strong>. Pick:</p>
+          <ul>
+            <li><strong>Type</strong> — one-time (license, lifetime deal) or recurring (subscription)</li>
+            <li><strong>Billing interval</strong> — monthly, yearly, both</li>
+            <li><strong>Price</strong> — USD; Polar converts at checkout</li>
+            <li><strong>Benefits</strong> — Polar's killer feature. Attach automated entitlements: GitHub repo access, Discord role, file download, license key, ad-hoc webhook. Triggered automatically on successful purchase + revoked on cancellation.</li>
+          </ul>
+          <p>Save. Copy the <code>product_id</code> — you'll need it for the checkout URL.</p>
+        </div>
+      </div>
+
+      <h2>Get your API keys</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p><strong>Settings → API Keys → Create API key</strong>. Pick scopes:</p>
+          <ul>
+            <li><code>checkouts:write</code> — to create checkout sessions</li>
+            <li><code>customers:read</code> — to query customer state</li>
+            <li><code>subscriptions:read</code> — to check entitlement</li>
+          </ul>
+          <p>Add to <code>.env</code>:</p>
+          <pre><code>POLAR_ACCESS_TOKEN=polar_oat_…
+POLAR_WEBHOOK_SECRET=polar_whs_…  # from next step
+POLAR_PRODUCT_ID=prod_…           # from step 1</code></pre>
+          <div class="warn-box">
+            <strong>Sandbox vs production.</strong> Polar has a <a href="https://sandbox.polar.sh/" target="_blank" rel="noopener">sandbox</a> at sandbox.polar.sh — use it for development. The token prefixes differ; don't mix them.
+          </div>
+        </div>
+      </div>
+
+      <h2>Create a checkout from your app</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Install the SDK:</p>
+          <pre><code>npm install @polar-sh/sdk</code></pre>
+          <p>Server route — when user clicks "Upgrade":</p>
+          <pre><code>import { Polar } from "@polar-sh/sdk";
+
+const polar = new Polar({
+  accessToken: process.env.POLAR_ACCESS_TOKEN,
+  server: "production", // or "sandbox"
+});
+
+// POST /api/upgrade
+app.post("/api/upgrade", async (req, res) =&gt; {
+  const checkout = await polar.checkouts.create({
+    products: [process.env.POLAR_PRODUCT_ID],
+    successUrl: "https://yourapp.com/welcome?checkout_id={CHECKOUT_ID}",
+    customerEmail: req.user.email,
+    metadata: { userId: req.user.id },   // critical — see step 5
+  });
+  res.json({ url: checkout.url });
+});</code></pre>
+          <p>Client redirects to <code>checkout.url</code>. Polar handles card entry, tax calculation per the customer's country, receipt email.</p>
+          <p>Alternative: <strong>Polar Checkout Links</strong> — no API, just a hosted URL like <code>polar.sh/checkout/abc</code>. Drop into a button. Great for landing pages.</p>
+        </div>
+      </div>
+
+      <h2>Wire up webhooks for fulfillment</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Polar fires events on your server when state changes. Don't trust the success-URL redirect — users close tabs, cards retry async.</p>
+          <p>Dashboard → <strong>Settings → Webhooks → Add endpoint</strong>:</p>
+          <ul>
+            <li><strong>URL</strong> — <code>https://yourapp.com/api/webhooks/polar</code></li>
+            <li><strong>Events</strong> — <code>subscription.created</code>, <code>subscription.updated</code>, <code>subscription.canceled</code>, <code>order.created</code>, <code>order.refunded</code></li>
+            <li>Copy the signing secret into <code>POLAR_WEBHOOK_SECRET</code></li>
+          </ul>
+          <p>Verify + handle:</p>
+          <pre><code>import { validateEvent } from "@polar-sh/sdk/webhooks";
+
+app.post(
+  "/api/webhooks/polar",
+  express.raw({ type: "application/json" }),
+  async (req, res) =&gt; {
+    let event;
+    try {
+      event = validateEvent(
+        req.body,
+        req.headers,
+        process.env.POLAR_WEBHOOK_SECRET,
+      );
+    } catch {
+      return res.status(401).send("bad signature");
+    }
+
+    switch (event.type) {
+      case "subscription.created":
+      case "subscription.updated": {
+        const userId = event.data.metadata.userId;
+        await db.users.update(userId, {
+          plan: event.data.product.name,
+          polarSubscriptionId: event.data.id,
+          subscriptionStatus: event.data.status, // active | past_due | …
+        });
+        break;
+      }
+      case "subscription.canceled": {
+        const userId = event.data.metadata.userId;
+        await db.users.update(userId, { plan: "free" });
+        break;
+      }
+    }
+    res.json({ ok: true });
+  },
+);</code></pre>
+          <p>Same shape as <a href="/tutorials/set-up-stripe-webhooks.html">the Stripe webhooks tutorial</a>. Same rules apply: respond 2xx fast, idempotent handler, signature verification before any DB write.</p>
+        </div>
+      </div>
+
+      <h2>Test locally with the CLI</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Polar doesn't have a webhook-forwarder CLI like Stripe's. Two options:</p>
+          <ul>
+            <li><a href="https://ngrok.com/" target="_blank" rel="noopener">ngrok</a> — <code>ngrok http 3000</code>, set the public URL as your sandbox webhook endpoint</li>
+            <li><a href="https://docs.svix.com/play" target="_blank" rel="noopener">Svix Play</a> — captures + replays webhooks so you don't need to recreate test orders</li>
+          </ul>
+          <p>Make a sandbox purchase with Polar's test card numbers — same as Stripe (<code>4242 4242 4242 4242</code>). Tail your server logs, verify the webhook arrived signed, verify DB updated.</p>
+        </div>
+      </div>
+
+      <h2>Check entitlement on every request</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Don't query Polar's API per request — too slow + rate-limited. Read from your DB:</p>
+          <pre><code>// middleware
+function requirePlan(...plans) {
+  return (req, res, next) =&gt; {
+    if (!plans.includes(req.user.plan)) {
+      return res.status(402).json({ error: "Upgrade required" });
+    }
+    next();
+  };
+}
+
+app.post("/api/pro-only", requirePlan("pro", "max_pro"), handler);</code></pre>
+          <p>The webhook keeps the DB in sync. Polar's server is authoritative; your DB is the cache.</p>
+        </div>
+      </div>
+
+      <h2>Customer portal (manage subscription)</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Don't build cancel/upgrade UI yourself. Polar hosts a <strong>Customer Portal</strong>.</p>
+          <pre><code>app.post("/api/billing/portal", async (req, res) =&gt; {
+  const session = await polar.customerPortal.sessions.create({
+    customerId: req.user.polarCustomerId,
+  });
+  res.redirect(session.customerPortalUrl);
+});</code></pre>
+          <p>Users get: change card, upgrade/downgrade plan, cancel, view invoices, download receipts (with correct tax info). Polar handles proration.</p>
+        </div>
+      </div>
+
+      <h2>Common failures</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Test webhooks not firing</strong> — sandbox endpoints are configured separately from production. <em>Two</em> webhook endpoints to manage. Don't confuse them.</li>
+            <li><strong>Metadata not flowing through</strong> — <code>metadata</code> on the checkout flows to the order and subscription objects, but you have to read it from <code>event.data.metadata</code> (not <code>event.metadata</code>). Easy to typo.</li>
+            <li><strong>Higher fees than Stripe</strong> — yes, ~5%. The mental model: that 2% extra is your tax compliance team. EU VAT registration alone is ~$2K/yr per country.</li>
+            <li><strong>Payouts in USD only</strong> — Polar pays out in USD via wire/ACH. If you need local-currency payouts, Paddle is more flexible (but more expensive and enterprise-y).</li>
+            <li><strong>Some regions blocked</strong> — Polar can't accept payments from sanctioned countries. Same for all MoRs. If you need 100% global, you may need both Stripe and an MoR.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>When NOT to use Polar</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>You already have entities + tax registrations</strong> — if you have a US LLC + a EU VAT registration + sales-tax software (TaxJar, Anrok), Stripe + your accountant is cheaper.</li>
+            <li><strong>You're &gt;$1M ARR and growing</strong> — at scale, the 2% MoR premium turns into real money. Migrate to Stripe + dedicated tax tooling.</li>
+            <li><strong>You sell physical goods</strong> — Polar is digital-only (SaaS, downloads, licenses). For physical, use Shopify or Stripe.</li>
+            <li><strong>B2B with invoicing/POs</strong> — Polar supports it but is less mature than Paddle for enterprise invoicing.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Polar</strong> — 4% + 40¢ per transaction. No monthly fee, no minimum.</li>
+            <li><strong>Lemon Squeezy</strong> — 5% + 50¢. Acquired by <a href="https://stripe.com/" target="_blank" rel="noopener">Stripe</a> in 2024 — still operates standalone but future is uncertain.</li>
+            <li><strong>Paddle</strong> — 5% + 50¢ on standard; enterprise rates negotiable.</li>
+            <li><strong>Stripe + DIY tax</strong> — 2.9% + 30¢, plus your time + tax software (~$500/mo Anrok, ~$200/mo TaxJar entry tier) + accountant + filings.</li>
+          </ul>
+          <p>Pricing pages: <a href="https://polar.sh/pricing" target="_blank" rel="noopener">polar.sh/pricing</a>, <a href="https://lemonsqueezy.com/pricing" target="_blank" rel="noopener">lemonsqueezy.com/pricing</a>, <a href="https://paddle.com/pricing/" target="_blank" rel="noopener">paddle.com/pricing</a>.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <ul>
+            <li><a href="https://docs.polar.sh/" target="_blank" rel="noopener">Polar docs home</a></li>
+            <li><a href="https://docs.polar.sh/api-reference" target="_blank" rel="noopener">API reference</a></li>
+            <li><a href="https://github.com/polarsource/polar" target="_blank" rel="noopener">Polar source (open source, AGPL)</a> — yes, you could self-host. Most don't.</li>
+            <li><a href="https://docs.polar.sh/integrate/sdk" target="_blank" rel="noopener">SDK list</a> — TS/JS, Python, Go, framework adapters for Next.js, Astro, etc.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Trade-off framing.</strong> Stripe = lower fees, you handle compliance. MoR = higher fees, they handle compliance. Solo founder shipping globally? Pay the 2%. Series A with a finance team? Switch to Stripe.
+      </div>
+
+      <div class="tutorial-next">
+        <h3>What's next</h3>
+        <div class="tutorial-next-cards">
+          <a href="/tutorials/set-up-stripe-webhooks.html" class="tutorial-next-card">
+            <h4>Stripe webhooks (the alternative)</h4>
+            <p>If you decided to self-handle tax — same shape, different vendor.</p>
+          </a>
+          <a href="/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h4>Send receipts with Resend</h4>
+            <p>Polar emails the receipt; you may want your own "Welcome to Pro" message.</p>
+          </a>
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h4>Error tracking with Sentry</h4>
+            <p>Webhook failures = lost revenue. Get alerted instantly.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

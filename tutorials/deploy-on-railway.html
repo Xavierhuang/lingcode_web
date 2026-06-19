@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I deploy on Railway from LingCode? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Railway is the easiest deploy in modern PaaS — point at a GitHub repo, get a URL. Predictable usage-based billing, real Postgres/Redis sidekicks, no Docker required.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-on-railway.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-on-railway.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-on-railway.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/deploy-on-railway.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Deploy on Railway",
+  "description": "Railway is what happens when you take Heroku's simplicity, add real-time logs, give it 2020s pricing transparency, and don't make the user fight a Dockerfile. Point at a GitHub repo; thirty seconds later, your app is on the internet at a real URL.",
+  "url": "https://lingcode.dev/tutorials/deploy-on-railway.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/deploy-on-railway.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Deploy on Railway"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Deploy on Railway",
+      "item": "https://lingcode.dev/tutorials/deploy-on-railway.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/deploy-on-railway.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Deploy on Railway</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I deploy on Railway from LingCode?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Push to GitHub, connect the repo to Railway at railway.app, and Railway auto-detects your stack and builds. For LingCode-side deploys, paste a Railway token into Magic Deploy → Railway and click Ship. No Dockerfile needed for most stacks.</p>
+      <p class="intro">Railway is what happens when you take Heroku's simplicity, add real-time logs, give it 2020s pricing transparency, and don't make the user fight a Dockerfile. Point at a GitHub repo; thirty seconds later, your app is on the internet at a real URL.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The thing that made early Heroku magical was that you didn't have to think. <code>git push heroku main</code>. The dyno started. The URL worked. You'd get to the actual problem you were trying to solve in minutes instead of hours. Then Heroku got expensive, lost its free tier, and stagnated for years. The market noticed and a small wave of replacements arrived. Of those, Railway has done the cleanest job of recreating "the magic" while solving the problems Heroku didn't.</p>
+      <p>Railway's pitch is: connect a GitHub repo, they detect what kind of project it is (Node, Python, Go, Ruby, Rust, anything), they figure out the build, they deploy, you get a URL. The whole flow is fifteen seconds of UI clicks plus the build time. If your app needs a database, add a Postgres or Redis from a side menu; the connection string is automatically injected as an env var. If your app needs a worker, add another service. The mental model is "a project is a collection of services that share env vars and a private network." It maps to what real apps look like without making you build a yaml file.</p>
+      <p>The trade-off is opinionatedness. Railway picks the build path; you can override but doing so feels like fighting the platform. Pricing is usage-based (you pay for compute-time and RAM-time, not a flat monthly plan), which is great when usage is low and surprising when it's high. For most indie projects and side businesses, Railway is the cheapest path to "real production-shaped infrastructure." For specifically-shaped enterprise workloads, the opinionatedness becomes a problem.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The Railway model: projects, services, plugins</li>
+        <li>Connecting a GitHub repo and triggering the first deploy</li>
+        <li>Adding a Postgres or Redis service</li>
+        <li>Managing environment variables</li>
+        <li>Where the pricing surprises hide</li>
+      </ul>
+
+      <h2>Step 1: Sign up + connect GitHub</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>One OAuth flow</h3>
+          <p>Sign up at <code>railway.com</code> with your GitHub account. Railway requests permissions to read your repos — you can scope this to specific repos rather than "all" if you prefer. The free trial gives you $5 of usage credit; from there you pick a plan.</p>
+          <p>Railway's pricing changed in 2023 — there's no longer a free tier in the old sense, but the $5/month Hobby plan is real and the $5 credit is enough to test for hours.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: New project from a GitHub repo</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>The first-deploy flow</h3>
+          <p>Click <strong>New Project</strong> → <strong>Deploy from GitHub repo</strong>. Pick the repo. Pick the branch (defaults to <code>main</code>). Railway scans the repo, detects the stack (e.g., "this is a Next.js app"), and starts building.</p>
+          <p>Within 30–90 seconds the first deploy is live. Railway generates a public URL like <code>my-app-production.up.railway.app</code> that's HTTPS-by-default. Click it; your app should load.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>If detection picks the wrong build path,</strong> you can add a <code>railway.toml</code> at the project root or set explicit start commands in the service settings. The detection is usually right for the common stacks; expect to override for monorepos or unusual setups.
+      </div>
+
+      <h2>Step 3: Add a database</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Right-click on the project canvas</h3>
+          <p>In the Railway project view, click the empty space and pick <strong>Add Service → Database</strong>. Pick Postgres, MySQL, MongoDB, or Redis.</p>
+          <p>Railway provisions the database in seconds and exposes a connection string as an env var inside the project's network — your app service automatically gets <code>DATABASE_URL</code> in its environment without you setting it manually. The database is private to the project; nothing on the public internet can reach it.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Environment variables</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Per-service, with reference syntax for sharing</h3>
+          <p>In the service's <strong>Variables</strong> tab, set any env vars your app needs (<code>SECRET_KEY</code>, third-party API keys, etc.). Two patterns worth knowing:</p>
+          <ul>
+            <li><strong>Reference another service's variable:</strong> <code>${{ Postgres.DATABASE_URL }}</code> imports the database's connection string into your app's env without copying the value.</li>
+            <li><strong>Shared variables across services:</strong> set them at the project level; reference from each service.</li>
+          </ul>
+          <p>Variables are encrypted at rest; the dashboard shows them masked by default.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Custom domain</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Service settings → Networking → Custom Domain</h3>
+          <p>Click your service, go to <strong>Settings → Networking</strong>, click <strong>Custom Domain</strong>. Enter your domain. Railway shows a CNAME target (something like <code>your-app.up.railway.app</code>) to point your DNS at.</p>
+          <p>At your <a href="/tutorials/connect-domain-to-server-with-dns.html">DNS provider</a>, add a CNAME for the subdomain pointing at that target. For apex domains, Railway supports ALIAS / flattened-CNAME at hosts that allow it (Cloudflare, Route 53, etc.). Within a few minutes Railway issues TLS automatically.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Production discipline</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Two environments, with promotion</h3>
+          <p>Real projects want a staging environment to test before main goes live. In Railway, click <strong>Environments → New Environment</strong> and duplicate from production. Railway sets up an independent copy with its own URLs and (cloned) database. You push to the staging environment's branch; promote to production when ready.</p>
+          <p>This is the gap Railway closes that Heroku never quite did — a real two-environment workflow without learning yet another tool.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: The pricing thing</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Usage-based; cap your spend</h3>
+          <p>Railway charges for CPU-time, RAM-time, network egress, and database storage. Pricing is per-service. A small idle app on the Hobby plan ($5/month) is usually fine; an app that spikes (long-running cron jobs, large container builds, lots of bandwidth) can climb.</p>
+          <p>Set a <strong>usage limit</strong> in your account settings — Railway will shut services down when you hit the cap rather than letting the bill grow indefinitely. This is the single most important configuration; do it on day one.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Cold starts are real on cheap plans.</strong> Railway can put idle services to sleep on lower tiers. If your app needs to wake up on each request, expect 1–3 seconds of cold start. For user-facing apps, keep the service warm (a min-replicas setting) or use a higher tier.
+      </div>
+
+      <h2>Step 8: When Railway isn't right</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>Three cases</h3>
+          <ul>
+            <li><strong>You want multi-region.</strong> Railway runs in fixed regions; you don't pick where each service lives. For global apps, <a href="/tutorials/deploy-on-fly-io.html">Fly.io</a> is the answer.</li>
+            <li><strong>You want flat monthly bills.</strong> Usage-based pricing means uncertainty. <a href="/tutorials/deploy-on-render.html">Render's</a> flat plans are more predictable.</li>
+            <li><strong>You need true root / kernel-level control.</strong> Railway abstracts this. For Docker-with-custom-init or systemd-needs, use a real VPS.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/deploy-on-render.html" class="tutorial-next-card">
+            <h3>Deploy on Render</h3>
+            <p>Heroku-shaped, flat monthly pricing — the predictable cousin</p>
+          </a>
+          <a href="/tutorials/deploy-on-fly-io.html" class="tutorial-next-card">
+            <h3>Deploy on Fly.io</h3>
+            <p>More control, global edge — when geography matters</p>
+          </a>
+          <a href="/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>Connect your domain to a server</h3>
+            <p>Point your custom domain at the Railway service</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

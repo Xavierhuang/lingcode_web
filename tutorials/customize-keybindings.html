@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customize keybindings in LingCode</title>
+  <meta name="description" content="LingCode reads ~/.claude/keybindings.json — rebind shortcuts, add chord bindings, and bring your Cursor/VS Code/Vim muscle memory across in five minutes.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/customize-keybindings.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/customize-keybindings.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/customize-keybindings.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/customize-keybindings.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Customize keybindings in LingCode",
+  "description": "LingCode ships sensible default shortcuts, but if your muscle memory comes from Cursor, VS Code, JetBrains, or Vim, those defaults will fight you for weeks. Five minutes editing ~/.claude/keybindings.json saves years of friction.",
+  "url": "https://lingcode.dev/tutorials/customize-keybindings.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/customize-keybindings.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Customize keybindings in LingCode"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Customize keybindings",
+      "item": "https://lingcode.dev/tutorials/customize-keybindings.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/customize-keybindings.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Native Mac IDE</a>
+      <span>/</span>
+      <span>Customize keybindings</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Customize keybindings in LingCode</h1>
+      <p class="intro">LingCode ships sensible default shortcuts, but if your muscle memory comes from Cursor, VS Code, JetBrains, or Vim, those defaults will fight you for weeks. Five minutes editing <code>~/.claude/keybindings.json</code> saves years of friction.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why a file, not a menu</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>Most editors hide keybindings behind a settings UI with a search box and a tiny "edit" button per row. That's fine for one rebind, painful for ten, and unportable when you move machines.</p>
+          <p>LingCode keeps keybindings in a plain JSON file at <code>~/.claude/keybindings.json</code>. You can:</p>
+          <ul>
+            <li>Edit it in your favorite text editor.</li>
+            <li>Diff it against last week's version.</li>
+            <li>Drop it in dotfiles and sync across Macs.</li>
+            <li>Comment a chord with a TODO and come back to it.</li>
+          </ul>
+          <p>The format is small: an array of <code>{keys, command}</code> objects. That's it. Once you've seen one, you've seen them all.</p>
+        </div>
+      </div>
+
+      <h2>Open the file</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>In a terminal:</p>
+          <pre><code>mkdir -p ~/.claude
+touch ~/.claude/keybindings.json
+open -e ~/.claude/keybindings.json</code></pre>
+          <p>If the file is new and empty, paste this skeleton and save:</p>
+          <pre><code>[
+]</code></pre>
+          <p>Empty array = "use all defaults, override nothing." Every entry you add either replaces a default or registers a new binding. LingCode hot-reloads the file on save — no restart.</p>
+        </div>
+      </div>
+
+      <h2>The shape of one binding</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Each binding is an object with two fields:</p>
+          <pre><code>{
+  "keys": "cmd+k",
+  "command": "chat.focus"
+}</code></pre>
+          <ul>
+            <li><strong><code>keys</code></strong> — the keystroke. Modifiers are <code>cmd</code>, <code>shift</code>, <code>alt</code> (= Option), <code>ctrl</code>. Join with <code>+</code>. Key names are lowercase (<code>k</code>, <code>enter</code>, <code>escape</code>, <code>tab</code>, <code>up</code>, <code>down</code>, <code>left</code>, <code>right</code>, <code>f1</code>…<code>f12</code>).</li>
+            <li><strong><code>command</code></strong> — the action to fire. You can see the full list by asking LingCode in chat: <em>"list all keybinding commands."</em></li>
+          </ul>
+          <p>That's the whole grammar. Examples for common rebinds:</p>
+          <pre><code>[
+  { "keys": "cmd+p",         "command": "file.quickOpen"    },
+  { "keys": "cmd+shift+p",   "command": "command.palette"   },
+  { "keys": "cmd+b",         "command": "sidebar.toggle"    },
+  { "keys": "cmd+j",         "command": "terminal.toggle"   },
+  { "keys": "cmd+enter",     "command": "chat.submit"       },
+  { "keys": "cmd+l",         "command": "chat.focus"        }
+]</code></pre>
+        </div>
+      </div>
+
+      <h2>Rebind the submit key</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>The single most-asked rebind: how chat messages get sent. Default is <kbd>Return</kbd> sends, <kbd>Shift+Return</kbd> inserts newline. If you came from a multi-line-first editor, you might want the opposite — <kbd>Return</kbd> for newline, <kbd>Cmd+Return</kbd> to send:</p>
+          <pre><code>[
+  { "keys": "enter",     "command": "chat.newline" },
+  { "keys": "cmd+enter", "command": "chat.submit"  }
+]</code></pre>
+          <p>Save the file, focus the chat input, and the binding is live. No need to restart LingCode.</p>
+          <div class="tip-box">
+            <strong>Two bindings can target the same key</strong> in different contexts (e.g. chat input vs editor). LingCode picks based on which view is focused. If a rebind seems not to apply, click into the view you expect it to fire in and try again.
+          </div>
+        </div>
+      </div>
+
+      <h2>Chord bindings — two-keystroke shortcuts</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>A chord is two key combos in sequence: press the first, then the second within a short window. Useful when single-keystroke shortcuts are running out. Separate the two with a space:</p>
+          <pre><code>[
+  { "keys": "cmd+k cmd+s", "command": "settings.open"        },
+  { "keys": "cmd+k cmd+t", "command": "theme.pick"           },
+  { "keys": "cmd+k z",     "command": "zenMode.toggle"       },
+  { "keys": "cmd+k cmd+r", "command": "keybindings.open"     }
+]</code></pre>
+          <p>VS Code users will recognize the <code>cmd+k</code> prefix convention — it's there because there's literally nothing else mnemonic left after a decade of editor history.</p>
+        </div>
+      </div>
+
+      <h2>Bringing your editor's bindings across</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>You don't need to translate by hand. Ask LingCode:</p>
+          <pre><code>I came from Cursor. Read ~/.claude/keybindings.json and add the
+core Cursor shortcuts I'm probably missing — at minimum:
+- cmd+k for the inline AI prompt
+- cmd+l for chat focus
+- cmd+i for inline suggestions
+- cmd+. for quick fix
+- cmd+; for the model picker
+
+Don't remove any existing bindings. Show me the diff before
+saving.</code></pre>
+          <p>Same prompt works for "I came from VS Code," "I came from JetBrains," "I came from Vim." LingCode knows the standard sets and will append rather than overwrite — but only if you ask it to show the diff first, which catches accidental clobbers.</p>
+          <div class="warn-box">
+            <strong>One key can't fire two unrelated commands</strong> in the same context. If you add <code>cmd+k</code> for inline AI and LingCode's default <code>cmd+k</code> chord prefix conflicts, the last entry wins. Re-read the file after edits to confirm what's actually bound.
+          </div>
+        </div>
+      </div>
+
+      <h2>Sync across machines</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>The file is plain JSON — drop it into your dotfiles repo:</p>
+          <pre><code>cd ~/dotfiles
+ln -s ~/.claude/keybindings.json claude-keybindings.json
+git add claude-keybindings.json
+git commit -m "Add LingCode keybindings"</code></pre>
+          <p>On a new Mac, symlink it back the other way:</p>
+          <pre><code>mkdir -p ~/.claude
+ln -sf ~/dotfiles/claude-keybindings.json ~/.claude/keybindings.json</code></pre>
+          <p>Your bindings travel with your shell, your editor configs, and your aliases. Treat them as one set.</p>
+        </div>
+      </div>
+
+      <h2>When a binding stops working</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Three likely causes, in order of frequency:</p>
+          <ul>
+            <li><strong>JSON is malformed.</strong> A trailing comma drops the whole file. Check with <code>python3 -m json.tool ~/.claude/keybindings.json</code>.</li>
+            <li><strong>Wrong focus context.</strong> The binding only applies in some views. Click into the view you expect it to fire in.</li>
+            <li><strong>macOS or another app grabs the key first.</strong> System shortcuts (<code>cmd+space</code>, <code>cmd+tab</code>) and global utilities (Raycast, Alfred, Rectangle) take precedence. Check System Settings → Keyboard → Keyboard Shortcuts.</li>
+          </ul>
+          <p>Don't suspect the rebinding itself until you've ruled out those three.</p>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>The whole workflow — locate, edit, rebind, chord, sync — is packaged as a skill. Drop it into your skills folder and ask LingCode for "rebind a shortcut" or "customize keybindings" to invoke it:</p>
+          <pre><code>---
+name: keybindings-help
+description: Use when the user wants to customize keyboard shortcuts, rebind keys, add chord bindings, or modify ~/.claude/keybindings.json. Triggers: 'rebind ctrl+s', 'add a chord shortcut', 'change the submit key', 'customize keybindings', 'remap key', 'I'm used to Cursor / VS Code / Vim keys', 'keyboard shortcuts'. Actions: edit ~/.claude/keybindings.json, add {keys, command} entry, import Cursor/VS Code/Vim conventions, sync to dotfiles, debug malformed JSON / focus-context issues / OS-level shortcut grabs.
+---
+
+Customize LingCode's keyboard shortcuts by editing
+~/.claude/keybindings.json directly.
+
+Format: a JSON array of objects, each with two fields:
+- keys: the keystroke. Modifiers cmd, shift, alt, ctrl joined with +.
+  Key names lowercase (k, enter, escape, tab, arrows, f1..f12).
+  Chords are two combos separated by a space ("cmd+k cmd+s").
+- command: the action to fire. Run "list all keybinding commands" in
+  chat to discover them.
+
+Workflow:
+1. Create ~/.claude/keybindings.json if it doesn't exist; seed with
+   an empty array [].
+2. Identify the user's source-editor convention (Cursor, VS Code,
+   JetBrains, Vim) so the proposed bindings match their muscle
+   memory.
+3. Append entries — never silently replace existing ones unless
+   asked. Show a diff first.
+4. Validate with `python3 -m json.tool` before declaring done.
+5. The file hot-reloads on save — no restart needed.
+
+If a binding doesn't fire, check: JSON validity, focus context (chat
+input vs editor vs terminal), and OS/global app shortcuts (Raycast,
+Alfred, System Settings → Keyboard Shortcuts) that may grab the key
+first.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/keybindings-help/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/customize-permissions-and-env-vars-in-settings.html" class="tutorial-next-card">
+            <h3>Customize permissions and env vars</h3>
+            <p>The other config file — settings.json — controls approval prompts and environment variables</p>
+          </a>
+          <a href="/tutorials/add-custom-hooks.html" class="tutorial-next-card">
+            <h3>Add custom hooks</h3>
+            <p>Run scripts on lifecycle events — pre-commit lint, post-tool logging, session-start setup</p>
+          </a>
+          <a href="/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>Permission modes</h3>
+            <p>Switch between default, accept-edits, and plan modes for different kinds of work</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

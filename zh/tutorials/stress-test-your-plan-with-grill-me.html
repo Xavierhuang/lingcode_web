@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用 /grill-me 压力测试你的方案——在实现之前找出漏洞</title>
+  <meta name="description" content="方案看起来完整，直到有人严格审问它。/grill-me 工作流让 LingCode 扮演"挑剔的面试官"，逐一走过每个决策分支，在你花一周时间实现之前暴露出所有未解决的假设。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/stress-test-your-plan-with-grill-me.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/stress-test-your-plan-with-grill-me.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/stress-test-your-plan-with-grill-me.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="用 /grill-me 压力测试你的方案——在实现之前找出漏洞">
+  <meta property="og:description" content="方案看起来完整，直到有人严格审问它。/grill-me 工作流让 LingCode 扮演"挑剔的面试官"，逐一走过每个决策分支，在你花一周时间实现之前暴露出所有未解决的假设。">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/stress-test-your-plan-with-grill-me.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "用 /grill-me 压力测试你的方案",
+  "description": "方案看起来完整，直到有人严格审问它。/grill-me 工作流让 LingCode 扮演挑剔的面试官——逐一走过每个决策分支，在你花一周时间实现之前暴露出所有未解决的假设。",
+  "url": "https://lingcode.dev/zh/tutorials/stress-test-your-plan-with-grill-me.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/stress-test-your-plan-with-grill-me.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "用 /grill-me 压力测试你的方案"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "技巧与窍门",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "用 /grill-me 压力测试你的方案",
+      "item": "https://lingcode.dev/zh/tutorials/stress-test-your-plan-with-grill-me.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/stress-test-your-plan-with-grill-me.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">技巧与窍门</a>
+      <span>/</span>
+      <span>用 /grill-me 压力测试你的方案</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>用 /grill-me 压力测试你的方案</h1>
+      <p class="intro">方案在没人审问的时候看起来总是完整的。<code>/grill-me</code> 工作流让 LingCode 扮演"挑剔的面试官"——逐一走过每个决策分支，在你花一周时间实现之<em>前</em>就把所有未解决的假设暴露出来。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么你的方案有问题，而你还浑然不觉</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>每个方案，第一遍读起来总觉得完整。你亲手写的，结构合理，步骤连贯，感觉可以动手了。</p>
+          <p>然后实现一开始，漏洞就冒出来了：</p>
+          <ul>
+            <li>"等等——如果用户在这个操作触发时已退出登录，会怎样？"</li>
+            <li>"这个假设两端同时部署。但实际上不会。"</li>
+            <li>"我们从来没说过迁移中途失败该怎么办。"</li>
+            <li>"如果同时有两个这样的操作在跑，我们到底选了哪个策略——后写者胜，还是冲突即报错？"</li>
+          </ul>
+          <p>每一个都是当初没问的五秒钟问题。每一个在实现到一半时浮出水面，都要花好几个小时返工。<em>提问</em>与<em>重建</em>的成本比大约是 1:200。</p>
+          <p><code>/grill-me</code> 工作流反转了这种不对等。你花二十分钟让 LingCode 审问方案，在任何代码存在之前。在这个窗口里找到的每一个漏洞，都是你之后不需要再返工的时间。</p>
+        </div>
+      </div>
+
+      <h2>什么时候该"接受审问"</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>在以下情况运行 <code>/grill-me</code>：</p>
+          <ul>
+            <li>你刚写完一个实现方案，感觉"差不多了"。</li>
+            <li>你即将迈出不可逆的一步（Schema 变更、公开 API、数据回填）。</li>
+            <li>方案涉及的系统，你的理解不如将来审 PR 的人深入。</li>
+            <li>过去十分钟里你有过两次"直接开干吧"的冲动。这种冲动通常意味着方案还没经受足够的压力测试。</li>
+          </ul>
+          <p>不要对一行代码的小修小补使用它。也不要对已经执行过的方案使用它（那是代码审查，属于另一个技能）。审问的窗口是"方案写好"到"代码开始"之间。</p>
+        </div>
+      </div>
+
+      <h2>设定对抗性框架</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>AI 编程工具的默认行为是友好且顺从的。而这恰恰是审问时最不需要的。请明确地设定框架：</p>
+          <pre><code>I want you to stress-test my plan. Play a hostile interviewer
+who's trying to find every hole in this design before we
+commit to it.
+
+Rules:
+- Interrogate every decision branch. If the plan says "the
+  service handles this case," ask what happens in five
+  variations of that case.
+- Don't be agreeable. If I hand-wave, push back. If my answer
+  introduces a new assumption, grill that too.
+- Walk the failure paths, not just the happy path. What
+  breaks? Who sees it? How do we recover?
+- Don't propose fixes mid-grill. Just surface the questions.
+  We'll address them in a separate pass.
+
+Here's the plan:</code></pre>
+          <p>然后粘贴方案，或引用方案文件路径。"不要中途提修复建议"这一条很重要——一旦审问变成共同设计会议，对抗性的张力就消失了，效果也就大打折扣。</p>
+          <div class="tip-box">
+            <strong>框架本身就是整个技能的核心。</strong>不明确说出"挑剔的面试官"，LingCode 就会默认进入友好模式——只挑一两件事，其他都点头同意。点名这个角色，才能解锁那种毫不留情的审问状态。
+          </div>
+        </div>
+      </div>
+
+      <h2>沿决策树走，而不是沿文档走</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>LingCode 会开始连续发问。你的本能反应是先回答简单的。忍住。按顺序回答，优先回答那些让你感到不舒服的问题——那里通常才是真正的漏洞所在。</p>
+          <p>一次好的审问对话大概是这样的：</p>
+          <ul>
+            <li><em>LingCode：</em>"第 4 步说你从旧列回填新列。顺序是什么——先写新代码再回填，还是先回填再发布代码？"</li>
+            <li><em>你：</em>"先回填。"</li>
+            <li><em>LingCode：</em>"那么，从回填开始到回填完成之间写入的行怎么处理？旧代码还在写旧列。"</li>
+            <li><em>你：</em>"呃。嗯……"</li>
+            <li><em>LingCode：</em>"对——所以光靠回填还不够。迁移窗口期间你还需要双写。方案应该把这个单列为一步吗？"</li>
+          </ul>
+          <p>这段对话只需九十秒。它揪出的 bug，如果留到生产环境调试，要花上整整一天。<strong>这个比例，就是这个技能存在的全部理由。</strong></p>
+        </div>
+      </div>
+
+      <h2>不要反驳——要回答或承认</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>被审问时最大的诱惑是为方案辩护。别这样做。每个问题只有两种有效回应：</p>
+          <ul>
+            <li><strong>"答案是这样的。"</strong>如果你真的知道会发生什么，就直接说。LingCode 会继续追问。</li>
+            <li><strong>"我不知道。"</strong>把它标记为待解决问题。LingCode 会保留这份清单。</li>
+          </ul>
+          <p>无效回应："到时候再说"、"框架会处理"、"不会有人踩这个情况"。每一个都是推迟了的漏洞。审问的意义就在于<em>不</em>推迟。</p>
+          <div class="warn-box">
+            <strong>如果你发现自己在找理由自圆其说，</strong>停下来，把这个问题写成一条待解决项。审问之下的合理化解释，几乎总是你还没验证的假设。
+          </div>
+        </div>
+      </div>
+
+      <h2>暴露失败模式</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>大多数方案只覆盖了顺利路径。审问应该重点探查出错时会发生什么：</p>
+          <pre><code>Now walk only the failure paths. For each step:
+- What's the most likely way this step fails in production?
+- What's the rarest catastrophic way it can fail?
+- If it fails partway through, what state is the system in?
+- Who notices first — automated alert, user complaint, no one?
+- What's the rollback path, in commands or steps, not "we'd
+  roll back"?
+
+Don't accept "we'd handle it" — name the mechanism.</code></pre>
+          <p>这一轮通常能找出比第一轮更多的问题。顺利路径经过了充分的演练；假设正是埋藏在失败路径里的。</p>
+        </div>
+      </div>
+
+      <h2>审问步骤之间的接口</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>方案常见的失败模式是：每个步骤单独看都没问题，但步骤之间的接缝却没人管。要专门针对这些接缝进行审问：</p>
+          <ul>
+            <li>"第 3 步写入缓存，第 5 步从缓存读取。一致性模型是什么——写后读有保证吗？"</li>
+            <li>"第 4 步部署 API，第 6 步部署客户端。第 4 步上线时，还在使用旧版本的客户端会怎样？"</li>
+            <li>"第 2 步执行迁移，第 7 步在回滚时反向执行。它们真的互为逆操作，还是只是'差不多'？"</li>
+          </ul>
+          <p>排序 bug 就藏在步骤的接口处。明确命名每个接口并对它们进行审问，能揪出逐步审查时漏掉的偏差。</p>
+        </div>
+      </div>
+
+      <h2>结束审问——整理待解决清单</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>当 LingCode 问题问完了（或者更可能的是，你的时间用完了），结束会话：</p>
+          <pre><code>End the grill. Compile a single list of open items we surfaced
+that aren't yet resolved in the plan. For each one:
+- The question.
+- The status (unanswered, answered but plan not updated yet,
+  or "won't fix — accept the risk").
+- Where it should land in the plan if we adopt it (which
+  step gets amended, or where a new step belongs).
+
+Don't propose specific fixes — just the open-item list.</code></pre>
+          <p>这份清单就是这次审问的交付物。它也是一次残酷的诚实检验——如果清单很长，说明你的方案还没准备好执行。现在知道，总比后来发现要好。</p>
+        </div>
+      </div>
+
+      <h2>根据待解决清单修订方案</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>把待解决清单带回方案文件。对每一项：</p>
+          <ul>
+            <li><strong>通过澄清已解决？</strong>更新相关步骤的描述，让它不再模糊。</li>
+            <li><strong>需要新增步骤才能解决？</strong>在正确的位置加入这一步，并重新编号。</li>
+            <li><strong>接受为已知风险？</strong>在方案中加入"已知风险"部分，写下这个决定。未来的你（或审查者）需要看到这是经过深思熟虑的，而不是被遗漏的。</li>
+          </ul>
+          <p>将方案修订单独作为一次提交，与代码分开：</p>
+          <pre><code>git commit -m "Amend plan after /grill-me pass — add dual-write
+step, document migration rollback path"</code></pre>
+          <p>现在，方案已经经过压力测试。带着检查点去执行它（参见下一篇教程）。你预先花在审问上的时间，就是你之后不需要花在返工上的时间。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>审问自己，而不只是让 LingCode 审问。</strong>这个技能最强大的用法，是让 LingCode 审问<em>你的</em>设计。但你同样可以用它来审查队友的方案、RFC，或者你接手的生产环境操作手册。只要有需要找漏洞的设计，这个框架就适用。
+      </div>
+
+      <h2>在 LingCode 中使用</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>将审问工作流封装为一个技能，让 <code>/grill-me</code> 每次都能一致地调用它：</p>
+          <pre><code>---
+name: grill-me
+description: Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree. Triggers: 'grill me', 'stress-test my plan', 'poke holes', 'find gaps', 'play devil's advocate', 'interview me', 'is this plan complete', 'what am I missing'. Actions: hostile interviewer, walk decision branches, surface unresolved assumptions, list open items (NOT direct fixes). Output: open-items list the user must answer before implementation. Anti-pattern: making suggestions instead of asking questions.
+---
+
+Play a hostile interviewer stress-testing the user's plan or
+design. Find holes before any code is written.
+
+Rules of engagement:
+- Interrogate every decision branch. If a step says "handles
+  this case," ask what happens in five variations.
+- Don't be agreeable. Push back on hand-waving. If an answer
+  introduces a new assumption, grill that one too.
+- Walk failure paths as thoroughly as happy paths. For each
+  step ask: most likely failure, worst-case failure, partial
+  failure, detection, rollback.
+- Probe interfaces between steps — consistency, versioning,
+  deployment ordering, inverse migrations.
+- Do not propose fixes mid-grill. Just surface the questions.
+- Accept only "here's the answer" or "I don't know." Reject
+  "we'll figure it out later" — that's a deferred hole.
+
+When the user closes the grill, compile a single list of open
+items: question, status (unanswered / answered-but-not-in-plan
+/ accepted risk), and where each should land in the plan.
+
+Don't write code, don't amend the plan file directly. The
+output is the open-items list.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/grill-me/SKILL.md</code>——请参阅<a href="/zh/tutorials/install-a-skill.html">安装技能</a>了解具体位置以及技能如何被发现。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/write-an-implementation-plan-with-lingcode.html" class="tutorial-next-card">
+            <h3>编写实现方案</h3>
+            <p>前提条件——没有书面方案，就没有东西可以接受审问</p>
+          </a>
+          <a href="/zh/tutorials/execute-a-plan-with-checkpoints.html" class="tutorial-next-card">
+            <h3>带检查点执行方案</h3>
+            <p>审问结束后，一步一步执行方案，让纠错的代价保持低廉</p>
+          </a>
+          <a href="/zh/tutorials/brainstorm-before-you-build.html" class="tutorial-next-card">
+            <h3>先头脑风暴，再动手构建</h3>
+            <p>在生命周期的更早阶段——先厘清范围，让你要审问的方案有坚实的基础</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速交付的创始人和需要真正趁手工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

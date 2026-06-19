@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何为 LingCode Cloud 后端添加语义搜索和混合搜索？ | 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="使用内置的 pgvector 和托管向量嵌入，为 LingCode Cloud 后端添加基于语义的搜索以及全文 + 向量混合搜索——无需外部向量数据库，无需自行配置嵌入 API。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/semantic-and-hybrid-search.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/semantic-and-hybrid-search.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/semantic-and-hybrid-search.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-02T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-02T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/semantic-and-hybrid-search.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "添加语义搜索和混合搜索",
+  "description": "使用 LingCode Cloud 后端内置的 pgvector 和托管向量嵌入，添加语义搜索及混合搜索（全文 + 向量融合排序）——无需外部向量数据库，无需配置嵌入 API。",
+  "url": "https://lingcode.dev/zh/tutorials/semantic-and-hybrid-search.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-02",
+  "dateModified": "2026-06-02",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/zh/tutorials/semantic-and-hybrid-search.html" },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "添加语义搜索和混合搜索"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "教程", "item": "https://lingcode.dev/zh/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "搜索", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "后端集成", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "语义搜索与混合搜索", "item": "https://lingcode.dev/zh/tutorials/semantic-and-hybrid-search.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/semantic-and-hybrid-search.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html">后端集成</a>
+      <span>/</span>
+      <span>语义搜索与混合搜索</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-06-02</span>
+      </div>
+      <h1>如何为后端添加语义搜索和混合搜索？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>你的托管后端内置了 <strong>pgvector</strong> 和<strong>托管向量嵌入</strong>。添加一个 <code>vector(1536)</code> 列，用 <code>client.vector.embed(text)</code> 嵌入文本并存储，然后通过 <code>client.search.text(...)</code>（全文搜索）、<code>client.vector.search(...)</code>（纯向量搜索）或 <code>client.search.hybrid(...)</code>（全文 + 向量融合）按语义查询。无需外部向量数据库，无需管理嵌入 API 密钥。</p>
+      <p class="intro">关键词搜索（<code>LIKE '%cat%'</code>）只能匹配"cat"这个词，找不到"kitten"或"feline"。语义搜索能做到，因为它比较的是<em>含义</em>——以向量形式编码——而非字符本身。过去实现这一点需要自己搭一套嵌入模型、向量存储和相似度查询的完整链路。LingCode Cloud 后端已把这三者都内置好，"按语义搜索笔记"只需几行代码，不用再起一个新服务。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>本教程假设你已<a href="/zh/tutorials/connect-a-managed-backend.html">连接了托管后端</a>。最快的方式：直接告诉智能体<em>"为我的笔记添加语义搜索"</em>，它会自动添加列、在插入时生成嵌入、并接好查询逻辑。本文的目的是解释背后的运作原理，让你明白它做了什么。</p>
+
+      <h2>三种搜索模式</h2>
+      <ul>
+        <li><strong>全文搜索</strong>——基于关键词/短语的快速匹配与排序（Postgres FTS）。适合大多数场景，无需嵌入。</li>
+        <li><strong>语义搜索（向量搜索）</strong>——利用嵌入向量 + pgvector 按语义相似度排序，能找到同义表达和相关概念。</li>
+        <li><strong>混合搜索</strong>——将全文结果与向量结果融合（倒数排名融合），让精确关键词命中和语义匹配都能出现在结果中，通常效果最佳。</li>
+      </ul>
+
+      <h2>第一步——添加向量列</h2>
+      <p>嵌入向量是一组数字，存储在 <code>vector(N)</code> 列中（N 为模型维度；内置嵌入为 1536 维）。让智能体操作，或在控制台 SQL 标签页中执行迁移：</p>
+      <pre><code class="mono">ALTER TABLE notes ADD COLUMN embedding vector(1536);</code></pre>
+
+      <h2>第二步——嵌入文本并存储</h2>
+      <p>托管嵌入意味着你不需要自带嵌入 API 密钥。创建或编辑一行数据时，嵌入其文本并保存向量：</p>
+      <pre><code class="mono">const { data } = await client.vector.embed(note.body);   // → { embedding: [...] }
+await client.from('notes').eq('id', note.id).update({ embedding: data.embedding });</code></pre>
+
+      <h2>第三步——执行搜索</h2>
+      <p>全文搜索无需嵌入：</p>
+      <pre><code class="mono">const { data } = await client.search.text({ table: 'notes', column: 'body', query: 'budget planning' });</code></pre>
+      <p>混合搜索会先嵌入查询词，再融合关键词排序与向量排序：</p>
+      <pre><code class="mono">const { embedding } = (await client.vector.embed('how do I save money')).data;
+const { data } = await client.search.hybrid({
+  table: 'notes', text_column: 'body', vector_column: 'embedding',
+  query: 'how do I save money', embedding,
+});</code></pre>
+      <p>返回结果按相关度排序，且（对于租户作用域的数据 API）只包含当前登录用户有权查看的行——你的 <a href="/zh/tutorials/connect-a-managed-backend.html">RLS 策略</a>依然生效。</p>
+
+      <div class="info-box">
+        <h3>在控制台中试用</h3>
+        <p>前往 <a href="/backends.html">lingcode.dev/backends</a> → <strong>数据库</strong>，打开一张表并点击<strong>搜索</strong>。输入查询词，选择全文搜索或混合搜索，控制台会自动完成嵌入并展示排序后的结果——这是在接入应用前快速验证相关性的好方法。</p>
+      </div>
+
+      <h2>提升性能</h2>
+      <p>对于较大的表，建议为向量列添加索引以避免全表扫描，并为全文搜索添加生成的 <code>tsvector</code> 列。当你提到数据规模时，智能体会自动添加——核心是在向量列上建 HNSW/IVF 索引，在文本列上建 GIN 索引。在数据量适中时，现在的配置已经足够快了。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>连接托管后端</h3>
+            <p>了解本文所依赖的 Postgres + pgvector 基础</p>
+          </a>
+          <a href="/zh/tutorials/call-external-apis-from-your-backend.html" class="tutorial-next-card">
+            <h3>调用外部 API</h3>
+            <p>如果你偏好自带嵌入模型或 AI 服务商，可以从这里开始</p>
+          </a>
+          <a href="/zh/tutorials/scan-your-backend-with-advisors.html" class="tutorial-next-card">
+            <h3>用 Advisors 扫描后端</h3>
+            <p>在缺失的索引拖慢搜索之前提前发现问题</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+      <p>原生 AI 应用开发。为想快速发布的创始人和需要专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col"><h4>产品</h4><ul><li><a href="/try.html">Web (/try)</a></li><li><a href="/cli.html">CLI</a></li><li><a href="/features.html">Mac IDE</a></li><li><a href="/pricing.html">定价</a></li><li><a href="/changelog.html">更新日志</a></li></ul></div>
+    <div class="footer-col"><h4>开发者</h4><ul><li><a href="/docs.html">文档</a></li><li><a href="/tutorials.html">教程</a></li><li><a href="/getting-started.html">入门</a></li><li><a href="/cli.html">CLI 参考</a></li><li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li></ul></div>
+    <div class="footer-col"><h4>社区</h4><ul><li><a href="/community.html">周五工作坊</a></li><li><a href="/community.html">高校合作</a></li><li><a href="/examples.html">案例展示</a></li><li><a href="/blog.html">博客</a></li><li><a href="/support.html">支持</a></li></ul></div>
+    <div class="footer-col"><h4>公司</h4><ul><li><a href="/manifesto.html">宣言</a></li><li><a href="/pitch.html">融资演示</a></li><li><a href="/privacy.html">隐私政策</a></li><li><a href="/signin.html">登录</a></li><li><a href="/signup.html">注册</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

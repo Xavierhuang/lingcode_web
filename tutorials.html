@@ -1,0 +1,2423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutorials — LingCode</title>
+  <meta name="description" content="Learn LingCode at your own pace. Written guides, videos, and hands-on examples for every skill level.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials.html">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/tutorials.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    /* Full-width nav matching docs / features / try: logo flush left,
+       primary nav links centered, search + Sign up flush right. Without
+       this, .nav-inner falls back to style.css's `max-width: 1100px;
+       margin: 0 auto` and the logo sits inset from the viewport edge. */
+    .nav-inner {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0;
+      max-width: none;
+      margin: 0;
+      padding: 18px 40px;
+      height: auto;
+    }
+    .nav-inner > .nav-logo   { grid-column: 1; justify-self: start; }
+    .nav-inner > .nav-links  {
+      grid-column: 2;
+      justify-self: stretch;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+    .nav-inner > .nav-burger { grid-column: 3; justify-self: end; }
+    .nav-inner > .nav-links > a:first-of-type { margin-left: auto; }
+    .nav-inner > .nav-links > .nav-search { margin-left: auto; }
+
+    /* .nav-search pill — matches docs.html / features.html / etc. Without
+       these rules the form rendered as a bare <input> with default browser
+       borders + the native WebKit magnifying-glass icon, instead of the
+       rounded pill the rest of the site uses. */
+    .nav-search {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--bg-card, #FFFFFF);
+      border: 1px solid var(--border, var(--border-hi, rgba(168, 85, 247, 0.18)));
+      border-radius: 100px;
+      padding: 4px 10px 4px 12px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      max-width: 220px; min-width: 0;
+      margin: 0 4px;
+    }
+    .nav-search:focus-within {
+      border-color: var(--signal, var(--accent, #A855F7));
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+    }
+    .nav-search svg {
+      width: 14px; height: 14px; flex-shrink: 0;
+      color: var(--text-muted, var(--ink-dim, #5D5475));
+    }
+    .nav-search input {
+      border: none; outline: none; background: transparent;
+      font-family: 'Geist', -apple-system, sans-serif;
+      font-size: 13px;
+      color: var(--text, var(--ink, #1A1530));
+      padding: 4px 0; width: 130px; min-width: 0;
+    }
+    .nav-search input::placeholder { color: var(--text-dim, var(--ink-faint, #8B829F)); }
+    @media (max-width: 980px) { .nav-search { display: none !important; } }
+
+    /* Reset WebKit's native <input type="search"> chrome: the magnifying
+       glass + clear-button pseudo-elements doubled up with the form's own
+       inline SVG before this. */
+    .nav-search input[type="search"] {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .nav-search input[type="search"]::-webkit-search-decoration,
+    .nav-search input[type="search"]::-webkit-search-cancel-button,
+    .nav-search input[type="search"]::-webkit-search-results-button,
+    .nav-search input[type="search"]::-webkit-search-results-decoration {
+      -webkit-appearance: none;
+      display: none;
+    }
+    @media (max-width: 720px) {
+      .nav-inner { padding: 14px 20px; }
+    }
+
+    /* Tutorials page styles */
+    .tutorials-hero {
+      position: relative;
+      padding: 110px 24px 64px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: radial-gradient(circle at 30% 50%, rgba(139,92,246,0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 50%, rgba(0,208,132,0.08) 0%, transparent 50%);
+    }
+    .tutorials-hero > * { position: relative; z-index: 1; }
+    .tutorials-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; margin-bottom: 24px;
+      border: 1px solid var(--border-strong);
+      border-radius: 100px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem; color: var(--text-muted); font-weight: 500;
+      letter-spacing: 0.02em;
+      background: rgba(28,28,28,0.02);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .tutorials-hero h1 {
+      font-size: clamp(2.25rem, 5vw, 3.35rem);
+      margin: 0 0 12px;
+      letter-spacing: -0.025em;
+      font-weight: 600;
+      line-height: 1.10;
+    }
+    .tutorials-hero p {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-muted);
+      margin: 0 0 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
+
+    /* Main content */
+    .tutorials-content {
+      padding: 80px 24px;
+    }
+    .section-container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Pill filter nav */
+    .pill-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+      justify-content: center;
+    }
+    .pill-btn {
+      padding: 8px 20px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .pill-btn:hover {
+      border-color: rgba(28,28,28,0.3);
+    }
+    .pill-btn.is-active {
+      background: #6366f1;
+      color: white;
+      border-color: #6366f1;
+    }
+
+    /* Tutorial section */
+    .tutorial-section {
+      margin-bottom: 64px;
+    }
+    .tutorial-section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0 0 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.3;
+    }
+
+    /* Tutorial grid and cards */
+    .tutorial-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .tutorial-card {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .tutorial-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+      border-color: rgba(28,28,28,0.12);
+    }
+    .tutorial-card.hidden {
+      display: none;
+    }
+
+    /* Badges */
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+    }
+    .badge-format {
+      background: rgba(28,28,28,0.05);
+      color: var(--text-muted);
+    }
+    .badge-beginner {
+      background: rgba(16,185,129,0.1);
+      color: #059669;
+    }
+    .badge-intermediate {
+      background: rgba(245,158,11,0.1);
+      color: #b45309;
+    }
+    .badge-advanced {
+      background: rgba(99,102,241,0.1);
+      color: #4f46e5;
+    }
+
+    /* Card content */
+    .tutorial-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 8px;
+      line-height: 1.3;
+    }
+    .tutorial-card p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin: 0 0 16px;
+      flex: 1;
+      line-height: 1.4;
+    }
+    .tutorial-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+    .tutorial-time {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .tutorial-cta {
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .tutorial-cta:hover {
+      color: #4f46e5;
+      transform: translateX(2px);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .pill-nav {
+        gap: 6px;
+      }
+      .pill-btn {
+        padding: 6px 16px;
+        font-size: 0.8125rem;
+      }
+      .tutorial-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <!-- Hero Section -->
+  <section class="tutorials-hero">
+    <div class="section-container">
+      <div class="tutorials-eyebrow">
+        <span class="dot"></span>
+        <span>Tutorials</span>
+      </div>
+      <h1>Learn at your own pace</h1>
+      <p>Written guides, videos, and hands-on examples — for every skill level. Looking for inspiration? <a href="/examples.html" style="color: var(--signal); text-decoration: none;">Browse the examples gallery →</a></p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="tutorials-content">
+    <div class="section-container">
+      <!-- Filter Pills -->
+      <div class="pill-nav">
+        <button class="pill-btn is-active" data-level="all">All levels</button>
+        <button class="pill-btn" data-level="beginner">Beginner</button>
+        <button class="pill-btn" data-level="intermediate">Intermediate</button>
+        <button class="pill-btn" data-level="advanced">Advanced</button>
+      </div>
+
+      <!-- Getting Started Section -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">Getting started</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Your first build</h3>
+            <p>Open the playground, pick a template, run your first prompt, and watch it render in the preview.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/your-first-build.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Setting up API keys</h3>
+            <p>Connect Claude, DeepSeek, OpenAI, Gemini, or any OpenAI-compatible provider to the playground.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">3 min</span>
+              <a href="/tutorials/setting-up-api-keys.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">🎥 Video</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Understanding providers</h3>
+            <p>How to choose between AI providers and run the same prompt side-by-side to compare outputs.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/understanding-providers.html" class="tutorial-cta">Watch →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Community skills (recommended external skills, not LingCode-authored) -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">Community skills (recommended)</h2>
+        <p style="margin: -0.5rem 0 1rem; color: var(--text-secondary, #888); font-size: 0.95rem;">Third-party skills we recommend installing alongside the LingCode pack. Not LingCode-authored — credit and links go to the original maintainers.</p>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">🌐 External</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>UI UX Pro Max</h3>
+            <p>Searchable design-intelligence skill: 67 UI styles, 161 color palettes, 57 font pairings, 99 UX guidelines, and 161 industry-specific reasoning rules. Works with SwiftUI, Compose, React Native, Flutter, and 11 more stacks. By <a href="https://nextlevelbuilder.io" target="_blank" rel="noopener noreferrer">nextlevelbuilder</a> — MIT licensed, 80k+ stars.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">GitHub →</span>
+              <a href="https://github.com/nextlevelbuilder/ui-ux-pro-max-skill" target="_blank" rel="noopener noreferrer" class="tutorial-cta">Install →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Native Mac IDE -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">Native Mac IDE</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>The bottom panel, explained</h3>
+            <p>Nine tabs, four that look like "logs". The mental model that tells Output from Run Console from Console from Debug Console — plus what every other tab does.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/the-bottom-panel-explained.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Test APIs with the REST Client</h3>
+            <p>Pick a method, set headers and a body, send the request, and read status, timing, and response — a full HTTP client in the bottom panel, no Postman.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/test-apis-with-the-rest-client.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Read test results &amp; coverage</h3>
+            <p>Filter a run by pass/fail, click a failure's stack frame to jump to the source line, and overlay which lines your tests actually exercised.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/view-test-results-and-coverage.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Forward &amp; monitor local ports</h3>
+            <p>A live list of your dev-server ports — which are listening, what owns them, and a one-click button to open localhost in your browser.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 min</span>
+              <a href="/tutorials/forward-and-monitor-ports.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Hermes-style self-improving agent</h3>
+            <p>Persistent memory, agent-proposed skills, and full-text session search — the Hermes Agent learning loop, native and across providers.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/hermes-style-self-improving-agent.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Migrate a Flutter app to native iOS, Android, and macOS</h3>
+            <p>LingCode reads your Flutter repo as a design spec and writes idiomatic SwiftUI, Compose, and macOS SwiftUI from scratch — zero Dart in the output.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">18 min</span>
+              <a href="/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Brainstorm before you build</h3>
+            <p>A 5-minute pass that clarifies scope before code exists — the cheapest correction window you'll get.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/brainstorm-before-you-build.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Write an implementation plan with LingCode</h3>
+            <p>Produce a reviewable IMPLEMENTATION_PLAN.md with goal, non-goals, ordered steps, explicit riskiest step, and rollback.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/write-an-implementation-plan-with-lingcode.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Execute a plan with checkpoints</h3>
+            <p>Stepwise execution with real-output verification, per-step commits, deliberate amendments, and bad-step recovery.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/execute-a-plan-with-checkpoints.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Give and receive code review with LingCode</h3>
+            <p>Verify every review claim against code before classifying agree/disagree/unclear. Push back when wrong, implement when right.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/give-and-receive-code-review-with-lingcode.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Finish a development branch</h3>
+            <p>The closing checklist from green-tests to clean integration — merge, PR, or scrap. Diff audit, main-sync, post-merge cleanup.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 min</span>
+              <a href="/tutorials/finish-a-development-branch.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Customize permissions and env vars in settings.json</h3>
+            <p>Where the settings file is, what shape it has, and how to allow safe commands by glob — user-wide or per-project.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/customize-permissions-and-env-vars-in-settings.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Customize keybindings</h3>
+            <p>Rebind ~/.claude/keybindings.json — chord shortcuts, submit key, Cursor / VS Code / Vim conventions imported.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/customize-keybindings.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Reduce permission prompts by allowlisting safe commands</h3>
+            <p>Scan transcripts, build a prioritized allowlist, save 3-second taxes on every <code>ls</code>, <code>cat</code>, and <code>git status</code>.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/reduce-permission-prompts.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Undo bad AI edits</h3>
+            <p>Roll back a project file, entitlements, or Info.plist after a bad agent edit — without touching git.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/undo-bad-ai-edits.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Experiment safely with worktrees</h3>
+            <p>Fork your project into a git worktree, let the agent try something speculative, merge only what you want.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/experiment-safely-with-worktrees.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-advanced">● Advanced</span>
+            </div>
+            <h3>Upload to TestFlight with the agent</h3>
+            <p>Configure App Store Connect API keys once, then ask the agent to archive, sign, and upload your iOS build.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Switch providers mid-conversation</h3>
+            <p>When Claude stalls, hand the same chat to DeepSeek or GPT-4. The new model inherits the entire conversation.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 min</span>
+              <a href="/tutorials/switch-providers-mid-conversation.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Set up an App Store Connect API key</h3>
+            <p>Generate, download, and register an ASC API key once — unblocks every future agent-driven ship.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/set-up-app-store-connect-key.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Create and run your first Android emulator</h3>
+            <p>Device Manager → + → New Android Emulator. iOS simulators and Android AVDs in one window, no Android Studio required.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/create-and-run-your-first-avd.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Create an iOS or Mac app icon</h3>
+            <p>Modern Xcode wants one 1024×1024 PNG and generates the rest. The single-size flow, the alpha-channel pitfall, and the one prompt that ships it.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/create-an-ios-or-mac-app-icon.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Create an Android adaptive icon</h3>
+            <p>Two layers, a 66dp safe zone, per-launcher masking. The XML, the folder layout, and how to preview in your AVD.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 min</span>
+              <a href="/tutorials/create-an-android-adaptive-icon.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Create a custom SF Symbol</h3>
+            <p>Make your logo behave like a system icon: scales with Dynamic Type, picks up <code>.foregroundStyle</code>, swaps weights. The template SVG and the one-line API difference.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/create-a-custom-sf-symbol.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Add a favicon to a /try project</h3>
+            <p>/try doesn't host binary assets, so the standard favicon.ico flow doesn't apply. The inline-SVG, base64 PNG, and inline-manifest workarounds — plus the one-line PWA upgrade.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/add-a-favicon-to-a-try-project.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Install and use the lingcode CLI</h3>
+            <p>The same agent loops the Mac app uses — exposed as a terminal binary for scripts, servers, and one-shot prompts.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/install-and-use-the-lingcode-cli.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Permission modes: default, acceptEdits, plan</h3>
+            <p>How often the agent should stop to ask. Shift+Tab cycles three modes; pick the one that matches your current risk level.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/permission-modes.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>What is a skill — and how to install one</h3>
+            <p>A skill is the smallest way to teach the agent a habit. Learn what one looks like, where it lives on disk, and the two ways to install one someone else wrote.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/install-a-skill.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Install and configure plugins</h3>
+            <p>Bundle skills, hooks, and MCP servers into reusable plugins. Install per-user or per-project; namespaced to avoid collisions.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/install-and-configure-plugins.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Connect an MCP server</h3>
+            <p>Give the agent typed tools for Linear, GitHub, your DB. Configure once; tools show up namespaced and approved per-call.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/connect-an-mcp-server.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Write a custom skill</h3>
+            <p>Teach the agent a small reusable habit with one markdown file. Project-local or user-wide, manual or auto-invoked.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/write-a-custom-skill.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Add custom hooks</h3>
+            <p>Shell commands that run before tool calls or after prompts. Real policy enforcement — not advice you hope the model reads.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/add-custom-hooks.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Read your usage and rate limits</h3>
+            <p>Tokens spent, headroom remaining, time to reset. One panel, every provider, surfaced from the most authoritative source available.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/read-your-usage-and-rate-limits.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Magic Deploy a website</h3>
+            <p>Paste a token, get a live URL. The agent detects the right host, picks the build settings, and deploys from chat.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/magic-deploy-a-website.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Magic Install missing packages</h3>
+            <p>One click to install what's missing. Detects npm, pip, Cargo, CocoaPods, and 20+ more package managers.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 min</span>
+              <a href="/tutorials/magic-install-missing-packages.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Magic Push: AI commit messages</h3>
+            <p>Stage, generate a clean commit message from the actual diff, push — better than "wip", faster than writing by hand.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 min</span>
+              <a href="/tutorials/magic-push-ai-commit-messages.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Navigate background agents with the Agent View</h3>
+            <p>The Agents sidebar is the cockpit for jobs you dispatched and walked away from. Row anatomy, status grouping, peek pane, and the one trust decision behind the dispatch input.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/navigate-agents-with-agent-view.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Write a subagent</h3>
+            <p>A specialist with its own system prompt, tools, and context window. Use one when a task has a clean boundary and shouldn't pollute the main chat.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/write-a-subagent.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-advanced">● Advanced</span>
+            </div>
+            <h3>Multi-agent swarms: when to use, when to skip</h3>
+            <p>Spawning sub-agents multiplies tokens and complexity. The four patterns where swarms win, the three where a single agent beats them.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/multi-agent-swarms-when-to-use.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-advanced">● Advanced</span>
+            </div>
+            <h3>Run lingcode serve as a backend</h3>
+            <p>The same agent loops as a local HTTP API with SSE streaming. Build your own bots, UIs, and CI integrations on top.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/run-lingcode-serve-as-backend.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Explain terminal errors with AI</h3>
+            <p>Right-click a cryptic error, get a short explanation in a floating popup. Out of the way of your main chat.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">3 min</span>
+              <a href="/tutorials/explain-terminal-errors-with-ai.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-advanced">● Advanced</span>
+            </div>
+            <h3>Author your own MCP server</h3>
+            <p>Write a small TypeScript or Python server that exposes typed tools. The agent calls them correctly first time, every time.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/author-your-own-mcp-server.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Publish a plugin to a marketplace</h3>
+            <p>Bundle your team's plugins into a marketplace. One JSON manifest; one keystroke install for every teammate.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/publish-a-plugin-to-a-marketplace.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Connect Linear and GitHub via MCP</h3>
+            <p>End-to-end setup for two real MCP servers. Read a ticket, edit code, open a PR — one prompt.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 min</span>
+              <a href="/tutorials/connect-linear-and-github-via-mcp.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Generate a CLAUDE.md with /init</h3>
+            <p>The agent reads your codebase and writes the project-context file. Every future chat in the project gets it loaded automatically.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 min</span>
+              <a href="/tutorials/generate-a-claude-md-with-init.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Review pull requests with /review</h3>
+            <p>Run /review on a local branch or remote PR. First-pass review that points at what humans miss.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/review-pull-requests-with-review.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Run /security-review on your branch</h3>
+            <p>Focused threat-surface scan on your pending changes. Auth, input validation, secrets, injection — graded by severity.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/run-security-review.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Re-upload an iOS build to TestFlight</h3>
+            <p>Beta-test your iOS update. Install Xcode, bump CFBundleVersion, archive, upload, wait. Direct links for every tool.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 min</span>
+              <a href="/tutorials/reupload-an-ios-build-to-testflight.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Re-upload an iOS app to the App Store</h3>
+            <p>Ship your update to the public App Store. Bump version, archive, attach build, write release notes, submit for review.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/reupload-an-ios-app-to-the-app-store.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Re-upload an Android app to Play Console</h3>
+            <p>Beta or production. Install Android Studio, bump versionCode, build signed AAB, upload, pick a track. Direct links for every tool.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/reupload-an-android-app.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>First-time iOS App Store submission</h3>
+            <p>Ship your first iOS app. Bundle ID registration, app record, screenshots, App Privacy, age rating, then archive and submit.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">15 min</span>
+              <a href="/tutorials/first-time-ios-app-store-submission.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>First-time Android Play Console submission</h3>
+            <p>Ship your first Android app. Developer account, signing, store listing, Data Safety, Content Rating, then submit.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">15 min</span>
+              <a href="/tutorials/first-time-android-play-console-submission.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-advanced">● Advanced</span>
+            </div>
+            <h3>Upload an Android app to Google Play for the first time</h3>
+            <p>Signing key, Play App Signing, internal testing tracks, the metadata Google asks for. From signed AAB to live store listing.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">18 min</span>
+              <a href="/tutorials/upload-an-android-app-to-google-play.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shipping & infrastructure -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">Shipping &amp; infrastructure</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Deploy your app to LingCode Cloud</h3>
+            <p>Ship a web app from the Mac IDE in one click. The Cloud button builds your project and hosts the static output at a live HTTPS URL — no host account, no deploy token, no DNS to start.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/deploy-to-lingcode-cloud.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Connect a custom domain to your Cloud app</h3>
+            <p>Put your own domain in front of an app deployed to LingCode Cloud. One DNS record, HTTPS issued automatically — apex + www, registrar steps, and the Cloudflare gotcha.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/connect-a-custom-domain.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Draft a release announcement</h3>
+            <p>One click reads your recent commits and drafts a Slack post, tweet, LinkedIn update, blog paragraph, and CHANGELOG entry — together.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/draft-a-release-announcement.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Codesign and notarize a Mac app for distribution</h3>
+            <p>The full pipeline outside the App Store — archive, codesign, notarize, staple. The three macOS 26.2+ traps that will bite you.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">14 min</span>
+              <a href="/tutorials/codesign-and-notarize-a-mac-app.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Upload to TestFlight with an app-specific password</h3>
+            <p>Ship from the Archive &amp; Distribute sheet without an API key — archive once, export, upload with just your Apple ID. Why the password is needed and how to generate it.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/upload-to-the-app-store-with-an-app-specific-password.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Fix common iOS signing errors</h3>
+            <p>"No account for team," capability sync, automatic vs manual, six causes of "No matching provisioning profile" — scoped diagnostic ladder.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 min</span>
+              <a href="/tutorials/fix-ios-signing-errors.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a domain from Namecheap</h3>
+            <p>The friendly default registrar. What it costs, what to skip, and what to do after the purchase to make the domain usable.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/buy-a-domain-from-namecheap.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a domain from Cloudflare Registrar</h3>
+            <p>At-cost pricing, no upsells, no first-year bait. The trade-off: you have to use Cloudflare's DNS.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/buy-a-domain-from-cloudflare.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Connect your domain to a server with DNS</h3>
+            <p>A and CNAME records, TTL, propagation. Three commands that tell you whether DNS is actually working.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a domain from Porkbun</h3>
+            <p>Developer-favorite alternative. Clean UI, no upsells, free WHOIS privacy + email forwarding + SSL bundled in.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/buy-a-domain-from-porkbun.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a domain from GoDaddy</h3>
+            <p>The biggest registrar and the one most upsell-heavy. How to escape the checkout with just a domain at a fair price.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/buy-a-domain-from-godaddy.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a domain from Gandi</h3>
+            <p>European registrar with transparent flat pricing, free mailboxes included. Best for EU TLDs (.fr, .eu, .de).</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/buy-a-domain-from-gandi.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a domain from Hover</h3>
+            <p>Premium "no upsells, just domains" registrar. Slightly higher prices, calmest checkout in the business, real human support.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/buy-a-domain-from-hover.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a domain from NameSilo</h3>
+            <p>Budget registrar with flat near-cost pricing and a working API. Dated UI; functional everything else.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/buy-a-domain-from-namesilo.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a domain from Squarespace Domains</h3>
+            <p>What's left of Google Domains. Cleanest dashboard in the business; prices climbed after the acquisition.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/buy-a-domain-from-squarespace.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Buy a domain from AWS Route 53</h3>
+            <p>The right pick when the rest of your infra is on AWS. Alias records, ACM integration, your existing AWS bill.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/buy-a-domain-from-aws-route53.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a server from DigitalOcean</h3>
+            <p>The friendly default VPS. Five dollars a month for a real Linux box, with the calmest UI and best docs in the indie-cloud market.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a server from Hetzner</h3>
+            <p>The best price-per-RAM in the VPS market. Same shape as DigitalOcean, ~half the cost; drier UI.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/buy-a-server-from-hetzner.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a server from Vultr</h3>
+            <p>30+ data center locations worldwide. Pick this when your users are in Seoul, Mumbai, São Paulo, Sydney — places others don't cover.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/buy-a-server-from-vultr.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Buy a server from AWS EC2</h3>
+            <p>The biggest, most flexible, most complex VPS. Pick it when the rest of your stack is on AWS; skip otherwise.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/buy-a-server-from-aws-ec2.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Use Route 53 for a domain bought elsewhere</h3>
+            <p>Delegate DNS to AWS without moving the registrar — the right move when your servers and certs live in AWS.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 min</span>
+              <a href="/tutorials/use-route-53-for-your-domain.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Deploy a static site to S3 + CloudFront</h3>
+            <p>The classic AWS static-hosting pattern. Once wired, deploys are three commands forever.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">14 min</span>
+              <a href="/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Deploy with AWS Amplify Hosting</h3>
+            <p>AWS's git-push-to-deploy service. The Vercel-equivalent on AWS, with honest tradeoffs.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/deploy-with-aws-amplify-hosting.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Run a Node API on AWS Lightsail</h3>
+            <p>The simple corner of AWS. Fixed $5/month, one Linux box, ssh in and run your code.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/run-a-node-api-on-aws-lightsail.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-advanced">● Advanced</span>
+            </div>
+            <h3>Deploy a container to ECS Fargate</h3>
+            <p>Production-grade container deployment on AWS. ECR + ECS + Fargate + ALB + Route 53, demystified.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">18 min</span>
+              <a href="/tutorials/deploy-a-container-to-aws-ecs-fargate.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Prepare a fresh Linux server for production</h3>
+            <p>The 20-minute hardening checklist between "I have a Linux server" and "I'm ready to deploy." Universal across providers.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">15 min</span>
+              <a href="/tutorials/prepare-a-fresh-linux-server-for-production.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Install Postgres and Redis on your server</h3>
+            <p>Backing services with the auth and binding defaults that aren't on by default. Self-host vs managed, honestly.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">14 min</span>
+              <a href="/tutorials/install-postgres-and-redis-on-your-server.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Pick a BaaS: Firebase vs Supabase</h3>
+            <p>The decision before any tutorial. Data model, lock-in, pricing curves, working hello-worlds for each.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/pick-a-baas-firebase-vs-supabase.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Buy a server from Linode</h3>
+            <p>The Akamai-owned VPS that taught a generation of developers to rent Linux boxes. Stable, well-documented, slightly pricier than DO/Hetzner.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/buy-a-server-from-linode.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Set up HTTPS with Let's Encrypt</h3>
+            <p>Free TLS certificates with automatic renewal. Two commands gets you a real cert; one cron job keeps it valid forever.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/set-up-https-with-lets-encrypt.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Put Cloudflare in front of any host</h3>
+            <p>Free TLS, global CDN, DDoS protection, hidden origin. Add any domain to Cloudflare regardless of where it's registered.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 min</span>
+              <a href="/tutorials/put-cloudflare-in-front-of-any-host.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Deploy on Fly.io</h3>
+            <p>Run Docker containers near your users — 30+ regions, machine-level granularity. The middle ground between PaaS and VPS.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/deploy-on-fly-io.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Deploy on Railway</h3>
+            <p>The easiest deploy in modern PaaS. Connect a GitHub repo, get a URL in seconds. Real Postgres/Redis sidekicks bundled.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/deploy-on-railway.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Deploy on Render</h3>
+            <p>The most Heroku-shaped of the post-Heroku PaaSes. Flat $7/mo plans; the bill is the bill.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/deploy-on-render.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Redeploy a website</h3>
+            <p>Push code updates to Vercel / Netlify / Render / Cloudflare Pages / Railway / Fly.io. The redeploy command and time-to-live for each.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/redeploy-a-website.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Redeploy a self-hosted VPS</h3>
+            <p>SSH, pull, restart. The manual flow, the deploy script, the one-line laptop version, and zero-downtime patterns.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/redeploy-a-vps.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Automate deploys with GitHub Actions</h3>
+            <p>One YAML file. Tests on every PR, auto-deploy on push to main. Vercel, SSH, AWS, mobile — every common destination.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 min</span>
+              <a href="/tutorials/automate-deploys-with-github-actions.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Manage database migrations</h3>
+            <p>Versioned schema changes that move every environment to a specific shape. Prisma, Drizzle, or raw SQL — pick one, never edit a deployed migration.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">13 min</span>
+              <a href="/tutorials/manage-database-migrations.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Set up uptime monitoring</h3>
+            <p>External pings that wake you when your site goes down — before users notice. UptimeRobot, the /health endpoint, alert channels, status pages.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/set-up-uptime-monitoring.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backend integrations -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">Backend integrations</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Connect a managed backend to your project</h3>
+            <p>One menu click gives a project its own Postgres + auth + storage + realtime + vector search — no external services, no keys. The agent provisions tables and builds against it from a prompt.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/connect-a-managed-backend.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Use LingCode Cloud in your own app</h3>
+            <p>Take a backend outside /try: load the SDK, set the data URL + anon key, and call from().select(), auth, storage, and realtime — plus the table-CRUD patterns (no JOINs, no upserts) so your code works the first time.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/use-lingcode-cloud-in-your-own-app.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Call ElevenLabs &amp; other APIs from your backend</h3>
+            <p>Store a third-party key encrypted on your backend and call it from your app without leaking it — the elevenlabs-tts and http-fetch function templates, plus the egress allow-list.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/call-external-apis-from-your-backend.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Add semantic &amp; hybrid search</h3>
+            <p>Meaning-based and hybrid (full-text + vector) search with built-in pgvector and managed embeddings — no external vector DB or embedding key to wire up.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/semantic-and-hybrid-search.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Require MFA on your backend</h3>
+            <p>Add TOTP multi-factor auth and rotating refresh tokens to your backend's users — a console toggle plus two SDK calls; the data API enforces it.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">6 min</span>
+              <a href="/tutorials/require-mfa-on-your-backend.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Scan your backend with Advisors</h3>
+            <p>One-click security + performance lint: catch RLS-disabled tables, unsafe policies, missing primary keys, and unindexed foreign keys before users do.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/scan-your-backend-with-advisors.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Build with the Claude API</h3>
+            <p>The Anthropic SDK with prompt caching, full tool-use loop, streaming, and dated-snapshot model migrations. Cut spend by half on day one.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/build-with-the-claude-api.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Dispatch parallel agents for independent tasks</h3>
+            <p>The two-question test for parallelism. Three patterns where it cuts wall time, four traps where it produces conflicting writes.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/dispatch-parallel-agents.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Run a prompt on a schedule — /loop vs /schedule</h3>
+            <p>Two time-shifting tools for different problems. The three-question picker, two worked examples, and the cleanup discipline.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/run-a-prompt-on-a-schedule.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Set up Stripe API keys</h3>
+            <p>Four keys — publishable and secret, test and live. Knowing which goes where prevents the two Stripe accidents that hurt.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/set-up-stripe-api-keys.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Set up Stripe webhooks</h3>
+            <p>How Stripe tells your server something happened. Signature verification, idempotency, and local-dev tunneling.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/set-up-stripe-webhooks.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Sign in with Google (OAuth)</h3>
+            <p>Let users sign in with their Google account. Three values from Google Cloud Console; the rest is your code.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 min</span>
+              <a href="/tutorials/sign-in-with-google-oauth.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Sign in with GitHub (OAuth)</h3>
+            <p>Sign-in for developer audiences. One GitHub OAuth App, twelve clicks. Twin to Google OAuth.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/sign-in-with-github-oauth.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Auth with Clerk</h3>
+            <p>Drop-in managed auth. Sign-up, sign-in, social providers, organizations, MFA — out of the box. Four components and you're done.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/auth-with-clerk.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Auth with Auth0</h3>
+            <p>Enterprise-grade auth. SAML/SSO, SCIM, Organizations, custom Actions. The right call when IT departments demand identity-provider plug-in.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/auth-with-auth0.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Send transactional email with Resend</h3>
+            <p>Dev-first email API. The slow part is DNS for SPF/DKIM/DMARC; once verified, your mail lands in inbox not spam.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/send-transactional-email-with-resend.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Send email with Postmark</h3>
+            <p>Deliverability-first email API. Strict acceptable use, transactional-only, best inbox placement in independent tests.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 min</span>
+              <a href="/tutorials/send-transactional-email-with-postmark.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Send email with SendGrid</h3>
+            <p>Largest email API by volume; enterprise features (sub-accounts, dedicated IPs, IP warmup). Marketing + transactional in one tool.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/send-transactional-email-with-sendgrid.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Send email with AWS SES</h3>
+            <p>$0.10 per 1K emails. More AWS-flavored setup (IAM, sandbox exit, SNS-driven bounce handling). Pick at scale or when already on AWS.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/send-transactional-email-with-aws-ses.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Set up Sentry error tracking</h3>
+            <p>Catch errors in production before users have to tell you. SDK install, DSN, releases, source maps, alerts.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 min</span>
+              <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Uptime monitoring with Better Stack</h3>
+            <p>Get paged when your site goes down — by something other than your customers. Monitors, on-call, status page, heartbeats.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/uptime-monitoring-with-better-stack.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Upload files to S3 or Cloudflare R2</h3>
+            <p>Add file uploads to your app. Presigned URLs for direct browser uploads; same code for S3 or R2; CORS, validation, serving back.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 min</span>
+              <a href="/tutorials/upload-files-to-s3-or-r2.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Set up Supabase (database + auth)</h3>
+            <p>Postgres + Auth + Storage in one signup. Anon key, RLS, your first table, OAuth providers, realtime subscriptions.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 min</span>
+              <a href="/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Background jobs with Inngest</h3>
+            <p>Run code after the response. Define a function, send an event, get durable retries + cron + delays — no Redis to manage.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/background-jobs-with-inngest.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Product analytics with PostHog</h3>
+            <p>Track events, build funnels, watch session replays, run feature flags. One tool, one signup.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/product-analytics-with-posthog.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Set up Neon (managed Postgres)</h3>
+            <p>Serverless Postgres with branching. One branch per pull request; scale-to-zero pricing; generous free tier.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/set-up-neon-postgres.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Set up PlanetScale (MySQL)</h3>
+            <p>Serverless MySQL on Vitess. Non-blocking schema changes through deploy requests; database branching.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/set-up-planetscale-mysql.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Set up Algolia search</h3>
+            <p>Instant search-as-you-type with typo tolerance, faceting, ranking. Drop in the React/Vue UI library; sub-100ms queries.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 min</span>
+              <a href="/tutorials/set-up-algolia-search.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Self-hosted search with Meilisearch</h3>
+            <p>Open-source search engine in a single Rust binary. Run on a $5 VPS; same UI library as Algolia at a fraction of the cost.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 min</span>
+              <a href="/tutorials/self-hosted-search-with-meilisearch.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Set up Typesense search</h3>
+            <p>Open-source search with native semantic + vector + geo. Single binary or Typesense Cloud. Algolia-like DX without per-record fees.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/set-up-typesense-search.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Marketing email with Loops</h3>
+            <p>Newsletters, onboarding sequences, win-backs. Drag-and-drop editor and audience filters that read like English.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/marketing-email-with-loops.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Log management with Axiom</h3>
+            <p>Ship structured logs from any backend. APL queries, 30-day retention free, monitors that page on patterns Sentry can't see.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 min</span>
+              <a href="/tutorials/log-management-with-axiom.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Take payments with Polar (merchant of record)</h3>
+            <p>Polar handles sales tax, VAT, GST, and chargebacks for you. The Stripe alternative for indie SaaS shipping globally.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">13 min</span>
+              <a href="/tutorials/take-payments-with-polar.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Cache and rate-limit with Upstash</h3>
+            <p>Serverless Redis over HTTP. Cache hot queries, throttle abusive callers, queue background jobs — without running a Redis box.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">11 min</span>
+              <a href="/tutorials/cache-and-rate-limit-with-upstash.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Vector search with Pinecone</h3>
+            <p>Store embeddings, do semantic search, build RAG. Foundation of any AI feature that needs to "remember" your data.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">13 min</span>
+              <a href="/tutorials/vector-search-with-pinecone.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Building Specific Things -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">Building specific things</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Build a pitch deck</h3>
+            <p>Step-by-step: from blank prompt to a 6-slide investor deck ready to download as PowerPoint.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/build-a-pitch-deck.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Build an analytics dashboard</h3>
+            <p>KPI cards with Chart.js charts. One prompt generates a complete SaaS-style dashboard.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/build-an-analytics-dashboard.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">💻 Interactive</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Build a Shopify section</h3>
+            <p>Liquid templates with live preview. Generate production-ready code for Shopify theme upload.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">12 min</span>
+              <a href="/tutorials/build-a-shopify-section.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Build a multi-page website</h3>
+            <p>Named code blocks, internal page linking, and self-contained CSS. Scale beyond single files.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">15 min</span>
+              <a href="/tutorials/build-a-multi-page-website.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Pair-audit Solidity with Claude Code Native + LingModel</h3>
+            <p>Two-model workflow for crypto devs: draft in Claude Code Native, audit with LingModel, reconcile against Foundry tests, ship audit-worthy code.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">15 min</span>
+              <a href="/tutorials/pair-audit-solidity.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tips & Tricks -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">Tips & tricks</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Stress-test your plan with /grill-me</h3>
+            <p>LingCode plays hostile interviewer — walking every decision branch, failure path, and step interface until assumptions surface.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">9 min</span>
+              <a href="/tutorials/stress-test-your-plan-with-grill-me.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Debug systematically with LingCode</h3>
+            <p>The five-step protocol: reproduce → isolate → hypothesize → test the hypothesis (not the fix) → narrow to a minimal fix with a regression test.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/debug-systematically-with-lingcode.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Test-driven development with LingCode</h3>
+            <p>TDD as anti-hallucination tool — verify red is really red, mutation-test each new green, refactor only while green.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">10 min</span>
+              <a href="/tutorials/test-driven-development-with-lingcode.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Verify before claiming done</h3>
+            <p>Evidence over assertion. Three failure modes — compiles but does nothing, tests pass nothing, code never ran — and the discipline that catches them.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/verify-before-claiming-done.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Simplify changed code with /simplify</h3>
+            <p>Five-category review pass: missed reuse, over-abstraction, defensive-impossible code, dead branches, narrating comments.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/simplify-changed-code.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Writing better prompts</h3>
+            <p>Prompt patterns that consistently produce polished, production-ready results on the first try.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">5 min</span>
+              <a href="/tutorials/writing-better-prompts.html" class="tutorial-cta">Read →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-advanced">● Advanced</span>
+            </div>
+            <h3>Test and observe your LLM app</h3>
+            <p>Evals as unit tests for prompts, traces as production observability. The minimum viable setup before you ship.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">14 min</span>
+              <a href="/tutorials/test-and-observe-your-llm-app.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="intermediate">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-intermediate">● Intermediate</span>
+            </div>
+            <h3>Iterating on your prototype</h3>
+            <p>How to refine, tweak, and branch from existing outputs without starting over.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">7 min</span>
+              <a href="/tutorials/iterating-on-your-prototype.html" class="tutorial-cta">Read →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Exporting to PDF and PowerPoint</h3>
+            <p>One-click export directly from the preview pane. Works for decks, reports, and any HTML.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">3 min</span>
+              <a href="/tutorials/exporting-to-pdf-powerpoint.html" class="tutorial-cta">Read →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="advanced">
+            <div class="badge-row">
+              <span class="badge badge-format">🎥 Video</span>
+              <span class="badge badge-advanced">● Advanced</span>
+            </div>
+            <h3>Running across all providers</h3>
+            <p>Side-by-side comparison workflow. Run the same prompt on Claude, DeepSeek, GPT-4, and more.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">8 min</span>
+              <a href="/tutorials/running-across-all-providers.html" class="tutorial-cta">Watch →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Provider Setup -->
+      <div class="tutorial-section">
+        <h2 class="tutorial-section-title">Provider setup</h2>
+        <div class="tutorial-grid">
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>Claude (Anthropic)</h3>
+            <p>Getting your Anthropic API key and connecting it to LingCode for full tool use.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">4 min</span>
+              <a href="/tutorials/claude-anthropic.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>DeepSeek</h3>
+            <p>Fast, cheap, and capable. Setting up DeepSeek V4 with your API key in minutes.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">3 min</span>
+              <a href="/tutorials/deepseek.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>OpenAI / GPT-4</h3>
+            <p>Connecting GPT-4o and other OpenAI models to the playground.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">3 min</span>
+              <a href="/tutorials/openai-gpt4.html" class="tutorial-cta">Start →</a>
+            </div>
+          </div>
+
+          <div class="tutorial-card" data-level="beginner">
+            <div class="badge-row">
+              <span class="badge badge-format">📝 Written</span>
+              <span class="badge badge-beginner">● Beginner</span>
+            </div>
+            <h3>LingModel (built-in)</h3>
+            <p>The built-in managed model. Free tier available — no API key needed to get started.</p>
+            <div class="tutorial-footer">
+              <span class="tutorial-time">2 min</span>
+              <a href="/tutorials/lingmodel.html" class="tutorial-cta">Learn →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    // Pill filter functionality
+    const pillBtns = document.querySelectorAll('.pill-btn');
+    const tutorialCards = document.querySelectorAll('.tutorial-card');
+
+    pillBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active pill
+        pillBtns.forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+
+        const level = btn.dataset.level;
+
+        // Filter cards
+        tutorialCards.forEach(card => {
+          if (level === 'all' || card.dataset.level === level) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // Close nav when clicking a link (mobile)
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

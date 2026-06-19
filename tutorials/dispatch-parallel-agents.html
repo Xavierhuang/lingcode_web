@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I dispatch parallel agents for independent tasks? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="When you have 2+ tasks with no shared state and no sequential dependency, LingCode runs them in parallel to compress wall time. Learn when it's the right move — and when shared state means you should stay serial.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/dispatch-parallel-agents.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/dispatch-parallel-agents.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/dispatch-parallel-agents.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/dispatch-parallel-agents.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Dispatch parallel agents for independent tasks",
+  "description": "Most \"agent in a loop\" work serializes naturally — read a file, decide, write a file, repeat. But when you have two or more tasks with no shared state and no sequential dependency, running them in parallel compresses wall time linearly. The skill is knowing when it's the right mo",
+  "url": "https://lingcode.dev/tutorials/dispatch-parallel-agents.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/dispatch-parallel-agents.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Dispatch parallel agents for independent tasks"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Dispatch parallel agents",
+      "item": "https://lingcode.dev/tutorials/dispatch-parallel-agents.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/dispatch-parallel-agents.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Dispatch parallel agents</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>How do I dispatch parallel agents for independent tasks?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> When you have 2+ tasks with no shared state, send a single message with multiple <code>Agent</code> tool-calls. The agents run concurrently, return independent results, and the main loop continues. Use for parallel searches, parallel test runs, or parallel build checks.</p>
+      <p class="intro">Most "agent in a loop" work serializes naturally — read a file, decide, write a file, repeat. But when you have two or more tasks with no shared state and no sequential dependency, running them in parallel compresses wall time linearly. The skill is knowing when it's the right move — because shared state means race conditions, and race conditions on code mean lost work.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>The serial default is correct most of the time</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>LingCode runs one agent loop at a time by default, and that's almost always what you want. A typical task — "refactor this module" — looks like:</p>
+          <ol>
+            <li>Read <code>module.swift</code>.</li>
+            <li>Decide what to change based on what you read.</li>
+            <li>Write <code>module.swift</code>.</li>
+            <li>Run the test that touches <code>module.swift</code>.</li>
+            <li>Decide what to fix based on the test output.</li>
+          </ol>
+          <p>Every step depends on the previous one. Parallelizing this is impossible — step 2 can't run before step 1 returns. LingCode's natural shape is sequential because reasoning is sequential.</p>
+          <p><strong>Parallel dispatch is the exception</strong>, reserved for the cases below. Reaching for it on the wrong task wastes context and produces conflicting writes; reaching for it on the right task cuts a 20-minute job to 5.</p>
+        </div>
+      </div>
+
+      <h2>The two-question test</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Before asking LingCode to dispatch parallel agents, answer two questions about the task. Both must be "yes":</p>
+          <ul>
+            <li><strong>No shared mutable state.</strong> The agents must not write to the same file, the same database row, the same git branch, or the same in-memory variable. Reads from shared state are fine; writes are the trap.</li>
+            <li><strong>No sequential dependency.</strong> Agent B's input must not require Agent A's output. If you'd write "first do X, then do Y" — that's serial.</li>
+          </ul>
+          <p>If you can answer "yes" to both, parallel dispatch is safe and faster. If either answer is "no," stay serial.</p>
+          <div class="warn-box">
+            <strong>"Probably independent" is not the same as "independent."</strong> Two agents refactoring "different" parts of a Swift file are still both writing the same file — they will overwrite each other. Verify on file granularity, not concept granularity.
+          </div>
+        </div>
+      </div>
+
+      <h2>When parallel is the right move — three real cases</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>The patterns that pay off in practice:</p>
+          <ul>
+            <li><strong>Multi-target builds.</strong> Building iOS, Android, and macOS targets of the same app. Each has its own toolchain and project; no shared writes. Parallel cuts a 9-minute total build to a 3-minute one.</li>
+            <li><strong>Per-file independent reviews.</strong> Code review across 12 separate modules where each review writes to its own <code>REVIEW_&lt;module&gt;.md</code>. Each agent reads one file, writes one file — no collisions.</li>
+            <li><strong>Independent research questions.</strong> "Find every usage of API A," "Find every usage of API B," "Find every usage of API C." Three agents read the codebase, each writes to its own scratch note. The aggregation step at the end is what merges them.</li>
+          </ul>
+          <p>Common thread: the dispatching turn ends with a clean merge step. The parallel agents produce isolated outputs; you (or a follow-up serial turn) combine them.</p>
+        </div>
+      </div>
+
+      <h2>When parallel is the wrong move — four traps</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Implementing one feature.</strong> "Add login" touches the UI, the model, the network layer, the keychain — all coupled. Running them in parallel produces four agents writing inconsistent contracts at each other.</li>
+            <li><strong>Refactor across coupled files.</strong> Renaming a Swift protocol that's adopted in 8 files: each file's edit depends on the protocol signature, and the protocol signature itself is being designed during the refactor. Serial loop with iterative judgment is faster end-to-end.</li>
+            <li><strong>Anything writing to the same git branch.</strong> Two agents committing to <code>main</code> in parallel = merge conflict in your own session. Use isolated worktrees if you genuinely need this — see the <a href="/tutorials/use-isolated-worktrees.html">worktrees tutorial</a>.</li>
+            <li><strong>Iterative debugging.</strong> "Try a fix, run tests, try another fix" is inherently sequential — each attempt informs the next. Parallelizing here just burns parallel attempts on stale information.</li>
+          </ul>
+          <div class="tip-box">
+            <strong>Heuristic:</strong> if your prompt to LingCode naturally contains "then" — "do X then do Y" — you're serial. If it naturally contains "and" without any "then" — "find every X and find every Y and find every Z" — you're parallel.
+          </div>
+        </div>
+      </div>
+
+      <h2>Dispatching from chat</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Ask LingCode to dispatch in parallel by naming the tasks as a list and stating they're independent. A prompt that works:</p>
+          <pre><code>I want three independent things done in parallel — no shared
+state, no ordering between them:
+
+1. Audit Sources/Auth/ for force-unwraps and write findings to
+   AUDIT_AUTH.md.
+2. Audit Sources/Networking/ for force-unwraps and write findings
+   to AUDIT_NET.md.
+3. Audit Sources/Storage/ for force-unwraps and write findings to
+   AUDIT_STORAGE.md.
+
+Dispatch one sub-agent per task. After all three return,
+synthesize a top-level AUDIT_SUMMARY.md that aggregates the
+counts and ranks modules by severity.</code></pre>
+          <p>LingCode dispatches three sub-agents, each with its own context window, runs them concurrently, and joins on completion. The synthesis step is a final serial turn — that's where the merge happens.</p>
+        </div>
+      </div>
+
+      <h2>What each sub-agent sees</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Sub-agents don't share your conversation history. They get the task you assigned them and the project files — nothing else. This is a feature, not a bug:</p>
+          <ul>
+            <li><strong>Smaller context per agent</strong> = faster, cheaper, more focused. Each sub-agent isn't carrying your 50-turn history into a 5-minute audit.</li>
+            <li><strong>No context leakage between agents</strong> = parallel decisions don't accidentally agree because they read the same recent assertion. Each gets independent judgment.</li>
+          </ul>
+          <p>The price you pay: each sub-agent must be given enough instruction to do its job standalone. "Audit Auth" isn't enough — say which directory, what to look for, where to write findings. The prompt above does this for all three.</p>
+          <div class="warn-box">
+            <strong>Don't expect sub-agents to read your mind.</strong> If a sub-agent task contains "like we discussed earlier," the sub-agent has no earlier discussion. Write self-contained task descriptions.
+          </div>
+        </div>
+      </div>
+
+      <h2>The merge step matters more than the dispatch</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Parallel dispatch produces N isolated artifacts. The value comes from synthesizing them — and synthesis is serial. Spend more thought on the merge prompt than the dispatch prompt:</p>
+          <pre><code>Now that AUDIT_AUTH.md, AUDIT_NET.md, and AUDIT_STORAGE.md exist,
+synthesize AUDIT_SUMMARY.md:
+
+- Total force-unwrap count across all three modules.
+- Ranked list of files by count, highest first.
+- Patterns that appeared in 2+ modules (likely systemic, fix once).
+- Patterns unique to one module (likely local, fix in place).
+- Three concrete next-step PR titles.
+
+Read the three audit files; do not re-scan the source code.</code></pre>
+          <p>The "do not re-scan" instruction matters. Without it, LingCode often re-does the work the sub-agents already did — defeating the parallelization. Trust the artifacts.</p>
+        </div>
+      </div>
+
+      <h2>Verifying the win</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>After a parallel run, sanity-check two things:</p>
+          <ul>
+            <li><strong>No file was written by two agents.</strong> Run <code>git status</code> or check timestamps. If two artifacts ended up at the same path, one overwrote the other — your "independent" tasks weren't independent.</li>
+            <li><strong>Wall time was actually shorter.</strong> If you parallelized three 30-second tasks, the overhead of dispatching may have eaten the win. Parallelization pays off when each sub-task is at least a minute or two of real work.</li>
+          </ul>
+          <p>If the parallel run didn't beat a serial run, that's information for next time. Not every "looks parallel" task actually is.</p>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Package the dispatch heuristic as a skill so LingCode applies the two-question test before parallelizing — and stays serial when serial is right:</p>
+          <pre><code>---
+name: dispatching-parallel-agents
+description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies. Triggers: 'do these in parallel', 'split this work', 'run multiple agents', 'parallelize', 'fan out', batch of independent file edits, multiple test fixtures, multiple isolated components. Actions: dispatch, parallelize, batch, fan-out, fan-in. Anti-pattern: tasks that share state, sequential dependencies, conflicting writes. Compresses wall time when the two-question test passes (no shared state + no sequential dep).
+---
+
+Before dispatching parallel agents, answer two questions about
+the task set:
+
+1. Is there shared mutable state? (Same file, same DB row, same
+   git branch, same in-memory variable.) If yes — stay serial.
+2. Does any task's input depend on another task's output? If yes
+   — stay serial.
+
+Both must be "no" to parallelize.
+
+When parallelizing:
+- Give each sub-agent a self-contained task description. They do
+  not share conversation history.
+- Have each sub-agent write to its own artifact path. No two
+  agents writing the same file.
+- Plan the merge step explicitly. The synthesis turn is serial
+  and reads the artifacts; it should not re-scan source.
+
+Good fits: multi-target builds, per-file independent reviews,
+independent research questions.
+
+Bad fits: implementing one feature, refactor across coupled
+files, two writes to the same git branch, iterative debugging.
+
+After parallel runs, sanity-check: no file written by two agents,
+wall time actually beat serial.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/dispatching-parallel-agents/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/execute-a-plan-with-checkpoints.html" class="tutorial-next-card">
+            <h3>Execute a plan with checkpoints</h3>
+            <p>For longer workflows, structure the plan first so parallel steps are obvious — and serial steps stay serial</p>
+          </a>
+          <a href="/tutorials/build-with-the-claude-api.html" class="tutorial-next-card">
+            <h3>Build with the Claude API</h3>
+            <p>The same parallel-vs-serial logic applies to your own API calls: batch what's independent, stream what's sequential</p>
+          </a>
+          <a href="/tutorials/run-a-prompt-on-a-schedule.html" class="tutorial-next-card">
+            <h3>Run a prompt on a schedule</h3>
+            <p>Independent scheduled jobs can run in parallel; sequential ones chain through artifacts on disk</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

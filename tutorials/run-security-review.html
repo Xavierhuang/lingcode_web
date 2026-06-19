@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Run /security-review on your branch — LingCode Tutorials</title>
+  <meta name="description" content="/security-review reads your branch with a threat-surface lens. Auth, input validation, secrets, injection — the things general review skims over.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/run-security-review.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/run-security-review.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/run-security-review.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/run-security-review.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Run /security-review on your branch",
+  "description": "/security-review is the focused sibling of /review . Same input — your branch's pending changes — but a different lens: threat surfaces, secrets, input validation, auth checks. The things general review skims over because it has so many other things to look at.",
+  "url": "https://lingcode.dev/tutorials/run-security-review.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/run-security-review.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Run /security-review on your branch"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Run /security-review on your branch",
+      "item": "https://lingcode.dev/tutorials/run-security-review.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/run-security-review.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Run /security-review on your branch</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Run /security-review on your branch</h1>
+      <p class="intro"><code>/security-review</code> is the focused sibling of <code>/review</code>. Same input — your branch's pending changes — but a different lens: threat surfaces, secrets, input validation, auth checks. The things general review skims over because it has so many other things to look at.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Security problems in code share a property that makes them especially hard to catch in normal review: they don't <em>look</em> wrong. The unsafe SQL string concatenation parses fine. The unauthenticated endpoint compiles and tests pass. The hardcoded API key works in production until it leaks. The reviewer who knows what to look for finds these; the reviewer who's tired, on PR seven of the morning, and reading for general correctness reads past them.</p>
+      <p>A general-purpose review prompt averages across all those things. It catches some security issues but not consistently. A focused security review prompts the model to scan with a specific lens — "where does external input enter this code, and is it validated?" — and that single shift changes what gets found. The same agent, the same diff, the same code. Different findings.</p>
+      <p>The <code>/security-review</code> skill is exactly that prompt. It runs against your branch's pending changes (everything not yet on the base branch), categorizes findings by severity, and tells you which ones to fix before shipping versus which ones are "should we open a ticket" material. Use it before merging anything that touches a public surface, handles secrets, or moves data across trust boundaries.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>What categories of finding <code>/security-review</code> looks for</li>
+        <li>Running it on your current branch</li>
+        <li>How severity is assigned and what each tier means</li>
+        <li>Following up: from finding to fix</li>
+        <li>Where it ends and a real security audit begins</li>
+      </ul>
+
+      <h2>Step 1: Run it from your feature branch</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>One command, branch-scoped</h3>
+          <p>Check out the branch you want reviewed. In the chat panel:</p>
+          <pre><code>/security-review</code></pre>
+          <p>The agent diffs against the base branch (usually <code>main</code>), reads every changed file plus enough surrounding context to understand the change, and runs through a security-focused checklist. The output is a structured findings list, ordered by severity.</p>
+          <p>Unlike <code>/review</code>, this one specifically ignores style and most general bug-hunting — it's looking at <em>your changes</em> through one lens, not all lenses.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: What the skill looks for</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Six categories</h3>
+          <p>The review walks (roughly) these categories:</p>
+          <ul>
+            <li><strong>Input handling</strong> — Where does external input enter? Is it validated before use? Are SQL queries built with parameters, not concatenation? Are file paths checked for traversal?</li>
+            <li><strong>Auth and authorization</strong> — New endpoints, new operations on existing endpoints. Is auth required where it should be? Are roles/scopes checked?</li>
+            <li><strong>Secrets</strong> — Hardcoded keys, tokens, passwords, internal URLs. Logging that prints credentials. Config files committed with secrets.</li>
+            <li><strong>Injection surfaces</strong> — SQL, shell, template engines. Anywhere user input concatenates into something that gets executed or interpreted.</li>
+            <li><strong>Crypto and randomness</strong> — Use of insecure algorithms (MD5 for security purposes, ECB mode, etc.), <code>Math.random()</code> where CSPRNG is needed.</li>
+            <li><strong>Data exposure</strong> — Endpoints that return more user data than the caller should see. Error messages that leak implementation details.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 3: Read severities carefully</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Three tiers; only the top two block shipping</h3>
+          <p>Findings are flagged by severity:</p>
+          <ul>
+            <li><strong>High</strong> — exploitable, with a plausible attack path. Don't merge until fixed. Examples: SQL injection from user input, unauthenticated endpoint that returns user data, hardcoded production credential.</li>
+            <li><strong>Medium</strong> — concerning but bounded. Fix in this PR if you can; open a ticket if you can't. Examples: weak password requirements, missing rate limiting on a sensitive endpoint, insecure cookie attributes.</li>
+            <li><strong>Low</strong> — defense-in-depth. Worth fixing eventually but not blocking. Examples: a logger that's slightly chatty, a header missing on responses that doesn't currently leak anything.</li>
+          </ul>
+          <p>Don't dismiss "medium" findings just because they aren't "high." Most real incidents start as mediums that compounded with other mediums.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Follow up on each finding</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Ask for the fix</h3>
+          <p>For each finding, the next prompt is usually some variant of:</p>
+          <ul>
+            <li>"Show me the unsafe code." — the agent quotes the line, shows context.</li>
+            <li>"Propose a fix." — the agent suggests the change.</li>
+            <li>"Apply the fix." — the agent makes the edit (under your usual <a href="/tutorials/permission-modes.html">permission mode</a>).</li>
+            <li>"Add a test that would catch this regression." — the agent writes a test specifically for the case it flagged.</li>
+          </ul>
+          <p>The last one is high-value. A vulnerability fixed without a test will eventually regress. A test attached to the fix prevents that.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: Triage the false positives</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Some findings are wrong; tell the agent why</h3>
+          <p>Static security review always has false positives. The agent sees a SQL query that <em>looks</em> like concatenation but is actually using a parameterized API in a wrapper it doesn't recognize. Or it flags a "missing auth check" on an endpoint that's already protected by middleware higher up.</p>
+          <p>When you disagree, say so: "This is fine because <code>queryWithBind</code> is parameterized — see <code>db/helpers.ts</code>." The agent will revise its assessment. If the false positive is structural (the codebase has a pattern the agent keeps misreading), add a note to <a href="/tutorials/generate-a-claude-md-with-init.html">CLAUDE.md</a>: "We use <code>queryWithBind</code> for safe parameterized queries — it's not concatenation."</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Where this ends and a real audit begins</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>This is a checklist, not an audit</h3>
+          <p><code>/security-review</code> catches a useful subset of issues — the kind that show up in code, in this diff, that a careful reader with security training would also catch. What it doesn't do:</p>
+          <ul>
+            <li><strong>Architectural review.</strong> "Is this whole authentication scheme sound?" — a question for a real audit, not a diff scan.</li>
+            <li><strong>Cryptographic protocol review.</strong> Issues that come from the math, not the code.</li>
+            <li><strong>Threat modeling.</strong> What attacker types should you care about? What assets matter? <code>/security-review</code> assumes general threats; for high-stakes systems, you need a model.</li>
+            <li><strong>Dependency analysis.</strong> CVE-tracking, SBOM, license issues — those want dedicated tooling (Dependabot, Snyk, etc.).</li>
+          </ul>
+          <p>For systems where security failure is expensive (payments, identity, infrastructure), pair <code>/security-review</code> with periodic human audits. The agent is the floor; humans are the ceiling.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't paste the findings into a public ticket if they describe an unpatched issue.</strong> "Here's an SQL injection in our checkout flow" is information you want only the people fixing it to see. Triage privately; file the public ticket once it's fixed.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/review-pull-requests-with-review.html" class="tutorial-next-card">
+            <h3>Review pull requests with /review</h3>
+            <p>The general review skill; pairs with security-review</p>
+          </a>
+          <a href="/tutorials/add-custom-hooks.html" class="tutorial-next-card">
+            <h3>Add custom hooks</h3>
+            <p>For "never log API keys" and similar rules, encode them as hooks the agent can't bypass</p>
+          </a>
+          <a href="/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>Permission modes</h3>
+            <p>Run /security-review in plan mode for a strict read-only scan</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据分析与遥测 —— LingCode Cloud | 文档</title>
+  <meta name="description" content="内建于 LingCode Cloud SDK 的第一方数据分析与错误上报：记录事件、屏幕浏览、性能 trace 和捕获到的错误，并可选地关联到用户 id。事件在客户端缓冲，刷新发送到你自己的后端——没有第三方分析库，你的数据始终归你掌控。">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/docs/cloud/telemetry.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/telemetry.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/telemetry.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/telemetry.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/docs/cloud/telemetry.html">
+  <meta property="og:title" content="数据分析与遥测 —— LingCode Cloud">
+  <meta property="og:description" content="用内建的 SDK 遥测能力记录事件、屏幕浏览、性能 trace 和捕获到的错误。事件在客户端缓冲，刷新发送到你自己的后端。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/docs/cloud/telemetry.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/docs.html">文档</a>
+      <span>/</span>
+      <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/zh/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>数据分析</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 参考</span>
+        <span class="badge badge-beginner">● 遥测</span>
+        <span class="badge badge-date">更新于 2026-06-11</span>
+      </div>
+      <h1>数据分析与遥测</h1>
+      <p class="tldr"><strong>一句话：</strong>SDK 自带第一方数据分析与错误上报——<code>logEvent</code>、<code>logScreen</code>、<code>trace</code> 和 <code>recordError</code>，并可选地关联到真实的 <code>setUserId</code>。事件在客户端缓冲，刷新发送到<em>你自己</em>的后端，所以既不用额外引入第三方分析库，数据也从不脱离你的掌控。</p>
+      <p class="intro">大多数应用第一天就会接入一个托管分析 SDK，不出一周就把用户行为发往了别人的服务器，还要在构建里再接一套账号。LingCode Cloud 把这些基础能力——事件、屏幕浏览、计时和捕获到的错误——折叠进你已经用于数据和认证的同一个客户端。你调用一个方法，SDK 把它批处理，最后它落进你自己的后端。本页讲清这种拆分为什么重要，以及每个调用具体怎么用。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>为什么内建</h2>
+      <p>数据分析与崩溃上报，是几乎每个应用都需要、又几乎都外包出去的两件事。外包意味着打包里多一个依赖、多一个手握用户行为副本的厂商，以及又一个要登录的仪表盘。SDK 的 <code>telemetry</code> 接口把这三样都去掉了：你记录的事件被发到与你数据所在相同的后端，由客户端批处理并刷新发送，不必再安装任何额外的库。</p>
+      <p>这套模型刻意做得很小。你记录四类信号——事件、屏幕浏览、性能 trace 和错误——并且可以选择性地附上一个真实的用户 id，让数据按「谁做了什么」分群。其余的一切（缓冲、批处理、刷新失败重试）都已替你处理好。</p>
+
+      <div class="info-box">
+        <h3>数据去往何处</h3>
+        <p>遥测是第一方的。事件累积在一个小的客户端缓冲里，被投递到你后端的遥测端点——它们不经过任何第三方分析服务。由于目的地就是你自己的 LingCode Cloud 后端，分析数据就停留在你应用其余数据所在的同一个地方。</p>
+      </div>
+
+      <h2>遥测接口</h2>
+      <p>一切都挂在 <code>client.telemetry</code> 上。下面的示例里客户端都叫 <code>lingcode</code>——在 <a href="/try.html">/try</a> 和 Mac 预览里它已经是 <code>window.lingcode</code>；在你自己的应用里，它是 <code>LingCode.createClient(...)</code> 返回的那个对象。</p>
+
+      <ul>
+        <li><code>logEvent(name, params?)</code> → <code>void</code> —— 记录一个具名事件。<code>params</code> 是一个可选的标量值记录（<code>string | number | boolean</code>），最多 <strong>25 个键</strong>。</li>
+        <li><code>logScreen(name)</code> → <code>void</code> —— 记录 <code>screen_view</code> 事件的便捷写法。</li>
+        <li><code>trace(name, ms)</code> → <code>void</code> —— 记录一次自定义性能测量，单位毫秒。</li>
+        <li><code>recordError(err)</code> → <code>void</code> —— 上报一个捕获到的错误。<code>err</code> 可以是 <code>Error</code>、一个 <code>{ message?, stack? }</code> 对象，或一个字符串。<strong>立即刷新发送。</strong></li>
+        <li><code>setUserId(id)</code> → <code>void</code> —— 把分析关联到一个真实的应用用户 id（需主动开启）。传 <code>null</code> 或 <code>''</code> 来清除（例如登出时）。</li>
+        <li><code>setUserProperties(props)</code> → <code>void</code> —— 设置分群属性；它们会被合并、持久化，并附加到事件上。</li>
+        <li><code>flush()</code> → <code>Promise&lt;Result&gt;</code> —— 立即强制发送缓冲中的事件。</li>
+      </ul>
+
+      <h2>追踪一个动作</h2>
+      <p>主力是 <code>logEvent</code>。给它一个名字，并可选地附上一袋扁平的标量参数作为上下文：</p>
+      <pre><code>lingcode.telemetry.logEvent('checkout_started', { plan: 'pro', amount: 29 });</code></pre>
+      <p>参数是为了之后切片分析——套餐档位、商品数量、用户看到的实验变体。保持它们为标量（<code>string</code>、<code>number</code> 或 <code>boolean</code>），并把数量控制在 25 个键以内；嵌套对象和超量的键不该出现在一个事件里。</p>
+
+      <h2>追踪一个屏幕</h2>
+      <p>屏幕浏览有自己的简写，这样你就不必记住某种事件命名约定：</p>
+      <pre><code>lingcode.telemetry.logScreen('Pricing');</code></pre>
+      <p>这与一个针对 <code>Pricing</code> 屏幕的 <code>screen_view</code> 事件完全等价——在用户导航时，从每个路由或视图里调用它。</p>
+
+      <h2>把分析关联到用户</h2>
+      <p>默认情况下，事件不与任何人关联。一旦有人登录，就通过把他们的应用用户 id 交给遥测层来主动开启；登出时再次清除它，让下一次会话从干净状态开始：</p>
+      <pre><code>// 登录成功后
+lingcode.telemetry.setUserId(user.id);
+
+// 登出时
+lingcode.telemetry.setUserId(null);</code></pre>
+      <p>为了分群——套餐档位、语言区域、分组——设置用户属性。它们会与你之前设置的合并，在客户端持久化，并附加到后续事件上：</p>
+      <pre><code>lingcode.telemetry.setUserProperties({ plan: 'pro', locale: 'en-US', cohort: '2026-Q2' });</code></pre>
+
+      <h2>捕获错误</h2>
+      <p>在你的全局错误处理器，以及任何值得知道的 <code>catch</code> 块里，使用 <code>recordError</code>。它接受 <code>Error</code>、一个普通的 <code>{ message?, stack? }</code> 对象，或一个裸字符串：</p>
+      <pre><code>// 一个全局处理器
+window.addEventListener('error', (e) =&gt; {
+  lingcode.telemetry.recordError(e.error ?? e.message);
+});
+
+// 或在一个 catch 块里
+try {
+  await doRiskyThing();
+} catch (err) {
+  lingcode.telemetry.recordError(err);
+}</code></pre>
+      <p>与其它调用不同，<code>recordError</code> 会<strong>立即刷新发送</strong>——一次把页面一起带走的崩溃，不该把它自己的报告也一并带走。</p>
+
+      <h2>测量耗时</h2>
+      <p>用 <code>trace</code> 记录一次自定义性能测量，单位毫秒——一张图片加载花了多久、一次查询跑了多久、一个屏幕用多久变得可交互：</p>
+      <pre><code>const start = performance.now();
+await loadHeroImage();
+lingcode.telemetry.trace('image_load', performance.now() - start);
+
+// 或者传入你已经有的测量值
+lingcode.telemetry.trace('image_load', 320);</code></pre>
+
+      <div class="info-box">
+        <h3>缓冲与刷新发送如何工作</h3>
+        <p>事件会自动批处理并刷新发送——通常你不必自己调用 <code>flush()</code>。它真正派上用场的两种情形：在一次<strong>硬跳转</strong>（整页重定向或关闭）之前，你需要保证投递；以及任何你想让缓冲事件立刻发出去的时刻。<code>recordError</code> 本身已经会刷新，所以崩溃报告不会丢。事件参数保持标量且不超过 25 个键，并依靠 <code>setUserProperties</code> 来承载你将用于筛选的分群——套餐档位、语言区域、分组。</p>
+      </div>
+
+      <h2>离开前刷新发送</h2>
+      <p><code>flush()</code> 返回一个 promise，让你能在页面离开前等待投递完成：</p>
+      <pre><code>// 在硬跳转之前保证缓冲事件已发出
+await lingcode.telemetry.flush();
+window.location.href = '/checkout';</code></pre>
+
+      <h2>底层原理（REST）</h2>
+      <p>SDK 把批处理后的事件 POST 到你后端的遥测端点。你很少会直接调用它，但这里列出来，供非 JS 客户端和调试使用：</p>
+      <pre><code>POST https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/telemetry
+Content-Type: application/json
+
+{
+  "events": [
+    { "name": "checkout_started", "params": { "plan": "pro", "amount": 29 }, "timestamp": 1718064000000 }
+  ]
+}</code></pre>
+      <p>一次失败的发送会以 <code>telemetry_failed</code> 的形式呈现。</p>
+
+      <div class="warn-box">
+        <strong>身份关联需主动开启。</strong>在你调用 <code>setUserId</code> 之前，事件都是匿名的。只有当你有依据时——一个已登录的会话以及你应用所要求的任何同意——才附上真实的用户 id，并在登出时用 <code>setUserId(null)</code> 清除它，这样一台共用设备就不会把两个人的分析数据混在一起。
+      </div>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/zh/docs/cloud/config.html">
+            <span class="card-eyebrow">配置</span>
+            <h3>远程配置</h3>
+            <p>把客户端指向你后端的 URL 与 anon key，并在记录任何东西之前调好客户端行为。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">参考</span>
+            <h3>API 参考</h3>
+            <p>完整的 SDK 接口，以及每一个 <code>/api/cloud/be/&lt;id&gt;/…</code> REST 端点，遥测也包含在内。</p>
+          </a>
+          <a class="tutorial-next-card" href="/zh/docs/cloud/">
+            <span class="card-eyebrow">总览</span>
+            <h3>LingCode Cloud</h3>
+            <p>回到托管后端的主页——数据库、认证、存储、函数与托管。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

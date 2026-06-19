@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiple Claude Code Sessions — Speed Up Development | LingCode</title>
+  <meta name="description" content="Use multiple Claude Code tabs in LingCode to parallelize your work. Refactor in one session, write docs in another, debug in a third. A workflow Cursor can't match.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/claude-sessions.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/claude-sessions.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/claude-sessions.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/claude-sessions.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/claude-sessions.html">
+  <meta property="og:title" content="Multiple Claude Code Sessions — Speed Up Development">
+  <meta property="og:description" content="Parallel Claude Code tabs: refactor in one, write docs in another, debug in a third. Conversations persist across restarts.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Multiple Claude Code Sessions in LingCode">
+  <meta name="twitter:description" content="Parallel Claude Code tabs with session persistence. A workflow Cursor can't match.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .page-hero { padding: 140px 32px 60px; text-align: center; }
+    .page-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .page-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .page-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .page-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .page-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .page-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .page-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .page-content ul, .page-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .page-content li { margin-bottom: 8px; }
+    .page-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .workflow-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin: 20px 0; }
+    .workflow-card h4 { margin: 0 0 8px; font-size: 1rem; color: var(--text); }
+    .workflow-card p { margin: 0; }
+    .page-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .page-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .page-cta a:hover { text-decoration: underline; }
+    .page-cta .btn { margin-top: 16px; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="page-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Workflow</p>
+        <h1>Multiple Claude Code Sessions</h1>
+        <p>Run several Claude Code tabs at once. Parallelize refactors, docs, and debugging. A capability Cursor doesn't offer.</p>
+      </div>
+    </section>
+
+    <article class="page-content">
+      <h2>Why Multiple Sessions Matter</h2>
+      <p>With a single Claude Code tab, you wait. Start a refactor, then sit idle while the AI thinks. Want to write docs in parallel? You can't. Need to debug a different module while the first session churns? Switch tabs and lose context.</p>
+      <p>LingCode gives you multiple Claude Code sessions. Each tab runs its own <code>claude</code> process. Refactor in tab 1, write docs in tab 2, debug in tab 3. All at the same time. No context switching. No waiting.</p>
+
+      <h2>How to Open a New Session</h2>
+      <p>Right-click any tab and choose <strong>Claude Code: New Session</strong>. Or use the menu: <strong>Claude Code → New Session</strong>. A new tab appears with its own Claude Code instance. Each tab keeps its own conversation and state.</p>
+
+      <h2>Workflows That Speed You Up</h2>
+
+      <div class="workflow-card">
+        <h4>Refactor + Docs in Parallel</h4>
+        <p>Tab 1: "Refactor this module to use async/await." Tab 2: "Write README sections for the auth flow." While Claude works on the refactor, the docs session is already running. You get both outputs without blocking.</p>
+      </div>
+
+      <div class="workflow-card">
+        <h4>Debug + Feature Work</h4>
+        <p>Tab 1: "Why is this API returning 500?" Tab 2: "Add a new endpoint for user preferences." Investigate the bug in one session while building the next feature in another. No need to pause one task for the other.</p>
+      </div>
+
+      <div class="workflow-card">
+        <h4>Review + Fix + Plan</h4>
+        <p>Tab 1: "/review on the payment module." Tab 2: "Fix the issues in auth.ts from the review." Tab 3: "Draft a migration plan for the database schema." Three streams of work, one developer. Ship faster.</p>
+      </div>
+
+      <div class="workflow-card">
+        <h4>Explore + Implement</h4>
+        <p>Tab 1: "Research the best approach for real-time sync in this stack." Tab 2: "Implement the login flow we discussed." Use one session as a research assistant while the other executes. No context thrashing.</p>
+      </div>
+
+      <h2>Tips for Parallel Sessions</h2>
+      <ul>
+        <li><strong>Keep tasks focused.</strong> One session per major task. Mixing too many concerns in one tab slows Claude down.</li>
+        <li><strong>Name your intent.</strong> Start each session with a clear prompt. "Refactor X" and "Document Y" work better than vague "help me."</li>
+        <li><strong>Watch your API usage.</strong> Each session bills separately. Use multiple sessions when the time savings justify the cost.</li>
+        <li><strong>Close when done.</strong> Finished a session? Close the tab. LingCode keeps other sessions running. No need to hoard tabs.</li>
+      </ul>
+
+      <h2>Why LingCode Can Do This</h2>
+      <p>LingCode is built in Swift. Each Claude Code tab is a real terminal running the <code>claude</code> CLI. Native architecture means we can keep multiple processes alive without the overhead of a browser-based editor. Cursor uses a single custom Claude Code UI. We run the real CLI, and we run as many of them as you need.</p>
+
+      <div class="page-cta">
+        <p>Ready to parallelize your workflow?</p>
+        <a href="/LingCode-Installer.dmg" download class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download LingCode for Mac
+        </a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

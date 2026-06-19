@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>配置 Neon（托管 Postgres）— LingCode 教程</title>
+  <meta name="description" content="无服务器 Postgres，支持数据库分支。注册账号、创建数据库、获取连接字符串并接入应用。免费套餐足以覆盖大多数早期项目。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-neon-postgres.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-neon-postgres.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-neon-postgres.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/set-up-neon-postgres.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "配置 Neon（托管 Postgres）",
+  "description": "无服务器 Postgres — 空闲时自动缩容到零，支持即时分支用于开发环境，免费套餐慷慨大方。注册后复制连接字符串即可上线。五分钟内拥有一个真实数据库。",
+  "url": "https://lingcode.dev/zh/tutorials/set-up-neon-postgres.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/set-up-neon-postgres.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "注册并创建项目",
+      "url": "https://lingcode.dev/zh/tutorials/set-up-neon-postgres.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "从应用连接数据库",
+      "url": "https://lingcode.dev/zh/tutorials/set-up-neon-postgres.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "创建第一张表",
+      "url": "https://lingcode.dev/zh/tutorials/set-up-neon-postgres.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "配置 Neon（托管 Postgres）",
+      "item": "https://lingcode.dev/zh/tutorials/set-up-neon-postgres.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/set-up-neon-postgres.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">后端集成</a>
+      <span>/</span>
+      <span>配置 Neon（托管 Postgres）</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>配置 Neon（托管 Postgres）</h1>
+      <p class="intro">无服务器 Postgres — 空闲时自动缩容到零，支持即时数据库分支用于开发环境，免费套餐相当慷慨。注册后复制连接字符串即可上线。五分钟内拥有一个真实的数据库。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>什么时候选择 Neon</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>选择 Neon 的场景</strong> — 你只需要托管 Postgres，不需要捆绑的认证或存储功能。或者你需要数据库分支（每个 Pull Request 对应一个独立数据库）。或者你希望按使用量计费（空闲数据库几乎零成本）。</li>
+            <li><strong>选择 <a href="/zh/tutorials/set-up-supabase-database-and-auth.html">Supabase</a></strong>，如果你还想在同一套产品中获得认证和存储功能。</li>
+            <li><strong>选择 <a href="/zh/tutorials/set-up-planetscale-mysql.html">PlanetScale</a></strong>，如果 MySQL 更符合你的技术栈。</li>
+            <li><strong>选择 AWS RDS / Cloud SQL</strong>，如果你已深度依赖 AWS / GCP。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>注册并创建项目</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>前往 <a href="https://console.neon.tech/signup" target="_blank" rel="noopener">console.neon.tech ↗</a> 注册。免费，支持 GitHub 或 Google OAuth。</p>
+          <p>创建项目时配置如下：</p>
+          <ul>
+            <li><strong>名称</strong> — 随意填写。</li>
+            <li><strong>Postgres 版本</strong> — 推荐选择 17（最新稳定版）。</li>
+            <li><strong>区域</strong> — 选择离你应用服务器最近的区域，支持 AWS 和 Azure。</li>
+            <li><strong>数据库名称</strong> — 默认的 <code>neondb</code> 即可。</li>
+          </ul>
+          <p>配置大约需要 5 秒（这是 Neon 的技术亮点之一 — Postgres 基于写时复制从基础镜像快速启动）。</p>
+        </div>
+      </div>
+
+      <h2>获取连接字符串</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>项目创建完成后，控制台会立即显示连接字符串，格式如下：</p>
+          <pre><code>postgresql://&lt;user&gt;:&lt;password&gt;@ep-xxxxxx.region.aws.neon.tech/neondb?sslmode=require</code></pre>
+          <p>复制它，并存入后端的环境变量：</p>
+          <pre><code>DATABASE_URL=postgresql://user:pass@ep-xxxxxx.region.aws.neon.tech/neondb?sslmode=require</code></pre>
+          <p><strong>两种连接模式：</strong></p>
+          <ul>
+            <li><strong>直连模式</strong>（如上所示）— 适用于长时间运行的服务器，例如有连接池的传统 Node.js 应用。</li>
+            <li><strong>连接池模式</strong> — 主机名带有 <code>-pooler</code> 后缀；适用于无服务器函数或边缘运行时（无法持有长连接的场景）。在 Vercel、Cloudflare Workers、AWS Lambda 等环境中使用此模式。</li>
+          </ul>
+          <p>Neon 控制台的"Connection string"面板同时提供两种模式，根据你的运行时选择对应的连接字符串即可。</p>
+        </div>
+      </div>
+
+      <h2>从应用连接数据库</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>任何 Postgres 客户端库都可以使用 — 这就是标准的 Postgres。以下是两种常见模式：</p>
+          <p><strong>传统服务器（Node + pg）：</strong></p>
+          <pre><code>npm install pg</code></pre>
+          <pre><code>import { Pool } from "pg";
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+const { rows } = await pool.query("SELECT * FROM users WHERE id = $1", [123]);</code></pre>
+          <p><strong>无服务器 / 边缘环境（Neon HTTP 驱动 — 无需 TCP）：</strong></p>
+          <pre><code>npm install @neondatabase/serverless</code></pre>
+          <pre><code>import { neon } from "@neondatabase/serverless";
+
+const sql = neon(process.env.DATABASE_URL);
+
+const users = await sql`SELECT * FROM users WHERE id = ${123}`;</code></pre>
+          <p>HTTP 驱动可在 Cloudflare Workers、Vercel Edge Functions 及其他传统 TCP Postgres 客户端无法运行的环境中使用。<a href="https://neon.tech/docs/serverless/serverless-driver" target="_blank" rel="noopener">Neon serverless driver 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>创建第一张表</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p><strong>方式 A — Neon SQL 编辑器：</strong>在控制台中打开 <strong>SQL Editor</strong>，粘贴以下语句：</p>
+          <pre><code>CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);</code></pre>
+          <p>点击运行。</p>
+          <p><strong>方式 B — 使用你自己的 ORM</strong>：由于底层就是标准 Postgres，任何常规工具都可以使用。常见选择：</p>
+          <ul>
+            <li><a href="https://orm.drizzle.team/" target="_blank" rel="noopener">Drizzle ORM ↗</a> — TypeScript 优先，开发体验出色。</li>
+            <li><a href="https://www.prisma.io/" target="_blank" rel="noopener">Prisma ↗</a> — 最流行，提供完整的 Schema 管理功能。</li>
+            <li><a href="https://kysely.dev/" target="_blank" rel="noopener">Kysely ↗</a> — 类型安全的查询构建器。</li>
+            <li><a href="https://node-postgres.com/" target="_blank" rel="noopener">node-postgres (pg) ↗</a> — 原生 SQL，依赖最小。</li>
+          </ul>
+          <p>按照你喜欢的方式定义 Schema，然后针对 Neon 的连接 URL 运行数据库迁移即可。</p>
+        </div>
+      </div>
+
+      <h2>数据库分支（杀手锏功能）</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Neon 的分支功能类似 Git 分支 — 基于写时复制，可在任意时间点为数据库创建快照副本。创建分支、在其上运行迁移，如果出现问题直接丢弃即可。</p>
+          <p>在控制台中选择 <strong>Branches → Create branch</strong>，几秒内新分支即可就绪，并获得独立的连接字符串。</p>
+          <p>典型使用场景：</p>
+          <ul>
+            <li><strong>每个 Pull Request 对应一个分支。</strong> 在 CI 中针对从主分支新建的分支运行迁移，在隔离环境中验证新 Schema，PR 合并后直接删除该分支。</li>
+            <li><strong>无需复制数据的 Staging 环境。</strong> 从生产环境分支 → 用作 Staging，无需导出/导入数据。</li>
+            <li><strong>时光旅行调试。</strong> 从"5 分钟前"创建分支，检查某次错误迁移前数据库的状态。</li>
+          </ul>
+          <p><a href="https://neon.tech/docs/introduction/branching" target="_blank" rel="noopener">分支功能文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>Schema 迁移</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Neon 不强制使用任何特定的迁移工具，随你选择：</p>
+          <ul>
+            <li><strong>Drizzle Kit</strong> — <code>drizzle-kit generate</code> + <code>drizzle-kit migrate</code>，从 TypeScript Schema 生成 SQL。</li>
+            <li><strong>Prisma</strong> — <code>prisma migrate dev</code> / <code>prisma migrate deploy</code>。</li>
+            <li><strong>node-pg-migrate</strong> — 使用纯 SQL 迁移文件，依赖极少。</li>
+            <li><strong>Atlas</strong> — 声明式 Schema 管理，自动对比差异。<a href="https://atlasgo.io/" target="_blank" rel="noopener">atlasgo.io ↗</a>。</li>
+            <li><strong>纯 SQL 文件</strong> — 保存在 Git 中，通过 <code>psql</code> 执行。</li>
+          </ul>
+          <p>Neon 分支功能在迁移安全性方面尤为出色：先创建分支，在分支上运行迁移，验证无误后再应用到主分支。</p>
+        </div>
+      </div>
+
+      <h2>连接池的实际情况</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>如果你使用的是无服务器运行时（Vercel、Cloudflare Workers、AWS Lambda），<strong>请使用连接池连接字符串</strong>：</p>
+          <pre><code>postgresql://user:pass@ep-xxxxxx-pooler.region.aws.neon.tech/neondb?sslmode=require</code></pre>
+          <p><code>-pooler</code> 后缀会将请求路由到 Neon 的连接池。如果不使用它，每次冷启动都会建立新连接，很快就会耗尽 Postgres 的连接上限。</p>
+          <p>注意：连接池模式不支持 Session 级别的特性（如 advisory lock、需要持久化的 <code>SET</code> 语句、prepared statement）。如果需要这些功能，请使用直连模式并配合自己的连接池（如 pgBouncer）。</p>
+        </div>
+      </div>
+
+      <h2>备份与时间点恢复</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>免费套餐：保留 24 小时历史记录（可从最近一天的任意时间点创建分支）。付费套餐可将历史记录延长至 7 天、30 天或更长。</p>
+          <p>若要"从备份恢复"，只需从指定时间戳创建一个分支，然后将应用指向该分支的连接字符串即可，比传统的 dump/restore 方式更快。</p>
+          <p>通过 <code>pg_dump</code> 手动备份同样可行，适合归档到 S3 或冷存储，配合定时任务定期运行即可。</p>
+        </div>
+      </div>
+
+      <h2>监控</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>在控制台中打开 <strong>Monitoring</strong>，可以查看：</p>
+          <ul>
+            <li>每个计算节点的 CPU 和内存</li>
+            <li>活跃连接数</li>
+            <li>数据库大小</li>
+            <li>存储历史（随时间写入/变更的数据量）</li>
+          </ul>
+          <p>如需更深入的可观测性（慢查询日志、索引使用统计），可启用 <a href="https://neon.tech/docs/extensions/pg_stat_statements" target="_blank" rel="noopener">pg_stat_statements ↗</a>，并对其运行标准 Postgres 性能查询。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>自动弹性伸缩说明。</strong> Neon 的计算节点在空闲几分钟后会自动缩容到零。从零状态恢复时，首个请求大约需要 500 毫秒的"唤醒"时间。对于个人项目完全可以接受；若生产环境对用户响应延迟有要求，请配置最小计算规格以避免暂停。<a href="https://neon.tech/docs/manage/endpoints#autoscaling-configuration" target="_blank" rel="noopener">自动弹性伸缩文档 ↗</a>。
+      </div>
+
+      <h2>价格说明</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>免费套餐：0.5 GB 存储、24 小时时间点恢复、最多 10 个项目，早期阶段完全够用。</p>
+          <p>Launch 套餐：19 美元/月 — 10 GB 存储，7 天 PITR。Pro 套餐：69 美元/月 — 50 GB 存储，30 天 PITR，支持自动弹性伸缩。<a href="https://neon.tech/pricing" target="_blank" rel="noopener">Neon 定价 ↗</a>。</p>
+          <p>超出免费额度后，计算用量单独计费；缩容到零机制可将空闲成本压至接近零。</p>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <ul>
+        <li><a href="https://neon.tech/docs" target="_blank" rel="noopener">Neon 文档 ↗</a></li>
+        <li><a href="https://neon.tech/docs/serverless/serverless-driver" target="_blank" rel="noopener">Serverless 驱动 ↗</a></li>
+        <li><a href="https://neon.tech/docs/introduction/branching" target="_blank" rel="noopener">分支功能 ↗</a></li>
+        <li><a href="https://neon.tech/docs/get-started-with-neon/connect-neon" target="_blank" rel="noopener">连接选项 ↗</a></li>
+        <li><a href="https://neon.tech/docs/guides/framework" target="_blank" rel="noopener">框架集成指南 ↗</a></li>
+      </ul>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>配置 Supabase（数据库 + 认证）</h3>
+            <p>如果你还需要在同一套产品中获得认证和存储功能</p>
+          </a>
+          <a href="/zh/tutorials/set-up-planetscale-mysql.html" class="tutorial-next-card">
+            <h3>配置 PlanetScale（MySQL）</h3>
+            <p>采用类似无服务器模型的 MySQL 替代方案</p>
+          </a>
+          <a href="/zh/tutorials/auth-with-clerk.html" class="tutorial-next-card">
+            <h3>使用 Clerk 实现认证</h3>
+            <p>将 Neon（数据库）与 Clerk（认证）搭配使用，构建灵活的全托管技术栈</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速上线的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

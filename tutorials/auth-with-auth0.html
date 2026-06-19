@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I add auth to my app with Auth0? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="The enterprise-grade auth provider. SAML/SSO, SCIM, B2B identity, custom rules. Sign up, set up an Application, drop in the SDK, redirect.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/auth-with-auth0.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/auth-with-auth0.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/auth-with-auth0.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-22T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/auth-with-auth0.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Auth with Auth0",
+  "description": "Auth0 is the enterprise-grade auth provider — owned by Okta, used wherever SAML / SSO / SCIM matters. Heavier UI than Clerk; more rule customization; the right call when your auth requirements include \"Fortune 500 IT can plug in their identity provider.\"",
+  "url": "https://lingcode.dev/tutorials/auth-with-auth0.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-22",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/auth-with-auth0.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Sign up + create a tenant",
+      "url": "https://lingcode.dev/tutorials/auth-with-auth0.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Create an Application",
+      "url": "https://lingcode.dev/tutorials/auth-with-auth0.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Configure callback URLs",
+      "url": "https://lingcode.dev/tutorials/auth-with-auth0.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Enable identity providers",
+      "url": "https://lingcode.dev/tutorials/auth-with-auth0.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Install the SDK (Next.js example)",
+      "url": "https://lingcode.dev/tutorials/auth-with-auth0.html#step-5"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "name": "Add sign-in / sign-out links",
+      "url": "https://lingcode.dev/tutorials/auth-with-auth0.html#step-6"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 7,
+      "name": "Add custom logic with Actions",
+      "url": "https://lingcode.dev/tutorials/auth-with-auth0.html#step-7"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Auth with Auth0",
+      "item": "https://lingcode.dev/tutorials/auth-with-auth0.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/auth-with-auth0.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Auth with Auth0</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-22</span>
+      </div>
+      <h1>How do I add auth to my app with Auth0?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Auth0 is the enterprise-grade auth provider (SAML, SSO, SCIM, custom rules). Create a tenant at auth0.com, create an Application, configure callback URLs, drop in their SDK, redirect. Pick over Clerk when you need IT-grade identity-provider plug-in.</p>
+      <p class="intro">Auth0 is the enterprise-grade auth provider — owned by Okta, used wherever SAML / SSO / SCIM matters. Heavier UI than Clerk; more rule customization; the right call when your auth requirements include "Fortune 500 IT can plug in their identity provider."</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>When to pick Auth0</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick Auth0 when</strong> — you sell to enterprises that demand SAML / Microsoft Entra ID / Okta SSO, you need SCIM user provisioning, your auth has complex per-tenant rules, or you need an OIDC provider that other apps consume.</li>
+            <li><strong>Pick <a href="/tutorials/auth-with-clerk.html">Clerk</a></strong> for the same problem with a friendlier DX and lower price ceiling at modest scale.</li>
+            <li><strong>Pick <a href="/tutorials/set-up-supabase-database-and-auth.html">Supabase Auth</a></strong> if you're already on Supabase.</li>
+            <li><strong>Pick <a href="/tutorials/sign-in-with-google-oauth.html">manual OAuth</a></strong> if you only need 1–2 providers and want full control without a vendor.</li>
+          </ul>
+          <p>Auth0 is overkill for an indie SaaS. It's the right answer for B2B sold to IT departments.</p>
+        </div>
+      </div>
+
+      <h2>Sign up + create a tenant</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Sign up at <a href="https://auth0.com/signup" target="_blank" rel="noopener">auth0.com/signup ↗</a>. Free tier: 7,500 monthly active users for B2C, or 50 MAU for B2B with SSO enabled.</p>
+          <p>You're prompted to pick a <strong>tenant</strong> name and region. The tenant is the top-level container; everything else (Applications, Connections, Rules) lives under it. Most teams have one tenant per environment (dev, staging, prod).</p>
+        </div>
+      </div>
+
+      <h2>Create an Application</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Auth0 console → <strong>Applications → Create Application</strong>. Pick:</p>
+          <ul>
+            <li><strong>Name</strong> — your app's name.</li>
+            <li><strong>Application type</strong>:
+              <ul>
+                <li><strong>Single Page Application (SPA)</strong> — React, Vue, Angular client-rendered apps.</li>
+                <li><strong>Regular Web Application</strong> — Next.js, Express, server-rendered apps.</li>
+                <li><strong>Machine to Machine</strong> — backend-to-backend service auth, no user.</li>
+                <li><strong>Native</strong> — iOS, Android, Electron.</li>
+              </ul>
+            </li>
+          </ul>
+          <p>Click Create. You get a <strong>Domain</strong>, <strong>Client ID</strong>, and (for confidential apps) <strong>Client Secret</strong>.</p>
+          <pre><code>AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+AUTH0_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   # NEVER in browser
+AUTH0_AUDIENCE=https://yourapp.com/api                  # for API auth (Step 8)</code></pre>
+        </div>
+      </div>
+
+      <h2>Configure callback URLs</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Application settings → scroll to <strong>Application URIs</strong>. Add:</p>
+          <ul>
+            <li><strong>Allowed Callback URLs</strong> — comma-separated: <code>http://localhost:3000/api/auth/callback, https://yourapp.com/api/auth/callback</code></li>
+            <li><strong>Allowed Logout URLs</strong> — where to send users after logout: <code>http://localhost:3000, https://yourapp.com</code></li>
+            <li><strong>Allowed Web Origins</strong> — needed for SPA token refresh: <code>http://localhost:3000, https://yourapp.com</code></li>
+          </ul>
+          <p>Exact match required. Trailing slash, http vs https, port number — all matter. Save.</p>
+        </div>
+      </div>
+
+      <h2>Enable identity providers</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Auth0 console → <strong>Authentication → Database</strong> for email/password. Or:</p>
+          <p><strong>Authentication → Social</strong> for Google, GitHub, Apple, Microsoft, Facebook, etc. — toggle on; Auth0 provides default dev credentials, or paste your own from the provider's console (recommended for production).</p>
+          <p><strong>Authentication → Enterprise</strong> for SAML, ADFS, Azure AD / Microsoft Entra ID, Google Workspace, Okta, OneLogin — the things your enterprise customers' IT departments will want to plug in.</p>
+          <p><a href="https://auth0.com/docs/authenticate/identity-providers" target="_blank" rel="noopener">Identity providers docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Install the SDK (Next.js example)</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <pre><code>npm install @auth0/nextjs-auth0</code></pre>
+          <p>Add env vars (see Step 2). Create the API route:</p>
+          <pre><code>// app/api/auth/[auth0]/route.ts
+import { handleAuth } from '@auth0/nextjs-auth0';
+
+export const GET = handleAuth();</code></pre>
+          <p>Wrap your app:</p>
+          <pre><code>// app/layout.tsx
+import { UserProvider } from '@auth0/nextjs-auth0/client';
+
+export default function RootLayout({ children }) {
+  return (
+    &lt;html&gt;
+      &lt;body&gt;
+        &lt;UserProvider&gt;{children}&lt;/UserProvider&gt;
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+          <p>Other quickstarts: <a href="https://auth0.com/docs/quickstarts" target="_blank" rel="noopener">React, Vue, Angular, Express, Python, Java, .NET, iOS, Android ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Add sign-in / sign-out links</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <pre><code>&lt;a href="/api/auth/login"&gt;Sign in&lt;/a&gt;
+&lt;a href="/api/auth/logout"&gt;Sign out&lt;/a&gt;</code></pre>
+          <p>Clicking Sign in redirects to Auth0's <strong>Universal Login</strong> page — the hosted sign-in UI. Users authenticate there; Auth0 redirects back to your app with the session cookie set.</p>
+          <p>Universal Login is customizable: console → <strong>Branding → Universal Login</strong>. Match colors, logo, copy. For deeper customization (your own UI), use the embedded login flow (more complex; <a href="https://auth0.com/docs/authenticate/login/embedded-login" target="_blank" rel="noopener">embedded docs ↗</a>).</p>
+        </div>
+      </div>
+
+      <h2>Read the current user</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <pre><code>// Server side (Next.js)
+import { getSession } from '@auth0/nextjs-auth0';
+
+export default async function Dashboard() {
+  const session = await getSession();
+  if (!session) redirect('/api/auth/login');
+  return &lt;div&gt;Hello {session.user.name}&lt;/div&gt;;
+}
+
+// Client side
+import { useUser } from '@auth0/nextjs-auth0/client';
+
+export function Profile() {
+  const { user, isLoading } = useUser();
+  if (isLoading) return null;
+  if (!user) return &lt;a href="/api/auth/login"&gt;Sign in&lt;/a&gt;;
+  return &lt;img src={user.picture} alt={user.name} /&gt;;
+}</code></pre>
+        </div>
+      </div>
+
+      <h2>Protect an API with JWT</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>For separate backend APIs (not just app sessions), Auth0 issues signed JWTs your server validates.</p>
+          <p>Auth0 console → <strong>Applications → APIs → Create API</strong>. Set an Identifier (e.g., <code>https://yourapp.com/api</code>) — used as the JWT audience.</p>
+          <p>In your API:</p>
+          <pre><code>npm install jose</code></pre>
+          <pre><code>import { jwtVerify, createRemoteJWKSet } from 'jose';
+
+const JWKS = createRemoteJWKSet(new URL(
+  `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`
+));
+
+export async function verifyAuth(req) {
+  const auth = req.headers.get('authorization');
+  if (!auth?.startsWith('Bearer ')) return null;
+  const token = auth.slice(7);
+  try {
+    const { payload } = await jwtVerify(token, JWKS, {
+      issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+      audience: process.env.AUTH0_AUDIENCE,
+    });
+    return payload;   // contains sub (user ID), permissions, etc.
+  } catch {
+    return null;
+  }
+}</code></pre>
+          <p>JWKS rotation, signature verification — all handled by jose. <a href="https://auth0.com/docs/secure/tokens/json-web-tokens" target="_blank" rel="noopener">JWT docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Add custom logic with Actions</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Auth0's <strong>Actions</strong> run server-side JavaScript at key points in the auth flow — post-login, pre-registration, sending password change emails, etc. Use them for:</p>
+          <ul>
+            <li>Adding custom claims to the JWT (e.g., role, plan).</li>
+            <li>Syncing the user to your database on signup.</li>
+            <li>Blocking sign-up for emails on a deny list.</li>
+            <li>Enforcing MFA for specific user groups.</li>
+          </ul>
+          <p>Auth0 console → <strong>Actions → Flows → Login</strong> → Add Action → Build Custom. Example:</p>
+          <pre><code>exports.onExecutePostLogin = async (event, api) =&gt; {
+  // Add a custom claim to the token
+  api.idToken.setCustomClaim('https://yourapp.com/role', event.user.app_metadata?.role || 'member');
+};</code></pre>
+          <p><a href="https://auth0.com/docs/customize/actions" target="_blank" rel="noopener">Actions docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Organizations (for B2B / multi-tenant)</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>If your customers are companies (and each company has multiple users), use <strong>Organizations</strong>. Each org has its own connection settings, members, branding, and admin role.</p>
+          <p>Auth0 console → <strong>Organizations → Create Organization</strong>. Members sign in to a specific org via <code>?organization=org_xxx</code> URL param.</p>
+          <p>This is one of Auth0's strongest B2B features — Clerk and Supabase Auth have similar concepts now, but Auth0's is deepest. <a href="https://auth0.com/docs/manage-users/organizations" target="_blank" rel="noopener">Organizations docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>SAML / SSO for enterprise customers</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p>The reason most teams pick Auth0: enterprise SSO works out of the box.</p>
+          <p>Auth0 console → <strong>Authentication → Enterprise → SAML → Create Connection</strong>. Configure with the customer's IdP metadata. Tie it to an Organization. Users from that org now sign in via their company's IdP (Okta, Microsoft Entra ID, OneLogin, etc.).</p>
+          <p>SCIM provisioning (auto-creating/disabling users from the IdP) is also supported on Enterprise plans. <a href="https://auth0.com/docs/authenticate/protocols/saml" target="_blank" rel="noopener">SAML docs ↗</a> · <a href="https://auth0.com/docs/authenticate/protocols/scim" target="_blank" rel="noopener">SCIM docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Pricing climbs faster than Clerk.</strong> Free tier looks generous (7,500 MAU B2C) but production features like Organizations, custom domains, MFA enforcement, and SAML are paywalled on the Essentials plan ($35+/mo). At meaningful scale, Auth0 routinely costs 3–10× what Clerk costs for similar features. Run the math before committing. <a href="https://auth0.com/pricing" target="_blank" rel="noopener">Auth0 pricing ↗</a>.
+      </div>
+
+      <h2>Custom domain</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <p>By default users see <code>your-tenant.auth0.com</code> in the sign-in URL. For production, set up a custom domain (e.g., <code>login.yourapp.com</code>):</p>
+          <p>Auth0 console → <strong>Settings → Custom Domains → Add Domain</strong>. Add the required CNAME at your <a href="/tutorials/connect-domain-to-server-with-dns.html">DNS provider</a>. Wait for verification.</p>
+          <p>Requires Essentials plan or higher.</p>
+        </div>
+      </div>
+
+      <h2>Common pitfalls</h2>
+      <div class="step">
+        <div class="step-num">13</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Callback URL mismatch</strong> — the #1 first-time bug. Add every variant (localhost, prod, with and without trailing slash) to Allowed Callback URLs.</li>
+            <li><strong>SPA token in JS bundle</strong> — SPA apps don't get a Client Secret; only the Client ID is shipped to the browser. If your "SPA" needs a secret, you actually want a Regular Web Application type.</li>
+            <li><strong>Tokens expiring mid-session</strong> — Auth0 default token lifetime is short (1 hour). For longer sessions, use refresh tokens or extend the lifetime in Application settings.</li>
+            <li><strong>Forgot to add the API audience</strong> — calling your own API from the front end requires passing <code>audience: AUTH0_AUDIENCE</code> in the login call. Without it, you get an opaque token instead of a JWT, and your API can't validate it.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://auth0.com/docs" target="_blank" rel="noopener">Auth0 docs ↗</a></li>
+        <li><a href="https://auth0.com/docs/quickstarts" target="_blank" rel="noopener">Quickstarts (every framework) ↗</a></li>
+        <li><a href="https://auth0.com/docs/customize/actions" target="_blank" rel="noopener">Actions reference ↗</a></li>
+        <li><a href="https://auth0.com/docs/manage-users/organizations" target="_blank" rel="noopener">Organizations ↗</a></li>
+        <li><a href="https://auth0.com/docs/authenticate/protocols/saml" target="_blank" rel="noopener">SAML ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/auth-with-clerk.html" class="tutorial-next-card">
+            <h3>Auth with Clerk</h3>
+            <p>Modern alternative; friendlier DX, lower mid-tier cost</p>
+          </a>
+          <a href="/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>Set up Supabase (database + auth)</h3>
+            <p>If you're already on Supabase</p>
+          </a>
+          <a href="/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>Sign in with Google (OAuth)</h3>
+            <p>Manual OAuth without a managed provider</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

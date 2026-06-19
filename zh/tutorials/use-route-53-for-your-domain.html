@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>将在其他地方购买的域名迁移至 Route 53 — LingCode 教程</title>
+  <meta name="description" content="将在 Namecheap 或 Cloudflare 购买的域名的 DNS 托管委托给 AWS Route 53 — 当您的服务器和证书都在 AWS 时，这是最合适的做法。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/use-route-53-for-your-domain.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/use-route-53-for-your-domain.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/use-route-53-for-your-domain.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/use-route-53-for-your-domain.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "将在其他地方购买的域名迁移至 Route 53",
+  "description": "您在 Namecheap 或 Cloudflare 购买了域名，服务器、证书和负载均衡器都运行在 AWS 上。将 DNS 指向 Route 53 — 无需转移注册商 — 即可获得 AWS 用户所需的 Alias 记录集成和 ACM 验证便利，同时继续使用原来便宜的注册商。",
+  "url": "https://lingcode.dev/zh/tutorials/use-route-53-for-your-domain.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/use-route-53-for-your-domain.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "将在其他地方购买的域名迁移至 Route 53"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "将在其他地方购买的域名迁移至 Route 53",
+      "item": "https://lingcode.dev/zh/tutorials/use-route-53-for-your-domain.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/use-route-53-for-your-domain.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>将在其他地方购买的域名迁移至 Route 53</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>将在其他地方购买的域名迁移至 Route 53</h1>
+      <p class="intro">您在 Namecheap 或 Cloudflare 购买了域名，服务器、证书和负载均衡器都运行在 AWS 上。将 DNS 指向 Route 53 — 无需转移注册商 — 即可获得 AWS 用户所需的 Alias 记录集成和 ACM 验证便利，同时继续使用原来便宜的注册商账单。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>"在哪里注册域名"和"在哪里托管 DNS"是两个相互独立的决定。每家注册商都允许您将 DNS 指向其他服务商的名称服务器 — 这是互联网运作的标准机制。在 Namecheap 购买的域名完全可以由 Cloudflare、Route 53、NS1 或任何其他服务来提供 DNS。注册商最终控制的，只是谁能成为权威解析方；<em>这一点</em>由您提供给他们的那四行名称服务器记录决定。</p>
+      <p>AWS 用户关心这个问题的原因在于集成能力。<a href="/zh/tutorials/buy-a-domain-from-aws-route53.html">Route 53</a> 拥有其他 DNS 服务商所没有的功能：<strong>Alias 记录</strong>让您能将域名顶点（Apex）直接指向 AWS 资源（ALB、CloudFront、S3 静态网站端点），无需绕过 CNAME-at-apex 的限制；<strong>ACM 证书验证</strong>一键将验证 TXT 记录写入您的托管区；<strong>私有托管区</strong>仅在您的 VPC 内部提供 DNS 解析。这些功能都只能在 Route 53 上使用 — 它们要求 AWS 本身来应答查询。</p>
+      <p>本教程介绍"域名在别处购买、DNS 托管在 Route 53"的操作模式：创建托管区、在切换前复制现有记录、在注册商处更改名称服务器、验证结果，并开始使用 AWS 专属功能。我们会严格按照顺序操作 — 顺序错误会导致服务中断。</p>
+
+      <h2>您将学到</h2>
+      <ul>
+        <li>为什么将 DNS 迁移到 Route 53 与域名的注册地无关</li>
+        <li>托管区的费用（每月 $0.50）及其带来的价值</li>
+        <li>避免 DNS 中断的正确切换操作顺序</li>
+        <li>如何将现有的 A / CNAME / MX 记录复制到新托管区</li>
+        <li>如何将注册商的名称服务器指向 Route 53 的四个 NS 值</li>
+        <li>如何在宣告切换完成前进行验证</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>前提条件：</strong>一个有 Route 53 访问权限的 AWS 账户，一个已在其他地方注册且记录了当前 DNS 记录的域名，以及可运行 <code>dig</code> 命令的 shell 环境。如果您不确定当前 DNS 提供商有哪些记录在生效，请先截图或运行 <code>dig mybrand.com ANY +noall +answer</code> — 您在步骤 2 中会用到这份清单。
+      </div>
+
+      <h2>步骤 1：在 Route 53 中创建托管区</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>每个域名对应一个托管区；费用为每月 $0.50</h3>
+          <p>在 AWS 控制台中，打开 Route 53 → <strong>Hosted zones</strong> → <strong>Create hosted zone</strong>。输入您的域名（<code>mybrand.com</code> — 不含 <code>www</code>，不含末尾的点）。类型选择：<strong>Public hosted zone</strong>。点击 Create。</p>
+          <p>Route 53 会为该区域生成四条名称服务器记录，类似于 <code>ns-1234.awsdns-12.com</code>、<code>...co.uk</code>、<code>...net</code>、<code>...org</code>。每个新创建的托管区都会得到不同的四个值；<strong>不要假设您的记录与教程示例一致</strong>。请将这些值保存下来 — 您将在步骤 4 中粘贴到注册商处。</p>
+          <p>计费立即开始。托管区按小时计费，每月 $0.50，另加每百万次标准查询 $0.40。对于个人域名，预计每月总费用为 $0.50 至 $0.60。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>为什么名称服务器分布在不同的顶级域下。</strong>四条 NS 记录分别位于 <code>.com</code>、<code>.net</code>、<code>.org</code> 和 <code>.co.uk</code> — 这是刻意为之的设计。若任何一个顶级域出现 DNS 故障，其余三个仍能正常解析您的域名。不要试图"整理"成全 <code>.com</code> 的名称服务器。
+      </div>
+
+      <h2>步骤 2：将所有现有记录复制到新托管区</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>这一步是人们最容易跳过的，也是邮件中断的根源</h3>
+          <p>在更改注册商的名称服务器之前，请将当前 DNS 提供商的每一条记录都复制到新的 Route 53 托管区中。<strong>一旦名称服务器变更传播完成，任何遗漏的记录都将立即停止解析。</strong>常见的遗漏记录包括：</p>
+          <ul>
+            <li><strong>MX 记录</strong> — 如果您的域名有邮件服务（Google Workspace、Fastmail、Proton），MX 记录必须复制，否则收件会退信。</li>
+            <li><strong>SPF/DKIM/DMARC 的 TXT 记录</strong> — 有 MX 记录的地方通常也有这些。遗漏后，您的外发邮件会被标记为垃圾邮件。</li>
+            <li><strong>TXT 验证记录</strong> — Google Search Console、Stripe、Vercel 等要求您"证明域名所有权"的服务都留有 TXT 记录，需一并复制。</li>
+            <li><strong>子域名的 CNAME 记录</strong> — <code>www</code>、<code>blog</code>、<code>api</code>、<code>status</code> 等所有指向某处的子域名，每个都是独立的记录。</li>
+          </ul>
+          <p>在 Route 53 中：针对旧提供商的每条记录，点击 <strong>Create record</strong>，填入相同的名称（顶点记录留空）、记录类型、值和 TTL（切换期间设为 300 即可）。界面虽然密集，但操作机械 — 逐一录入即可。</p>
+        </div>
+      </div>
+
+      <h2>步骤 3：提前降低旧提供商的 TTL</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>切换前先缩短切换窗口</h3>
+          <p>在更改名称服务器的前一两天，登录您当前的 DNS 提供商，将每条记录的 TTL 降至 300（五分钟）。保存。然后至少等待一个当前 TTL 的时长（如果记录原来是 3600，就等一小时），让全球的缓存刷新为更短的 TTL。</p>
+          <p>这样一来，当您正式切换名称服务器时，残留的缓存记录会很快过期。若跳过此步骤，某些解析器可能在迁移后数小时内仍持有旧的 IP 地址。</p>
+        </div>
+      </div>
+
+      <h2>步骤 4：在注册商处更改名称服务器</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>没有轻松退路的关键一步</h3>
+          <p>前往您的注册商（Namecheap、Cloudflare Registrar 或域名所在的任何服务商）。找到该域名的 <strong>Nameservers</strong> 设置 — 通常位于 Manage / Domain → Nameservers 下，默认值通常是"BasicDNS"/"Default"或注册商自己的 DNS。</p>
+          <p>切换为 <strong>Custom DNS</strong>（或类似选项），粘贴步骤 1 中的四个 NS 值 — 每行一个，不加末尾的点，不加协议前缀。保存。</p>
+          <p>变更会在数秒内传达至顶级域的根名称服务器，但全球各地的解析器只会在其缓存的"旧"记录过期后才能看到更新。实际上，全球切换大约需要 1 至 48 小时，大多数解析器会在 6 小时内完成更新。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>至少保留旧 DNS 提供商的记录一周。</strong>在传播完成期间，仍有部分客户端在查询旧名称服务器。过早删除旧 DNS 记录，这些客户端将什么都解析不到。请等到从多个不同网络执行 <code>dig mybrand.com NS +short</code> 时均返回 Route 53 的 NS 值后，再拆除旧配置。
+      </div>
+
+      <h2>步骤 5：验证切换结果</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>四条查询命令，让您一目了然</h3>
+          <pre><code># 1. Whose nameservers does the public internet think we're using?
+dig mybrand.com NS +short
+# Expected: the four Route 53 NS values. If you still see old ones, propagation isn't complete.
+
+# 2. Bypass cache; ask the root chain fresh.
+dig +trace mybrand.com NS
+# Walks from . → com. → mybrand.com. Shows the registrar's NS delegation
+# at the TLD level — the most authoritative view of what's published.
+
+# 3. Are A/CNAME records resolving correctly from the new zone?
+dig @ns-1234.awsdns-12.com mybrand.com +short
+# (Use your actual Route 53 NS hostname.) Direct query to Route 53.
+# If this answers correctly, the zone is configured. If not, fix records in Route 53.
+
+# 4. Are the records actually visible to normal traffic?
+dig mybrand.com +short
+curl -I https://mybrand.com</code></pre>
+          <p>判断规律：若第 2 条显示了 Route 53 的 NS 但第 1 条仍显示旧值，说明您的本地缓存尚未刷新。若第 3 条正确但第 1 条错误，说明传播仍在进行中。若第 1 条和第 3 条都显示正确值，则切换完成。</p>
+        </div>
+      </div>
+
+      <h2>步骤 6：开始使用 AWS 原生功能</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>这才是您做这一切的真正原因</h3>
+          <p>将 DNS 托管在 Route 53 之后，许多原本繁琐的操作都变成了一键完成：</p>
+          <ul>
+            <li><strong>ACM 证书验证。</strong>在 AWS Certificate Manager 中申请 TLS 证书 → 选择 DNS 验证 → 点击"Create record in Route 53"。验证用的 CNAME 记录会自动写入您的托管区，ACM 在几分钟内完成验证，无需手动复制粘贴记录。</li>
+            <li><strong>Alias 记录指向 AWS 资源。</strong>需要将顶点域名指向 CloudFront 分发、ALB 或 S3 静态网站端点？勾选 Alias = Yes，从下拉菜单选择资源即可，无需 CNAME-at-apex 的变通方案。</li>
+            <li><strong>健康检查。</strong>Route 53 可以监控您的端点，并在主 IP 下线时自动切换到备用 IP。配置只需几次点击，而在大多数其他 DNS 提供商处实现同等功能则需要写脚本。</li>
+          </ul>
+          <p>这些功能不会改变记录的解析方式 — 它们只是让 AWS 的常规工作流（证书续期、ALB 后端部署、多区域故障转移）明显减少了手动操作。</p>
+        </div>
+      </div>
+
+      <h2>什么情况下不适合这样做</h2>
+      <p><strong>您没有 AWS 工作负载。</strong>如果所有服务都在 Vercel / Netlify / Fly / DigitalOcean 上，步骤 6 中的 AWS 专属功能对您毫无价值。Cloudflare DNS 全球速度更快且免费，建议继续使用。</p>
+      <p><strong>您需要在域名上使用邮件服务，且偏好更简单的工具。</strong>Route 53 不提供邮件服务；与 Cloudflare 的邮件转发功能相比，在 AWS 控制台中管理 MX + DKIM 要复杂得多。如果邮件配置的简便性更重要，节省下来的操作时间可能比 AWS 集成优势更有价值。</p>
+      <p><strong>成本敏感的个人项目。</strong>每月 $0.50/托管区 × N 个域名会积少成多。Cloudflare DNS 免费。20 个个人域名每年就是 $120 不必要的开销。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html" class="tutorial-next-card">
+            <h3>将静态网站部署到 S3 + CloudFront</h3>
+            <p>经典的 AWS 静态托管模式，现在您已将 DNS 迁移至 Route 53</p>
+          </a>
+          <a href="/zh/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>通过 DNS 将域名连接到服务器</h3>
+            <p>A 记录与 CNAME 记录、TTL、传播 — DNS 通用背景知识</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-domain-from-aws-route53.html" class="tutorial-next-card">
+            <h3>从 Route 53 购买域名</h3>
+            <p>如果您希望直接从 Route 53 起步，而不是后期迁移 DNS</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

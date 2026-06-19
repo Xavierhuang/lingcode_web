@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用 DNS 将域名连接到服务器 — LingCode 教程</title>
+  <meta name="description" content="DNS 记录如何将域名映射到服务器。A 记录、CNAME、传播机制，以及判断配置是否生效的三种检验方法。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/connect-domain-to-server-with-dns.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-domain-to-server-with-dns.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-domain-to-server-with-dns.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/connect-domain-to-server-with-dns.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "用 DNS 将域名连接到服务器",
+  "description": "你已经有了域名，也有了带 IP 地址的服务器（或托管平台）。DNS 就是那一小组记录，让"输入名称、访问 IP"真正运转起来。三种记录类型几乎能搞定一切；把它们弄懂一次，就是"就是不通"与"我知道哪里出了问题"之间的分水岭。",
+  "url": "https://lingcode.dev/zh/tutorials/connect-domain-to-server-with-dns.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/connect-domain-to-server-with-dns.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "用 DNS 将域名连接到服务器"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "用 DNS 将域名连接到服务器",
+      "item": "https://lingcode.dev/zh/tutorials/connect-domain-to-server-with-dns.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/connect-domain-to-server-with-dns.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>用 DNS 将域名连接到服务器</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>用 DNS 将域名连接到服务器</h1>
+      <p class="intro">你已经有了域名，也有了带 IP 地址的服务器（或托管平台）。DNS 就是那一小组记录，让"输入名称、访问 IP"真正运转起来。三种记录类型几乎能搞定一切；把它们弄懂一次，就是"就是不通"与"我知道哪里出了问题"之间的分水岭。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>DNS 之所以像个黑盒，是因为它运转正常时完全无感知：你输入 URL，页面就加载了。配置改动后的第二天再输同一个 URL，有时能加载，有时不行，而差别只在于你的电脑碰巧问到了哪个城市的哪台服务器。这一切都不直觉。缺的那个心智模型——也是唯一重要的那个——就是 DNS 究竟<em>做了什么</em>。</p>
+      <p>DNS 是一张全球分布的查询表。名称进去，答案出来。你的域名——比如 <code>mybrand.com</code>——有一条记录说"有人查我，就把他路由到 IP X"。子域名（<code>www.mybrand.com</code>、<code>api.mybrand.com</code>）可以有各自的记录，指向不同的目的地。存放这些答案的记录分为几种类型，你在域名注册商（或者你委托管理 DNS 的地方）写入它们，然后等待全球 DNS 缓存追上来——这就是"传播"，也是让整个系统感觉很慢的那个环节。</p>
+      <p>本教程涵盖处理 95% 真实域名场景的三种记录类型、如何第一次就配置正确，以及在你花一小时排查一个根本没问题的应用之前，用来验证 DNS 是否真的生效的三种检验方法。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>你会用到的三种记录类型：A、CNAME，以及（较少用到的）AAAA</li>
+        <li>如何分别指向根域名（<code>mybrand.com</code>）和子域名</li>
+        <li>TTL 的作用以及如何合理设置</li>
+        <li>传播：发生了什么、需要多久、何时需要担心</li>
+        <li>在怪罪应用之前，用三条命令验证 DNS 是否生效</li>
+      </ul>
+
+      <h2>第一步：搞清楚你的服务器用的是哪种地址</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>IP 地址还是主机名——对应不同的记录</h3>
+          <p>打开 DNS 管理面板之前，先确认你的目标地址长什么样：</p>
+          <ul>
+            <li><strong>IPv4 地址</strong>，如 <code>198.51.100.42</code>——VPS 常见（DigitalOcean Droplet、Hetzner 服务器等）。使用 <strong>A 记录</strong>。</li>
+            <li><strong>IPv6 地址</strong>，如 <code>2001:db8::1</code>——越来越普遍，部分主机仅支持 IPv6。使用 <strong>AAAA 记录</strong>。</li>
+            <li><strong>主机名</strong>，如 <code>my-app.vercel.app</code>——PaaS 平台给你的地址。使用 <strong>CNAME 记录</strong>。</li>
+          </ul>
+          <p>规则很简单：数字地址用 A（或 AAAA）；名称用 CNAME。混淆两者是排行第一的配置错误。</p>
+        </div>
+      </div>
+
+      <h2>第二步：指向根域名</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>"顶点"域名——没有子域名的 <code>mybrand.com</code></h3>
+          <p>在你的 DNS 提供商（注册商面板，或你委托 DNS 管理的地方）：</p>
+          <ul>
+            <li><strong>指向 IP：</strong>添加一条 A 记录。名称填 <code>@</code>（或留空，代表根域名），值填服务器 IP，TTL 填 3600（一小时）即可。</li>
+            <li><strong>指向主机名：</strong>从技术上讲，传统 DNS 不允许在顶点域名设置 CNAME。但现代提供商（<a href="/zh/tutorials/buy-a-domain-from-cloudflare.html">Cloudflare</a>、Route 53）用"CNAME 扁平化"或"ALIAS 记录"绕过了这个限制。使用你的主机所叫的名称——在 Cloudflare，直接在 <code>@</code> 添加 CNAME 就能用。</li>
+          </ul>
+          <p>这条记录让输入 <code>mybrand.com</code> 能访问到你的网站。</p>
+        </div>
+      </div>
+
+      <h2>第三步：指向 www 子域名</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>大多数网站希望 <code>mybrand.com</code> 和 <code>www.mybrand.com</code> 都能访问</h3>
+          <p>为 <code>www</code> 添加一条记录：</p>
+          <ul>
+            <li><strong>如果根域名是 A 记录：</strong>添加一条 CNAME，名称填 <code>www</code>，值填 <code>mybrand.com</code>。这样 <code>www</code> 会跟随根域名。</li>
+            <li><strong>如果根域名是 CNAME / ALIAS：</strong>再添加一条 CNAME，名称填 <code>www</code>，目标与根域名相同。</li>
+            <li><strong>或者：</strong>把根域名和 www 都直接指向同一个目的地。两种方式都行；通过 CNAME 间接跳转的好处是，目的地变化时只需更新一条记录。</li>
+          </ul>
+          <p>选定一种规范形式（"我们希望所有人访问 <code>mybrand.com</code>"），然后让主机把另一个重定向过去。<a href="/zh/tutorials/magic-deploy-a-website.html">Magic Deploy</a> 和大多数现代主机会自动处理这一步。</p>
+        </div>
+      </div>
+
+      <h2>第四步：TTL——它实际上做了什么</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>记录的"生存时间"</h3>
+          <p>TTL 是以秒为单位的时长，决定全球各地的 DNS 服务器在重新查询之前可以缓存你的记录多久。默认值（通常是 3600，即一小时）对稳定运行的域名来说够用了。两条实用规则：</p>
+          <ul>
+            <li><strong>改动前降低 TTL。</strong>计划更新记录前一两天，把 TTL 降到 300（五分钟）。这样实际切换时，全球缓存持有旧值的时间会大大缩短。</li>
+            <li><strong>稳定后提高 TTL。</strong>新记录生效一天后，把 TTL 提回 3600 或更高。TTL 越低，DNS 查询越频繁——没什么大问题，但也不是没有代价。</li>
+          </ul>
+          <p>对于无关紧要的域名，保持默认值，不用费心思。</p>
+        </div>
+      </div>
+
+      <h2>第五步：传播——实际发生了什么</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>不是魔法；是缓存过期</h3>
+          <p>你发布一条新 DNS 记录后，权威服务器（你的注册商 / DNS 提供商）会立即持有它。但全球的每一台 DNS 解析器——你的 ISP 解析器、公共解析器（如 8.8.8.8 和 1.1.1.1）、你笔记本上的本地缓存——都在持有某个带 TTL 的缓存答案。在 TTL 过期之前，这些解析器会愉快地返回缓存中（往往是旧的）答案，而不会重新查询。</p>
+          <p>"传播"就是等待所有这些缓存过期的过程。实际上：</p>
+          <ul>
+            <li><strong>大多数解析器在几分钟内更新</strong>（前提是 TTL 设得较低）。</li>
+            <li><strong>有些需要数小时</strong>，无论 TTL 设为多少（部分 ISP 解析器会无视 TTL，激进地缓存）。</li>
+            <li><strong>"最多 48 小时"是真实存在但属于罕见情况。</strong>如果 6 小时后还没传播完，很可能是配置错误，而不是传播太慢。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>第六步：调试前先验证</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>三条命令；一个真相</h3>
+          <p>在怀疑应用有问题之前，先验证 DNS 本身：</p>
+          <pre><code># 1. What does your local resolver see right now?
+dig mybrand.com +short
+# Expected: your IP. If empty or wrong, the record isn't published or hasn't propagated.
+
+# 2. What does a different resolver see?
+dig @1.1.1.1 mybrand.com +short
+# Asks Cloudflare's public resolver (1.1.1.1) instead of your local one.
+# Different resolver = different cache state. If this agrees with #1,
+# both resolvers updated. If it differs, your local cache is just stale —
+# that's a wait, not a bug. For the truest view (no caches anywhere):
+#     dig +trace mybrand.com
+# walks from the root nameservers down, asking each fresh. Slowest, most honest.
+
+# 3. Are you actually reaching the server?
+curl -I https://mybrand.com
+# Expected: an HTTP response. If you get connection refused or timeout,
+# the IP is wrong, the server isn't listening, or the firewall is blocking.</code></pre>
+          <p>判断逻辑：如果 #1 和 #2 结果不同，传播还在进行中——等一等。如果 #2 结果不对，是你 DNS 提供商那边的记录有误——修正记录。如果两者都对但 #3 失败，DNS 没有问题；问题出在服务器端。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>在线检测工具（whatsmydns.net、dnschecker.org）可以显示全球众多解析器的传播状态。</strong>当出现"我这边能访问，朋友说打不开"的情况时非常有用——你能看到哪些地区已更新、哪些还没有。
+      </div>
+
+      <h2>第七步：HTTPS——DNS 做不到的那部分</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>DNS 负责路由流量；TLS 负责加密</h3>
+          <p>DNS 配置好之后，<code>http://mybrand.com</code> 就能访问到你的服务器了。但 <code>https://mybrand.com</code> 还不行，需要先配置 TLS 证书。这是单独的一步，通常由以下方式处理：</p>
+          <ul>
+            <li><strong>你的主机</strong>（Vercel、Netlify、Cloudflare Pages）——自动完成。在其管理面板添加域名，它们会自动签发证书。<a href="/zh/tutorials/magic-deploy-a-website.html">Magic Deploy</a> 可以从聊天面板驱动这个流程。</li>
+            <li><strong>Cloudflare 代理</strong>——如果你的 DNS 在 Cloudflare，并开启了橙色云朵图标，则自动完成。</li>
+            <li><strong>Let's Encrypt + certbot</strong>，在你自己的服务器上——大多数环境只需一条命令：<code>sudo certbot --nginx -d mybrand.com -d www.mybrand.com --redirect</code>。<code>--redirect</code> 参数会在 nginx 配置中将 HTTP 重写为 HTTPS；certbot 还会安装一个定时任务，每 90 天自动续期。</li>
+          </ul>
+          <p>公开站点绝对不要在没有 HTTPS 的情况下运行。现代浏览器会大声警告；所有人都把它当作标配；而成本为零。TLS 证书是 DNS 之后的第二层，两者合在一起才能让网站安全地被访问到。</p>
+        </div>
+      </div>
+
+      <h2>第八步：你迟早会遇到的其他记录类型</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>A 和 CNAME 覆盖 95%；其余的在需要时才重要</h3>
+          <p>以下这些记录对于纯粹托管网站来说不是必须的，但你迟早会碰到：</p>
+          <ul>
+            <li><strong>AAAA 记录</strong>——A 记录的 IPv6 版本。如果主机同时给了你 IPv4 和 IPv6 地址，两条都发布：IPv6 专属网络的访客（部分移动运营商、部分企业网络）只能解析 AAAA，IPv4 访客只能解析 A。双栈更具弹性，而且免费。</li>
+            <li><strong>MX 记录</strong>——决定你域名的邮件发往哪里。如果你希望 <code>you@mybrand.com</code> 真的能收到邮件，需要把 MX 记录指向你的邮件主机（Fastmail、Google Workspace、Proton 等）。主机会给你具体的值——名称、优先级、目标——你直接粘贴进去。MX 与 A/CNAME 相互独立，在某个域名上能收邮件并不影响网站的位置。</li>
+            <li><strong>TXT 记录</strong>——任意文本。两个真实用途：<strong>SPF / DKIM / DMARC</strong>（为你的邮件防伪造；邮件主机生成值，你粘贴进去），以及<strong>域名验证</strong>（<em>"粘贴这段 TXT 来证明你拥有该域名"</em>——Vercel、Search Console、Stripe，以及任何要签发 TLS 或确认你控制某域名的主机都会用这种方式）。</li>
+          </ul>
+          <p>经验法则：A/AAAA/CNAME 路由流量；MX 路由邮件；TXT 证明所有权。知道某个问题属于哪种记录类型，就是解决了一半的排查工作。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>注意末尾的点。</strong>某些 DNS 管理面板显示记录时带末尾点（<code>example.com.</code>），某些不带。在 DNS 领域两者含义相同。在不同提供商之间复制粘贴 CNAME 目标时，那个点可能需要，也可能不需要——如果 CNAME 看起来正确却无法解析，查一下该提供商的文档。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/buy-a-domain-from-cloudflare.html" class="tutorial-next-card">
+            <h3>从 Cloudflare Registrar 购买域名</h3>
+            <p>注册后 DNS 管理最简单的域名注册商</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-domain-from-namecheap.html" class="tutorial-next-card">
+            <h3>从 Namecheap 购买域名</h3>
+            <p>灵活的注册商，支持自定义任意名称服务器</p>
+          </a>
+          <a href="/zh/tutorials/magic-deploy-a-website.html" class="tutorial-next-card">
+            <h3>Magic Deploy 一键部署网站</h3>
+            <p>如果你的"服务器"其实是托管平台，Magic Deploy 帮你自动完成一半的流程</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为何不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多智能体群：何时使用，何时跳过 — LingCode 教程</title>
+  <meta name="description" content="并行启动多个智能体会成倍增加 token 消耗和复杂度。有时这是正确的取舍——探索、审计、对抗性评审。但很多时候并非如此。本文给出决策规则和真正有效的模式。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/multi-agent-swarms-when-to-use.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/multi-agent-swarms-when-to-use.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/multi-agent-swarms-when-to-use.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/multi-agent-swarms-when-to-use.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "多智能体群：何时使用，何时跳过",
+  "description": "启动子智能体会同时放大能力与成本。朴素的默认方案——"用一个大型智能体循环顺序完成所有事情"——往往出人意料地正确。群组模式真正胜出的场景很具体：独立并行工作、对抗性评审、多角度探索。",
+  "url": "https://lingcode.dev/zh/tutorials/multi-agent-swarms-when-to-use.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/multi-agent-swarms-when-to-use.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "多智能体群：何时使用，何时跳过"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "LingCode 与 AI",
+      "item": "https://lingcode.dev/tutorials.html?level=advanced"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "多智能体群：何时使用，何时跳过",
+      "item": "https://lingcode.dev/zh/tutorials/multi-agent-swarms-when-to-use.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/multi-agent-swarms-when-to-use.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=advanced">LingCode 与 AI</a>
+      <span>/</span>
+      <span>多智能体群：何时使用，何时跳过</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-advanced">● 高级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>多智能体群：何时使用，何时跳过</h1>
+      <p class="intro">启动子智能体会同时放大能力与成本。朴素的默认方案——"用一个大型智能体循环顺序完成所有事情"——往往出人意料地正确。群组模式真正胜出的场景很具体：独立并行工作、对抗性评审、多角度探索。本文给出决策规则以及真正经得起考验的模式。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>LingCode 两种方式都支持。单智能体在一次长对话中累积上下文，逐步完成任务——这也是大多数人说"Claude 写了代码"时的含义。群组模式则会启动一个或多个<strong>子智能体</strong>，每个子智能体拥有独立干净的上下文和专属的局部任务，可以并行或串行执行，结果由父智能体汇总。营销层面的说法是"更多智能体 = 更好的结果"；工程现实是"更多智能体 = 更多 token、更多整合工作、更多丢失线索的地方"。两种方式各有用武之地，选对了就是加速，选错了就是昂贵的干扰。</p>
+      <p>一个经得起检验的心智模型：<strong>智能体之间除了你显式传递的内容之外，什么都不共享。</strong>每个子智能体都从零开始——没有父智能体之前工作的记忆，没有共享的草稿板。父智能体传一个提示；子智能体完成任务；父智能体读取结果。这种隔离既是群组的优势（并行工作而不污染上下文），<em>也</em>是它的代价（你无法让子智能体"继续我们之前做的事"——你必须重新解释）。需要完整对话历史才能做出正确决策的任务，恰恰是群组模式最吃亏的场景。每个子任务独立且边界清晰的任务，才是群组模式真正发挥作用的地方。</p>
+      <p>本教程涵盖决策规则、四种有效模式、三种反模式，以及 LingCode 中实现这些模式的具体功能（Explore、Plan、并行 Task 启动）。我们以代码审查和重构场景作为贯穿全文的例子，因为那里的对比最为鲜明。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>子智能体共享什么、不共享什么（隔离规则）</li>
+        <li>群组模式胜过单智能体的四种场景</li>
+        <li>群组模式表现不佳的三种反模式</li>
+        <li>具体成本：token 消耗如何随智能体数量增长</li>
+        <li>LingCode 已提供的 Explore、Plan、Task 三种原语</li>
+        <li>如何措辞父提示，让子智能体不跑偏</li>
+        <li>整合问题及其设计应对方法</li>
+      </ul>
+
+      <h2>第一步：单一规则框架</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>"各子任务能在互不知情的情况下完成吗？"</h3>
+          <p>如果能 → 群组是候选方案。如果不能 → 单智能体。</p>
+          <p>通过检验的例子（子智能体运作良好）：</p>
+          <ul>
+            <li>"分别审计这 5 个微服务的安全问题。"每次审计相互独立，最后汇总结果。</li>
+            <li>"读取这 12 个文件，逐一总结各自的功能。"逐文件摘要不需要相互参照。</li>
+            <li>"为这个功能尝试三种不同的架构，返回最佳方案。"独立尝试，最终择优。</li>
+            <li>"评审这个 PR（一个智能体），独立于写这个 PR 的智能体。"对抗性配对。</li>
+          </ul>
+          <p>未通过检验的例子（单智能体更优）：</p>
+          <ul>
+            <li>"将这个代码库重构为 TypeScript strict 模式。"每个文件的改动都依赖于前面文件中确立的类型模式。</li>
+            <li>"调试这个失败的测试。"调试是一系列推理链，每一步都建立在上一步之上。</li>
+            <li>"写一篇关于 X 的教程。"第一段制约着第二段，顺序思考本身就是核心工作。</li>
+          </ul>
+          <p>当你想着"我先启动一个智能体做规划，再启动另一个执行"时——停一下。规划者的上下文恰恰是执行者所需要的；单独启动执行者意味着要把所有内容重新喂一遍。带有"先规划后执行"提示的单智能体，通常优于两个串行智能体，因为交接过程中不会丢失任何上下文。</p>
+        </div>
+      </div>
+
+      <h2>第二步：四种有效模式</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>每种模式都有其特定的胜出理由</h3>
+          <p><strong>模式一：并行独立工作。</strong>N 个任务互不依赖，最终汇总结果。典型案例："并行审计这 5 个服务。"五个子智能体同时运行；总耗时约等于最长的单次审计，而非所有审计之和。token 成本随 N 线性增长，但你在为真实工作付费，而非为协调开销买单。</p>
+          <p><strong>模式二：多角度探索。</strong>"为这个功能尝试三种实现方案。"每个子智能体单独尝试一种方案。父智能体读取三个结果并择优（或综合）。当你否则会过早押注某一方案时最为有效；并行探索能捕捉到那种"方案二明显更好，但你可能根本不会去写它"的情况。</p>
+          <p><strong>模式三：对抗性评审。</strong>一个智能体产出内容；另一个拥有干净上下文的智能体进行评审。评审者缺乏上下文恰恰是优势：它能发现作者自我合理化掉的问题。经典形式是"写作智能体 + 编辑智能体"，但同样适用于代码（提出者 + 批评者）和设计（设计师 + 质疑者）。最少两个智能体；更多评审者通常帮助不大。</p>
+          <p><strong>模式四：带有独立阶段的长周期计划。</strong>某些工作流存在真正不需要共享工作状态的阶段——"研究这个主题"，然后"用研究成果起草文档"，然后"格式化并检查文档"。每个阶段的输出是下一阶段的输入；中间过程不需要保留。串行的子智能体序列（每个仅接收上一个的最终输出）能保持上下文预算低廉，让每个阶段专注于自身任务。</p>
+        </div>
+      </div>
+
+      <h2>第三步：三种反模式</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>启动子智能体的代价超过收益的场景</h3>
+          <p><strong>反模式一：为小任务启动子智能体。</strong>如果一个任务用 5–10 句提示就能描述清楚，父智能体不到一分钟就能完成，那么启动子智能体的准备开销（重新解释上下文、重新加载工具）就超过了实际工作量。阈值：只为那些需要独立上下文窗口、或需要几分钟计算时间的任务启动子智能体。</p>
+          <p><strong>反模式二：为了编排而编排。</strong>启动一个"管理者"子智能体，其唯一工作是启动其他子智能体。这个管理者没有父智能体不具备的任何能力；它只是增加了一个消耗 token 的中间环节。如果父智能体能决定要启动哪些子智能体，就应该由父智能体直接启动。</p>
+          <p><strong>反模式三：本该是一次对话的串行子智能体链。</strong>"智能体 A 读取文件，智能体 B 分析 A 读到的内容，智能体 C 写出修复。"如果 A 对文件的理解正是 B 和 C 所需要的，那么每次交接都在付出重新解释的代价。让单个智能体读取文件后在对话中依次完成 A→B→C 更优。经验法则：<em>如果各阶段之间的自然数据流就是前一阶段所知道的一切，那么这些阶段就应该是同一个智能体。</em></p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>token 成本大致随 N 倍增长。</strong>三个子智能体处理同一任务，token 消耗大约是单智能体顺序执行的三倍——有时更多，因为每个子智能体要重新读取父智能体已有的上下文。在扩大规模前先算好成本：以 Claude Sonnet $3/M 输入 token 的价格，在 50 万 token 的代码库上运行 3 智能体群组，每次运行约 $4.50 的输入成本还不含输出 token。对于真正的探索性工作这是合理的；用来装点门面就太贵了。
+      </div>
+
+      <h2>第四步：措辞父提示</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>让子智能体的任务清晰明确，不要让它自己去猜边界</h3>
+          <p>子智能体对父智能体的推理过程一无所知。父智能体传递的内容就是它们能得到的全部。父提示中常见的两个错误：</p>
+          <ul>
+            <li><strong>描述不足。</strong>"审计这个服务"让子智能体自己决定看什么——安全、性能、架构、命名？五个子智能体审计五个服务时，可能每个对"审计"的理解都不同，产出的报告无法横向对比。要明确范围："专门审计这个服务中的 SQL 注入模式。查找到达数据库层的未经清理的输入；每个发现报告 file:line 及建议的修复方案。"</li>
+            <li><strong>过度解释。</strong>把父智能体的全部上下文都塞进子智能体的提示，会让群组模式失去意义。子智能体现在的上下文膨胀程度和父智能体一样。只传递子智能体真正需要的内容。</li>
+          </ul>
+          <p>一个好的父提示读起来应该像一份独立的 bug 报告：足够完成工作的上下文，没有父智能体为何决定委托的叙事背景。</p>
+        </div>
+      </div>
+
+      <h2>第五步：LingCode 的原语</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Explore、Plan、并行 Task、自定义子智能体</h3>
+          <p>LingCode 将上述模式作为具体工具提供：</p>
+          <ul>
+            <li><strong>Explore 子智能体</strong>——快速只读搜索，用于"查找 / 统计 / 定位"类工作。成本低，上下文独立，返回摘录。当答案是"哪些文件提到了 X"或"Y 的结构是什么"时使用。不能用于代码编辑——它无法写入。</li>
+            <li><strong>Plan 子智能体</strong>——为复杂任务设计实现策略。返回包含关键文件识别的分步计划。用作模式四（长周期）的"规划阶段"。</li>
+            <li><strong>通用子智能体</strong>——拥有所有工具的完整智能体循环。用于真正的并行工作：为 N 个独立任务启动 N 个这样的子智能体。</li>
+            <li><strong>自定义子智能体</strong>通过 <code>.claude/agents/</code>——定义你自己的受限工具集。适用于重复性专项任务（"SQL 注入审计员"）。参见 <a href="/zh/tutorials/write-a-subagent.html">编写子智能体</a>。</li>
+          </ul>
+          <p>模式与工具对照：</p>
+          <ul>
+            <li><em>并行独立（模式一）</em>→ 在单条消息中启动多个 Explore 或通用子智能体。</li>
+            <li><em>多角度探索（模式二）</em>→ 多个通用子智能体，每个提示中包含不同的方案方向。</li>
+            <li><em>对抗性评审（模式三）</em>→ 主智能体产出，自定义"评审者"子智能体批评。</li>
+            <li><em>长周期（模式四）</em>→ 串行 Explore → Plan → 通用子智能体链。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>并行启动，而非串行。</strong>如果你要为模式一（独立工作）启动 5 个子智能体，在一条消息中发出 5 个工具调用。LingCode 会并发运行它们；总耗时约等于最长的单次运行。逐个启动会将工作串行化，白白将耗时延长 5 倍。
+      </div>
+
+      <h2>第六步：整合问题</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>N 个智能体都返回了，然后呢？</h3>
+          <p>群组的输出是 N 个部分答案。将它们合并本身也是一项任务——也是群组方案最常退化为比单智能体更差的结果的地方。三种应对方法：</p>
+          <ul>
+            <li><strong>拼接。</strong>如果每个子智能体的输出是独立的（例如逐文件摘要），直接堆叠成最终报告。成本最低；当没有需要协调的重叠内容时最有效。</li>
+            <li><strong>投票或择优。</strong>如果子智能体探索了 N 种方案（模式二），父智能体读取所有 N 个并择优（或融合最强部分）。父智能体的判断就是整合本身。</li>
+            <li><strong>整合通道。</strong>将所有 N 个输出反馈给父智能体（或专门的整合子智能体），配合提示如："以下是对同一代码库的五份独立报告。找出在 ≥3 份报告中出现的发现——这些是高置信度问题。找出看起来重要的独特发现——这些需要二次审查。"</li>
+          </ul>
+          <p>如果整合确实很难——子智能体产出了相互重叠、矛盾、难以调和的内容——这往往是任务实际上没有通过第一步"独立子任务"检验的信号。重新考虑单智能体是否会给出更清晰的答案。</p>
+        </div>
+      </div>
+
+      <h2>第七步：实例解析</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>三个真实 LingCode 任务的评分</h3>
+          <p><strong>任务："为这 8 个没有测试覆盖的模块添加测试。"</strong>每个模块的测试套件相互独立，模块之间不共享被测代码。<em>模式一。</em>启动 8 个通用子智能体，每个对应一个模块，并行执行。总耗时约等于最长的单个测试套件。成本约等于对单个模块运行单智能体的 8 倍。值得。</p>
+          <p><strong>任务："将这个 50 个文件的代码库从 JavaScript 重构为 TypeScript。"</strong>每个文件的类型声明都依赖于其他文件的导入/导出；早期确立的类型定义制约着后续文件。<em>单智能体。</em>群组模式会让每个子智能体重新推导同一套类型模型，导致各文件的类型定义不一致。在上下文中保留类型映射的顺序智能体更优。</p>
+          <p><strong>任务："调查这个生产环境崩溃。"</strong>调试是推理性的；每一条新证据都会引导下一步。<em>单智能体。</em>启动"日志读取器"、"堆栈追踪器"和"git 归责器"会产生三个局部视图，父智能体需要加以调和——而单智能体在读取这些材料时本可在拥有完整上下文的情况下自然完成这项工作。</p>
+          <p><strong>任务："写一个营销落地页；让一个智能体起草，另一个评审其清晰度。"</strong>对抗性评审受益于干净的上下文。<em>模式三。</em>作者起草；评审者在未看到头脑风暴过程的情况下评审；作者根据评审意见修改。两个智能体，串行而非并行。</p>
+        </div>
+      </div>
+
+      <h2>不确定时，选单智能体</h2>
+      <p>2026 年最可靠的默认方案是"一个智能体、长上下文、精心设计的提示"。现代 Claude 模型能良好处理 20 万 token 的上下文；现代工具让单个智能体在一次运行中检索数百个文件。群组模式真正增加价值的场景是具体且越来越少的——那些关闭了"上下文太小"缺口的模型改进，同时也关闭了大部分使用群组的理由。当任务确实具有独立并行结构时使用它们，或者当作者与评审者之间的对抗隔离本身就是目的时使用。当"更多智能体"只是装饰时，请跳过。</p>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/write-a-subagent.html" class="tutorial-next-card">
+            <h3>编写子智能体</h3>
+            <p>在 .claude/agents/ 中定义自定义子智能体——模式三（专业评审者）所必需的</p>
+          </a>
+          <a href="/zh/tutorials/test-and-observe-your-llm-app.html" class="tutorial-next-card">
+            <h3>测试和观察你的 LLM 应用</h3>
+            <p>如何判断你的群组方案是否真的优于单智能体——用数据说话</p>
+          </a>
+          <a href="/zh/tutorials/writing-better-prompts.html" class="tutorial-next-card">
+            <h3>写出更好的提示</h3>
+            <p>编排子智能体的父提示是最值得精雕细琢的提示</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要发布产品的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

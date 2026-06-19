@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>配置 Algolia 搜索 — LingCode 教程</title>
+  <meta name="description" content="为你的应用添加即输即搜功能。索引记录、引入 UI 组件、上线发布。查询延迟低于 100ms；免费套餐支持 10K 条记录和每月 10K 次请求。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/set-up-algolia-search.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/set-up-algolia-search.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/set-up-algolia-search.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/set-up-algolia-search.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "配置 Algolia 搜索",
+  "description": "即输即搜，支持拼写容错、分面筛选和结果排序——运行在 Algolia 全球网络上。通过一次 API 调用即可索引记录，再引入 React/Vue/JS UI 库即可完成。全球任意位置查询延迟低于 100ms。",
+  "url": "https://lingcode.dev/zh/tutorials/set-up-algolia-search.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/set-up-algolia-search.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "注册账号并创建应用",
+      "url": "https://lingcode.dev/zh/tutorials/set-up-algolia-search.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "配置索引设置",
+      "url": "https://lingcode.dev/zh/tutorials/set-up-algolia-search.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "引入 UI 库",
+      "url": "https://lingcode.dev/zh/tutorials/set-up-algolia-search.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "配置 Algolia 搜索",
+      "item": "https://lingcode.dev/zh/tutorials/set-up-algolia-search.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/set-up-algolia-search.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>配置 Algolia 搜索</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>配置 Algolia 搜索</h1>
+      <p class="intro">即输即搜，支持拼写容错、分面筛选和结果排序——运行在 Algolia 全球网络上。通过一次 API 调用即可索引记录，再引入 React/Vue/JS UI 库即可完成。全球任意位置查询延迟低于 100ms。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>什么时候该选 Algolia（以及什么时候不该）</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>选 Algolia 的场景</strong>——你希望快速获得精美的搜索体验，即输即搜体验至关重要，记录数量 ≤ ~100 万条，搜索面向用户且对延迟敏感。</li>
+            <li><strong>选 <a href="https://www.meilisearch.com/" target="_blank" rel="noopener">Meilisearch ↗</a></strong>——如果你需要开源、可自托管、基于 Rust 且开发体验相近的方案。</li>
+            <li><strong>选 <a href="https://typesense.org/" target="_blank" rel="noopener">Typesense ↗</a></strong>——另一个开源选项，大规模使用时成本更低。</li>
+            <li><strong>选 Postgres 全文搜索</strong>（<code>tsvector</code> / <code>tsquery</code>）——需求简单且已在使用 Postgres 时的轻量方案。</li>
+            <li><strong>选 <a href="https://opensearch.org/" target="_blank" rel="noopener">OpenSearch ↗</a> / Elasticsearch</strong>——复杂的企业级需求、日志分析或大数据场景。</li>
+          </ul>
+          <p>Algolia 最适合的场景：独立 SaaS 产品，希望用几个小时的工作打造出 Linear 或 Stripe 文档那样的搜索体验。</p>
+        </div>
+      </div>
+
+      <h2>注册账号并创建应用</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>前往 <a href="https://www.algolia.com/users/sign_up" target="_blank" rel="noopener">algolia.com ↗</a> 注册账号。Build 套餐（免费）包含 10K 条记录 + 每月 10K 次请求——对于小型应用或文档站点来说已经足够。</p>
+          <p>Dashboard 中可以看到你的 <strong>Application ID</strong> 和四个 API 密钥：</p>
+          <ul>
+            <li><strong>Search-Only API Key</strong>——供浏览器/客户端使用，只读权限。</li>
+            <li><strong>Admin API Key</strong>——供后端使用，拥有完全控制权。切勿发送到客户端。</li>
+            <li><strong>Write API Key</strong>——供后端写入操作使用。</li>
+            <li><strong>Monitoring API Key</strong>——用于查看使用统计。</li>
+          </ul>
+          <pre><code>ALGOLIA_APP_ID=ABCD1234
+ALGOLIA_ADMIN_KEY=xxxxxxxxxxxxxxxxxxxxxxxx           # backend only
+ALGOLIA_SEARCH_KEY=xxxxxxxxxxxxxxxxxxxxxxxx          # safe in browser
+NEXT_PUBLIC_ALGOLIA_SEARCH_KEY=xxxxxxxxxxxxxx        # ditto, for Next.js</code></pre>
+        </div>
+      </div>
+
+      <h2>决定索引哪些内容</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Algolia 中的"索引"是一组记录的集合。每条记录是一个 JSON 对象——任何你希望出现在搜索结果中的内容都可以作为记录。</p>
+          <p>对于博客：每篇文章是一条记录。对于电商：每个商品是一条记录。对于 SaaS：可能有一个用于文档的索引、一个用于用户的索引、一个用于标签的索引。</p>
+          <p>每条记录需要一个 <code>objectID</code>（你的唯一标识符——数据库主键即可）。Algolia 会自动索引其他所有顶层字段。</p>
+          <pre><code>{
+  "objectID": "post-123",
+  "title": "How to deploy to Vercel",
+  "body": "First, install the CLI...",
+  "author": "Jane",
+  "tags": ["deploy", "vercel"],
+  "published_at": 1714521600
+}</code></pre>
+        </div>
+      </div>
+
+      <h2>从后端推送记录</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <pre><code>npm install algoliasearch</code></pre>
+          <pre><code>import { algoliasearch } from "algoliasearch";
+
+const client = algoliasearch(
+  process.env.ALGOLIA_APP_ID,
+  process.env.ALGOLIA_ADMIN_KEY      // admin key, BACKEND ONLY
+);
+
+// Save / replace a single record
+await client.saveObject({
+  indexName: "posts",
+  body: {
+    objectID: "post-123",
+    title: "How to deploy to Vercel",
+    body: "First, install the CLI...",
+    tags: ["deploy", "vercel"],
+  },
+});
+
+// Bulk replace (faster for initial import)
+await client.saveObjects({
+  indexName: "posts",
+  objects: arrayOfPosts,
+});</code></pre>
+          <p>可以按计划定期执行（每隔 N 分钟），或在每次涉及可索引内容的数据库写入时触发。<a href="https://www.algolia.com/doc/api-client/getting-started/install/javascript/" target="_blank" rel="noopener">JS API 客户端文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>配置索引设置</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>进入 Dashboard → 你的索引 → <strong>Configuration</strong>。最重要的两项设置：</p>
+          <ul>
+            <li><strong>可搜索属性</strong>——哪些字段参与搜索以及优先级顺序。通常将 <code>title</code> 排在第一位，<code>body</code> 排在第二位。<a href="https://www.algolia.com/doc/guides/managing-results/must-do/searchable-attributes/" target="_blank" rel="noopener">文档 ↗</a>。</li>
+            <li><strong>排序规则</strong>——Algolia 默认排序为"拼写错误 → 地理位置 → 词语匹配 → 过滤条件 → 邻近度 → 属性 → 精确匹配 → 自定义"。对于大多数应用，建议添加自定义排序属性（例如 <code>popularity</code> 或 <code>published_at</code>）来决定同分情况下的排序。<a href="https://www.algolia.com/doc/guides/managing-results/relevance-overview/" target="_blank" rel="noopener">排序规则文档 ↗</a>。</li>
+          </ul>
+          <p>也可以通过 API 配置：</p>
+          <pre><code>await client.setSettings({
+  indexName: "posts",
+  indexSettings: {
+    searchableAttributes: ["title", "body", "tags"],
+    customRanking: ["desc(published_at)"],
+  },
+});</code></pre>
+        </div>
+      </div>
+
+      <h2>在浏览器端执行搜索</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <pre><code>import { algoliasearch } from "algoliasearch";
+
+const client = algoliasearch(
+  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
+  process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY    // search-only key; safe in browser
+);
+
+const { hits } = await client.searchSingleIndex({
+  indexName: "posts",
+  searchParams: { query: "vercel deploy" },
+});</code></pre>
+          <p>请使用只读搜索密钥，而非 Admin 密钥。搜索密钥仅限读取操作，可以安全地打包进前端 JS 中。</p>
+        </div>
+      </div>
+
+      <h2>引入 UI 库</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>要实现即输即搜效果，无需自己从头开发。Algolia 的 <strong>InstantSearch</strong> 库已经处理好防抖、分面筛选、分页，并负责渲染结果。</p>
+          <p><strong>React：</strong></p>
+          <pre><code>npm install algoliasearch react-instantsearch</code></pre>
+          <pre><code>import { liteClient } from "algoliasearch/lite";
+import { InstantSearch, SearchBox, Hits } from "react-instantsearch";
+
+const searchClient = liteClient(
+  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID,
+  process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY
+);
+
+export function Search() {
+  return (
+    &lt;InstantSearch searchClient={searchClient} indexName="posts"&gt;
+      &lt;SearchBox /&gt;
+      &lt;Hits hitComponent={({ hit }) =&gt; &lt;div&gt;{hit.title}&lt;/div&gt;} /&gt;
+    &lt;/InstantSearch&gt;
+  );
+}</code></pre>
+          <p>其他框架版本：<a href="https://www.algolia.com/doc/guides/building-search-ui/getting-started/vue/" target="_blank" rel="noopener">Vue InstantSearch ↗</a>、<a href="https://www.algolia.com/doc/api-reference/widgets/js/" target="_blank" rel="noopener">原生 JS InstantSearch ↗</a>、<a href="https://docusaurus.io/docs/search" target="_blank" rel="noopener">Docusaurus DocSearch ↗</a>（开源文档免费使用）。</p>
+        </div>
+      </div>
+
+      <h2>分面筛选</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>若需要"按分类 / 标签 / 价格区间筛选结果"，需先将属性声明为分面字段：</p>
+          <pre><code>await client.setSettings({
+  indexName: "posts",
+  indexSettings: {
+    attributesForFaceting: ["tags", "author", "filterOnly(published)"],
+  },
+});</code></pre>
+          <p>然后在 InstantSearch 中使用：</p>
+          <pre><code>import { RefinementList, HierarchicalMenu } from "react-instantsearch";
+
+&lt;RefinementList attribute="tags" /&gt;
+&lt;RefinementList attribute="author" /&gt;</code></pre>
+          <p>这些组件会自动渲染复选框并应用筛选条件。<a href="https://www.algolia.com/doc/api-reference/widgets/refinement-list/react/" target="_blank" rel="noopener">RefinementList 文档 ↗</a>。</p>
+        </div>
+      </div>
+
+      <h2>自动同步数据库到 Algolia</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>你可能不希望手动推送每一条记录。常见的两种方案：</p>
+          <ul>
+            <li><strong>每次数据库写入时同步</strong>——数据库写入的同时调用 <code>saveObject</code>。简单直接，但会增加响应延迟。</li>
+            <li><strong>通过队列/后台任务异步同步</strong>——数据库写入触发一个事件；由 <a href="/zh/tutorials/background-jobs-with-inngest.html">Inngest 函数</a>或队列 worker 同步到 Algolia。解耦更彻底，能应对 Algolia 临时宕机。</li>
+            <li><strong>定期全量同步</strong>——每隔 N 分钟拉取所有变更记录并批量保存。最简单，存在小幅数据延迟。</li>
+          </ul>
+          <p>针对 Postgres，Algolia 提供了一个 <a href="https://www.algolia.com/doc/guides/sending-and-managing-data/send-and-update-your-data/connectors/postgresql/" target="_blank" rel="noopener">Postgres 连接器 ↗</a>，可自动处理同步（付费功能）。</p>
+        </div>
+      </div>
+
+      <h2>常见误区</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>记录体积过大</strong>——Algolia 有 10 KB / 100 KB 的单条记录限制（视套餐而定）。不要索引文章正文全文；应索引摘要和偏移量引用。</li>
+            <li><strong>索引所有字段会降低相关性</strong>——可搜索属性应该是精心挑选的子集。如果用户不会按 <code>author_bio</code> 搜索，就不要添加它，否则会稀释 title/body 的匹配权重。</li>
+            <li><strong>同步数据漂移</strong>——同步失败时数据库与 Algolia 会出现数据不一致。建议加入监控，定期核对记录数量。</li>
+            <li><strong>忘记在删除时同步</strong>——当数据库中的记录被删除时，必须同时调用 Algolia 的 <code>client.deleteObject()</code>。这一步容易遗漏，会导致"我明明删了那篇文章，搜索结果里还能看到"的问题。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>超出免费套餐后定价增长较快。</strong>Algolia 按搜索次数和记录数计费。免费套餐（10K 条记录、每月 10K 次搜索）已相当慷慨；Build 套餐起步价为每 1K 条额外记录 $0.40 / 每 1K 次额外搜索 $0.50。访问量中等的站点每月费用可能出乎意料地达到数百美元。<a href="https://www.algolia.com/pricing/" target="_blank" rel="noopener">Algolia 定价 ↗</a>。扩展前请仔细估算成本。
+      </div>
+
+      <h2>如果定价成问题，可考虑自托管替代方案</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>如果费用难以承受：</p>
+          <ul>
+            <li><strong><a href="https://www.meilisearch.com/" target="_blank" rel="noopener">Meilisearch ↗</a></strong>——开源，单一 Rust 二进制文件，自托管在 $10/月的 VPS 上即可支撑任意体量。也有云托管选项。</li>
+            <li><strong><a href="https://typesense.org/" target="_blank" rel="noopener">Typesense ↗</a></strong>——类似方案，开源 + 云托管两种选择。</li>
+            <li><strong>Postgres FTS</strong>——记录数 ≤ ~10 万条且需求简单时，<code>tsvector</code> + GIN 索引免费且够用。</li>
+          </ul>
+          <p>Meilisearch 和 Typesense 都提供兼容 Algolia 的 API，因此 InstantSearch UI 组件只需更换客户端即可直接使用。</p>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <ul>
+        <li><a href="https://www.algolia.com/doc/" target="_blank" rel="noopener">Algolia 文档 ↗</a></li>
+        <li><a href="https://www.algolia.com/doc/api-client/getting-started/install/javascript/" target="_blank" rel="noopener">JS API 客户端 ↗</a></li>
+        <li><a href="https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/react/" target="_blank" rel="noopener">React InstantSearch ↗</a></li>
+        <li><a href="https://www.algolia.com/doc/guides/managing-results/relevance-overview/" target="_blank" rel="noopener">排序与相关性 ↗</a></li>
+        <li><a href="https://www.algolia.com/doc/guides/security/api-keys/" target="_blank" rel="noopener">API 密钥 ↗</a></li>
+      </ul>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/set-up-supabase-database-and-auth.html" class="tutorial-next-card">
+            <h3>配置 Supabase（数据库 + 认证）</h3>
+            <p>作为数据主源；在写入时同步到 Algolia</p>
+          </a>
+          <a href="/zh/tutorials/background-jobs-with-inngest.html" class="tutorial-next-card">
+            <h3>使用 Inngest 处理后台任务</h3>
+            <p>异步同步数据库到 Algolia 的推荐模式</p>
+          </a>
+          <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h3>配置 Sentry 错误监控</h3>
+            <p>在同步失败导致搜索数据过时之前提前捕获问题</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速上线的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

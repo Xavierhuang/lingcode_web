@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>完成开发分支 — 合并、PR 或丢弃</title>
+  <meta name="description" content="测试通过不等于完成。使用 LingCode 逐步执行开发分支的收尾清单 — 选择合并策略、推送或创建 PR，或者在工作不值得保留时干净地放弃。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/finish-a-development-branch.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/finish-a-development-branch.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/finish-a-development-branch.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/finish-a-development-branch.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "完成开发分支 — 合并、PR 或丢弃",
+  "description": "\"所有测试通过\" 并不代表完成。只有当差异正是你所期望的、main 分支没有在你之下漂移、且集成路径符合项目约定时，分支才能干净落地。LingCode 执行收尾清单 — 并在正确答案是 \"丢掉它\" 时告诉你。",
+  "url": "https://lingcode.dev/zh/tutorials/finish-a-development-branch.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/finish-a-development-branch.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "推送前验证收尾清单",
+      "url": "https://lingcode.dev/zh/tutorials/finish-a-development-branch.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "选择集成路径",
+      "url": "https://lingcode.dev/zh/tutorials/finish-a-development-branch.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "创建与差异相符的 PR 描述",
+      "url": "https://lingcode.dev/zh/tutorials/finish-a-development-branch.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "合并后删除分支",
+      "url": "https://lingcode.dev/zh/tutorials/finish-a-development-branch.html#step-4"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "在 LingCode 中使用此功能",
+      "url": "https://lingcode.dev/zh/tutorials/finish-a-development-branch.html#step-5"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "完成开发分支",
+      "item": "https://lingcode.dev/zh/tutorials/finish-a-development-branch.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/finish-a-development-branch.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">原生 Mac IDE</a>
+      <span>/</span>
+      <span>完成开发分支</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>完成开发分支 — 合并、PR 或丢弃</h1>
+      <p class="intro">"所有测试通过"并不等于完成。只有当差异正是你所期望的、main 分支没有在你之下漂移、且集成路径符合项目约定时，分支才能干净落地。LingCode 执行收尾清单 — 并在正确答案是"丢掉它"时告诉你。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么"测试绿了就推"会让分支出问题</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>最简单的收尾流程是：本地测试通过，推送，开 PR，完事。但从测试绿到干净合并，有四件事经常出错：</p>
+          <ul>
+            <li><strong>main 已经前进了。</strong>你的分支落后了 N 个提交，而其中某个提交与你的修改产生了本地测试无法暴露的冲突。</li>
+            <li><strong>差异比意图更大。</strong>游离的打印语句、注释掉的代码、一个不相关的清理混入了重构。PR 描述与补丁不符。</li>
+            <li><strong>合并策略与仓库不匹配。</strong>只接受 squash 的仓库收到了 12 个提交的功能分支，或者只接受 rebase 的仓库收到了 merge commit。团队在合并时才发现问题。</li>
+            <li><strong>这段工作根本不该发布。</strong>有时正确的答案是"这个方案行不通，保留测试，删掉分支"。一旦 PR 打开、有人评论了，这个决定就更难做了。</li>
+          </ul>
+          <p>本教程中的技能为 LingCode 提供了明确的收尾协议：审查差异、与 main 同步、选择集成路径，以及在工作不值得发布时干净放弃。</p>
+        </div>
+      </div>
+
+      <h2>你需要什么</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong> — <a href="/LingCode-Installer.dmg" download>下载安装包</a>。</li>
+            <li><strong>一个测试通过、待集成的功能分支。</strong></li>
+            <li><strong>了解仓库的合并约定</strong> — squash、rebase 还是 merge commit。如果你不确定，LingCode 会从 <code>git log main</code> 推断。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>对照意图审查差异</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>在做任何其他事情之前，让 LingCode 将分支中的实际内容与分支本应完成的任务进行比对：</p>
+          <pre><code>Compare the branch diff against the original task. Run:
+- git diff main...HEAD
+- git log main..HEAD --oneline
+
+For each change, classify:
+- IN-SCOPE: matches the stated task.
+- DRIVE-BY: small unrelated fix or cleanup.
+- ACCIDENTAL: stray prints, commented-out code, dead imports,
+  unrelated formatting churn.
+
+Flag anything ACCIDENTAL for removal. Flag DRIVE-BY for a
+decision — keep, split into a separate branch, or revert.</code></pre>
+          <p>意外改动是最容易避免的审查意见。顺手修复的内容则需要判断 — 小的可以随行，真正的重构应该单独开 PR，让下一个看 <code>git log</code> 的人明白为什么。</p>
+        </div>
+      </div>
+
+      <h2>与 main 同步并重新运行测试</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>本地绿不等于集成后绿。让 LingCode 按仓库惯例将 main 并入分支，然后重新跑完整测试套件：</p>
+          <pre><code>1. git fetch origin
+2. If the repo rebases: git rebase origin/main
+   If the repo merges:  git merge origin/main
+   (Infer from `git log --merges main | head` — if main has merge
+    commits, this repo merges; if it's a flat line, it rebases.)
+3. Resolve conflicts. For each conflict, explain in 1-2 lines what
+   the conflict is and how you resolved it.
+4. Re-run the full test suite — not just the affected file.</code></pre>
+          <div class="warn-box">
+            <strong>如果冲突涉及逻辑而非仅导入或格式，请停下来询问。</strong>逻辑冲突是无声 bug 的温床。人眼检查解决后的代码块，比一次重跑后变绿更有价值。
+          </div>
+        </div>
+      </div>
+
+      <h2>推送前验证收尾清单</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>这是让"我完成了"的声明变得可验证的环节。让 LingCode 执行固定清单，并对每一项报告 PASS/FAIL：</p>
+          <pre><code>Run the closing checklist. For each item, report PASS / FAIL /
+N/A with one-line evidence:
+
+- Tests pass: full suite, post-rebase.
+- Linter clean: project's linter, not just LingCode's opinion.
+- Type-check clean: tsc / mypy / xcodebuild / etc.
+- No console.log / dbg! / print() debug noise.
+- No commented-out code.
+- No TODO that should have been done in this branch.
+- Diff matches the intent — re-run the IN-SCOPE / ACCIDENTAL
+  classification on the post-rebase diff.
+- Commit messages are imperative ("Add X", "Fix Y"), no WIP,
+  no fixup commits.
+- If the repo squashes: the PR title will be the merge commit
+  message — does it say what changed?
+
+Stop on first FAIL. Don't proceed to merge with anything red.</code></pre>
+          <p>"遇到第一个 FAIL 就停下"是铁律。忍不住带着警告合并的冲动，正是问题分支落地的方式。</p>
+        </div>
+      </div>
+
+      <h2>选择集成路径</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>从一个完成的分支出发，有三条合理的路径。请有意识地选择：</p>
+          <ul>
+            <li><strong>开 PR。</strong>团队仓库的默认选择。即使是单人项目，PR 视图也是最后一次自审的好界面。使用 <code>gh pr create</code>。</li>
+            <li><strong>直接推送到 main。</strong>单人项目、小改动、你已经自审过了。适合拼写修正、文档微调和紧急热修复 — 不适合功能开发。</li>
+            <li><strong>仅清理 — 不合并。</strong>工作为某个决策提供了信息，但代码本身不需要发布。把测试或笔记合入 main，删掉分支。</li>
+          </ul>
+          <p>让 LingCode 根据仓库历史推荐一条路径：</p>
+          <pre><code>Recommend the integration path. Consider:
+- Does main accept direct pushes from this user / role?
+- Does the repo require PRs (branch protection)?
+- Is this a single-author repo or a team?
+- Is the change risky (logic) or trivial (typo)?
+
+Then propose one path with a one-line justification.</code></pre>
+        </div>
+      </div>
+
+      <h2>创建与差异相符的 PR 描述</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>如果选择 PR 路径，描述应该反映补丁实际做了什么 — 而不是你在分支开始时的计划。让 LingCode 从最终差异起草，而不是从原始任务描述：</p>
+          <pre><code>Draft the PR body from the post-rebase diff, not from the
+original task description. Structure:
+
+## Summary
+1-3 bullets of what changed in the codebase, in plain language.
+
+## Why
+The user-visible reason or the problem this fixes. One paragraph.
+
+## Test plan
+Bulleted checklist of how to verify. Include the exact commands
+you ran locally.
+
+## Risk
+What could go wrong, if anything? Migration steps? Config flags?
+"N/A" if genuinely none.
+
+Title: imperative, under 70 characters, no trailing punctuation.</code></pre>
+          <p>"Why" 一节是大家最容易跳过、而审阅者最需要的部分。为什么现在做，为什么用这种方案，为什么不用显而易见的替代方案。</p>
+        </div>
+      </div>
+
+      <h2>"丢弃"路径</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>有时正确的答案就是丢掉这个分支。该技能让 LingCode 识别这些信号，并主动提出，而不是硬推：</p>
+          <pre><code>Recommend SCRAP if any of these hold:
+- The branch tried an approach the codebase clearly resists
+  (the diff fights existing abstractions in &gt;3 files).
+- A simpler approach became obvious mid-way and the branch
+  is now legacy thinking.
+- The feature was speculatively built and product changed
+  direction.
+- Tests pass but the code is structurally bad and rewriting
+  is cheaper than refactoring.
+
+If recommending SCRAP, identify what's worth salvaging:
+- Any tests written? They probably encode useful behavior.
+- Any docstrings or comments capturing decisions?
+- Any small utility extractions?
+
+Land the salvage as a tiny PR. Then delete the branch.</code></pre>
+          <p>带着干净的 salvage PR 丢弃一个分支不是失败 — 这是在不继承其错误的情况下，保留分支所学成果的最低成本方式。</p>
+          <div class="tip-box">
+            <strong>不要悄悄丢弃。</strong>如果这个分支来自一个工单，在工单上留下评论："尝试了这个方案，因为 X 放弃，这是 salvage PR。"未来的你会去找它的。
+          </div>
+        </div>
+      </div>
+
+      <h2>合并后删除分支</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>分支删除之前，收尾清单都不算完成。让 LingCode 来清理：</p>
+          <pre><code>After merge:
+- git checkout main
+- git pull origin main
+- git branch -d &lt;branch-name&gt;       # local
+- git push origin --delete &lt;branch&gt;  # remote, if not auto-deleted
+
+If `git branch -d` refuses because the branch isn't merged
+(common with squash-merge), verify the squashed commit is in
+main, then use `-D`. Don't `-D` without verification.</code></pre>
+          <p>过时的分支，是六个月后"那个实验去哪儿了"这类排查的起点。</p>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用此功能</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>收尾协议被打包成一个技能 — 将它放入你的技能文件夹，在测试通过后让 LingCode "完成这个分支"：</p>
+          <pre><code>---
+name: finishing-a-development-branch
+description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work. Triggers: 'tests pass, what now', 'wrap up this branch', 'merge vs PR', 'finish up', 'close this out', 'I'm done coding', 'ship it'. Actions: diff audit (IN-SCOPE/DRIVE-BY/ACCIDENTAL), sync with main, run closing checklist, choose integration path (PR / direct push / scrap), post-merge branch cleanup. Output: clean commit history + clear next step (PR opened, merge done, or branch deleted).
+---
+
+Walk a finished feature branch to a clean integration. Green
+tests are not done; the branch still needs to land.
+
+1. Audit the diff against intent. Classify each change as
+   IN-SCOPE / DRIVE-BY / ACCIDENTAL. Strip ACCIDENTAL.
+
+2. Sync with main. Rebase or merge based on the repo's
+   convention (infer from git log). Resolve conflicts and
+   re-run the full test suite.
+
+3. Run the closing checklist: tests, lint, type-check, no
+   debug noise, no commented-out code, commit messages clean,
+   diff matches intent. Stop on first FAIL.
+
+4. Pick an integration path: PR, direct push, or SCRAP. Justify
+   in one line based on repo history and risk.
+
+5. If PR: draft the body from the post-rebase diff (not the
+   original task). Summary + Why + Test plan + Risk.
+   Imperative title under 70 chars.
+
+6. If SCRAP: identify salvage (tests, decisions, utilities),
+   land them as a tiny PR, then delete the branch.
+
+7. Post-merge cleanup: pull main, delete local + remote
+   branches. Verify squash-merge before -D.
+
+Bail at any step rather than ship a broken branch.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/finishing-a-development-branch/SKILL.md</code> — 查看<a href="/zh/tutorials/install-a-skill.html">安装技能</a>了解确切位置及技能的发现机制。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/give-and-receive-code-review-with-lingcode.html" class="tutorial-next-card">
+            <h3>给出并接受代码审查</h3>
+            <p>PR 打开后，严格处理审阅者的反馈 — 验证、分类，在对方有误时据理力争</p>
+          </a>
+          <a href="/zh/tutorials/debug-systematically-with-lingcode.html" class="tutorial-next-card">
+            <h3>系统化调试</h3>
+            <p>当收尾清单暴露测试失败时，调试它，而不是掩盖它</p>
+          </a>
+          <a href="/zh/tutorials/migrate-a-flutter-app-to-native-with-lingcode.html" class="tutorial-next-card">
+            <h3>Flutter 迁移到原生</h3>
+            <p>一个使用 LingCode 进行大型重构的多阶段示例，最终以相同的收尾协议结束</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要发布产品的创始人和需要真实工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">隐私</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

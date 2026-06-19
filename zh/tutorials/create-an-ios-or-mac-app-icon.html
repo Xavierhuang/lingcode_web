@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>创建 iOS 或 Mac 应用图标 — LingCode 教程</title>
+  <meta name="description" content="现代 Xcode 只需要一张 1024×1024 的 PNG 图片，其余尺寸自动生成。本教程讲解单尺寸流程、导致构建被拒绝的 alpha 通道陷阱，以及如何让 AI 智能体替你完成这一切。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/create-an-ios-or-mac-app-icon.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/create-an-ios-or-mac-app-icon.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/create-an-ios-or-mac-app-icon.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605171400">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-17T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/create-an-ios-or-mac-app-icon.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "创建 iOS 或 Mac 应用图标",
+  "description": "应用图标曾经意味着要为每个设备像素尺寸导出十五张 PNG。现代 Xcode 只需要一张——1024×1024 的 PNG——并自动生成其余所有尺寸。本教程介绍如何让这张图片符合 App Store 上架要求、资源目录的使用流程，以及那个会让构建静默被拒的常见错误。",
+  "url": "https://lingcode.dev/zh/tutorials/create-an-ios-or-mac-app-icon.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-17",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/create-an-ios-or-mac-app-icon.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "创建 iOS 或 Mac 应用图标"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "创建 iOS 或 Mac 应用图标",
+      "item": "https://lingcode.dev/zh/tutorials/create-an-ios-or-mac-app-icon.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/create-an-ios-or-mac-app-icon.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">原生 Mac IDE</a>
+      <span>/</span>
+      <span>创建 iOS 或 Mac 应用图标</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-17</span>
+      </div>
+      <h1>创建 iOS 或 Mac 应用图标</h1>
+      <p class="intro">应用图标曾经意味着要为每个设备像素尺寸导出十五张 PNG。现代 Xcode 只需要一张——1024×1024 的 PNG——并自动生成其余所有尺寸。本教程介绍如何让这张图片符合 App Store 上架要求、资源目录的使用流程，以及那个会让构建在上传时静默被拒的常见错误。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>你可以用三句话让 AI 智能体替你完成这件事（"<em>给这个项目添加应用图标，使用 ~/Desktop/icon.png 作为源图片</em>"），通常一次就能成功。本教程存在的意义，是为了当出现问题时——通常是上传被拒——你需要了解资源目录实际期望的格式。一旦你理解了问题的本质，智能体的操作就不再是魔法了。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li>为什么现代 Xcode 只需要一张 1024×1024 的源图片</li>
+        <li><code>AppIcon.appiconset</code> 在磁盘上究竟是什么结构</li>
+        <li>图片的三个要求（sRGB、无 alpha 通道、正方形）以及各自的重要性</li>
+        <li>快速路径：LingCode 的<strong>应用图标生成器</strong>面板——在一个窗口内从提示词到图标集一步到位</li>
+        <li>对话路径：通过 Gemini 生成图片，再接入资源目录</li>
+        <li>两种失败模式及各自的排查方法</li>
+      </ul>
+
+      <h2>第一步：建立心智模型</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>资源目录是伪装成文件的文件夹</h3>
+          <p>当你在 Xcode 项目导航栏中看到 <code>Assets.xcassets</code> 时，它并非单个文件——而是磁盘上的一个目录。在其中，你添加的每一张"图片"都有自己的子目录，包含实际的 PNG 文件和一个小型 <code>Contents.json</code>，用于告知构建系统哪个文件对应哪种尺寸、缩放比例和设备类型（iPhone、iPad、Mac 等）。</p>
+          <p>对于应用图标，该目录命名为 <code>AppIcon.appiconset</code>。旧版流程中，它会包含约 15 张覆盖所有设备像素尺寸的 PNG。自 Xcode 14 起，现代流程支持"单一尺寸"模式：只需放入一张 1024×1024 的 PNG，工具链会在构建时自动生成每个较小的变体。你不需要交付 15 个文件——只需一个。</p>
+          <p>这正是"用这张图片作为应用图标"这类提示词对智能体如此奏效的根本原因——只需写入一个文件，编辑一个 <code>Contents.json</code>。</p>
+        </div>
+      </div>
+
+      <h2>第二步：准备源图片</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>三条规则，其中一条会导致构建被拒</h3>
+          <p>你的 1024×1024 源 PNG 需要满足三个条件：</p>
+          <ul>
+            <li><strong>精确为 1024×1024 像素，且为正方形。</strong>不能是 1023×1024，也不能是 2048×2048 缩小版。Xcode 会发出警告但仍会发布；App Store Connect 在上传时若发现不是正方形则会直接拒绝。</li>
+            <li><strong>sRGB 色彩空间。</strong>如果你从 Figma 或 Sketch 导出，几乎可以肯定已经是 sRGB。如果从印刷工具导出，可能是 Display P3 或 Adobe RGB——导入前请先转换，否则颜色在设备上会出现偏差。</li>
+            <li><strong>不含 alpha 通道。</strong>这是最隐蔽的问题。App Store Connect 会拒绝任何带有透明度的 iOS 图标——而且是在漫长的等待之后，在上传最后阶段才报错。请在保存前将图片合并到纯色背景上（通常是白色或品牌色）。</li>
+          </ul>
+          <p>另外：<strong>不要提前圆角化</strong>。iOS 和 macOS 会应用各自的圆角蒙版（不同平台、不同设备家族的圆角半径各有差异）。如果你交付一个已经圆角化的正方形，最终会得到一个"双重圆角"的效果，在所有设备上看起来都不对劲。请交付完整的正方形；操作系统会完成剩余的处理。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>alpha 通道被拒是最常见的发布阻断问题。</strong>典型症状：你上传到 App Store Connect，等待 10 分钟，收到一封邮件，内容是"<em>Invalid Asset — The app icon … can't contain alpha channels or transparencies</em>"。修复方法是合并图层：在"预览"中打开 → 导出 → 取消勾选"Alpha" → 保存 → 重新导入。或者在终端中执行：<code>sips -s format png --setProperty hasAlpha no icon.png --out icon-flat.png</code>。
+      </div>
+
+      <h2>第三步：快速路径——应用图标生成器（内置 AI）</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Mobile 菜单 → 应用图标生成器… → 输入提示词或粘贴图片 → 生成</h3>
+          <p>LingCode 提供了一个专用面板，可在一个窗口内完成整个流程——生成源图片、调整为所有必要尺寸、写入资源目录。从菜单栏选择 <strong>Mobile → App Icon Generator…</strong>。</p>
+          <p>你有两种方式提供源图片：</p>
+          <ul>
+            <li><strong>输入提示词</strong>：文本框支持自然语言输入（"<em>简约紫色闪电，扁平设计，白色背景</em>"），调用 LingCode 托管的图片生成后端生成 1024×1024 的 PNG。文本框上方的配额标记显示本月剩余的生成次数——免费版/Pro/Max-Pro 各有不同的上限。</li>
+            <li><strong>拖入主图片</strong>：如果你已经有来自 Figma、Midjourney、对话中 <code>generate_image</code> 工具或其他来源的 1024×1024 PNG，点击主图片槽位并选取文件即可。</li>
+          </ul>
+          <p>然后选择目标目录——iOS 槽位指向项目的 <code>Assets.xcassets/AppIcon.appiconset/</code>，Android 槽位指向 <code>app/src/main/res/</code>（关闭不需要发布的平台即可）。点击<strong>生成</strong>。面板会列出写入的所有文件，以便你确认输出是否落到了正确的文件夹中。</p>
+          <p>该面板底层使用 LingCode 内置的 <code>AppIconGeneratorService</code>——纯 Core Graphics 实现，无需外部工具。iOS 通道会生成包含所有必要尺寸的完整 <code>AppIcon.appiconset</code>；Android 通道会在每个密度分组下写入 <code>ic_launcher</code>、<code>ic_launcher_round</code> 和自适应 <code>ic_launcher_foreground</code>（详见 <a href="/zh/tutorials/create-an-android-adaptive-icon.html">Android 自适应图标</a>教程）。</p>
+        </div>
+      </div>
+
+      <h2>第四步：或者通过对话完成</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>如果你更倾向于在智能体对话中操作</h3>
+          <p>在项目中打开 Claude 对话，输入：</p>
+          <pre><code>Add an app icon to this project. Use ~/Desktop/icon.png as the source image.
+Use the modern single-size asset catalog flow (one 1024×1024 image).</code></pre>
+          <p>智能体会将文件复制到 <code>YourApp/Assets.xcassets/AppIcon.appiconset/icon.png</code>，并重写 <code>Contents.json</code> 以声明单个 1024×1024 的通用条目。两处修改都会显示在差异视图中，可以方便地撤销。</p>
+          <p>还没有源图片？对话本身接入了 Gemini 图像模型的图片生成工具。输入"<em>生成一个 1024×1024 的应用图标：深海军蓝背景上的金色几何太阳，扁平设计</em>"，智能体会将结果保存到 <code>&lt;project&gt;/assets/&lt;slug&gt;.png</code>，并在对话中内联引用，方便你迭代。此功能需要你自己的 Gemini API 密钥（设置 → API Keys → Gemini）。满意后，让智能体将其接入资源目录——或打开应用图标生成器面板并指向生成的文件。</p>
+          <p>验证方法：在 Xcode（或 LingCode 的资源浏览器）中打开 <code>Assets.xcassets</code>，点击 <strong>AppIcon</strong>。你应该看到图片显示在一个大的单一槽位中，而不是分散在设备专属槽位的网格里。这就确认了单一尺寸模式已开启。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>同一个项目中既有 iOS 又有 Mac？</strong>单张 1024×1024 图片对两者都适用——构建系统会合成各平台的变体。如果你想要平台专属的图标（Mac 和 iPhone 上显示不同的外观），可以让智能体将资源目录切换回多平台模式，并为每种 idiom 添加独立的源图片。在提示词中加上"<em>我希望 macOS 上使用不同的图标</em>"即可。
+      </div>
+
+      <h2>第五步：手动添加（了解自动化背后的流程）</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>需要手动操作时</h3>
+          <p>同样的流程，逐步点击完成。当某些设置发生偏移而差异不明显时非常有用。</p>
+          <ol>
+            <li>在 Xcode 中打开 <code>Assets.xcassets</code>。在左侧边栏选择 <strong>AppIcon</strong> 条目。</li>
+            <li>在右侧检查器（属性）中，将<strong>设备</strong>设置为 <em>iOS、iPadOS、macOS</em>（根据需要选择）。</li>
+            <li>开启<strong>单一尺寸</strong>（或"iOS Marketing"——取决于 Xcode 版本，二者含义相同）。</li>
+            <li>将你的 1024×1024 PNG 拖入出现的单一槽位。</li>
+            <li>构建并运行。确认图标出现在 Dock（Mac）或主屏幕（iOS 模拟器）中。</li>
+          </ol>
+          <p>如果槽位提示"<em>Image dimensions don't match expected size</em>"，说明源图片不是精确的 1024 正方形。如果提示 alpha 相关问题，请参见第二步的警告框。</p>
+        </div>
+      </div>
+
+      <h2>第六步：排查失败</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>两种失败模式，各有一个明显症状</h3>
+          <p>如果图标未出现或无法发布，几乎总是下面两种情况之一：</p>
+          <table>
+            <thead>
+              <tr><th>症状</th><th>原因</th><th>修复方法</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>构建并安装成功，但启动台显示通用灰色应用图标</td>
+                <td>资源目录中有图片，但项目构建设置未将 <code>AppIcon</code> 设为图标来源。</td>
+                <td>项目 Target → Build Settings → 搜索"<code>ASSETCATALOG_COMPILER_APPICON_NAME</code>"。值应为 <code>AppIcon</code>。若为空，设置它。</td>
+              </tr>
+              <tr>
+                <td>App Store Connect 上传被拒，提示"alpha channels or transparencies"</td>
+                <td>1024×1024 源 PNG 包含 alpha 通道——即使看起来完全不透明，通道本身就是问题所在。</td>
+                <td>参见第二步的警告框：用 <code>sips</code> 或"预览"的"取消勾选 Alpha"导出来合并图层，替换文件，归档并重新上传。</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>两种问题用智能体排查都只需 30 秒：将拒绝邮件或启动台症状粘贴到对话中，它会帮你检查 <code>Contents.json</code> 和构建设置。</p>
+        </div>
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/create-an-android-adaptive-icon.html" class="tutorial-next-card">
+            <h3>创建 Android 自适应图标</h3>
+            <p>Android 的对应流程——两个图层、安全区域以及各启动器的蒙版机制</p>
+          </a>
+          <a href="/zh/tutorials/create-a-custom-sf-symbol.html" class="tutorial-next-card">
+            <h3>创建自定义 SF Symbol</h3>
+            <p>应用图标是一张图片；应用内图标是 SF Symbols——这里介绍如何制作你自己的</p>
+          </a>
+          <a href="/zh/tutorials/first-time-ios-app-store-submission.html" class="tutorial-next-card">
+            <h3>将你的首个 iOS 版本提交到 App Store Connect</h3>
+            <p>图标就位后的完整提交流程</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/zh/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要发布产品的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

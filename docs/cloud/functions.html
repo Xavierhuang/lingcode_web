@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Functions — LingCode Cloud | Docs</title>
+  <meta name="description" content="Run server-side code on LingCode Cloud by slug: seven zero-deploy builtins (email, SMS, TTS, Stripe Checkout, HTTP fetch) plus custom TypeScript functions in a sandboxed Deno runtime. Invoke from the SDK or REST, read vault secrets, and respect the tier limits.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/functions.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/functions.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/functions.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/functions.html">
+  <meta property="og:title" content="Functions — LingCode Cloud">
+  <meta property="og:description" content="Seven zero-deploy builtins plus custom Deno-sandboxed functions. Invoke by slug from the SDK or REST, read vault secrets, and ship server-side logic the browser can't.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .fn-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; }
+    .fn-table th, .fn-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .fn-table th { font-family: "Geist Mono", monospace; font-size: 0.72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim); }
+    .fn-table td code { white-space: nowrap; }
+    .tutorial-next { margin-top: 40px; }
+    .tutorial-next-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Functions</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-intermediate">● Functions</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Functions</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Functions are server-side code you call by <strong>slug</strong>. Two kinds: <strong>seven builtins</strong> that are already live on every backend — set any required secret and invoke, no deploy — and <strong>custom functions</strong> you author in TypeScript and run in a sandboxed Deno runtime. Invoke either with <code>lingcode.functions.invoke(slug, body?)</code> or by POSTing to <code>/api/cloud/be/&lt;backend-id&gt;/functions/&lt;slug&gt;</code>. Use functions for what the browser can't safely do: hold a secret key, call a vendor API, run trusted logic.</p>
+      <p class="intro">A function exists for one reason: there are things the browser can't do safely. It can't hold a Stripe secret key. It can't be trusted to compute a price or grant access. It can't call a vendor API that needs a credential. Functions are the small slice of your app that runs on the server, behind your backend, where a secret stays a secret. This page covers both flavours — the builtins that ship turned on, and the custom functions you write yourself — and how to call them.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>Why functions exist</h2>
+      <p>Everything in the client SDK — <code>from('table').select()</code>, auth, storage — runs against a thin gateway with the public <strong>anon key</strong>, gatekept by row-level security. That covers most of an app. But some logic has to live somewhere the user can't see or tamper with:</p>
+      <ul>
+        <li><strong>A secret can't ship in the bundle.</strong> Your Stripe secret key, a vendor API key, an SMS auth token — these go in the backend's <a href="/docs/cloud/secrets.html">Secrets vault</a> and are only readable server-side, from a function.</li>
+        <li><strong>Trusted logic can't run client-side.</strong> Anything where the user deciding the answer is a problem — creating a Checkout Session, validating a coupon, calling a partner API — belongs on the server.</li>
+        <li><strong>The browser can't reach some hosts.</strong> CORS, credentials, and signing make many vendor calls impossible (or unsafe) from the page. A function makes the call for you.</li>
+      </ul>
+      <p>You reach a function by its <strong>slug</strong> — a short name. There are two ways to get one: use a <strong>builtin</strong> (already live, just set its secret) or write a <strong>custom function</strong> (your own TypeScript). Both are invoked exactly the same way.</p>
+
+      <h2>How to invoke (both kinds)</h2>
+      <p>From the SDK, call <code>functions.invoke</code> with the slug and an optional body. Like every SDK call it returns a <code>Result</code> — <code>{ data, error }</code> — so you never have to wrap it in try/catch:</p>
+      <pre><code>const { data, error } = await lingcode.functions.invoke('echo', {
+  hello: 'world'
+});
+// data -> { hello: 'world', timestamp: '2026-06-11T…' }</code></pre>
+      <p>Or call it over REST — handy from a server, a curl smoke test, or a non-JS client. POST to the function endpoint with an <code>{ input }</code> body, authorized by the anon key or a signed-in user's token:</p>
+      <pre><code>POST https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/functions/&lt;slug&gt;
+Authorization: Bearer &lt;anon-key-or-user-token&gt;
+Content-Type: application/json
+
+{ "input": { "hello": "world" } }</code></pre>
+
+      <div class="info-box">
+        <h3><code>unknown_function</code> means the name is wrong</h3>
+        <p>If an invoke returns <code>unknown_function</code>, the <strong>slug</strong> is misspelled or that function doesn't exist on this backend — it does <em>not</em> mean functions are unavailable. Check the slug against the builtins below, or against the slug you gave your custom function. (For the one case where the runtime itself is down, see <a href="#availability">Availability</a> — that surfaces as <code>503 functions_runtime_unavailable</code>, and only for custom functions.)</p>
+      </div>
+
+      <h2>The seven builtins</h2>
+      <p>These are live on every backend with <strong>no deploy step</strong>. For each one you only need to set its required secret (if any) in the <a href="/docs/cloud/secrets.html">Secrets vault</a>, then invoke it by slug. Start with <code>echo</code> to confirm your wiring works.</p>
+
+      <table class="fn-table">
+        <thead>
+          <tr><th>Slug</th><th>What it does</th><th>Input</th><th>Required secrets</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>echo</code></td>
+            <td>Returns your input plus a timestamp. Use it to smoke-test that invoke works.</td>
+            <td>anything</td>
+            <td>none</td>
+          </tr>
+          <tr>
+            <td><code>send-email</code></td>
+            <td>Sends email via LingCode's managed sender.</td>
+            <td><code>{ to, subject, html }</code></td>
+            <td>none</td>
+          </tr>
+          <tr>
+            <td><code>elevenlabs-tts</code></td>
+            <td>Text-to-speech. Returns base64 audio.</td>
+            <td><code>{ text, voice_id?, model_id? }</code> → <code>{ audio_base64, content_type }</code></td>
+            <td><code>ELEVENLABS_API_KEY</code></td>
+          </tr>
+          <tr>
+            <td><code>twilio-sms</code></td>
+            <td>Sends an SMS via Twilio.</td>
+            <td><code>{ to, body, from?, messaging_service_sid? }</code></td>
+            <td><code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, plus one of <code>TWILIO_FROM</code> or <code>TWILIO_MESSAGING_SERVICE_SID</code></td>
+          </tr>
+          <tr>
+            <td><code>resend-byo</code></td>
+            <td>Sends email via your own Resend account.</td>
+            <td><code>{ from, to, subject, html?, text? }</code></td>
+            <td><code>RESEND_API_KEY</code></td>
+          </tr>
+          <tr>
+            <td><code>stripe-checkout</code></td>
+            <td>Creates a Stripe Checkout Session.</td>
+            <td><code>{ price_id, success_url, cancel_url, mode?, quantity?, customer_email?, metadata? }</code> → <code>{ id, url }</code></td>
+            <td><code>STRIPE_SECRET_KEY</code></td>
+          </tr>
+          <tr>
+            <td><code>http-fetch</code></td>
+            <td>Makes an outbound HTTPS request to an allow-listed host.</td>
+            <td><code>{ url, method?, headers?, body? }</code></td>
+            <td>none of its own — but header/body strings may reference vault secrets as <code>{{SECRET_NAME}}</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Smoke-test with <code>echo</code></h3>
+      <p>The very first thing to run on a new backend. If this returns your input back, invoke is wired and your URL + key are correct.</p>
+      <pre><code>const { data } = await lingcode.functions.invoke('echo', { ping: 1 });
+console.log(data); // { ping: 1, timestamp: '2026-06-11T…' }</code></pre>
+
+      <h3>Create a Stripe Checkout Session</h3>
+      <p>Set <code>STRIPE_SECRET_KEY</code> in the <a href="/docs/cloud/secrets.html">Secrets vault</a> first — it never touches the browser. Then call the builtin and redirect the user to the returned URL:</p>
+      <pre><code>const { data, error } = await lingcode.functions.invoke('stripe-checkout', {
+  price_id:    'price_123',
+  success_url: 'https://yourapp.com/thanks',
+  cancel_url:  'https://yourapp.com/pricing',
+  mode:        'subscription'
+});
+if (error) throw error;
+window.location.href = data.url; // hosted Stripe Checkout</code></pre>
+
+      <div class="info-box">
+        <h3><code>http-fetch</code>: secret-aware, host-restricted</h3>
+        <p><code>http-fetch</code> has no secret of its own, but any <code>{{SECRET_NAME}}</code> token in a header or body string is substituted from the vault server-side — so you can call an API that needs a bearer token without the token ever reaching the client. The destination host must be on the backend's <strong>fetch-hosts allow-list</strong>; calls to hosts not on the list are refused. This is the deliberate, locked-down way to call third-party APIs without writing any code. See the tutorial <a href="/tutorials/call-external-apis-from-your-backend.html">Call external APIs from your backend</a>.</p>
+      </div>
+
+      <h2>Custom functions</h2>
+      <p>When no builtin fits, write your own. You author custom functions in the Cloud console / IDE — you give the function a <strong>slug</strong> and its <strong>TypeScript source</strong> (this is a console authoring step, not something an agent tool does for you). They run in a sandboxed Deno runtime, invoked by the same <code>functions.invoke(slug, body?)</code> call as the builtins.</p>
+
+      <h3>The contract</h3>
+      <p>Your source must <code>export default</code> a handler. Whatever you <code>return</code> becomes the invoke result's <code>data</code>. TypeScript is supported natively — Deno runs it directly, no build step:</p>
+      <pre><code>export default async function handler(input, ctx) {
+  // ctx.secrets.MY_KEY  — your vault secrets, server-side only
+  // ctx.backendId       — this backend's id
+  // ctx.gateway         — the backend's own data-API base URL
+  return { ok: true };   // becomes the invoke result's `data`
+}</code></pre>
+      <p>The second argument <code>ctx</code> is your server-side context:</p>
+      <pre><code>ctx = {
+  secrets:   { /* every secret set in the vault, by name */ },
+  backendId: string,
+  gateway:   string   // call your own data API through this
+}</code></pre>
+
+      <h3>A small custom function</h3>
+      <p>Reads a secret from the vault and returns JSON. The secret never leaves the server:</p>
+      <pre><code>export default async function handler(input, ctx) {
+  const key = ctx.secrets.WEATHER_API_KEY;
+  const city = input.city ?? 'NYC';
+  const res = await fetch(
+    `https://api.example.com/weather?city=${city}&key=${key}`
+  );
+  const json = await res.json();
+  return { city, tempC: json.temp_c };
+}</code></pre>
+      <p>Invoke it from the client exactly like a builtin — by its slug:</p>
+      <pre><code>const { data, error } = await lingcode.functions.invoke('get-weather', {
+  city: 'Tokyo'
+});
+if (error) throw error;
+console.log(data.tempC);</code></pre>
+
+      <h3>The sandbox</h3>
+      <p>Custom functions run in Deno with <strong>deny-by-default</strong> permissions. This is a feature, not a restriction to fight:</p>
+      <ul>
+        <li><strong>No filesystem, no environment, no subprocesses, no FFI.</strong> A function can't read disk, spawn processes, or load native code.</li>
+        <li><strong>The only network it can reach is the backend's own gateway</strong> (<code>ctx.gateway</code>). A function can call your data API — but it can't exfiltrate to arbitrary hosts. (Need to reach a vendor? Use the <code>http-fetch</code> builtin's allow-list, or have your function call back through the gateway.)</li>
+        <li><strong>Memory is capped at 128 MB.</strong></li>
+      </ul>
+
+      <h3>Limits</h3>
+      <table class="fn-table">
+        <thead>
+          <tr><th>Limit</th><th>free</th><th>pro</th><th>max_pro</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Timeout (wall-clock, SIGKILL past it)</td><td>3s</td><td>10s</td><td>30s</td></tr>
+          <tr><td>Custom functions (<code>maxFunctions</code>)</td><td>2</td><td>10</td><td>50</td></tr>
+          <tr><td>Source size</td><td colspan="3">up to 256 KB</td></tr>
+          <tr><td>Memory</td><td colspan="3">128 MB</td></tr>
+        </tbody>
+      </table>
+      <p>Functions are <strong>short-lived</strong>. Past the wall-clock timeout the process is SIGKILLed — there's no graceful extension. Don't put anything that runs longer than ~30 seconds in a function.</p>
+
+      <h2 id="availability">Availability</h2>
+      <p>Custom functions need the Deno runtime, which <strong>is installed and live in production</strong> — custom functions work today. If a deployment ever lacks the runtime, custom invokes return <code>503 functions_runtime_unavailable</code> while the <strong>builtins keep working</strong> (they don't depend on the Deno sandbox). So a 503 on a custom function is a runtime-availability signal; a builtin failing is something else. And remember — <code>unknown_function</code> is always a wrong-slug error, never an availability one.</p>
+
+      <div class="warn-box">
+        <strong>What functions are NOT for.</strong> No long-running processes, no background queues, no persistent WebSocket servers, and nothing over ~30 seconds — those belong in a <a href="/docs/cloud/hosting.html">hosted Worker app</a>, not a function. One honest specific: a <strong>Stripe webhook handler</strong> that needs raw-body signature verification is <em>not</em> one of the builtins and is awkward to express as a short custom function — put it in your hosted app's own route (a Worker/SSR route) instead. The <code>stripe-checkout</code> builtin only <em>creates</em> Checkout Sessions; it does not receive webhooks.
+      </div>
+
+      <div class="tutorial-next">
+        <h2>What's next</h2>
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/secrets.html">
+            <span class="card-eyebrow">Security</span>
+            <h3>Secrets vault →</h3>
+            <p>Set the vendor keys your functions read — Stripe, Twilio, ElevenLabs, Resend — encrypted and server-side only.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/hosting.html">
+            <span class="card-eyebrow">Deploy</span>
+            <h3>App hosting →</h3>
+            <p>Where long-running logic, background work, and webhook routes belong — full-stack Worker/SSR apps.</p>
+          </a>
+          <a class="tutorial-next-card" href="/tutorials/call-external-apis-from-your-backend.html">
+            <span class="card-eyebrow">Tutorial</span>
+            <h3>Call external APIs →</h3>
+            <p>Use <code>http-fetch</code> and the fetch-hosts allow-list to reach a vendor API with a vault secret, end-to-end.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

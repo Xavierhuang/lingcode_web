@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Realtime — subscribe to row changes over SSE | LingCode Cloud Docs</title>
+  <meta name="description" content="LingCode Cloud Realtime lets your UI react to database changes the instant they happen. Subscribe to a table over RLS-filtered Server-Sent Events and live-tail INSERT, UPDATE, and DELETE — no polling.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/realtime.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/realtime.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/realtime.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/realtime.html">
+  <meta property="og:title" content="LingCode Cloud Realtime">
+  <meta property="og:description" content="Subscribe to row changes over RLS-filtered Server-Sent Events — live-tail INSERT, UPDATE, and DELETE without polling.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .tutorial-next-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+    .tutorial-next-grid a { display: block; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); text-decoration: none; transition: border-color .15s ease, transform .15s ease; }
+    .tutorial-next-grid a:hover { border-color: var(--signal); transform: translateY(-2px); }
+    .tutorial-next-grid h4 { margin: 0 0 6px; font-size: 0.98rem; color: var(--text); }
+    .tutorial-next-grid p { margin: 0; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Realtime</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Live</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Realtime</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Realtime lets your UI react to database changes the instant they happen instead of polling. Subscribe to a table and you get an event whenever a row is inserted, updated, or deleted. It's delivered over <strong>Server-Sent Events</strong> and it's <strong>row-level-security filtered</strong> — a signed-in user only receives the rows they're allowed to see. One call: <code>lingcode.from('table').subscribe(onChange)</code>, which returns an unsubscribe function you call on teardown.</p>
+      <p class="intro">Most apps fake "live" with a timer: re-fetch every few seconds and hope nothing important happened in between. That's wasteful when nothing changed and laggy when something did. Realtime flips it — the server pushes you the row the moment it changes, so your chat, dashboard, or shared list updates the instant the write lands, and stays quiet otherwise. This page covers why you'd use it, the SDK, a complete example, and what's happening under the hood.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>Why realtime instead of polling</h2>
+      <p>Polling trades freshness against load: poll often and you hammer the backend for mostly-unchanged data; poll rarely and your UI feels stale. Realtime removes the trade. The subscription holds an open stream, and the server sends you a small event <em>only</em> when a row you can see actually changes. Reach for it whenever the screen should reflect what other people (or other tabs, or a background job) just did:</p>
+      <ul>
+        <li><strong>Chat</strong> — live-tail new messages as they're inserted.</li>
+        <li><strong>Presence-style UIs</strong> — show who's online or active by subscribing to a status table.</li>
+        <li><strong>Live dashboards</strong> — counters and feeds that update as the underlying rows move.</li>
+        <li><strong>Collaborative lists</strong> — todos, kanban cards, and docs where two people edit the same data.</li>
+      </ul>
+      <p>Realtime reflects the <em>same data your queries return</em> — it's not a separate copy. So the natural pattern is to combine an initial <code>.select()</code> to load history with a <code>.subscribe()</code> to live-tail everything after.</p>
+
+      <h2>The SDK</h2>
+      <p>One method on the table builder:</p>
+      <pre><code>client.from('table').subscribe(onChange, onError?) // → unsubscribe</code></pre>
+      <p>Your <code>onChange</code> callback receives a single <strong>event</strong> object each time a row changes:</p>
+      <pre><code>{
+  table: string,                          // which table the change came from
+  type: "INSERT" | "UPDATE" | "DELETE",   // what happened
+  row: object                             // the affected row
+}</code></pre>
+      <p>The return value of <code>subscribe</code> is an <strong>unsubscribe function</strong>. Call it when you're done — typically on component unmount — to close the stream. Keeping the handle and calling it is the one rule that matters; forget it and you leak open streams.</p>
+      <pre><code>const off = lingcode.from('messages').subscribe(({ type, row }) =&gt; {
+  if (type === 'INSERT') appendMessage(row);
+});
+
+// later, on teardown:
+off();</code></pre>
+
+      <div class="info-box">
+        <h3>How the filtering works</h3>
+        <p>Every change is re-checked against the subscriber's permissions <em>before</em> it's delivered, so users never receive rows they couldn't read with a normal query — the same row-level security that gates your <code>.select()</code> gates your subscription. Because a deleted row is already gone, <code>DELETE</code> events fall back to a best-effort ownership check. And very large rows — near the database's notification size limit (~8&nbsp;KB) — are delivered as a lightweight "something changed, refetch" signal rather than the full row. Be ready for that: if a change arrives without a full <code>row</code> payload, re-query to get the current state.</p>
+      </div>
+
+      <h2>A complete example</h2>
+      <p>Here's the whole loop for a chat view: load the recent history once with <code>.select()</code>, then subscribe to live-append new messages, then unsubscribe on teardown. Inside <code>/try</code> and the Mac preview, <code>lingcode</code> already exists; in your own app, create the client first (see the <a href="/docs/cloud/api-reference.html">API reference</a>).</p>
+      <pre><code>// 1. Load history.
+const { data: history } = await lingcode
+  .from('messages')
+  .order('created_at', { ascending: true })
+  .limit(100)
+  .select();
+
+for (const row of history) appendMessage(row);
+
+// 2. Live-tail everything after.
+const off = lingcode.from('messages').subscribe(
+  ({ type, row }) =&gt; {
+    if (!row) { reloadMessages(); return; } // large-row "refetch" signal
+    if (type === 'INSERT') appendMessage(row);
+    if (type === 'UPDATE') replaceMessage(row);
+    if (type === 'DELETE') removeMessage(row);
+  },
+  (err) =&gt; console.error('realtime stream error', err)
+);
+
+// 3. On teardown (e.g. component unmount), close the stream.
+function teardown() {
+  off();
+}</code></pre>
+      <p>That's the canonical shape: an initial read for state, a subscription for the live tail, and an unsubscribe handle you actually call.</p>
+
+      <h2>Under the hood (REST)</h2>
+      <p>The SDK's <code>subscribe</code> opens an SSE connection to one endpoint:</p>
+      <pre><code>GET https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/realtime</code></pre>
+      <p>It's a Server-Sent Events stream — the response is <code>Content-Type: text/event-stream</code>. Authenticate with your <strong>anon key</strong> or a signed-in <strong>user token</strong> (the same credential you use for queries; it's what scopes the RLS filtering). An optional query parameter narrows which tables you hear about:</p>
+      <pre><code>GET /api/cloud/be/&lt;backend-id&gt;/realtime?table=messages,presence</code></pre>
+      <p>The <code>?table=</code> filter is comma-separated and limits the stream to those tables. Each change arrives as an SSE <code>change</code> event:</p>
+      <pre><code>event: change
+data: {"table":"messages","type":"INSERT","row":{"id":42,"body":"hi"}}</code></pre>
+      <p>The stream also sends a <strong>heartbeat about every 25&nbsp;seconds</strong> to keep the connection alive through proxies and idle timeouts. The SDK handles all of this for you — the endpoint is here so you can see exactly what the subscription is doing, or consume it directly from a non-JS client.</p>
+
+      <h2>What realtime is — and is not</h2>
+      <p>Realtime streams <strong>row changes from your tables</strong>. That's the whole surface. It is deliberately <em>not</em>:</p>
+      <ul>
+        <li><strong>Not a general pub/sub or broadcast bus.</strong> There's no "publish an arbitrary message to a channel" primitive.</li>
+        <li><strong>Not a presence service.</strong> There's no built-in "who's connected" feed.</li>
+      </ul>
+      <p>The good news is you rarely need those as separate systems. For arbitrary server&rarr;client messaging, <strong>write to a table and subscribe to it</strong> — insert a row to send, and every subscriber gets the change. The same trick gives you presence: keep a <code>presence</code> table, write a heartbeat row, and subscribe to it.</p>
+
+      <div class="warn-box">
+        <strong>Always keep the unsubscribe handle and call it.</strong> <code>subscribe</code> hands you a function for a reason — call it when the view goes away. An unclosed subscription is an open stream that keeps consuming a connection. In component frameworks, return <code>off</code> from your effect's cleanup; in plain JS, call it in your teardown path.
+      </div>
+
+      <div class="tutorial-next">
+        <h2>What's next</h2>
+        <div class="tutorial-next-grid">
+          <a href="/docs/cloud/database.html">
+            <h4>Database →</h4>
+            <p>Tables, the chainable query builder, migrations, and RLS — the data your subscriptions reflect.</p>
+          </a>
+          <a href="/docs/cloud/auth.html">
+            <h4>Authentication →</h4>
+            <p>Sign users in so their user token scopes realtime to only the rows they're allowed to see.</p>
+          </a>
+          <a href="/docs/cloud/api-reference.html">
+            <h4>API reference →</h4>
+            <p>The full SDK surface and every <code>/api/cloud/be/&lt;id&gt;/…</code> REST endpoint, with shapes.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

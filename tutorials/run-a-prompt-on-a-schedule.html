@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I run a LingCode prompt on a schedule? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Two different time-shifting tools, two different use cases. /loop runs locally on an interval; /schedule runs as a remote cron-style routine. Picking the wrong one means burning local context or paying for unnecessary cloud minutes.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/run-a-prompt-on-a-schedule.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/run-a-prompt-on-a-schedule.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/run-a-prompt-on-a-schedule.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/run-a-prompt-on-a-schedule.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Run a prompt on a schedule — /loop vs /schedule",
+  "description": "LingCode ships two time-shifting tools that look similar and are not. /loop runs locally on an interval — \"check the deploy every 5 minutes.\" /schedule runs as a remote routine on cron — \"every morning at 8am, review the overnight PRs.\" Picking the wrong one means burning your lo",
+  "url": "https://lingcode.dev/tutorials/run-a-prompt-on-a-schedule.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/run-a-prompt-on-a-schedule.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Run a prompt on a schedule — /loop vs /schedule"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Run a prompt on a schedule",
+      "item": "https://lingcode.dev/tutorials/run-a-prompt-on-a-schedule.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/run-a-prompt-on-a-schedule.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Run a prompt on a schedule</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>How do I run a LingCode prompt on a schedule?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> <code>/loop 5m /check-deploys</code> runs a prompt every 5 minutes <em>in your current session</em>. <code>/schedule</code> creates a cron-style remote routine that runs on Anthropic's infrastructure when you're offline. Pick local /loop for polling, remote /schedule for background work.</p>
+      <p class="intro">LingCode ships two time-shifting tools that look similar and are not. <code>/loop</code> runs locally on an interval — "check the deploy every 5 minutes." <code>/schedule</code> runs as a remote routine on cron — "every morning at 8am, review the overnight PRs." Picking the wrong one means burning your local session context, or paying for cloud minutes you didn't need.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Two tools, two problems</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>"Run a prompt repeatedly" is two different needs disguised as one:</p>
+          <ul>
+            <li><strong>"While I'm working, keep doing this in the background."</strong> You're at your desk, LingCode should poll something every few minutes and tell you when it changes. The work has to share your session — same files, same git state, same chat history. This is <code>/loop</code>.</li>
+            <li><strong>"While I'm asleep or on vacation, do this on my behalf."</strong> A task runs without you present, on a wall-clock schedule, possibly daily for months. It has to survive your laptop being closed. This is <code>/schedule</code>.</li>
+          </ul>
+          <p>Confusing these is expensive in both directions. A scheduled task running on your laptop dies when the lid closes. A looped task running in the cloud bills you for compute while you're sitting there watching.</p>
+        </div>
+      </div>
+
+      <h2>What /loop is</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p><code>/loop</code> runs a prompt or slash command on a recurring interval inside your current LingCode session. The session stays open; the work happens locally.</p>
+          <pre><code># Run /check-deploy every 5 minutes.
+/loop 5m /check-deploy
+
+# Run a freeform prompt every 30 seconds.
+/loop 30s Check if the test suite is still green and ping me if not.
+
+# Self-paced — LingCode decides when to re-run based on context.
+/loop /watch-the-CI-and-summarize</code></pre>
+          <p>What you get:</p>
+          <ul>
+            <li><strong>Same files, same git state.</strong> The loop runs in your project directory. If a file changed since the last iteration, the next iteration sees it.</li>
+            <li><strong>Same chat history.</strong> Each iteration sees what the previous ones said. The loop can build on prior turns — "this is the third time the build failed for the same reason, alerting you."</li>
+            <li><strong>Stops when you stop it.</strong> Close the tab, quit LingCode, or type "stop the loop" — it ends. No external cleanup required.</li>
+          </ul>
+          <div class="tip-box">
+            <strong>Omitting the interval is intentional.</strong> <code>/loop /foo</code> with no time argument lets LingCode self-pace — it re-runs when it judges there's reason to, not on a fixed clock. Good for "watch this thing until it's done" tasks where polling at a fixed rate would be wasteful.
+          </div>
+        </div>
+      </div>
+
+      <h2>What /schedule is</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p><code>/schedule</code> creates a remote routine that runs on a cron schedule. It executes on LingCode's servers, not your machine. Your laptop can be closed; the routine still fires.</p>
+          <pre><code># Run a routine every weekday at 8am.
+/schedule create "Morning PR triage" "0 8 * * 1-5" \
+  "Review every PR opened in the last 24h. Post a summary to
+   #engineering in Slack with: count, blockers, anything that
+   looks urgent."
+
+# One-time scheduled run.
+/schedule once "2026-05-25 09:00" \
+  "Email me a summary of last week's customer support tickets."
+
+# List, update, delete.
+/schedule list
+/schedule run &lt;id&gt;        # fire it now, manually
+/schedule delete &lt;id&gt;</code></pre>
+          <p>What you get:</p>
+          <ul>
+            <li><strong>Survives your laptop being off.</strong> Routines run in the cloud on their schedule, regardless of your local state.</li>
+            <li><strong>Fresh context every run.</strong> Each fire is a clean slate — no chat history, no leftover local files. The routine has to be self-contained.</li>
+            <li><strong>Bills cloud compute.</strong> Each run costs you. Cheap for daily routines; expensive if you confuse it with <code>/loop</code> and set it to fire every 30 seconds.</li>
+            <li><strong>Persists across sessions.</strong> Routines exist as named entities. List them, edit them, delete them — they're not tied to a chat window.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>The picker — which one for which job</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Three questions decide:</p>
+          <ul>
+            <li><strong>Do I need to be present?</strong> If yes (or "doesn't matter"), <code>/loop</code> is fine. If no (must run while I'm offline), <code>/schedule</code>.</li>
+            <li><strong>Does it need access to my local files or git state?</strong> If yes, <code>/loop</code>. If no (all data lives in APIs, Slack, email, the cloud), <code>/schedule</code> is cleaner.</li>
+            <li><strong>How often?</strong> If &gt; once per minute, <code>/loop</code> — paying for cloud cycles on sub-minute schedules is wasteful. If &lt;= a few times per day, <code>/schedule</code> — running a local loop for 24 hours just to fire once is wasteful in the other direction.</li>
+          </ul>
+          <div class="warn-box">
+            <strong>The trap:</strong> "Every 5 minutes review my PRs" sounds like a cron job. But if you only care while you're at your desk, <code>/loop 5m</code> is right — closing the laptop stops it, and that's the desired behavior. <code>/schedule</code> would fire at 2am when you don't care.
+          </div>
+        </div>
+      </div>
+
+      <h2>Worked example — local polling with /loop</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>You're shipping a feature behind a feature flag, and you want LingCode to watch the rollout dashboard while you do something else:</p>
+          <pre><code>/loop 2m Check the error rate on the dashboard.json file in
+this repo (re-fetched by my polling script). If the 5xx rate
+goes above 1%, immediately alert me with the failing endpoint.
+Otherwise summarize the trend in one sentence.</code></pre>
+          <p>This is the right tool because:</p>
+          <ul>
+            <li>You're present — the loop running while you're in another tab is fine.</li>
+            <li>It reads a local file (<code>dashboard.json</code> in the repo) — needs filesystem access.</li>
+            <li>2-minute cadence — too fast for cloud cron, perfect for a local loop.</li>
+            <li>Each iteration builds on the prior — "the rate has been climbing for three checks in a row" is information the loop accumulates.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Worked example — overnight routine with /schedule</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>You want a digest of every PR opened overnight, in Slack, before you sit down with coffee:</p>
+          <pre><code>/schedule create "Morning PR digest" "0 8 * * 1-5" \
+  "List all PRs opened in the org repo between 6pm yesterday and
+   8am today. For each, summarize: title, author, files touched,
+   reviewers requested, whether CI is green. Post the digest to
+   #engineering. If any PR is from an external contributor, flag
+   it at the top."</code></pre>
+          <p>This is the right tool because:</p>
+          <ul>
+            <li>You're not present — fires while you're asleep.</li>
+            <li>No local file access needed — pulls from GitHub API, posts to Slack API.</li>
+            <li>Weekday-morning cadence — once per day, exactly the cron sweet spot.</li>
+            <li>Each run is independent — no need to know what yesterday's digest said.</li>
+          </ul>
+          <div class="tip-box">
+            <strong>Routines need credentials to talk to APIs.</strong> Configure GitHub and Slack tokens in your LingCode account before creating the routine, or it'll fail silently on its first fire. Test the routine manually with <code>/schedule run &lt;id&gt;</code> before trusting the schedule.
+          </div>
+        </div>
+      </div>
+
+      <h2>Mixing them — local watch that escalates to a scheduled report</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>The two tools compose. A pattern that works for production monitoring:</p>
+          <ul>
+            <li><strong><code>/loop 1m</code> while shipping</strong> — local, fast, watches the deploy and tells you instantly when something breaks. Stops the moment you close the laptop.</li>
+            <li><strong><code>/schedule</code> daily at 6pm</strong> — remote, generates a "today's deploys" report into your team channel. Runs whether or not you were watching during the day.</li>
+          </ul>
+          <p>The loop catches problems in real time; the schedule produces the artifact you'll read tomorrow. Different windows of attention.</p>
+        </div>
+      </div>
+
+      <h2>Stopping things</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Cleanup is where confused configs become billing surprises:</p>
+          <ul>
+            <li><strong>Stop a loop:</strong> type "stop the loop" in chat, or close the tab. Loops are session-local; quitting LingCode kills them.</li>
+            <li><strong>Stop a routine:</strong> <code>/schedule list</code> to see your routines, then <code>/schedule delete &lt;id&gt;</code>. They keep firing until you delete them. A forgotten routine firing every 5 minutes for a month is a real bill.</li>
+          </ul>
+          <div class="warn-box">
+            <strong>Audit your routines monthly.</strong> Run <code>/schedule list</code> and delete anything you don't recognize or no longer want. Scheduled compute is the easiest cost to leak.
+          </div>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Package the picker as a skill so LingCode reaches for the right tool the first time:</p>
+          <pre><code>---
+name: schedule-or-loop
+description: Run a prompt or slash command on a recurring schedule. Two distinct tools: /loop runs locally on an interval, session-bound, fast cadence ('check the deploy every 5 minutes'). /schedule runs as a remote cron-style routine, persistent, survives laptop close ('every morning at 8am, review overnight PRs'). Triggers: 'recurring task', 'check every N minutes', 'cron job for Claude Code', 'run on a schedule', 'daily routine', 'while I'm asleep', 'set up reminder'. Actions: /loop for in-session polling, /schedule for cloud-cron tasks, list/run/delete routines. Pick by: session-bound vs survives-laptop-closed, fast-iteration vs persistent-recurring.
+---
+
+When the user asks to run a prompt repeatedly, decide between
+/loop and /schedule with three questions:
+
+1. Does the task need to keep running while the user is offline /
+   laptop closed? If yes → /schedule. If no → /loop is fine.
+
+2. Does the task need local files or git state? If yes → /loop.
+   If no (data lives in APIs, Slack, email) → /schedule is
+   cleaner.
+
+3. How often? Sub-minute or every few minutes → /loop. Once a day
+   or less → /schedule. Anything in between, pick by question 1.
+
+/loop usage:
+- /loop &lt;interval&gt; &lt;prompt-or-slash-command&gt;
+- /loop &lt;prompt&gt;  (no interval = self-paced)
+- Shares session: same files, same chat history.
+- Stops on session close or "stop the loop".
+
+/schedule usage:
+- /schedule create "&lt;name&gt;" "&lt;cron&gt;" "&lt;prompt&gt;"
+- /schedule once "&lt;datetime&gt;" "&lt;prompt&gt;"
+- /schedule list / run &lt;id&gt; / delete &lt;id&gt;
+- Each run is a fresh context. No file access, no session
+  history. Self-contained prompts only.
+- Test with /schedule run &lt;id&gt; before trusting the schedule.
+
+Audit routines periodically with /schedule list. Forgotten
+routines are the easiest cloud cost to leak.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/schedule-or-loop/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/dispatch-parallel-agents.html" class="tutorial-next-card">
+            <h3>Dispatch parallel agents</h3>
+            <p>When a scheduled routine has multiple independent sub-tasks, run them in parallel inside the routine</p>
+          </a>
+          <a href="/tutorials/build-with-the-claude-api.html" class="tutorial-next-card">
+            <h3>Build with the Claude API</h3>
+            <p>Routines and loops both call out to the model — make those calls cache-efficient</p>
+          </a>
+          <a href="/tutorials/finish-a-development-branch.html" class="tutorial-next-card">
+            <h3>Finish a development branch</h3>
+            <p>A scheduled morning routine pairs naturally with the end-of-day finish-branch workflow</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

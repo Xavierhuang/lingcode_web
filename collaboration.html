@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-time pair programming in LingCode — Share, Join, Edit Together | LingCode</title>
+  <meta name="description" content="LingCode's collaboration mode: live cursors, shared edits over CRDT, viewer/editor roles, invite links. How to host a session, how to join, what's persisted, and the limits to know.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/collaboration.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Real-time pair programming in LingCode">
+  <meta property="og:description" content="Live cursors, CRDT edits, invite links — how to share a LingCode session with a teammate.">
+  <meta property="og:url" content="https://lingcode.dev/collaboration.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 760px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--text); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; color: var(--text); }
+    .callout p { margin: 0; }
+    .callout strong { color: var(--signal); }
+    .steps { counter-reset: step; margin: 24px 0; }
+    .step { position: relative; padding: 0 0 16px 48px; margin: 0 0 20px; }
+    .step::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: -4px; width: 32px; height: 32px; border-radius: 50%; background: var(--signal); color: #fff; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; }
+    .step h3 { margin-top: 0; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Guide · Pair programming</p>
+        <h1>Real-time collaboration in LingCode</h1>
+        <p>Share a file with a teammate, see each other's cursors, edit at the same time. CRDT under the hood — no merge conflicts, no "save and refresh", no third-party SaaS.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+
+      <div class="callout">
+        <p><strong>Both participants need to be signed in.</strong> Collab uses your LingCode account for identity and permission. <a href="/signup.html">Create a free account</a> first if you haven't, then come back here.</p>
+      </div>
+
+      <h2>Host a session</h2>
+
+      <div class="steps">
+        <div class="step">
+          <h3>Open the file you want to share</h3>
+          <p>Any file in any open project. Collab works on a single document at a time — to share a different file, end the session and start a new one.</p>
+        </div>
+        <div class="step">
+          <h3>Click <em>Share</em> in the Collab toolbar</h3>
+          <p>The Collab toolbar lives at the top of the editor pane (next to the avatar/people icons). When no session is active, the only button is <strong>Share</strong>.</p>
+          <p>LingCode does three things automatically:</p>
+          <ul>
+            <li>Creates a saved-prototype row for this file (one-time, if needed)</li>
+            <li>Generates a single-use invite token</li>
+            <li>Copies a <code>lingcode://collab/join?proto=&lt;UUID&gt;&amp;token=&lt;TOKEN&gt;</code> link to your clipboard</li>
+          </ul>
+        </div>
+        <div class="step">
+          <h3>Send the link to your teammate</h3>
+          <p>Slack, iMessage, email — anywhere a URL pastes. The link is a <code>lingcode://</code> deep link, so clicking it on a Mac with LingCode installed opens the app and joins the session directly.</p>
+        </div>
+      </div>
+
+      <h2>Join a session</h2>
+
+      <div class="steps">
+        <div class="step">
+          <h3>Click the link your teammate sent</h3>
+          <p>macOS hands the URL to LingCode. If LingCode isn't running, it launches first. The app opens a virtual document for the shared file and connects to the live session.</p>
+          <p>Default role on join is <strong>viewer</strong> — you see the host's cursor and edits but can't type. The host can promote you to editor.</p>
+        </div>
+        <div class="step">
+          <h3>Wait for promotion (or just watch)</h3>
+          <p>The Collab toolbar in the host's window shows your avatar with a "Promote to editor" action. They click it; your role flips immediately and your edits start streaming back to the host.</p>
+        </div>
+        <div class="step">
+          <h3>Edit together</h3>
+          <p>Type anywhere. Your cursor shows up in the host's editor with your account's color and initials. Their cursor shows up in yours. Every keystroke is a CRDT operation — concurrent edits merge cleanly without overwriting each other.</p>
+        </div>
+      </div>
+
+      <h2>What's actually happening</h2>
+
+      <p>LingCode runs a local Node bridge (<code>collab-bridge</code>) per session that owns a Yjs document. The bridge talks to a websocket on lingcode.dev that broadcasts deltas to all connected peers. Edits are applied locally first, then propagated — that's why typing feels instant even when the network blips.</p>
+
+      <ul>
+        <li><strong>Persistence:</strong> the document state is saved server-side after every batch of edits, so reconnecting picks up where you left off.</li>
+        <li><strong>Cursor presence:</strong> ephemeral; not saved. When you close the session your cursor disappears for everyone.</li>
+        <li><strong>History:</strong> every edit is recorded in <code>collab_history</code> for auditing and recovery, but the UI doesn't expose a time-machine yet.</li>
+      </ul>
+
+      <h2>Roles &amp; permissions</h2>
+
+      <ul>
+        <li><strong>Owner</strong> — the person who created the prototype. Always has full edit and can manage members.</li>
+        <li><strong>Editor</strong> — can edit the document and see others' cursors.</li>
+        <li><strong>Viewer</strong> — read-only; sees cursors and edits live but can't type. Default for guests joining via invite link.</li>
+      </ul>
+      <p>Only the owner can promote a viewer to editor. Promotion is reversible.</p>
+
+      <h2>Pair-program with the AI in the loop</h2>
+      <p>Both participants have their own LingCode chat panel pointed at the same project. Useful patterns:</p>
+      <ul>
+        <li><strong>One person drives, the AI navigates.</strong> Host edits; guest types <em>"jump to where this is called"</em> in their chat — the agent uses <code>grep</code> + <code>goto_line</code> to point them at the call sites without disturbing the host's flow.</li>
+        <li><strong>Split the workload.</strong> Host writes the function; guest (in their own chat) asks <em>"write tests for what they just wrote"</em>. The agent reads the live document state and produces tests in a separate file.</li>
+        <li><strong>Live debug.</strong> Both participants right-click an error in the <em>Output</em> panel → <strong>Explain with AI</strong>. Each gets the streaming explanation in their own popup — no clipboard roundtrip.</li>
+      </ul>
+      <p>Each participant's AI session is local to their LingCode — chat history doesn't sync across the collab session. That's intentional: you can each use different models or run different agent loops in parallel.</p>
+
+      <h2>End a session</h2>
+      <p>Click <strong>End session</strong> in the Collab toolbar. The bridge disconnects, your guests are dropped, and the invite token is invalidated. The document and its history stay saved on the server — you can host a fresh session for the same file later, with a new link.</p>
+
+      <h2>Multi-file + follow-mode</h2>
+      <p>Sessions now hold any number of open files. As the host focuses files in the editor, each one joins the share automatically — guests see edits arrive per file with independent CRDT history. Click a participant's avatar in the Collab toolbar to <strong>follow</strong> them: your viewport scrolls to wherever their cursor goes. A small banner above the participants list shows who you're following with a Stop button.</p>
+
+      <h2>Limits to know</h2>
+      <ul>
+        <li><strong>Mac only.</strong> Both participants need LingCode for Mac. iPad and Android can't currently join collab sessions.</li>
+        <li><strong>Internet required.</strong> No LAN/peer-to-peer mode — all edits round-trip through lingcode.dev.</li>
+        <li><strong>Sign-in required.</strong> Anonymous join isn't supported; identity is needed for cursor labels and ownership records.</li>
+        <li><strong>No voice or video.</strong> Use any voice tool (Zoom, FaceTime, Discord) on the side — LingCode is a code-edit surface, not a meeting client.</li>
+        <li><strong>Cross-file follow is in-file only today.</strong> If you're following a peer and they switch to a file you don't have open, your viewport stays on the current file — open the file manually to keep tracking.</li>
+      </ul>
+
+      <h2>Troubleshooting</h2>
+      <ul>
+        <li><strong>Link opens but the document is empty:</strong> the host probably hasn't shared a file yet. Confirm with them that they clicked Share <em>after</em> opening the right file.</li>
+        <li><strong>"Failed to join" error:</strong> the invite token may be expired or already consumed. Ask the host to click Share again — fresh link, fresh token.</li>
+        <li><strong>Cursor latency feels slow:</strong> check both networks. The websocket runs over wss:443; corporate proxies and weird VPNs can add hundreds of ms.</li>
+        <li><strong>Host's edits don't show up:</strong> reconnect — close the document tab and re-click the original invite link. The CRDT state syncs from the server on connect.</li>
+      </ul>
+
+      <h2>What to read next</h2>
+      <ul>
+        <li><a href="/getting-started.html">Getting Started</a> — install LingCode and connect Claude.</li>
+        <li><a href="/claude-sessions.html">Claude Sessions</a> — multiple AI sessions on one project, running in parallel.</li>
+        <li><a href="/debugging.html">Debugging</a> — LLDB and Kotlin debugger panels, breakpoints, step.</li>
+        <li><a href="/remote-control.html">Remote Control</a> — drive LingCode from your phone while a long task runs.</li>
+      </ul>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">Not signed up yet?</p>
+        <a href="/signup.html">Create a free LingCode account</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

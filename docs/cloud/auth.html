@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode Cloud Authentication — email/password, OAuth, magic links, OTP, MFA | Docs</title>
+  <meta name="description" content="The authentication guide for LingCode Cloud: sign users in with email/password, Google/GitHub/Apple OAuth, magic links, and email OTP; add TOTP multi-factor; and understand the anon key vs. user token model — with the SDK and REST reference.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/auth.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/auth.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/auth.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/auth.html">
+  <meta property="og:title" content="LingCode Cloud Authentication">
+  <meta property="og:description" content="Email/password, magic links, OTP, Google/GitHub/Apple OAuth, TOTP MFA, and the access-token model — with the SDK and REST reference.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .auth-method-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin: 20px 0; }
+    .auth-method-card { padding: 16px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); }
+    .auth-method-card h3 { margin: 0 0 6px; font-size: 0.95rem; color: var(--text); }
+    .auth-method-card p { margin: 0; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+    .rest-table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.875rem; }
+    .rest-table th, .rest-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .rest-table th { font-family: "Geist Mono", monospace; font-size: 0.72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim); }
+    .rest-table td code { font-size: 0.82rem; white-space: nowrap; }
+    .rest-table td.desc code { white-space: normal; }
+    .method-tag { font-family: "Geist Mono", monospace; font-size: 0.72rem; font-weight: 500; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border); color: var(--signal); }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Authentication</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Identity</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>Authentication</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Auth ships inside every LingCode Cloud backend — no separate service to stand up. Users sign in with email/password, a magic link, an email OTP code, or Google/GitHub/Apple OAuth; you can require TOTP multi-factor. After sign-in the <a href="/docs/cloud/api-reference.html">client SDK</a> stores the session and attaches it to every later <code>.from()</code> call, so row-level security keys off the signed-in user's id. The <strong>anon key is public</strong>; the <strong>user session token</strong> is what authenticates a person.</p>
+      <p class="intro">If you've used Firebase Auth or Supabase Auth, the shape is familiar: a few sign-in methods, a session token the SDK carries for you, and server-side rules that decide what each user can see. This page explains the model first — why the anon key is safe to ship, what the session token actually is, and how multi-factor raises the bar — and then walks each method with runnable code. The <code>lingcode</code> client in the samples is the SDK client; inside <a href="/try.html">/try</a> and the Mac preview it's pre-injected as <code>window.lingcode</code>.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>The model: two keys, one session</h2>
+      <p>Every backend exposes two kinds of credential, and keeping them straight is most of understanding auth here.</p>
+      <ul>
+        <li><strong>The anon key</strong> is public. It identifies your backend and grants anonymous, RLS-public access — it's meant to ship in your browser bundle. It does <em>not</em> identify a person. Row-level security, not key secrecy, is what protects data, so an anon key on its own can only reach rows your policies expose to everyone.</li>
+        <li><strong>The user session token</strong> is what authenticates a person. After a successful sign-in, the SDK stores the session and automatically attaches its token to subsequent requests. From then on, your RLS policies can key off the signed-in user's id — <code>auth.uid()</code>-style rules start matching, and each user sees only their own rows.</li>
+      </ul>
+
+      <div class="info-box">
+        <h3>Why the anon key is safe to ship</h3>
+        <p>It feels wrong to put a key in client JavaScript anyone can read. The reason it's fine: the anon key is an <em>address</em>, not a <em>permission</em>. It tells the gateway which backend you mean and lets unauthenticated reads through to whatever your policies mark public — nothing more. The thing that actually gates private data is the user session token plus your row-level-security policies on the server. Treat the anon key like a public URL and your real secrets (Stripe keys, vendor API keys) like passwords — those go in the <a href="/docs/cloud/secrets.html">Secrets vault</a>, never the client.</p>
+      </div>
+
+      <h3>Session shape</h3>
+      <p>A successful sign-in resolves to a <code>Session</code>. The SDK persists it for you, so you rarely read the token by hand:</p>
+      <pre><code>Session = {
+  user: { id, email } | null,
+  token: string            // a signed JWT representing the user
+}</code></pre>
+      <p>Every auth call returns a <code>Result</code> — <code>{ data, error }</code> — except the few noted below. Check <code>error</code> before trusting <code>data</code>.</p>
+
+      <div class="warn-box">
+        <strong>Await <code>client.ready</code> once on load.</strong> If the user is returning from an OAuth redirect or a magic link, the session arrives in the URL and the SDK has to consume it before <code>getUser()</code> can tell you who's signed in. <code>await lingcode.ready</code> resolves after that's done — call it once before reading the user, or a freshly-redirected user will look signed-out for a frame.
+      </div>
+
+      <h2>Sign-in methods at a glance</h2>
+      <p>Email/password, magic link, and email OTP are <strong>always available</strong> on every backend. The three managed OAuth providers — Google, GitHub, Apple — are operator-configured and shared, or you can bring your own per-backend OAuth credentials. Enable and manage OAuth providers and the "require MFA" setting from the console.</p>
+
+      <div class="auth-method-grid">
+        <div class="auth-method-card">
+          <h3>Email &amp; password</h3>
+          <p>Classic credentials. <code>signUp</code> creates the account, <code>signIn</code> returns a session. Always on.</p>
+        </div>
+        <div class="auth-method-card">
+          <h3>Magic link</h3>
+          <p>Email a one-tap sign-in link. No password to remember; the SDK finalizes the link on return.</p>
+        </div>
+        <div class="auth-method-card">
+          <h3>Email OTP</h3>
+          <p>Email a short numeric code the user types back. Good for mobile and passwordless flows.</p>
+        </div>
+        <div class="auth-method-card">
+          <h3>OAuth</h3>
+          <p>Google, GitHub, Apple (managed or bring-your-own), or a custom provider string. Top-level redirect.</p>
+        </div>
+        <div class="auth-method-card">
+          <h3>TOTP MFA</h3>
+          <p>Authenticator-app codes layered on any of the above. Raises the session to AAL2.</p>
+        </div>
+      </div>
+
+      <h2>Email &amp; password</h2>
+      <p>The simplest path. <code>signUp</code> registers the account and <code>signIn</code> (alias <code>signInWithPassword</code>) returns a session. Both take <code>{ email, password }</code> and return <code>Result&lt;Session&gt;</code>.</p>
+      <pre><code>// Register
+const { data, error } = await lingcode.auth.signUp({
+  email: 'ada@example.com',
+  password: 'a-strong-passphrase'
+});
+
+// Sign in (signInWithPassword is an alias)
+const { data: session, error: err } = await lingcode.auth.signIn({
+  email: 'ada@example.com',
+  password: 'a-strong-passphrase'
+});
+
+if (!err) {
+  console.log('signed in as', session.user.email);
+}</code></pre>
+      <p>After a successful call the SDK has already stored the session — your next <code>lingcode.from(...)</code> call goes out authenticated. You don't pass the token anywhere yourself.</p>
+
+      <h2>Magic links</h2>
+      <p>A magic link trades the password for a one-time link emailed to the user. You send the link; when the user clicks it they land back on your app with the session in the URL, and the SDK auto-finalizes it — which is why you rarely call <code>verifyMagicLink</code> directly.</p>
+      <pre><code>// 1. Send the link
+const { data, error } = await lingcode.auth.sendMagicLink({
+  email: 'ada@example.com',
+  redirectTo: 'https://your-app.example.com/welcome' // optional
+});
+// data =&gt; { sent: true }
+
+// 2. On the page the link returns to, just await ready —
+//    the SDK consumes the token from the URL for you.
+await lingcode.ready;
+const user = lingcode.auth.getUser(); // now populated
+
+// (rarely needed) finalize a token by hand:
+// await lingcode.auth.verifyMagicLink(tokenFromUrl);</code></pre>
+
+      <h2>Email OTP</h2>
+      <p>OTP is the same idea as a magic link but with a short code the user types instead of a link they click — handy on mobile or when deep links are awkward. Send a code, then verify the code the user enters.</p>
+      <pre><code>// 1. Send a code
+await lingcode.auth.sendOtp({ email: 'ada@example.com' });
+// =&gt; { sent: true }
+
+// 2. Verify what the user typed
+const { data: session, error } = await lingcode.auth.verifyOtp({
+  email: 'ada@example.com',
+  code: '482913'
+});
+if (!error) {
+  // session is stored; user is signed in
+}</code></pre>
+
+      <h2>OAuth (Google, GitHub, Apple)</h2>
+      <p>OAuth hands sign-in off to a provider the user already trusts. <code>signInWithOAuth</code> takes a provider — <code>'google'</code>, <code>'github'</code>, <code>'apple'</code>, or a custom string — and performs a <strong>top-level navigation</strong> to that provider's consent screen. It returns <code>void</code>, not a Result, because the page is leaving; on return, the SDK auto-stores the session.</p>
+      <pre><code>// Kicks off a full-page redirect to Google.
+lingcode.auth.signInWithOAuth('google', {
+  redirectTo: 'https://your-app.example.com/dashboard' // optional
+});</code></pre>
+      <p>Because it's a top-level navigation, don't expect code after this line to run with a result — the browser is already on its way to the provider. Handle the signed-in state on the page the user comes <em>back</em> to (await <code>ready</code>, then read the user).</p>
+
+      <h3>Which providers are enabled?</h3>
+      <p>Not every backend turns on every provider. Ask before you render the buttons — <code>getProviders()</code> returns a map of provider → availability, so you can show only the ones that work:</p>
+      <pre><code>const providers = await lingcode.auth.getProviders();
+// {
+//   google: { available: true,  source: 'managed' },
+//   github: { available: true,  source: 'byo' },
+//   apple:  { available: false, source: null }
+// }
+
+if (providers.google?.available) {
+  renderGoogleButton();
+}</code></pre>
+
+      <h3>Reading auth errors from a redirect</h3>
+      <p>If the provider round-trip failed (user cancelled, mis-configured client, etc.), the error code rides back on the URL. <code>lastError()</code> surfaces it so you can show a message after a redirect:</p>
+      <pre><code>await lingcode.ready;
+const err = lingcode.auth.lastError(); // e.g. 'access_denied' or null
+if (err) showBanner(`Sign-in failed: ${err}`);</code></pre>
+
+      <div class="info-box">
+        <h3>Managed vs. bring-your-own OAuth</h3>
+        <p>You have two ways to wire up Google, GitHub, or Apple. <strong>Managed</strong> providers are operator-configured and shared across backends — the fastest path, nothing for you to register. <strong>Bring-your-own</strong> lets you supply your own client id and secret per backend in the console, so the consent screen shows your app's name and you own the OAuth app. Switch between them and flip the "require MFA" setting from the console at <a href="https://lingcode.dev/backends.html">lingcode.dev/backends</a> → your backend → auth providers. Step-by-step: <a href="/tutorials/sign-in-with-google-oauth.html">Sign in with Google</a> and <a href="/tutorials/sign-in-with-github-oauth.html">Sign in with GitHub</a>.</p>
+      </div>
+
+      <h2>Multi-factor authentication (MFA)</h2>
+      <p>A password or OAuth login proves the user knows a secret or controls an account — assurance level <strong>AAL1</strong>. MFA adds a second proof: a time-based one-time code from an authenticator app (TOTP — RFC 6238, 6 digits, a fresh code every 30 seconds, with ±1 step of drift tolerance so a slightly-off clock still verifies). Completing MFA raises the session to <strong>AAL2</strong>, the higher assurance level your sensitive operations can require.</p>
+      <p>The flow has two parts. <strong>Enroll</strong> once: the backend returns a secret plus a QR code, the user scans it into their authenticator app, and you verify a code to confirm the pairing. <strong>Verify</strong> thereafter: when a session needs AAL2, the user enters a current code and the session is promoted. If the backend has <strong>"MFA required"</strong> turned on, users must complete MFA before they're considered fully signed in.</p>
+
+      <div class="info-box">
+        <h3>Why AAL2 matters</h3>
+        <p>Splitting assurance into AAL1 and AAL2 lets you draw a line: routine reads happen at AAL1, but a policy can demand AAL2 for the dangerous stuff — deleting an account, moving money, changing security settings. A stolen password gets an attacker to AAL1; without the user's authenticator device they can't reach AAL2, so the high-value paths stay closed. Requiring MFA on the backend simply makes AAL2 the bar for being "signed in" at all.</p>
+      </div>
+
+      <p>MFA is driven through the REST endpoints below — enroll to get the secret and QR, then verify a code to reach AAL2:</p>
+      <pre><code>// Enroll: returns { secret, qr_code } — render the QR for the user to scan
+POST /api/cloud/be/&lt;backend-id&gt;/auth/mfa/enroll
+
+// Verify a code to confirm enrollment / raise the session to AAL2
+POST /api/cloud/be/&lt;backend-id&gt;/auth/mfa/verify   { "code": "482913" }</code></pre>
+      <p>Full walkthrough, including turning on the required-MFA switch: <a href="/tutorials/require-mfa-on-your-backend.html">Require MFA on your backend</a>.</p>
+
+      <h2>The token model</h2>
+      <p>The session token is a <strong>signed JWT</strong> that represents the user. The SDK carries it for you, but it helps to know what's moving:</p>
+      <ul>
+        <li><strong>Access vs. refresh.</strong> The access token authenticates requests and is short-lived; a refresh token exchanges for a fresh access token at the refresh endpoint when the access token ages out. The SDK manages this — you don't usually touch <code>/auth/token/refresh</code> directly.</li>
+        <li><strong>Assurance levels.</strong> A token carries its assurance level: <strong>AAL1</strong> after password or OAuth, <strong>AAL2</strong> after an MFA verify. Policies can require AAL2 for sensitive operations.</li>
+        <li><strong>Two ways apps authenticate.</strong> Requests carry either the <strong>anon key</strong> (as a Bearer token or <code>?apikey=</code>) for anonymous / RLS-public access, or the <strong>user token</strong> (attached automatically by the SDK) for signed-in access. Same endpoints, different credential.</li>
+      </ul>
+      <p>Reading the current user or token by hand, when you need to:</p>
+      <pre><code>const user  = lingcode.auth.getUser();  // { id, email } | null
+const token = lingcode.auth.getToken(); // string | null (the JWT)
+
+await lingcode.auth.signOut(); // clears the stored session; resolves { error: null }</code></pre>
+
+      <h2>Under the hood (REST)</h2>
+      <p>The SDK is a thin wrapper over these endpoints — reach for them directly if you're working outside JavaScript or want to see exactly what's happening. The base for a backend is <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code>. The sign-in and provider endpoints authenticate with the <strong>anon key</strong> (Bearer or <code>?apikey=</code>); the MFA, refresh, and sign-out endpoints require the <strong>user token</strong>.</p>
+
+      <table class="rest-table">
+        <thead>
+          <tr><th>Method</th><th>Path</th><th class="desc">Body / notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/signup</code></td><td class="desc"><code>{ email, password }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/signin</code></td><td class="desc"><code>{ email, password }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/magiclink/request</code></td><td class="desc"><code>{ email, redirect_url }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/magiclink/verify</code></td><td class="desc"><code>{ token }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/otp/request</code></td><td class="desc"><code>{ email }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/otp/verify</code></td><td class="desc"><code>{ email, code }</code></td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/apple/native</code></td><td class="desc"><code>{ identity_token }</code> — native Apple Sign In</td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/token/refresh</code></td><td class="desc"><code>{ refresh_token }</code> — requires user token</td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/signout</code></td><td class="desc"><code>{ refresh_token }</code> or <code>{ all: true }</code> — requires user token</td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/mfa/enroll</code></td><td class="desc">→ <code>{ secret, qr_code }</code> — requires user token</td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/mfa/verify</code></td><td class="desc"><code>{ code }</code> → session at AAL2 — requires user token</td></tr>
+          <tr><td><span class="method-tag">POST</span></td><td><code>/auth/mfa/challenge</code></td><td class="desc">requires user token</td></tr>
+          <tr><td><span class="method-tag">GET</span></td><td><code>/auth/mfa/factors</code></td><td class="desc">requires user token</td></tr>
+          <tr><td><span class="method-tag">DELETE</span></td><td><code>/auth/mfa/factors/:factorId</code></td><td class="desc">requires user token</td></tr>
+          <tr><td><span class="method-tag">GET</span></td><td><code>/auth/providers</code></td><td class="desc">→ <code>{ google:{available,source}, github:{…}, apple:{…} }</code></td></tr>
+          <tr><td><span class="method-tag">GET</span></td><td><code>/auth/oauth/:provider/start?redirect_url=…</code></td><td class="desc">→ 302 to the provider's consent screen</td></tr>
+        </tbody>
+      </table>
+
+      <p>The OAuth round-trip finishes at a callback the platform owns:</p>
+      <pre><code>GET/POST /api/cloud/auth/oauth/:provider/callback
+
+// On success, redirects back to your redirect_url with:
+//   ?lc_session=&lt;jwt&gt;
+// On failure:
+//   ?lc_error=&lt;code&gt;</code></pre>
+
+      <div class="warn-box">
+        <strong>Match the credential to the endpoint.</strong> Sign-in, provider listing, and OAuth-start accept the <em>anon key</em> (Bearer or <code>?apikey=</code>). The MFA endpoints, token refresh, and sign-out require the <em>user token</em> — you can't enroll a factor or refresh a session with the anon key alone. The SDK picks the right one for you; if you're calling REST by hand, send the matching credential.
+      </div>
+
+      <div class="tutorial-next">
+        <h2>What's next</h2>
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/docs/cloud/database.html">
+            <span class="card-eyebrow">Data</span>
+            <h3>Database &amp; RLS →</h3>
+            <p>Now that users sign in, write row-level-security policies that key off their id so each person sees only their own rows.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/api-reference.html">
+            <span class="card-eyebrow">Reference</span>
+            <h3>API reference →</h3>
+            <p>The full SDK surface and every REST endpoint with exact shapes, including the complete <code>client.auth.*</code> signatures.</p>
+          </a>
+          <a class="tutorial-next-card" href="/tutorials/sign-in-with-google-oauth.html">
+            <span class="card-eyebrow">Tutorial</span>
+            <h3>Sign in with Google →</h3>
+            <p>A concrete, end-to-end walkthrough of wiring Google OAuth into your app — managed or bring-your-own.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

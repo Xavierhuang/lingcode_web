@@ -1,0 +1,114 @@
+# docker-compose.prod.yml — production hardening overlay for the LingCode Cloud
+# data plane. Layered ON TOP of docker-compose.yml:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# (bootstrap-remote.sh does this for you.) The base file stays dev-friendly so a
+# developer can still `docker compose up -d` with no secrets. This overlay adds
+# the two ops pieces that need real secret files on the host:
+#   - pgbouncer            : transaction-pooling in front of Postgres (:6432)
+#   - postgres (overridden): pgBackRest binary + WAL archiving for PITR
+#
+# Required secret files on the host (gitignored; created by bootstrap):
+#   pgbouncer/userlist.txt          (SCRAM verifier for cloud_admin)
+#   pgbackrest/pgbackrest.conf      (Spaces keys + cipher pass)
+
+services:
+  postgres:
+    # Swap the plain pgvector image for the derived one that also ships
+    # pgBackRest. Same PG16 + pgvector, so the existing pgdata volume is reused
+    # unchanged — no migration.
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+    image: lingcloud-postgres-pgbackrest:pg16
+    # WAL-archiving + observability GUCs as explicit -c flags. (NOTE: `include_dir`
+    # is NOT settable via `postgres -c` — it's only valid inside postgresql.conf —
+    # so we pass each setting directly. The postgres-conf.d/*.conf files remain the
+    # documented source of these values; keep them in sync with this list.)
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - archive_mode=on
+      - -c
+      - "archive_command=pgbackrest --stanza=lingcloud archive-push %p"
+      - -c
+      - wal_level=replica
+      - -c
+      - max_wal_senders=3
+      - -c
+      - archive_timeout=60
+      - -c
+      - max_slot_wal_keep_size=10GB
+      - -c
+      - pg_stat_statements.track=top
+      - -c
+      - pg_stat_statements.max=5000
+      - -c
+      - track_io_timing=on
+      - -c
+      - log_min_duration_statement=1000
+    volumes:
+      - ./pgbackrest/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: lingcloud-pgbouncer
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    # The control plane (API box) connects HERE, not to Postgres directly.
+    # Bind to the private interface only, same as Postgres.
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:6432:6432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 6432 -U cloud_admin -d lingcloud || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  # ── Observability exporters (scraped by Prometheus on the monitoring host) ──
+  # All bound to the PRIVATE interface; firewall the ports to the monitoring
+  # host only. These are read-only metric sources, not data paths.
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: lingcloud-postgres-exporter
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Least-privilege monitoring role (pg_monitor), created by obs-setup-db.sh.
+      DATA_SOURCE_NAME: "postgresql://monitoring:${MONITORING_PASSWORD}@postgres:5432/lingcloud?sslmode=disable"
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/queries.yaml"
+      PG_EXPORTER_AUTO_DISCOVER_DATABASES: "false"
+    volumes:
+      - ./observability/queries.yaml:/queries.yaml:ro
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:9187:9187"
+
+  pgbouncer_exporter:
+    image: prometheuscommunity/pgbouncer-exporter:v0.7.0
+    container_name: lingcloud-pgbouncer-exporter
+    depends_on:
+      pgbouncer:
+        condition: service_started
+    command:
+      - "--pgBouncer.connectionString=postgres://cloud_admin:${POSTGRES_PASSWORD}@pgbouncer:6432/pgbouncer?sslmode=disable"
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:9127:9127"
+
+  node_exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: lingcloud-node-exporter
+    command:
+      - "--path.rootfs=/host"
+    pid: host
+    volumes:
+      - "/:/host:ro,rslave"
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:9100:9100"

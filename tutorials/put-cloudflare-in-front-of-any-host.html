@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Put Cloudflare in front of any host — LingCode Tutorials</title>
+  <meta name="description" content="Point your DNS at Cloudflare; Cloudflare proxies to your real server. You get free TLS, a global CDN, DDoS protection — and the option to migrate the origin later without touching DNS again.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/put-cloudflare-in-front-of-any-host.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/put-cloudflare-in-front-of-any-host.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/put-cloudflare-in-front-of-any-host.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/put-cloudflare-in-front-of-any-host.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Put Cloudflare in front of any host",
+  "description": "\"Proxy through Cloudflare\" is the most generally useful infrastructure trick on the internet. You hand DNS to Cloudflare. Cloudflare answers requests, terminates TLS, caches static assets, blocks bad traffic, and forwards the rest to your real server — for free.",
+  "url": "https://lingcode.dev/tutorials/put-cloudflare-in-front-of-any-host.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/put-cloudflare-in-front-of-any-host.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Put Cloudflare in front of any host"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Put Cloudflare in front of any host",
+      "item": "https://lingcode.dev/tutorials/put-cloudflare-in-front-of-any-host.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/put-cloudflare-in-front-of-any-host.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Put Cloudflare in front of any host</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Put Cloudflare in front of any host</h1>
+      <p class="intro">"Proxy through Cloudflare" is the most generally useful infrastructure trick on the internet. You hand DNS to Cloudflare. Cloudflare answers requests, terminates TLS, caches static assets, blocks bad traffic, and forwards the rest to your real server — for free.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The default mental model of a website on the open internet is: DNS resolves to your server, the user's browser connects directly to your server, your server returns the response. This works fine. It also means your server bears every request — every bot scan, every attempted exploit, every cached asset request from a user who just refreshed. Bandwidth, CPU, and attention all flow at you directly.</p>
+      <p>A reverse proxy in front changes that geometry. The user connects to the proxy. The proxy decides whether to answer from its own cache, forward to your origin server, or refuse the request entirely. Your origin server only sees the requests the proxy decides to send. This is a familiar pattern in enterprise infra ($$$, lots of vendors), but the version that matters for indie developers is Cloudflare's free tier — which provides exactly this for any domain you have, at no cost.</p>
+      <p>The benefits compound. Free TLS termination means you don't run Let's Encrypt yourself. Global edge caching means static assets load from a server near each user. Basic DDoS protection means a small-scale attack doesn't take you down. Hidden origin IP means scanners can't trivially find your server. None of it is magic — it's the standard reverse-proxy benefits with the price set to zero.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The model: DNS at Cloudflare, traffic proxied through Cloudflare</li>
+        <li>Adding any domain to Cloudflare (regardless of where it's registered)</li>
+        <li>The orange-cloud icon and what it actually does</li>
+        <li>SSL/TLS mode — the one setting that matters</li>
+        <li>When proxying is the wrong choice</li>
+      </ul>
+
+      <h2>Step 1: The architecture</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Cloudflare becomes the middleman</h3>
+          <p>The data flow with Cloudflare in front:</p>
+          <pre><code>User → Cloudflare edge → Your origin server
+       (terminates TLS,
+        caches static,
+        filters traffic)</code></pre>
+          <p>You add your domain to Cloudflare. Cloudflare gives you new nameservers (NSx.cloudflare.com). You change your nameservers at your registrar to point at Cloudflare's. Cloudflare becomes authoritative for your DNS — and gets the opportunity to proxy any record you mark for proxying.</p>
+          <p>This works regardless of where you bought the domain. <a href="/tutorials/buy-a-domain-from-namecheap.html">Namecheap</a>, <a href="/tutorials/buy-a-domain-from-porkbun.html">Porkbun</a>, <a href="/tutorials/buy-a-domain-from-godaddy.html">GoDaddy</a> — all of them let you set custom nameservers. The exception is <a href="/tutorials/buy-a-domain-from-cloudflare.html">Cloudflare Registrar itself</a>, where it's all already wired up.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Add the domain to Cloudflare</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Free plan, takes five minutes</h3>
+          <p>Sign up at cloudflare.com (the free tier is enough; "Pro" and above are for businesses with specific needs). Click <strong>Add a Site</strong>, type your domain, pick the Free plan.</p>
+          <p>Cloudflare scans your current DNS — whatever's authoritative right now — and imports the existing records. Review the imported list. Anything missing, add manually. The records you don't proxy (DKIM, SPF, custom MX) just route DNS as before; the records you do proxy (your main A or CNAME for the website) get the orange-cloud treatment.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Change nameservers at your registrar</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>The cutover moment</h3>
+          <p>Cloudflare gives you two nameserver hostnames (e.g., <code>katie.ns.cloudflare.com</code> and <code>logan.ns.cloudflare.com</code>). At your registrar, find the nameserver settings (every registrar has them) and replace your current nameservers with Cloudflare's two.</p>
+          <p>Propagation takes minutes to hours — Cloudflare polls and emails you when it sees your domain pointed at them. Until then, both DNS providers are serving records (your old one for resolvers that haven't updated, Cloudflare for ones that have). Make sure your records at Cloudflare match what was there before, or some users will hit the wrong place.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Don't cut over without verifying first.</strong> Before changing nameservers, query Cloudflare's NS directly (<code>dig @logan.ns.cloudflare.com yourdomain.com</code>) to confirm Cloudflare returns the records you expect. Catching a typo before propagation starts saves you a stressed-out hour.
+      </div>
+
+      <h2>Step 4: The orange cloud icon</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Proxied vs. DNS-only</h3>
+          <p>In Cloudflare's DNS panel, each record has an icon next to it: an orange cloud (Proxied) or a gray cloud (DNS only).</p>
+          <ul>
+            <li><strong>Orange cloud (Proxied):</strong> requests go through Cloudflare's edge. TLS is terminated by Cloudflare; the origin IP is hidden; caching, security, and CDN features activate. Use this for your website's records.</li>
+            <li><strong>Gray cloud (DNS only):</strong> Cloudflare answers DNS queries but doesn't proxy. Requests go directly to your server. Use this for non-HTTP records (mail servers, SSH-only hosts, anything Cloudflare's proxy doesn't handle).</li>
+          </ul>
+          <p>Cloudflare's proxy supports HTTP/HTTPS only. Don't proxy a record that points at SSH or a database; gray-cloud it.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: SSL/TLS mode — the one critical setting</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>"Full (Strict)" is what you want</h3>
+          <p>Under <strong>SSL/TLS → Overview</strong>, Cloudflare offers four modes for the connection from Cloudflare to your origin:</p>
+          <ul>
+            <li><strong>Off:</strong> no HTTPS anywhere. Never use.</li>
+            <li><strong>Flexible:</strong> HTTPS user-to-Cloudflare, HTTP Cloudflare-to-origin. <strong>Avoid</strong> — looks secure to the user but isn't.</li>
+            <li><strong>Full:</strong> HTTPS end-to-end. Cloudflare doesn't verify the origin cert (so a self-signed cert works). Good for getting started fast.</li>
+            <li><strong>Full (Strict):</strong> HTTPS end-to-end, with Cloudflare verifying the origin has a valid cert. <strong>Use this</strong> for production.</li>
+          </ul>
+          <p>To use Full (Strict), your origin needs a real TLS cert too — either from <a href="/tutorials/set-up-https-with-lets-encrypt.html">Let's Encrypt</a>, or use a free Cloudflare Origin Certificate (Cloudflare → SSL/TLS → Origin Server → Create Certificate). The Origin Certificate is valid for up to 15 years and is trusted only by Cloudflare, not the public — perfect for the Cloudflare-to-origin leg.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: What you get for free</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>The features that activate when records are orange-clouded</h3>
+          <ul>
+            <li><strong>Free TLS.</strong> Cloudflare issues and renews certs for your domain automatically. Browsers see a valid cert from a major CA.</li>
+            <li><strong>Global edge caching.</strong> Static assets (images, CSS, JS) cache at Cloudflare's edge near the user. Cache rules are configurable.</li>
+            <li><strong>Basic DDoS mitigation.</strong> Cloudflare absorbs L3/L4 attacks transparently; application-layer attacks need more tuning.</li>
+            <li><strong>Hidden origin IP.</strong> Public DNS only shows Cloudflare IPs. Scanners can't trivially target your server.</li>
+            <li><strong>Always Online, IP rules, page rules.</strong> Various smaller features that compound.</li>
+          </ul>
+          <p>None of these require configuration to activate — they're on by default the moment the record is orange-clouded.</p>
+        </div>
+      </div>
+
+      <h2>Step 7: When proxying isn't right</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Four legitimate reasons to gray-cloud</h3>
+          <ul>
+            <li><strong>Non-HTTP services.</strong> SSH, FTP, mail, databases — Cloudflare's standard proxy doesn't speak these. Use Cloudflare Spectrum (paid) or gray-cloud.</li>
+            <li><strong>Real-time / WebSocket-heavy apps.</strong> Cloudflare supports WebSockets on the free tier but the latency added by the proxy can matter for chat / gaming / collaborative editing.</li>
+            <li><strong>Compliance constraints.</strong> Some regulated industries don't allow traffic to transit a third-party proxy. Read your compliance requirements.</li>
+            <li><strong>Cost-sensitive bandwidth.</strong> Cloudflare's free tier is generous but has soft limits on caching for very high traffic. Specific media-heavy use cases hit them.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't proxy unencrypted origins for a public-facing site.</strong> If Cloudflare → origin is HTTP (Flexible SSL mode), anyone on the path between them can snoop. Cloudflare's edge → user looks secure, but the back half isn't. Always at least Full mode; ideally Full (Strict).
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/set-up-https-with-lets-encrypt.html" class="tutorial-next-card">
+            <h3>Set up HTTPS with Let's Encrypt</h3>
+            <p>The origin-side TLS — pairs with Cloudflare's Full (Strict) mode</p>
+          </a>
+          <a href="/tutorials/buy-a-domain-from-cloudflare.html" class="tutorial-next-card">
+            <h3>Buy a domain from Cloudflare Registrar</h3>
+            <p>If you don't have a domain yet, here's the cheapest path</p>
+          </a>
+          <a href="/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>Connect your domain to a server</h3>
+            <p>The DNS layer below proxying</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

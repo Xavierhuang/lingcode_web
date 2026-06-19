@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How App Store Code Signing Actually Works | LingCode</title>
+  <meta name="description" content="Certificates, provisioning profiles, signed binaries — what each piece actually proves, why Apple stacks them this way, and how xcodebuild ties it all together.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/learn-code-signing.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How App Store Code Signing Actually Works">
+  <meta property="og:description" content="A 5-minute mental model for the certificate → profile → signed bundle trust chain.">
+  <meta property="og:url" content="https://lingcode.dev/learn-code-signing.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.375rem; margin: 40px 0 16px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content p { margin: 0 0 16px; line-height: 1.75; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.75; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .chain-diagram { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin: 20px 0; font-family: ui-monospace, monospace; font-size: 0.85rem; line-height: 1.7; color: var(--text); white-space: pre; overflow-x: auto; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Deep dive · Deploy fundamentals</p>
+        <h1>How App Store code signing actually works</h1>
+        <p>A certificate, a provisioning profile, and a signed bundle. Four pieces, one trust chain — here's what each one actually proves.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2>The problem "code signing" solves</h2>
+      <p>When your Mac downloads an app, how does it know the code came from who it claims to? Apple's answer is a <strong>chain of cryptographic proofs</strong> — each link proving one narrow claim, and every launch of the app on a user's device re-verifying the whole chain. If any link is broken, modified, or expired, the OS refuses to run the code.</p>
+      <p>From the outside, <em>"code signing"</em> looks like one thing. Inside, it's four things stacked.</p>
+
+      <h2>The four layers, from bottom to top</h2>
+      <div class="chain-diagram">Apple Root CA
+  │
+  │ (signs)
+  ▼
+Apple Worldwide Developer Relations CA
+  │
+  │ (signs)
+  ▼
+Your Apple Distribution certificate   ←  you hold the private key
+  │
+  │ (signs)
+  ▼
+Your provisioning profile              ←  which cert + which entitlements
+  │
+  │ (binds to)
+  ▼
+Your signed .app / .ipa                ←  the actual binary
+  │
+  │ (verified by)
+  ▼
+macOS / iOS on the user's device</div>
+
+      <p><strong>Apple Root CA.</strong> A self-signed root certificate Apple owns. Baked into every Mac and iPhone at the factory. The anchor of trust.</p>
+      <p><strong>Intermediate CA (WWDR).</strong> A certificate the root signed, used to sign developer certs. This indirection means Apple can rotate intermediate certs without replacing the root on millions of devices.</p>
+      <p><strong>Your <a href="/glossary.html#apple-distribution">Apple Distribution certificate</a>.</strong> A certificate Apple's WWDR signed for your team. It contains your public key; you hold the matching private key in your login keychain. <em>This is what "signing with your cert" really means</em> — you're signing a hash of your binary with the private key, and the cert is the public half that lets Apple (and users' devices) verify you did.</p>
+      <p><strong>Your <a href="/glossary.html#provisioning-profile">provisioning profile</a>.</strong> A bundle that declares three things: which certificate(s) are allowed to sign builds for a given <a href="/glossary.html#bundle-identifier">bundle ID</a>, which entitlements the app is allowed to claim (iCloud, push, app groups, etc.), and (for development builds only) which devices are whitelisted. For App Store distribution, Xcode creates and refreshes these automatically; you rarely touch them directly.</p>
+      <p><strong>Your signed <a href="/glossary.html#xcarchive">.xcarchive</a> / <a href="/glossary.html#app-bundle">.app</a> / <a href="/glossary.html#ipa">.ipa</a>.</strong> The build, with an embedded signature that chains all the way back up to the Apple Root CA.</p>
+
+      <h2>What each layer proves</h2>
+      <ul>
+        <li><strong>Cert chain</strong> → "This private key belongs to Team ID <code>HPTTZS5J27</code>, and Apple says that team is real."</li>
+        <li><strong>Provisioning profile</strong> → "The holder of that key is authorized to sign builds for this specific bundle ID with this specific set of entitlements."</li>
+        <li><strong>Bundle signature</strong> → "Every byte of this binary was blessed by that key at build time — if anything's changed since, the signature won't verify."</li>
+      </ul>
+      <p>You can see why mismatched pieces fail so loudly. A cert for Team A can't sign for a profile scoped to Team B. A profile declaring App Sandbox can't ship a binary missing that entitlement. A binary modified after signing (even by a single byte) fails every verification.</p>
+
+      <h2>Why Apple stacks it this way</h2>
+      <p>Why not a single signing step, like Android uses? Two reasons:</p>
+      <ul>
+        <li><strong>Revocation granularity.</strong> If a developer's private key leaks, Apple can revoke <em>just that certificate</em> without invalidating every app that team ever shipped. Apps signed before the revocation stay valid; new signatures with the revoked cert fail.</li>
+        <li><strong>Entitlement enforcement.</strong> Apple can decide which apps get access to camera, location, network extensions, etc. by controlling the provisioning profile issuance. Bundling the list of allowed entitlements into a signed profile means the OS can refuse to honor an entitlement an app declared but wasn't authorized to use.</li>
+      </ul>
+
+      <h2>How <code>xcodebuild</code> ties it together</h2>
+      <p>When LingCode runs <code>xcodebuild archive</code>, it:</p>
+      <ol>
+        <li>Compiles your Swift / Obj-C into a binary.</li>
+        <li>Finds an <em>Apple Distribution</em> certificate in the login keychain matching the team ID declared in your project.</li>
+        <li>Asks Apple's developer portal (via Xcode's automatic signing) for a matching provisioning profile — creating or refreshing one as needed.</li>
+        <li>Computes SHA-256 hashes of every file in the <a href="/glossary.html#app-bundle">.app bundle</a> and signs them with the cert's private key.</li>
+        <li>Embeds the provisioning profile inside the bundle so the device can verify it at launch time.</li>
+        <li>Wraps everything in an <code>.xcarchive</code> along with <code>dSYM</code>s and metadata.</li>
+      </ol>
+      <p>Then <code>xcodebuild -exportArchive</code> re-signs for distribution (different method, different destination — App Store vs. Developer ID vs. Enterprise) and produces the uploadable artifact.</p>
+
+      <h2>The takeaways</h2>
+      <ul>
+        <li>Signing isn't one cryptographic operation — it's a <em>chain</em> of proofs, each answering a different narrow question.</li>
+        <li>The certificate proves team identity. The profile proves app authorization. The bundle signature proves integrity.</li>
+        <li>Errors are almost always about a <em>mismatch between layers</em>: cert for wrong team, profile for wrong bundle ID, entitlement profile doesn't list, etc. LingCode's <a href="/magic-deploy-setup.html">App Store guide</a> maps each error to the specific layer to check.</li>
+        <li>Apple's model is strict because it has to be: the trust chain on your Mac is the only thing between users and malware masquerading as your app.</li>
+      </ul>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">More deep dives:</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;"><a href="/learn-jwt-auth.html">JWT auth in 5 minutes</a> · <a href="/learn-version-code.html">Why versionCode breaks your second deploy</a> · <a href="/learn-service-accounts.html">What a service account really is</a></p>
+        <a href="/magic-deploy-setup.html">Read the App Store deploy guide →</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

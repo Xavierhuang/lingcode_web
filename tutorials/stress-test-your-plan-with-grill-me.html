@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stress-test your plan with /grill-me — find the holes before you implement</title>
+  <meta name="description" content="Plans look complete until someone interrogates them. The /grill-me workflow has LingCode play hostile interviewer — walking each decision branch to surface unresolved assumptions before you spend a week implementing.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/stress-test-your-plan-with-grill-me.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/stress-test-your-plan-with-grill-me.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/stress-test-your-plan-with-grill-me.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/stress-test-your-plan-with-grill-me.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Stress-test your plan with /grill-me",
+  "description": "Plans look complete until someone interrogates them. The /grill-me workflow has LingCode play hostile interviewer — relentlessly walking each decision branch to surface unresolved assumptions before you spend a week implementing.",
+  "url": "https://lingcode.dev/tutorials/stress-test-your-plan-with-grill-me.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/stress-test-your-plan-with-grill-me.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Stress-test your plan with /grill-me"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Tips & tricks",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Stress-test your plan with /grill-me",
+      "item": "https://lingcode.dev/tutorials/stress-test-your-plan-with-grill-me.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/stress-test-your-plan-with-grill-me.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Tips &amp; tricks</a>
+      <span>/</span>
+      <span>Stress-test your plan with /grill-me</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Stress-test your plan with /grill-me</h1>
+      <p class="intro">Plans look complete until someone interrogates them. The <code>/grill-me</code> workflow has LingCode play hostile interviewer — relentlessly walking each decision branch to surface unresolved assumptions <em>before</em> you spend a week implementing.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why your plan is wrong, and you don't know it yet</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>Every plan, on a first read, feels complete. You wrote it. The structure makes sense. The steps connect. You're ready to start.</p>
+          <p>Then implementation begins, and the holes appear:</p>
+          <ul>
+            <li>"Wait — what happens if the user is logged out when this fires?"</li>
+            <li>"This assumes both clients deploy at the same time. They don't."</li>
+            <li>"We never said what happens if the migration fails halfway through."</li>
+            <li>"What if there are two of these in flight? Did we ever pick — last-write-wins or fail-on-conflict?"</li>
+          </ul>
+          <p>Each of these is a five-second question that wasn't asked. Each one is a multi-hour rework when it surfaces mid-implementation. The cost ratio of <em>asking</em> versus <em>rebuilding</em> is roughly 1:200.</p>
+          <p>The <code>/grill-me</code> workflow inverts the asymmetry. You spend twenty minutes letting LingCode interrogate the plan before any code exists. Every hole that gets found in that window is a rework you don't have to do later.</p>
+        </div>
+      </div>
+
+      <h2>When to grill</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Run <code>/grill-me</code> when:</p>
+          <ul>
+            <li>You've just written an implementation plan and it "feels done."</li>
+            <li>You're about to commit to an irreversible step (schema change, public API, data backfill).</li>
+            <li>The plan touches a system you understand less well than the people who'll review the PR.</li>
+            <li>You've felt the urge to "just start" twice in the last ten minutes. That urge is usually a sign the plan is under-stressed.</li>
+          </ul>
+          <p>Don't run it on a one-line fix. Don't run it on a plan you've already executed (different skill — that's a code review). The window for grilling is between "plan written" and "code started."</p>
+        </div>
+      </div>
+
+      <h2>Set the adversarial frame</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>The default behavior of an AI coding tool is helpful and agreeable. That's the opposite of what you need for a grilling. Set the frame explicitly:</p>
+          <pre><code>I want you to stress-test my plan. Play a hostile interviewer
+who's trying to find every hole in this design before we
+commit to it.
+
+Rules:
+- Interrogate every decision branch. If the plan says "the
+  service handles this case," ask what happens in five
+  variations of that case.
+- Don't be agreeable. If I hand-wave, push back. If my answer
+  introduces a new assumption, grill that too.
+- Walk the failure paths, not just the happy path. What
+  breaks? Who sees it? How do we recover?
+- Don't propose fixes mid-grill. Just surface the questions.
+  We'll address them in a separate pass.
+
+Here's the plan:</code></pre>
+          <p>Paste the plan, or reference the plan file path. The "don't propose fixes" line is important — a grilling that turns into a co-design session loses the adversarial energy that makes it work.</p>
+          <div class="tip-box">
+            <strong>The frame is the whole skill.</strong> Without naming "hostile interviewer," LingCode will default to helpful — pointing out one or two things, agreeing with the rest. Naming the role unlocks the relentless mode.
+          </div>
+        </div>
+      </div>
+
+      <h2>Walk the decision tree, not the document</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>LingCode will start firing questions. The natural urge is to answer the easy ones first. Resist it. Answer in order, and answer the ones that feel uncomfortable first — those are usually where the real holes are.</p>
+          <p>A good grill exchange looks like this:</p>
+          <ul>
+            <li><em>LingCode:</em> "Step 4 says you backfill the new column from the old one. What's the order — write the new code first, then backfill, or backfill first, then ship the code?"</li>
+            <li><em>You:</em> "Backfill first."</li>
+            <li><em>LingCode:</em> "What happens to rows written between when you start the backfill and when you finish? The old code is still writing the old column."</li>
+            <li><em>You:</em> "Uh. Hmm."</li>
+            <li><em>LingCode:</em> "Right — so backfill alone isn't enough. You also need dual-writes during the migration window. Should the plan name that as a step?"</li>
+          </ul>
+          <p>That exchange takes ninety seconds. The bug it caught would have taken a day to debug in production. <strong>That ratio is the entire reason this skill exists.</strong></p>
+        </div>
+      </div>
+
+      <h2>Don't argue back — answer or admit</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>The temptation when grilled is to defend the plan. Don't. Two valid responses to every question:</p>
+          <ul>
+            <li><strong>"Here's the answer."</strong> If you actually know what happens, say it. LingCode will probe further.</li>
+            <li><strong>"I don't know."</strong> Flag it as an open question. LingCode keeps the list.</li>
+          </ul>
+          <p>Invalid responses: "we'll figure that out when we get there," "the framework handles it," "no one will hit that case." Each is a deferred hole. The point of the grill is to <em>not</em> defer.</p>
+          <div class="warn-box">
+            <strong>If you find yourself rationalizing,</strong> stop and write the question down as an open item. Rationalizations under interrogation are almost always assumptions you haven't tested.
+          </div>
+        </div>
+      </div>
+
+      <h2>Surface the failure modes</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Most plans cover the happy path. The grill should disproportionately probe what happens when things go wrong:</p>
+          <pre><code>Now walk only the failure paths. For each step:
+- What's the most likely way this step fails in production?
+- What's the rarest catastrophic way it can fail?
+- If it fails partway through, what state is the system in?
+- Who notices first — automated alert, user complaint, no one?
+- What's the rollback path, in commands or steps, not "we'd
+  roll back"?
+
+Don't accept "we'd handle it" — name the mechanism.</code></pre>
+          <p>This pass usually surfaces more than the first. Happy paths are well-rehearsed; failure paths are where the assumptions are buried.</p>
+        </div>
+      </div>
+
+      <h2>Probe the interfaces between steps</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>A common plan failure is that each step is fine in isolation but the seams between them aren't. Grill those explicitly:</p>
+          <ul>
+            <li>"Step 3 writes to the cache. Step 5 reads from it. What's the consistency model — read-after-write guaranteed?"</li>
+            <li>"Step 4 deploys the API. Step 6 deploys the client. What happens to clients still on the old version when step 4 ships?"</li>
+            <li>"Step 2 runs a migration. Step 7 reverses it on rollback. Are they actually inverses, or just 'mostly'?"</li>
+          </ul>
+          <p>The interface between steps is where ordering bugs hide. Naming each interface and grilling it catches drift the per-step reviews miss.</p>
+        </div>
+      </div>
+
+      <h2>Close the grill — compile the open items</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>When LingCode runs out of questions (or, more likely, when you run out of unblocked time), close the session:</p>
+          <pre><code>End the grill. Compile a single list of open items we surfaced
+that aren't yet resolved in the plan. For each one:
+- The question.
+- The status (unanswered, answered but plan not updated yet,
+  or "won't fix — accept the risk").
+- Where it should land in the plan if we adopt it (which
+  step gets amended, or where a new step belongs).
+
+Don't propose specific fixes — just the open-item list.</code></pre>
+          <p>This list is the deliverable. It's also a brutal honesty check — if it's long, your plan wasn't ready to execute. Better to know now.</p>
+        </div>
+      </div>
+
+      <h2>Amend the plan from the open items</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Take the open-items list back to the plan file. For each item:</p>
+          <ul>
+            <li><strong>Resolved by clarification?</strong> Update the relevant step's description so it's no longer ambiguous.</li>
+            <li><strong>Resolved by a new step?</strong> Add the step in the right place. Renumber.</li>
+            <li><strong>Accepted as risk?</strong> Add a "known risks" section to the plan and write down the decision. Future-you (or the reviewer) will want to see that this was deliberate, not missed.</li>
+          </ul>
+          <p>Commit the plan amendment as its own commit, separate from code:</p>
+          <pre><code>git commit -m "Amend plan after /grill-me pass — add dual-write
+step, document migration rollback path"</code></pre>
+          <p>Now the plan is stress-tested. Execute it with checkpoints (see the next tutorial). The grilling time you spent up front is the time you won't spend reworking later.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Grill yourself, not just LingCode.</strong> The most powerful use of this skill is having LingCode grill <em>your</em> design. But you can also use it on a teammate's plan, an RFC, or a production runbook you're inheriting. The frame works wherever there's a design that needs holes found.
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>Package the grilling workflow as a skill so <code>/grill-me</code> invokes it consistently:</p>
+          <pre><code>---
+name: grill-me
+description: Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree. Triggers: 'grill me', 'stress-test my plan', 'poke holes', 'find gaps', 'play devil's advocate', 'interview me', 'is this plan complete', 'what am I missing'. Actions: hostile interviewer, walk decision branches, surface unresolved assumptions, list open items (NOT direct fixes). Output: open-items list the user must answer before implementation. Anti-pattern: making suggestions instead of asking questions.
+---
+
+Play a hostile interviewer stress-testing the user's plan or
+design. Find holes before any code is written.
+
+Rules of engagement:
+- Interrogate every decision branch. If a step says "handles
+  this case," ask what happens in five variations.
+- Don't be agreeable. Push back on hand-waving. If an answer
+  introduces a new assumption, grill that one too.
+- Walk failure paths as thoroughly as happy paths. For each
+  step ask: most likely failure, worst-case failure, partial
+  failure, detection, rollback.
+- Probe interfaces between steps — consistency, versioning,
+  deployment ordering, inverse migrations.
+- Do not propose fixes mid-grill. Just surface the questions.
+- Accept only "here's the answer" or "I don't know." Reject
+  "we'll figure it out later" — that's a deferred hole.
+
+When the user closes the grill, compile a single list of open
+items: question, status (unanswered / answered-but-not-in-plan
+/ accepted risk), and where each should land in the plan.
+
+Don't write code, don't amend the plan file directly. The
+output is the open-items list.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/grill-me/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/write-an-implementation-plan-with-lingcode.html" class="tutorial-next-card">
+            <h3>Write an implementation plan</h3>
+            <p>The prerequisite — without a written plan there's nothing to grill against</p>
+          </a>
+          <a href="/tutorials/execute-a-plan-with-checkpoints.html" class="tutorial-next-card">
+            <h3>Execute a plan with checkpoints</h3>
+            <p>After the grill, run the plan one step at a time so corrections stay cheap</p>
+          </a>
+          <a href="/tutorials/brainstorm-before-you-build.html" class="tutorial-next-card">
+            <h3>Brainstorm before you build</h3>
+            <p>Earlier in the lifecycle — clarify scope so the plan you grill has something solid to grill against</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

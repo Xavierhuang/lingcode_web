@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何在 LingCode 中撤销 AI 的错误编辑？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="在 LingCode 中从 AI 错误编辑中恢复。使用恢复面板回滚对项目文件、权限配置和 Info.plist 的更改，防止损坏蔓延。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/undo-bad-ai-edits.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/undo-bad-ai-edits.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/undo-bad-ai-edits.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/undo-bad-ai-edits.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "撤销 AI 的错误编辑",
+  "description": "当智能体损坏了 Xcode 项目文件或清空了你的权限配置时，你不需要求助于 git。LingCode 为每次受保护的更改保留了按文件维度的快照，让你能在两次点击内完成回滚。",
+  "url": "https://lingcode.dev/zh/tutorials/undo-bad-ai-edits.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/undo-bad-ai-edits.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "撤销 AI 的错误编辑"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "撤销 AI 的错误编辑",
+      "item": "https://lingcode.dev/zh/tutorials/undo-bad-ai-edits.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/undo-bad-ai-edits.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">原生 Mac IDE</a>
+      <span>/</span>
+      <span>撤销 AI 的错误编辑</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何在 LingCode 中撤销 AI 的错误编辑？</h1>
+      <p class="tldr"><strong>简而言之：</strong>打开 <em>编辑 → AI 历史记录</em>（或按 ⌘⇧Z），选择你想回退到的智能体操作轮次。LingCode 的预编辑快照会将 <code>project.pbxproj</code>、<code>Info.plist</code>、<code>build.gradle</code> 以及所有被修改的文件恢复至该轮次操作前的状态——无需执行 git checkout。</p>
+      <p class="intro">当智能体损坏了 Xcode 项目文件或清空了你的权限配置时，你不需要求助于 git。LingCode 为每次受保护的更改保留了按文件维度的快照，让你能在两次点击内完成回滚。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>AI 智能体编辑的大多数内容都是普通源代码，这些内容通常可以用 <code>git checkout</code> 轻松撤销。但智能体也会触碰一小部分危险得多的文件——那些维系着项目结构的关键配置文件。<code>.pbxproj</code> 将 Xcode 的目标与文件关联在一起；<code>Info.plist</code> 声明了你应用的身份信息；<code>.entitlements</code> 授予了你所依赖的每项能力。<code>AndroidManifest.xml</code> 和 <code>build.gradle</code> 在 Android 侧扮演着同样的角色。这里哪怕一个错位的键值，都可能是"项目正常编译"与"项目拒绝构建却找不到原因"之间的分水岭。</p>
+      <p>git 不够用的原因在于时机。git 只能记录你已提交的内容。而 AI 的错误编辑发生在提交<em>之间</em>，发生在一个已经混有你自己正常改动的工作区里。等你发现问题时——通常是因为构建报错——错误编辑和你正常的修改已经缠绕在一起。这时用 <code>git checkout</code> 会把上次提交以来的所有内容一并回滚，包括你本来想保留的工作。</p>
+      <p>LingCode 的解决方案是按文件维度的快照：智能体对受保护文件的每次修改，都会在落盘<em>前</em>被捕获一份快照。所以当某个文件出了问题，你不必在丢失工作和交付一个损坏的项目之间二选一——只需回滚那个出问题的单个文件即可。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>LingCode 会自动为哪些文件创建快照</li>
+        <li>如何从工具栏打开恢复面板</li>
+        <li>将单个文件回滚到之前的快照</li>
+        <li>在工具调用落盘前拒绝它</li>
+        <li>这与 <code>git checkout</code> 有何本质区别</li>
+      </ul>
+
+      <h2>第 1 步：了解哪些内容受到保护</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>最容易出问题的文件</h3>
+          <p>AI 智能体在编辑普通源代码时往往胸有成竹。真正让它们惹出麻烦的，是项目的<em>配置</em>文件：将 Xcode 项目组织在一起的 <code>.pbxproj</code>、<code>Info.plist</code>、<code>.entitlements</code>、scheme 文件，以及 Android 等价文件（<code>AndroidManifest.xml</code>、<code>build.gradle</code>）。</p>
+          <p>这里哪怕一个错位的键值，就可能让项目拒绝构建，或静默地移除推送通知等关键能力。LingCode 会自动为这些文件的每次变更创建快照——每当智能体触碰其中一个文件，就会在写入前保存一个带版本号的副本。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>为什么 git 不够用？</strong>快照在未提交的脏工作区也会触发，并且捕获的是每次工具调用<em>前</em>的精确瞬间。<code>git checkout</code> 只能看到你已暂存的内容。
+      </div>
+
+      <h2>第 2 步：打开恢复面板</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>从编辑器工具栏进入</h3>
+          <p>在编辑器顶部找到标有 <strong>恢复</strong> 的<strong>盾牌图标</strong>，点击它。一个侧边面板会滑出，列出所有拥有快照的受保护文件，最近编辑的文件排在最上方。</p>
+          <p>每个条目会显示文件路径、现有快照的数量，以及最新快照的创建时间。未被智能体触碰过的文件不会出现在这里——这个面板专注于真正有风险的内容。</p>
+        </div>
+      </div>
+
+      <h2>第 3 步：查看快照</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>点击文件查看其历史记录</h3>
+          <p>选中一个文件后，会展开一个按时间排列的快照列表，显示时间戳、触发该快照的智能体操作（例如"通过 Claude 的 edit_file"），以及与当前磁盘版本的差异对比。</p>
+          <p>回滚前请先阅读差异内容。智能体可能做了一个合理的修改，同时又犯了一个独立的小错误——差异视图会准确告诉你哪里发生了变化。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：执行回滚</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>恢复到选定的快照</h3>
+          <p>选择你想要的快照，然后点击<strong>恢复</strong>。LingCode 会将该版本写回磁盘，编辑器随即重新加载。如果该文件当前处于打开状态，编辑缓冲区会就地更新。</p>
+          <p>恢复操作本身也是可撤销的——在被覆盖之前，当前状态会先成为一个新的快照，所以如果需要，你可以撤销这次撤销。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>注意：</strong>恢复操作只会回滚你选中的那个单独文件。如果一次错误编辑跨越了多个文件（例如智能体在同一轮次中同时破坏了 <code>.pbxproj</code> 和某个 Swift 文件），需要逐一恢复每个你想回滚的文件。批量回滚功能已在路线图中。
+      </div>
+
+      <h2>第 5 步：在问题发生前就拦截它</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>拒绝工具调用</h3>
+          <p>最省事的恢复是根本不需要恢复。当智能体提议对配置文件进行编辑时，系统会弹出一个权限对话框，在应用前显示文件路径和差异内容。点击<strong>拒绝</strong>，该更改就永远不会落盘——无需任何快照。</p>
+          <p>如果将权限模式设置为 <code>default</code>，每次配置文件编辑都会弹出提示。<code>acceptEdits</code> 会自动接受，但仍然创建快照。<code>plan</code> 模式则会在不实际执行的情况下，向你展示智能体<em>将要</em>做什么。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：当恢复面板不够用时</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>回退到 git</h3>
+          <p>快照覆盖的是受保护的文件集合——它是针对智能体最常破坏的那些特定内容的精细安全网。对于更大范围的恢复（比如智能体触碰了数十个源文件），请使用 git：<code>git status</code> 显示发生了哪些变化，<code>git restore &lt;file&gt;</code> 回滚单个文件，<code>git stash</code> 将整个工作区暂存起来。</p>
+          <p>对于高风险实验，请参阅<a href="/zh/tutorials/experiment-safely-with-worktrees.html">使用 worktrees 安全地进行实验</a>——这是一种更强的隔离模式，能将有风险的智能体运行完全隔绝在主分支之外。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>提示：</strong>如果智能体把项目损坏得连 IDE 都无法打开，快照文件独立于 UI 存储在磁盘上。它们位于项目内的 <code>.lingcode/snapshots/</code> 目录下——如有需要，可以手动将文件复制回去。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/experiment-safely-with-worktrees.html" class="tutorial-next-card">
+            <h3>使用 worktrees 安全地进行实验</h3>
+            <p>在隔离的分支中运行有风险的智能体提示，保持主工作区的整洁</p>
+          </a>
+          <a href="/zh/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>通过聊天上传到 TestFlight</h3>
+            <p>让智能体将你的 iOS 应用归档并发布到 App Store Connect</p>
+          </a>
+          <a href="/zh/tutorials/setting-up-api-keys.html" class="tutorial-next-card">
+            <h3>配置 API 密钥</h3>
+            <p>配置 Claude、DeepSeek、GPT-4 及其他服务提供商</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速交付的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">路演</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

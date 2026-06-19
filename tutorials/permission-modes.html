@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Permission modes: default, acceptEdits, plan — LingCode Tutorials</title>
+  <meta name="description" content="LingCode's three permission modes — default, acceptEdits, and plan — control when the agent asks before doing. Learn when each one is right and how to switch.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/permission-modes.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/permission-modes.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/permission-modes.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/permission-modes.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Permission modes: default, acceptEdits, plan",
+  "description": "How often the agent should stop to ask \"are you sure?\" depends entirely on what you're doing. LingCode ships three permission modes so you can match the consent level to the risk — and switch between them mid-conversation as the risk changes.",
+  "url": "https://lingcode.dev/tutorials/permission-modes.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/permission-modes.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Permission modes: default, acceptEdits, plan"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Permission modes",
+      "item": "https://lingcode.dev/tutorials/permission-modes.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/permission-modes.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Native Mac IDE</a>
+      <span>/</span>
+      <span>Permission modes</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Permission modes: default, acceptEdits, plan</h1>
+      <p class="intro">How often the agent should stop to ask "are you sure?" depends entirely on what you're doing. LingCode ships three permission modes so you can match the consent level to the risk — and switch between them mid-conversation as the risk changes.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>Every agentic tool has the same tension. Asking permission for every action is safe but exhausting — you end up clicking "yes" without reading, which is worse than not asking. Skipping permission entirely is fast but reckless — the agent gets a turn or two of unsupervised power, which is plenty of time to overwrite a config file or run the wrong shell command. The trick is that the right setting is different from moment to moment in the same session. Reviewing what the agent <em>would</em> do before letting it touch anything is the right setting at the start of a complex task. Letting it churn through ten edits without prompting is the right setting once you've established trust for that task.</p>
+      <p>LingCode addresses this with three named permission modes you switch between as needed, not a single global setting you have to pick correctly at install time. <strong>Default</strong> asks before destructive actions. <strong>acceptEdits</strong> auto-approves file edits but still prompts for shell, deletes, and external calls. <strong>Plan</strong> mode is read-only — the agent can think, analyze, and plan but cannot actually do anything until you exit plan mode.</p>
+      <p>The actual mechanism is a keyboard shortcut: <kbd>Shift+Tab</kbd> in the chat panel cycles through the three modes. Once you know which mode means what, this becomes a fluent gesture — you press Shift+Tab when the work shifts in risk level.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>What each of the three modes allows and blocks</li>
+        <li>The right mode for the four most common scenarios</li>
+        <li>The <kbd>Shift+Tab</kbd> cycle and where to see the current mode</li>
+        <li>How modes interact with plugin-installed hooks</li>
+        <li>What changes when you're in plan mode (and what doesn't)</li>
+      </ul>
+
+      <h2>Step 1: <code>default</code> — ask first, do second</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>The conservative default</h3>
+          <p>In <code>default</code> mode, the agent prompts before every destructive action. A file edit shows a diff and waits. A shell command shows the exact command and waits. A network call shows the URL and waits. Read-only actions (reading a file, running tests in non-interactive mode, querying the language server) don't prompt — those are free.</p>
+          <p>Use <code>default</code> when you don't yet know what the agent is going to do. The first turn of a new task. An unfamiliar repo. Whenever the prompt is vague and you want to see the plan before committing to it.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: <code>acceptEdits</code> — flow mode for known work</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Trust the edits, gate everything else</h3>
+          <p>Once you've watched the agent make a few correct edits and you're in flow on a known task — a series of similar refactors, applying the same lint fix across many files, working through a list of TODOs — <code>default</code> mode's "approve every edit" becomes friction. Switch to <code>acceptEdits</code> and file writes go through without prompting. Shell commands, deletions, network calls, and tool invocations that touch the world outside your filesystem still prompt.</p>
+          <p>This is the most common steady-state mode for active development. You stay alert for the prompts that matter (commands that could break things) while letting the small edits flow.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Snapshot safety net:</strong> Even in <code>acceptEdits</code>, edits to protected configuration files (<code>.pbxproj</code>, <code>Info.plist</code>, entitlements) are snapshotted before the write. If <code>acceptEdits</code> approves something you regret, see <a href="/tutorials/undo-bad-ai-edits.html">Undo bad AI edits</a>.
+      </div>
+
+      <h2>Step 3: <code>plan</code> — read-only, propose-only</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>The agent thinks; nothing happens</h3>
+          <p>In <code>plan</code> mode, every action that would modify state is blocked at the tool layer. The agent can read files, search the codebase, query symbols, run analysis — it can build a complete understanding of what to do — but it cannot write, exec, or call. The final output is a plan: a structured proposal of changes for you to review.</p>
+          <p>Use <code>plan</code> when the right thing to do isn't obvious yet and you want the agent's analysis without its hands on the keyboard. A migration whose ordering matters. A refactor that touches a system you don't know well. Any task where "let me think before I do" is the right discipline.</p>
+          <p>When the plan looks good, exit plan mode (Shift+Tab back to <code>default</code> or <code>acceptEdits</code>) and let the agent execute it.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Switching modes mid-conversation</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The Shift+Tab cycle</h3>
+          <p>With the chat panel focused, press <kbd>Shift+Tab</kbd>. The status bar at the bottom updates to show the new mode. Press again to cycle through: <code>default → acceptEdits → plan → default</code>.</p>
+          <p>The mode change applies from the next turn forward — the current turn finishes with whatever mode it started in. This matters: if you switch mid-tool-call, that call still goes through under the old mode. Switch before sending the next message.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: A small decision tree</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Pick the right mode for the scenario</h3>
+          <ul>
+            <li><strong>"I'm not sure what to do" / "I want to see the plan first"</strong> → <code>plan</code></li>
+            <li><strong>"I know roughly what I want; let me eyeball each edit"</strong> → <code>default</code></li>
+            <li><strong>"I'm in flow; stop asking; my finger is on the snapshot revert button"</strong> → <code>acceptEdits</code></li>
+            <li><strong>"This is a destructive operation and I want to think before I let it happen"</strong> → <code>plan</code> first, then <code>default</code> for the execution turn</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Step 6: How modes interact with hooks</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Hooks are always sovereign</h3>
+          <p>Plugin-installed hooks (<code>PreToolUse</code>, <code>UserPromptSubmit</code>, etc.) run regardless of permission mode. A <code>PreToolUse</code> hook that blocks a tool call blocks it in all three modes; <code>acceptEdits</code> doesn't override a hook that says no. This is intentional: hooks are an explicit policy you (or your project) decided on, and modes shouldn't be able to escape them.</p>
+          <p>So if you find a hook is getting in the way, the answer is to adjust the hook, not the mode.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>The CLI has different mode names.</strong> The <a href="/tutorials/install-and-use-the-lingcode-cli.html">lingcode CLI</a> uses <code>tty</code>, <code>deny-all</code>, and <code>yolo</code> for its three permission policies. They're conceptually different: the CLI modes are about "how do I get consent when there's no GUI" rather than "what does the agent gate by default." Same goal, different surface.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/undo-bad-ai-edits.html" class="tutorial-next-card">
+            <h3>Undo bad AI edits</h3>
+            <p>The safety net that makes acceptEdits feel safer</p>
+          </a>
+          <a href="/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>Install and configure plugins</h3>
+            <p>How plugin hooks interact with the permission system</p>
+          </a>
+          <a href="/tutorials/experiment-safely-with-worktrees.html" class="tutorial-next-card">
+            <h3>Experiment safely with worktrees</h3>
+            <p>When even acceptEdits feels risky, isolate the whole tree</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

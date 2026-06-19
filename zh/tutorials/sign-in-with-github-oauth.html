@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 GitHub 登录（OAuth）— LingCode 教程</title>
+  <meta name="description" content="GitHub OAuth 与 Google OAuth 的流程几乎相同，但对开发者更友好：注册应用只需填写一张表单，而不是在 Google Cloud 的多个页面来回跳转。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/sign-in-with-github-oauth.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/sign-in-with-github-oauth.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/sign-in-with-github-oauth.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/sign-in-with-github-oauth.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 GitHub 登录（OAuth）",
+  "description": "如果你的用户群是开发者，GitHub OAuth 是最合适的第二登录选项（甚至是唯一的选项）。它与 Google OAuth 流程相同——但注册应用只需在 GitHub 上填写一张表单，无需穿越 Google Cloud Console 的重重页面，而且用户身份自带其开发者声誉。",
+  "url": "https://lingcode.dev/zh/tutorials/sign-in-with-github-oauth.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/sign-in-with-github-oauth.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 GitHub 登录（OAuth）"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "使用 GitHub 登录（OAuth）",
+      "item": "https://lingcode.dev/zh/tutorials/sign-in-with-github-oauth.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/sign-in-with-github-oauth.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>使用 GitHub 登录（OAuth）</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 GitHub 登录（OAuth）</h1>
+      <p class="intro">如果你的用户群是开发者，GitHub OAuth 是最合适的第二登录选项（甚至是唯一的选项）。它与 Google OAuth 的流程相同——但注册应用只需在 GitHub 上填写一张表单，而不是穿越 Google Cloud Console 的重重页面。更重要的是，用户身份自带其在开发者圈子里积累的信誉。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>选择哪些 OAuth 提供商，取决于你的用户是谁。面向普通消费者的应用首选 Google，因为人人都有 Google 账号。B2B 应用首选 Microsoft，因为企业账号在那里。面向开发者的应用则首选 GitHub——它是开发者的职业身份，他们每天都登着那个账号写代码，而"档案里的 GitHub 用户名"所承载的社会认可，是一个普通邮箱地址所没有的。如果你的产品涉及代码、DevOps 或开发者工作流，GitHub OAuth 就是标配。</p>
+      <p>从技术机制上看，它与 <a href="/zh/tutorials/sign-in-with-google-oauth.html">Google 版本</a>走的是同一套 OAuth 2.0 流程：跳转、授权页、带 auth code 的回调、服务端换取 access token、用户查询。差异只在表面。GitHub 的应用注册是 github.com/settings 上的单张表单，没有"审核流程"——创建应用的瞬间，任何 GitHub 用户都可以使用它。GitHub 的用户对象包含用户名（这比邮箱地址更有意义）、头像 URL，以及可选的公开邮箱（默认私密；需要申请 <code>user:email</code> 权限才能获取到可用的值）。</p>
+      <p>本教程将介绍注册表单的填写、值得申请的权限范围，以及最容易让新手踩坑的地方：如何从响应中拿到一个稳定可用的邮箱地址。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>在哪里注册 GitHub OAuth 应用</li>
+        <li>权限范围的选择——<code>user:email</code> 以及为什么几乎总是需要它</li>
+        <li>重定向回调的完整流程</li>
+        <li>如何从 GitHub API 获取经过验证的主邮箱</li>
+        <li>OAuth Apps 与 GitHub Apps 的区别——各自适用的场景</li>
+      </ul>
+
+      <h2>第 1 步：注册新的 OAuth App</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>github.com/settings/developers</h3>
+          <p>进入 GitHub 设置，在左侧边栏底部找到 <strong>Developer settings</strong>，点击 <strong>OAuth Apps → New OAuth App</strong>，填写以下信息：</p>
+          <ul>
+            <li><strong>Application name：</strong>用户在授权页上看到的应用名称。</li>
+            <li><strong>Homepage URL：</strong>你的应用首页地址。</li>
+            <li><strong>Authorization callback URL：</strong>用户授权后 GitHub 跳回的地址。格式参考：<code>https://yourapp.com/api/auth/callback/github</code>。本地开发时，可以单独注册一个测试应用，或使用 <code>http://localhost:3000/api/auth/callback/github</code>——地址必须完全匹配。</li>
+            <li><strong>Application description：</strong>可选，方便日后的自己（或团队）理解用途。</li>
+          </ul>
+          <p>点击 <strong>Register application</strong>，GitHub 会立即显示你的 <strong>Client ID</strong>。点击 <strong>Generate a new client secret</strong> 生成密钥；<strong>立刻复制保存</strong>，它只显示一次。</p>
+        </div>
+      </div>
+
+      <h2>第 2 步：多环境配置——一个应用还是多个</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>GitHub 每个应用只允许填写一个回调地址</h3>
+          <p>与 Google 不同，GitHub OAuth Apps 只接受一个回调地址。要同时支持开发环境和生产环境，最简单的方法是注册两个应用：</p>
+          <ul>
+            <li><strong>应用 #1：</strong>"MyApp (dev)" → 回调地址 <code>http://localhost:3000/...</code></li>
+            <li><strong>应用 #2：</strong>"MyApp (prod)" → 回调地址 <code>https://yourapp.com/...</code></li>
+          </ul>
+          <p>每个应用都有独立的 Client ID 和密钥。开发环境指向应用 #1，生产环境指向应用 #2。两者的名称可以不同——用户在开发环境的授权页上会看到"MyApp (dev)"，这对调试来说反而很方便。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>"只能填一个回调地址"的变通方法：</strong>GitHub 允许回调地址共享前缀。如果注册的回调是 <code>https://yourapp.com/auth/callback/github</code>，GitHub 会接受该路径下的任意子路径回调——你可以把状态信息放在路径里。大多数库不会利用这一特性；但在排查"为什么这个 redirect URL 不生效"时，记住这条规则会有帮助。
+      </div>
+
+      <h2>第 3 步：将凭据添加到代码中</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>用环境变量存储，与其他凭据保持一致</h3>
+          <pre><code>GITHUB_CLIENT_ID=Iv1.xxxxxxxxx
+GITHUB_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxx</code></pre>
+          <p>在 Auth.js / NextAuth 中，配置方式如下：</p>
+          <pre><code>import GitHubProvider from "next-auth/providers/github";
+
+export const authOptions = {
+  providers: [
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),
+  ],
+};</code></pre>
+          <p>如果你已经配置了 Google 提供商，可以直接把 GitHub 并排加进去——该库支持叠加多个提供商，登录界面会为每个提供商显示对应的按钮。</p>
+        </div>
+      </div>
+
+      <h2>第 4 步：申请合适的权限范围</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>用于登录时：<code>user:email</code></h3>
+          <p>默认情况下，GitHub OAuth 只授予对用户公开资料的访问权限，而公开资料中可能不包含邮箱地址（大多数用户的主邮箱都设置为私密）。要获取可用的邮箱，需要申请 <code>user:email</code> 权限范围。</p>
+          <p>Auth.js 默认已经申请了这个权限。手动构建授权 URL 时，需要在查询字符串中加上 <code>&amp;scope=user:email</code>。用户会在授权页上看到相应提示（"访问你的邮箱地址"）。</p>
+          <p>其他一些适用于高级场景的权限范围：</p>
+          <ul>
+            <li><code>read:user</code>——获取超出公开默认值的用户资料信息。</li>
+            <li><code>repo</code>——读写用户的代码仓库（仅在应用确实需要时申请）。</li>
+            <li><code>read:org</code>——查看用户所属的组织。</li>
+          </ul>
+          <p>原则是：只申请你实际会用到的权限。每增加一个权限范围，授权页的摩擦就多一分，用户的隐私顾虑也随之增加。</p>
+        </div>
+      </div>
+
+      <h2>第 5 步：从响应中获取真实的邮箱地址</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>最容易出错的地方</h3>
+          <p>授权成功后，GitHub 的 <code>/user</code> 接口返回用户的个人资料。响应中的 <code>email</code> 字段是用户的<em>公开</em>邮箱——很多情况下是 <code>null</code>，因为大多数用户将邮箱设为私密。</p>
+          <p>要获取可用的邮箱，应该改用 <code>/user/emails</code> 接口。在拥有 <code>user:email</code> 权限的情况下，该接口会返回用户的所有邮箱地址，包括经过验证的主邮箱：</p>
+          <pre><code>const emailsRes = await fetch('https://api.github.com/user/emails', {
+  headers: { Authorization: `Bearer ${accessToken}` },
+});
+const emails = await emailsRes.json();
+const primary = emails.find(e =&gt; e.primary &amp;&amp; e.verified)?.email;</code></pre>
+          <p>务必选取经过验证的主邮箱，这是 GitHub 自己信任并用于通信的邮箱。Auth.js 会自动处理这一逻辑；手动实现时需要自行处理，而这一步恰恰是最容易被遗漏的。</p>
+        </div>
+      </div>
+
+      <h2>第 6 步：存储 GitHub 用户 ID，而不仅仅是用户名</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>用户名可以修改，ID 不会变</h3>
+          <p><code>/user</code> 接口的响应同时包含 <code>login</code>（用户名，例如 <code>octocat</code>）和 <code>id</code>（稳定的数字 ID，例如 <code>583231</code>）。两者都应该存储，但要以 ID 作为外键。</p>
+          <p>GitHub 允许用户修改用户名；如果以 <code>login</code> 作为关联键，用户改名后你的数据记录就会断链。应以 <code>id</code> 作为关联键，将当前的 <code>login</code> 存储为一个独立字段，并在每次登录时更新。</p>
+        </div>
+      </div>
+
+      <h2>第 7 步：OAuth Apps 与 GitHub Apps 的区别</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>名称相似，但并不是同一回事</h3>
+          <p>GitHub 有两种应用类型：</p>
+          <ul>
+            <li><strong>OAuth Apps</strong>——本教程介绍的类型。最适合"让用户登录"的场景。以用户身份操作。标准 OAuth 2.0 流程。</li>
+            <li><strong>GitHub Apps</strong>——功能更强大。可以代表安装主体（用户或组织）操作；拥有细粒度权限控制；使用短期令牌。最适合"作为 GitHub 一等公民与代码仓库深度集成"的场景——比如 Bot、CI 工具、代码审查自动化。</li>
+          </ul>
+          <p>如果只是实现登录功能，OAuth Apps 简单又合适。如果需要与代码交互（创建 PR、发布 Check、访问仓库内容），GitHub Apps 是更现代的方式。两者可以并存——很多产品同时使用 OAuth App 处理登录，以及独立的 GitHub App 处理仓库集成功能。</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>速率限制不可忽视。</strong>OAuth App 的授权请求计入应用级别的速率限制（应用层面每小时 5,000 次）。登录量大的页面可能会触达上限。如果接近限制，可以考虑改用 GitHub Apps（有独立且更大的限额），或对用户资料进行积极缓存。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/sign-in-with-google-oauth.html" class="tutorial-next-card">
+            <h3>使用 Google 登录（OAuth）</h3>
+            <p>标准认证组合的另一半</p>
+          </a>
+          <a href="/zh/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-car d">
+            <h3>配置 Sentry 错误追踪</h3>
+            <p>用户开始登录后，你需要知道认证流程何时出了问题</p>
+          </a>
+          <a href="/zh/tutorials/connect-linear-and-github-via-mcp.html" class="tutorial-next-card">
+            <h3>通过 MCP 连接 Linear 与 GitHub</h3>
+            <p>你的应用已经通过 GitHub 实现了认证，现在让 Agent 也能与 GitHub 对话</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发平台。为想要快速发布产品的创始人和追求专业工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">作品展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">理念宣言</a></li>
+        <li><a href="/pitch.html">融资简介</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

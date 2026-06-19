@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I connect an MCP server to LingCode? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Connect an MCP server to LingCode. Give the agent typed tools for Linear, GitHub, your database, or any service that speaks the Model Context Protocol.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-an-mcp-server.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/connect-an-mcp-server.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-an-mcp-server.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/connect-an-mcp-server.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Connect an MCP server",
+  "description": "An MCP server is how you give the agent a new set of typed tools — for Linear, GitHub, your database, your internal admin API, anything. Configure once; the tools show up in every conversation, namespaced and approved per-call.",
+  "url": "https://lingcode.dev/tutorials/connect-an-mcp-server.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/connect-an-mcp-server.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Connect an MCP server"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Connect an MCP server",
+      "item": "https://lingcode.dev/tutorials/connect-an-mcp-server.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/connect-an-mcp-server.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Connect an MCP server</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>How do I connect an MCP server to LingCode?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Add an MCP server entry to <code>.lingcode/mcp.json</code> (or the equivalent UI in the Mac IDE) with the server's command, args, and env. LingCode launches it as a subprocess and exposes its tools to the agent as <code>mcp__&lt;id&gt;__&lt;name&gt;</code> calls. Works in the Mac IDE, the CLI, and /try (HTTP transport only in /try).</p>
+      <p class="intro">An MCP server is how you give the agent a new set of typed tools — for Linear, GitHub, your database, your internal admin API, anything. Configure once; the tools show up in every conversation, namespaced and approved per-call.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>The agent's built-in tools are good at what they do — read files, run shell, search code — but they all share the same shape: things you'd do in a local terminal. Plenty of real engineering work isn't local. Looking up a ticket in Linear, posting a status update to Slack, querying production for a user's row, kicking off a CI run — these are remote actions the agent can't do without a way to call out.</p>
+      <p>The naïve solution is to give the agent shell access to <code>curl</code> and hope it gets the API call right. This works occasionally and fails badly the rest of the time — the agent has to remember endpoints, auth headers, response shapes, error codes, all in prompt context. A wrong header is a 401; a wrong endpoint is a 404; either way, the agent is debugging with HTTP errors instead of structured feedback.</p>
+      <p>MCP — the Model Context Protocol — is the structured alternative. An MCP server is a small process that exposes typed tools (<code>create_ticket</code>, <code>get_user_by_email</code>, <code>run_query</code>) with explicit JSON schemas for arguments and return values. The agent sees the tool by name, calls it by name, and gets back structured data. Auth happens once, at server start; the agent doesn't see the credential.</p>
+      <p>This tutorial covers connecting an existing MCP server. (Writing your own is a separate deeper topic.) You'll learn the two transport flavors LingCode supports, where to put the config, what the namespacing looks like, and the per-tool approval flow.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>The shape of an MCP server config</li>
+        <li>stdio vs. HTTP transport, and which to use when</li>
+        <li>Three places you can declare a server (user, project, plugin)</li>
+        <li>How tool calls appear, named, and prompted</li>
+        <li>Common failure modes (server not starting, schema not loading)</li>
+      </ul>
+
+      <h2>Step 1: The shape of an MCP server config</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>A small JSON entry</h3>
+          <p>An MCP server entry is a few fields:</p>
+          <pre><code>{
+  "mcpServers": {
+    "linear": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-linear"],
+      "env": {
+        "LINEAR_API_KEY": "lin_api_..."
+      }
+    }
+  }
+}</code></pre>
+          <p>That's the minimum: a unique name (<code>linear</code>), a <code>command</code> + <code>args</code> to launch the server, and the env vars it needs. LingCode spawns the process when the agent starts a turn, talks to it over stdin/stdout, and shuts it down between turns to keep things tidy.</p>
+        </div>
+      </div>
+
+      <h2>Step 2: Pick a transport — stdio or HTTP</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Two ways the server can listen</h3>
+          <p>MCP supports two transports:</p>
+          <ul>
+            <li><strong>stdio</strong> — the default for local development. The server is a subprocess LingCode owns. Cheap, fast, no network. Use this for anything you can run locally as a Node or Python process.</li>
+            <li><strong>HTTP / SSE</strong> — for remote servers you connect to over the network. Set a <code>url</code> instead of a <code>command</code>; pass auth in <code>headers</code>. Use this when the server lives on a teammate's machine, a shared internal service, or a managed third-party provider.</li>
+          </ul>
+          <p>Both speak the same protocol — the only difference is how the connection is made. The agent doesn't know or care which transport its server is using.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Browser-side MCP:</strong> The /try playground supports HTTP transport only — stdio doesn't translate to the browser. If you want a tool in both LingCode (Mac) and /try (browser), wrap it in HTTP transport so it works in both.
+      </div>
+
+      <h2>Step 3: Where to declare the server</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>User, project, or plugin — pick the right scope</h3>
+          <p>Three places LingCode looks for MCP server configs:</p>
+          <ul>
+            <li><strong>User-wide:</strong> <code>~/.claude/mcp.json</code> — applies everywhere. Right for personal-account services (your Linear, your GitHub).</li>
+            <li><strong>Project-local:</strong> <code>.claude/mcp.json</code> in the project root or an ancestor — applies only when working in that project. Right for project-specific services (this product's admin API).</li>
+            <li><strong>Plugin-bundled:</strong> inside a <a href="/tutorials/install-and-configure-plugins.html">plugin</a>'s <code>mcp/</code> directory. Right for shareable, namespaced tools (a team-shared "Linear via mcp-server-linear" plugin you all install).</li>
+          </ul>
+          <p>All three are merged at load time. Project-local overrides user-wide on name collision.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: First tool call — what it looks like</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Namespaced as <code>mcp__&lt;server&gt;__&lt;tool&gt;</code></h3>
+          <p>When the server registers, LingCode discovers its tools and surfaces them to the agent with names like <code>mcp__linear__create_issue</code>, <code>mcp__linear__list_projects</code>, etc. The prefix matters: it keeps two MCP servers that both expose <code>create_issue</code> from colliding, and it lets you immediately see in the chat panel that a given tool call came from MCP rather than the built-in toolset.</p>
+          <p>The first time the agent calls each MCP tool in a session, you'll get a permission prompt with the tool's name, the arguments, and the server identity. Approve, deny, or "approve for this session." The approval is per-tool, not per-server — a deliberate choice, because some MCP servers expose powerful tools alongside benign ones.</p>
+        </div>
+      </div>
+
+      <h2>Step 5: When it doesn't work — the two common failures</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Server won't start, or tools won't show</h3>
+          <p><strong>Server won't start.</strong> Run <code>lingcode doctor</code> (or <code>/doctor</code> in the REPL). It tries to launch each configured MCP server and reports stderr from any that fail. The common causes: a missing <code>npx</code>/<code>node</code> on PATH, a required env var not set, a server package that hasn't been published yet (typo in the npm name). The fix is usually obvious once you've seen the actual error.</p>
+          <p><strong>Server starts, tools don't show.</strong> The server is up but isn't registering anything. This usually means a schema problem on the server side — the tool definitions exist in code but don't pass validation, so the agent never sees them. Check the server's own logs; the schemas usually fail noisily. If the server is third-party and recent, file an issue upstream.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: One small habit that prevents headaches</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Treat MCP credentials like ASC API keys</h3>
+          <p>Don't put <code>LINEAR_API_KEY</code> as a literal string in <code>mcp.json</code> if the file lives in version control. Either commit a template (<code>$LINEAR_API_KEY</code>) and let the env supply it, or put the real config in <code>~/.claude/mcp.json</code> (which is per-user and not committed). MCP servers are powerful — leaking the credential is the same risk class as leaking any other API key.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Performance note:</strong> MCP servers spawn fresh each turn. A slow-starting server adds latency to every prompt. For servers you use constantly, prefer HTTP transport to a long-lived local process over stdio to a process that has to import lots of code on each boot.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/install-and-configure-plugins.html" class="tutorial-next-card">
+            <h3>Install and configure plugins</h3>
+            <p>The cleanest way to share MCP configs with a team</p>
+          </a>
+          <a href="/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>Permission modes</h3>
+            <p>The per-tool approval flow MCP calls go through</p>
+          </a>
+          <a href="/tutorials/install-and-use-the-lingcode-cli.html" class="tutorial-next-card">
+            <h3>Install and use the lingcode CLI</h3>
+            <p>lingcode doctor is your friend for diagnosing MCP server problems</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

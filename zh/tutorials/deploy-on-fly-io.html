@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何从 LingCode 部署到 Fly.io？| 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Fly.io 将你的应用以 Docker 容器的形式运行在离用户最近的地方——覆盖 30+ 个地区，机器级别的精细控制，一个 CLI 搞定一切。介于"托管 PaaS"与"裸 VPS"之间的最佳选择。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-on-fly-io.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-on-fly-io.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-on-fly-io.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/deploy-on-fly-io.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "部署到 Fly.io",
+  "description": "Fly.io 让 Docker 容器同时运行在全球 30 个城市。你提供镜像，fly deploy 自动将其部署到离用户最近的地方。比 VPS 省心，比普通 PaaS 更可控——是让"默认全球化"变得廉价的唯一主流选择。",
+  "url": "https://lingcode.dev/zh/tutorials/deploy-on-fly-io.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/deploy-on-fly-io.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "部署到 Fly.io"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "发布与基础设施",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "部署到 Fly.io",
+      "item": "https://lingcode.dev/zh/tutorials/deploy-on-fly-io.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/deploy-on-fly-io.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">发布与基础设施</a>
+      <span>/</span>
+      <span>部署到 Fly.io</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>如何从 LingCode 部署到 Fly.io？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>先运行一次 <code>fly auth login</code>，再运行 <code>fly launch</code> 在项目中生成 <code>fly.toml</code>，然后 <code>fly deploy</code> 即可完成部署。Fly.io 会自动将你的 Docker 容器分发到 30+ 个地区——按 CPU 秒计费。</p>
+      <p class="intro">Fly.io 让 Docker 容器同时运行在全球 30 个城市。你提供镜像，<code>fly deploy</code> 自动将其部署到离用户最近的地方。比 VPS 省心，比普通 PaaS 更可控——是让"默认全球化"变得廉价的唯一主流选择。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>传统云平台各有侧重。Heroku/Render/Railway 屏蔽了基础设施细节：部署简单，但你无法控制运行位置。DigitalOcean 的裸 VPS 则把一切暴露给你：你可以自由选择机器和地区，但 OS、进程管理、重启和扩容全要自己搞定。这两种模式对很多项目都够用，但都不太适合"我想让应用就近服务悉尼、圣保罗和法兰克福的用户，同时又不想学 Kubernetes"的场景。</p>
+      <p>Fly.io 的理念是"以容器为基本单元"。你给它一个 Docker 镜像（或者直接提供 Dockerfile 让它帮你构建），它就用名为"Machines"的轻量级 Firecracker 虚拟机在 30+ 个地区运行，按秒计费。你选择部署到哪些地区；Fly 的 <code>fly-replay</code> 请求头允许一个请求在某个地区落地后，再转发到另一个地区。原本只运行在某个城市一台服务器上的应用，变成了"用户在哪个地区出现，就在那里启动一个小进程"。</p>
+      <p>代价是，这套机制比大多数 PaaS 的概念复杂得多。你需要编写 <code>fly.toml</code>，考虑机器规格和扩容规则，如果需要持久化状态还得配置 volumes。定价基于按秒计费的计算资源、存储和带宽——可预测，但变量比 Render 的固定月费更多。对于需要全球覆盖或容器级别控制的项目，这些代价是值得的。但如果你只是想"部署一个 Next.js 站点，别让我多想"，Vercel 更简单。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>Fly 的核心概念：应用、机器、地区、volumes</li>
+        <li>安装 flyctl 并注册账号</li>
+        <li>最简 <code>fly launch</code> 流程</li>
+        <li>扩容与添加地区</li>
+        <li>何时该放弃 Fly，改用更简单的 PaaS</li>
+      </ul>
+
+      <h2>第一步：安装 flyctl</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Mac 上一条命令搞定</h3>
+          <pre><code>brew install flyctl
+# 或：
+curl -L https://fly.io/install.sh | sh</code></pre>
+          <p>然后一条命令完成注册与鉴权：</p>
+          <pre><code>fly auth signup    # 或：如果已有账号，运行 fly auth login</code></pre>
+          <p>浏览器会打开 OAuth 流程。授权完成后，本地 CLI 会保存 token。Fly 要求在部署任何内容之前，必须先在控制台绑定支付方式（即使是在慷慨的免费额度期间）——请在控制台中添加。</p>
+        </div>
+      </div>
+
+      <h2>第二步：确保你的应用可以 Docker 化</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>能在本地 Docker 跑起来，Fly 就能在生产环境跑起来</h3>
+          <p>Fly 的部署单元是容器镜像。你可以选择：</p>
+          <ul>
+            <li><strong>提供 Dockerfile</strong>——Fly 在部署时帮你构建。</li>
+            <li><strong>直接提供预构建镜像</strong>——指向 <code>ghcr.io/you/myapp:latest</code> 或类似地址。</li>
+            <li><strong>使用 buildpack</strong>——<code>fly launch</code> 能自动识别常见技术栈（Node、Python、Go、Rails）并生成 Dockerfile。</li>
+          </ul>
+          <p>对大多数项目而言，在代码旁边写一个 <code>Dockerfile</code> 即可。只要应用能在本地以正确的端口通过 <code>docker run my-image</code> 运行，Fly 就能部署它。</p>
+        </div>
+      </div>
+
+      <h2>第三步：fly launch</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>交互式首次部署</h3>
+          <p>在项目根目录运行：</p>
+          <pre><code>fly launch</code></pre>
+          <p>向导会询问：应用名称（必须全局唯一）、主地区（开发时选离你最近的）、组织（默认使用你的个人组织），以及是否要一同创建 Postgres 或 Redis 实例。第一次部署时，建议跳过数据库选项，后续可随时添加。</p>
+          <p>Fly 会在项目中生成 <code>fly.toml</code>，构建镜像（如有需要），并询问是否立即部署。选是。大约一分钟后，你的应用就会上线，地址为 <code>https://&lt;app-name&gt;.fly.dev</code>。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong><code>fly.toml</code> 文件</strong>是你的部署配置：应用名称、主地区、构建设置、环境变量、服务及其端口、扩容参数。它应该被提交到 git；团队成员运行 <code>fly deploy</code> 时会使用完全相同的配置。
+      </div>
+
+      <h2>第四步：迭代部署</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>标准发布节奏</h3>
+          <p>后续部署只需一条命令：</p>
+          <pre><code>fly deploy</code></pre>
+          <p>这会重新构建镜像（或者如果你指定了远程镜像，则推送新镜像），用新镜像创建新的 Machines，将流量切换到新实例，再销毁旧的 Machines。默认部署策略是"滚动更新"——对无状态应用实现零停机。</p>
+          <p>用 <code>fly status</code> 查看部署状态，用 <code>fly logs</code> 实时查看日志。需要进入应用 shell 时，<code>fly ssh console</code> 可以在运行中的 Machine 上打开一个 shell。</p>
+        </div>
+      </div>
+
+      <h2>第五步：添加地区</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>一条命令实现全球化</h3>
+          <p>初始部署会在主地区放一台 Machine。添加更多地区：</p>
+          <pre><code>fly scale count 3 --region iad,fra,syd
+# 3 台机器，分别在 Ashburn / Frankfurt / Sydney</code></pre>
+          <p>Fly 的 anycast 路由会将每位用户的请求发送到最近的健康 Machine。对于无状态应用（大多数 Web 服务器和 API），开箱即用。对于有状态应用，你需要考虑哪个地区拥有可写数据库——Fly 的 <code>fly-replay</code> 请求头是官方推荐的解决方案。</p>
+        </div>
+      </div>
+
+      <h2>第六步：绑定自定义域名</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>两条 DNS 记录加一个 Fly 命令</h3>
+          <pre><code>fly certs create mydomain.com</code></pre>
+          <p>Fly 会告诉你需要添加哪些 DNS 记录——通常是一条指向 Fly anycast IP 的 A 或 AAAA 记录，以及一条用于验证的 <code>_acme-challenge</code> CNAME。在你的 <a href="/zh/tutorials/connect-domain-to-server-with-dns.html">DNS 服务商</a>处添加这些记录。几分钟后，Fly 会验证域名、签发 Let's Encrypt 证书，你的应用就能通过自定义域名以 HTTPS 访问了。</p>
+        </div>
+      </div>
+
+      <h2>第七步：何时不该用 Fly</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>三种真实情况</h3>
+          <ul>
+            <li><strong>你想要一条命令部署、零配置。</strong>Vercel 适合 Next.js，Railway 适合各种栈——两者的上手复杂度都低于哪怕最简单的 <code>fly.toml</code>。Fly 的复杂性只有在你真正用到那些功能时才值得。</li>
+            <li><strong>你不需要多地区部署。</strong>大多数应用在一个地区就够了。如果你的也是，Fly 的地理优势就用不上——而 DigitalOcean 可预测的月费账单更简单。</li>
+            <li><strong>你的应用不适合 Docker 化。</strong>如果你搞不定一个能用的 Dockerfile，用 Fly 会很痛苦。改用 Render 或 Railway，它们对非 Docker 技术栈的支持更好。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>有状态比无状态难得多。</strong>Fly 的 Machines 有本地 volumes，但它们是绑定到特定地区的——Sydney 的 Machine 访问不到 Ashburn 的 volume。对于数据库，建议使用 Fly Postgres（他们的托管方案），或者更常见的做法是接入外部托管数据库（Neon、Supabase、PlanetScale）。除非你真的清楚自己在做什么，否则不要尝试在裸 volumes 之上自建多地区存储。
+      </div>
+
+      <h2>接下来</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/deploy-on-railway.html" class="tutorial-next-card">
+            <h3>部署到 Railway</h3>
+            <p>上手更简单，控制更少——当"快速发布"比地理位置更重要时的首选</p>
+          </a>
+          <a href="/zh/tutorials/deploy-on-render.html" class="tutorial-next-card">
+            <h3>部署到 Render</h3>
+            <p>类 Heroku 体验，可预测的月费定价</p>
+          </a>
+          <a href="/zh/tutorials/buy-a-server-from-digitalocean.html" class="tutorial-next-card">
+            <h3>从 DigitalOcean 购买服务器</h3>
+            <p>如果你想要容器之外的完全掌控权</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速发布的创始人和需要真正工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门指南</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

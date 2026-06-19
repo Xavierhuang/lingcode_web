@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Re-upload an iOS build to TestFlight — LingCode Tutorials</title>
+  <meta name="description" content="A beginner-friendly walk through shipping a new iOS build: install Xcode, bump the build number, archive, upload to TestFlight. Every download link in one place.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/reupload-an-ios-build-to-testflight.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Re-upload an iOS build to TestFlight",
+  "description": "Ship a new version of your iOS app to TestFlight so your testers can try it. Bump the build number, archive, upload, wait for Apple's processing. About 10 minutes of your time + 5–30 minutes of Apple's. Walks through every tool you need to install.",
+  "url": "https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Pick the right destination",
+      "url": "https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Upload — pick one of three ways",
+      "url": "https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Write release notes",
+      "url": "https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Re-upload an iOS build to TestFlight",
+      "item": "https://lingcode.dev/tutorials/reupload-an-ios-build-to-testflight.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/reupload-an-ios-build-to-testflight.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Native Mac IDE</a>
+      <span>/</span>
+      <span>Re-upload an iOS build to TestFlight</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Re-upload an iOS build to TestFlight</h1>
+      <p class="intro">Ship a new version of your iOS app to TestFlight so your testers can try it. Bump the build number, archive, upload, wait for Apple's processing. About 10 minutes of your time + 5–30 minutes of Apple's. Walks through every tool you need to install.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>What you need (one-time)</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>First-time setup. Skip whichever you already have.</p>
+          <ul>
+            <li><strong>A Mac</strong> — required. iOS apps can only be built on macOS. Sorry, Windows/Linux users.</li>
+            <li><strong>Xcode</strong> — Apple's IDE; required to archive and upload. Free.
+              <ul>
+                <li><a href="https://apps.apple.com/us/app/xcode/id497799835?mt=12" target="_blank" rel="noopener">Xcode on the Mac App Store ↗</a> (recommended — auto-updates)</li>
+                <li><a href="https://developer.apple.com/download/all/?q=xcode" target="_blank" rel="noopener">Direct downloads on developer.apple.com ↗</a> (lets you pick a specific version; requires sign-in)</li>
+              </ul>
+            </li>
+            <li><strong>Apple Developer Program</strong> — $99/year. Required to ship to TestFlight or the App Store (free signing only lets you run on your own device).
+              <ul>
+                <li><a href="https://developer.apple.com/programs/enroll/" target="_blank" rel="noopener">Enroll in the Developer Program ↗</a></li>
+              </ul>
+            </li>
+            <li><strong>App Store Connect record</strong> — the listing for your app. Create one at <a href="https://appstoreconnect.apple.com/apps" target="_blank" rel="noopener">App Store Connect → My Apps → + ↗</a>. You need a Bundle ID (e.g., <code>com.yourname.appname</code>) and an app name.</li>
+            <li><strong>Optional but useful: Transporter app</strong> — Apple's standalone uploader. <a href="https://apps.apple.com/us/app/transporter/id1450874784" target="_blank" rel="noopener">Transporter on Mac App Store ↗</a>. Useful when Xcode's built-in upload UI is flaky.</li>
+            <li><strong>Optional: App Store Connect API key</strong> — for command-line / CI uploads. See <a href="/tutorials/set-up-app-store-connect-key.html">Set up an App Store Connect API key</a>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Bump the build number</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Apple rejects re-uploads with the same <code>CFBundleVersion</code>. Bump it before archiving.</p>
+          <p><strong>In Xcode:</strong> click your project at the top of the file navigator → select the target → <strong>General → Identity</strong>. Two fields:</p>
+          <ul>
+            <li><strong>Version</strong> (<code>CFBundleShortVersionString</code>) — the user-visible version. Keep the same for a patch; bump it (e.g., 1.2.0 → 1.2.1) when shipping real changes.</li>
+            <li><strong>Build</strong> (<code>CFBundleVersion</code>) — increase by 1. Must always increase, even within the same Version.</li>
+          </ul>
+          <p>Or via terminal at the project root:</p>
+          <pre><code>agvtool next-version -all</code></pre>
+          <p><a href="https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleversion" target="_blank" rel="noopener">CFBundleVersion docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Pick the right destination</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>In the toolbar (top of Xcode), the device picker must say <strong>Any iOS Device (arm64)</strong> — not a simulator. Archiving only works against a generic device target.</p>
+          <p>Menu: <strong>Product → Destination → Any iOS Device (arm64)</strong>.</p>
+        </div>
+      </div>
+
+      <h2>Archive</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p><strong>In Xcode:</strong> menu <strong>Product → Archive</strong>. Xcode builds in Release mode (this takes a minute or two on a typical project), then opens the <strong>Organizer</strong> window with your archive listed.</p>
+          <p><strong>Or via terminal:</strong></p>
+          <pre><code>xcodebuild -scheme YourAppScheme -configuration Release archive \
+  -archivePath ~/Desktop/YourApp.xcarchive</code></pre>
+          <p><a href="https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases" target="_blank" rel="noopener">Distribution docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Validate before uploading</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>In Organizer (it opens automatically after Archive), select your archive on the left → click <strong>Validate App</strong> on the right.</p>
+          <p>This catches signing problems, entitlement mismatches, and bundle issues before you waste time on a failed upload. Validation takes ~1 minute. Fix anything it flags before continuing.</p>
+        </div>
+      </div>
+
+      <h2>Upload — pick one of three ways</h2>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p><strong>Option A — Xcode Organizer (easiest).</strong></p>
+          <p>In Organizer: <strong>Distribute App → App Store Connect → Upload</strong>. The wizard signs and uploads. Typical time: 2–5 minutes.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p><strong>Option B — Transporter app (most reliable).</strong></p>
+          <p>Export an IPA first: in Organizer, <strong>Distribute App → App Store Connect → Export</strong>. Save the IPA file. Then open <a href="https://apps.apple.com/us/app/transporter/id1450874784" target="_blank" rel="noopener">Transporter ↗</a>, drag the IPA in, click <strong>Deliver</strong>.</p>
+          <p>Useful when Xcode's upload UI hangs (more common than it should be).</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p><strong>Option C — command line (for scripts / CI).</strong></p>
+          <p>Needs an <a href="/tutorials/set-up-app-store-connect-key.html">App Store Connect API key</a>. Then:</p>
+          <pre><code>xcrun altool --upload-app \
+  -f ~/Desktop/YourApp.ipa \
+  -t ios \
+  --apiKey "$ASC_KEY_ID" \
+  --apiIssuer "$ASC_ISSUER_ID"</code></pre>
+          <p><a href="https://developer.apple.com/documentation/security/app-store-connect-api" target="_blank" rel="noopener">App Store Connect API docs ↗</a> · <a href="https://help.apple.com/asc/appsaltool/" target="_blank" rel="noopener">altool reference ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Wait for processing</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Upload finishes fast (a few minutes). Apple's server-side processing takes longer:</p>
+          <ul>
+            <li><strong>5–15 min</strong> typical</li>
+            <li><strong>30 min – 2 hr</strong> during busy periods (WWDC week, holiday season)</li>
+            <li>You'll get an <strong>email</strong> when it's ready (sometimes spam folder — check)</li>
+          </ul>
+          <p>Watch in <a href="https://appstoreconnect.apple.com" target="_blank" rel="noopener">App Store Connect ↗</a> → <strong>My Apps</strong> → your app → <strong>TestFlight</strong> tab. Build status flows: <em>Uploading → Processing → Ready to Submit</em>.</p>
+        </div>
+      </div>
+
+      <h2>Hand it to testers</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>When status is <strong>Ready to Submit</strong>, you have two tester options:</p>
+          <ul>
+            <li><strong>Internal testing</strong> — auto-available to up to 100 users from your App Store Connect team. No review needed; they get it immediately. Right for your own team and tight collaborators.</li>
+            <li><strong>External testing</strong> — anyone with a link, up to 10,000 testers. <strong>First build per group needs Beta App Review</strong> (24–48 hours). Subsequent builds usually skip review unless something major changed.</li>
+          </ul>
+          <p>In App Store Connect: TestFlight tab → click your build → toggle which groups can access it. Testers get a push notification in the TestFlight app.</p>
+          <p><strong>Your testers also need the TestFlight app</strong> — <a href="https://apps.apple.com/us/app/testflight/id899247664" target="_blank" rel="noopener">TestFlight on the App Store ↗</a>. Send them the link if they don't have it yet.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Export compliance</strong> — first time only, you may need to answer "uses encryption" questions. Most apps qualify for the standard exemption (HTTPS only). Answer once in the build settings or App Store Connect; subsequent uploads inherit the answer. <a href="https://developer.apple.com/documentation/security/complying-with-encryption-export-regulations" target="_blank" rel="noopener">Encryption export docs ↗</a>.
+      </div>
+
+      <h2>Write release notes</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>By default, testers see your build with no notes. You can add release notes in App Store Connect → TestFlight → your build → <strong>Test Details</strong> → <strong>What to Test</strong>. Testers see these in the TestFlight app when they update.</p>
+          <p>Keep notes short and concrete: "Fixed the crash on the settings screen. Try toggling dark mode." Vague notes get vague feedback.</p>
+        </div>
+      </div>
+
+      <h2>If you're using LingCode's agent</h2>
+      <div class="tip-box">
+        Once you've <a href="/tutorials/set-up-app-store-connect-key.html">set up an ASC API key</a>, the agent can do the entire flow from chat: just say <em>"Bump the build number and upload to TestFlight"</em>. See <a href="/tutorials/upload-to-testflight-with-the-agent.html">Upload to TestFlight with the agent</a>.
+      </div>
+
+      <h2>Common failures and fixes</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>"No signing certificate found"</strong> — Xcode → Settings → Accounts → your Apple ID → <strong>Download Manual Profiles</strong>. Or enable <strong>Automatically manage signing</strong> in the target's Signing &amp; Capabilities tab.</li>
+            <li><strong>"This bundle version is already in use"</strong> — you didn't bump the build number. Go back to Step 1.</li>
+            <li><strong>"Missing required icon"</strong> — your app icon isn't filled in for all required sizes. Use <a href="https://developer.apple.com/design/human-interface-guidelines/app-icons" target="_blank" rel="noopener">Apple's icon spec ↗</a>; an asset like <a href="https://www.appicon.co/" target="_blank" rel="noopener">appicon.co ↗</a> generates all sizes from one image.</li>
+            <li><strong>"Invalid entitlements"</strong> — a capability in your <code>.entitlements</code> file isn't enabled on your provisioning profile. In <a href="https://developer.apple.com/account/resources/identifiers/list" target="_blank" rel="noopener">developer.apple.com → Identifiers ↗</a>, enable the capability on your App ID, then regenerate the profile.</li>
+            <li><strong>"ITMS-9000: Bad URL"</strong> — Apple's servers are flaky. Retry in 10 minutes. If it persists, switch to Transporter (Option B).</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://developer.apple.com/testflight/" target="_blank" rel="noopener">Apple TestFlight overview ↗</a></li>
+        <li><a href="https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases" target="_blank" rel="noopener">Distributing for beta testing &amp; releases ↗</a></li>
+        <li><a href="https://help.apple.com/app-store-connect/" target="_blank" rel="noopener">App Store Connect Help ↗</a></li>
+        <li><a href="https://developer.apple.com/support/code-signing/" target="_blank" rel="noopener">Code signing support ↗</a></li>
+        <li><a href="https://developer.apple.com/documentation/appstoreconnectapi" target="_blank" rel="noopener">App Store Connect API ↗</a></li>
+        <li><a href="https://docs.fastlane.tools/getting-started/ios/beta-deployment/" target="_blank" rel="noopener">fastlane: beta deployment ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/reupload-an-android-app.html" class="tutorial-next-card">
+            <h3>Re-upload an Android app to Play Console</h3>
+            <p>The Android equivalent — same flow shape, different tools</p>
+          </a>
+          <a href="/tutorials/set-up-app-store-connect-key.html" class="tutorial-next-card">
+            <h3>Set up an App Store Connect API key</h3>
+            <p>Required for the command-line / agent-driven upload</p>
+          </a>
+          <a href="/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>Upload to TestFlight with the agent</h3>
+            <p>The chat-driven version of this flow</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

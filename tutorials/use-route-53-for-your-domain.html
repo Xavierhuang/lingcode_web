@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Use Route 53 for a domain bought elsewhere — LingCode Tutorials</title>
+  <meta name="description" content="Delegate DNS for a domain you bought at Namecheap or Cloudflare to AWS Route 53 — the right move when your servers and certs live in AWS.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/use-route-53-for-your-domain.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/use-route-53-for-your-domain.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/use-route-53-for-your-domain.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/use-route-53-for-your-domain.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Use Route 53 for a domain bought elsewhere",
+  "description": "You bought your domain at Namecheap or Cloudflare. Your servers, certs, and load balancers live in AWS. Pointing DNS at Route 53 — without moving the registrar — gets you the Alias-record integration and ACM-validation conveniences AWS users want, while keeping the cheap registra",
+  "url": "https://lingcode.dev/tutorials/use-route-53-for-your-domain.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/use-route-53-for-your-domain.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Use Route 53 for a domain bought elsewhere"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Search",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Shipping & infrastructure",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "Use Route 53 for a domain bought elsewhere",
+      "item": "https://lingcode.dev/tutorials/use-route-53-for-your-domain.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/use-route-53-for-your-domain.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Shipping &amp; infrastructure</a>
+      <span>/</span>
+      <span>Use Route 53 for a domain bought elsewhere</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Use Route 53 for a domain bought elsewhere</h1>
+      <p class="intro">You bought your domain at Namecheap or Cloudflare. Your servers, certs, and load balancers live in AWS. Pointing DNS at Route 53 — without moving the registrar — gets you the Alias-record integration and ACM-validation conveniences AWS users want, while keeping the cheap registrar bill where it is.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>"Where you registered a domain" and "where its DNS is hosted" are two independent decisions. Every registrar lets you point DNS at someone else's nameservers — that's the standard mechanism that makes the internet work. A domain bought at Namecheap can serve its DNS from Cloudflare, Route 53, NS1, or anywhere else. The only thing the registrar ultimately controls is who else gets to be authoritative; <em>that</em> they control via the four-line set of nameserver records you give them.</p>
+      <p>The reason AWS users care about this is integration. <a href="/tutorials/buy-a-domain-from-aws-route53.html">Route 53</a> has features the other DNS providers don't: <strong>Alias records</strong> let you point a domain apex at AWS resources (ALB, CloudFront, S3 website endpoints) without the CNAME-at-apex workarounds; <strong>ACM certificate validation</strong> drops the validation TXT record straight into your hosted zone with one click; <strong>private hosted zones</strong> serve DNS only inside your VPC. None of these work from a non-Route 53 DNS provider — they require AWS to be the one answering the queries.</p>
+      <p>This tutorial covers the "domain bought elsewhere, DNS at Route 53" pattern: create the hosted zone, replicate your existing records before switching, change nameservers at the registrar, verify, and start using the AWS-only features. We'll do this carefully — the wrong order causes outages.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Why moving DNS to Route 53 is independent of where the domain is registered</li>
+        <li>The hosted-zone cost ($0.50/month) and what it buys</li>
+        <li>The order of operations that prevents a DNS outage during the switch</li>
+        <li>Replicating existing A / CNAME / MX records into the new hosted zone</li>
+        <li>Pointing your registrar's nameservers at Route 53's four NS values</li>
+        <li>How to verify the cutover before declaring victory</li>
+      </ul>
+
+      <div class="warn-box">
+        <strong>Prerequisites:</strong> An AWS account with Route 53 access, an existing domain registered somewhere else with its current DNS records documented, and shell access with <code>dig</code> available. If you're unsure what records are live at your current DNS provider, take a screenshot or run <code>dig mybrand.com ANY +noall +answer</code> before you start — you'll need that list in Step 2.
+      </div>
+
+      <h2>Step 1: Create a hosted zone in Route 53</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>One zone per domain; costs $0.50/month</h3>
+          <p>In the AWS console, open Route 53 → <strong>Hosted zones</strong> → <strong>Create hosted zone</strong>. Enter your domain (<code>mybrand.com</code> — no <code>www</code>, no trailing dot). Type: <strong>Public hosted zone</strong>. Click Create.</p>
+          <p>Route 53 generates four nameserver records for the zone — something like <code>ns-1234.awsdns-12.com</code>, <code>...co.uk</code>, <code>...net</code>, <code>...org</code>. Each newly-created zone gets a different four; <strong>do not assume yours match a tutorial's example</strong>. Copy these somewhere — you'll paste them at your registrar in Step 4.</p>
+          <p>Billing starts immediately. Hosted zones cost $0.50/month, prorated to the hour, plus $0.40 per million standard queries. For a personal domain, expect $0.50–$0.60/month total.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Why the nameservers are split across TLDs.</strong> The four NS records sit on <code>.com</code>, <code>.net</code>, <code>.org</code>, and <code>.co.uk</code> deliberately — if any one TLD has a DNS outage, the other three still resolve your domain. Don't try to "clean up" by using all-<code>.com</code> nameservers.
+      </div>
+
+      <h2>Step 2: Replicate every existing record into the new zone</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>This is the step people skip; this is what breaks email</h3>
+          <p>Before you change the nameservers at your registrar, copy every record from your current DNS provider into the new Route 53 hosted zone. <strong>If you miss a record, that record stops resolving the minute the nameserver change propagates.</strong> Common forgotten records:</p>
+          <ul>
+            <li><strong>MX records</strong> — if you have email at the domain (Google Workspace, Fastmail, Proton), the MX records must be replicated or incoming mail bounces.</li>
+            <li><strong>TXT records for SPF/DKIM/DMARC</strong> — if MX exists, these usually do too. Missing them = your outgoing email gets flagged as spam.</li>
+            <li><strong>TXT verification records</strong> — Google Search Console, Stripe, Vercel, anything that asked you to "prove you own this domain" has a TXT record. Replicate them.</li>
+            <li><strong>CNAME records for subdomains</strong> — <code>www</code>, <code>blog</code>, <code>api</code>, <code>status</code>, anything pointing somewhere. Each subdomain is a separate record.</li>
+          </ul>
+          <p>In Route 53: for each record at the old provider, click <strong>Create record</strong>, enter the same name (or leave blank for apex), record type, value(s), and TTL (300 is fine while you're cutting over). The interface is dense but mechanical — pour the records in one by one.</p>
+        </div>
+      </div>
+
+      <h2>Step 3: Lower TTLs at the old provider first</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Reduce the cutover window before you cut</h3>
+          <p>A day or two <em>before</em> you change nameservers, log into your current DNS provider and lower the TTL on every record to 300 (five minutes). Save. Wait at least one current-TTL period (typically the existing TTL — if records were at 3600, wait an hour) for the world's caches to pick up the shorter TTL.</p>
+          <p>Now, when you actually switch nameservers, the residual cached records expire fast. Without this step, some resolvers will hold the old IPs for hours after you've moved.</p>
+        </div>
+      </div>
+
+      <h2>Step 4: Change nameservers at the registrar</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>The point of no easy return</h3>
+          <p>Go to your registrar (Namecheap, Cloudflare Registrar, wherever the domain lives). Find the domain's <strong>Nameservers</strong> setting — usually under Manage / Domain → Nameservers, and usually set to "BasicDNS" / "Default" / the registrar's own DNS.</p>
+          <p>Switch to <strong>Custom DNS</strong> (or equivalent) and paste the four NS values from Step 1 — one per row, no trailing dot, no protocol prefix. Save.</p>
+          <p>The change registers at the TLD's root nameservers within seconds, but resolvers around the world only see it as their cached "old" records expire. Realistically the world flips over in 1–48 hours, with most resolvers updating in under 6.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Leave your old DNS provider's records intact for at least a week.</strong> While propagation completes, some clients are still asking the old nameservers. Delete the old DNS records too early and those clients see nothing. Wait until <code>dig mybrand.com NS +short</code> from a few different networks all return the Route 53 NS values before tearing down the old setup.
+      </div>
+
+      <h2>Step 5: Verify the cutover</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Four queries that tell you what's happening</h3>
+          <pre><code># 1. Whose nameservers does the public internet think we're using?
+dig mybrand.com NS +short
+# Expected: the four Route 53 NS values. If you still see old ones, propagation isn't complete.
+
+# 2. Bypass cache; ask the root chain fresh.
+dig +trace mybrand.com NS
+# Walks from . → com. → mybrand.com. Shows the registrar's NS delegation
+# at the TLD level — the most authoritative view of what's published.
+
+# 3. Are A/CNAME records resolving correctly from the new zone?
+dig @ns-1234.awsdns-12.com mybrand.com +short
+# (Use your actual Route 53 NS hostname.) Direct query to Route 53.
+# If this answers correctly, the zone is configured. If not, fix records in Route 53.
+
+# 4. Are the records actually visible to normal traffic?
+dig mybrand.com +short
+curl -I https://mybrand.com</code></pre>
+          <p>Pattern: if #2 shows Route 53's NS but #1 still shows old, your local cache is stale. If #3 is correct but #1 is wrong, propagation is still in progress. If #1 and #3 both show the right values, you're done.</p>
+        </div>
+      </div>
+
+      <h2>Step 6: Start using AWS-native features</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>The reason you did this</h3>
+          <p>With DNS at Route 53, several things become one-click that weren't:</p>
+          <ul>
+            <li><strong>ACM certificate validation.</strong> Request a TLS cert in AWS Certificate Manager → choose DNS validation → click "Create record in Route 53." The CNAME validation record drops into your hosted zone automatically. ACM verifies within minutes. No manual record copy-paste.</li>
+            <li><strong>Alias records to AWS resources.</strong> Pointing your apex at a CloudFront distribution, an ALB, or an S3 website endpoint? Choose Alias = Yes, pick the resource from a dropdown. No CNAME-at-apex workaround needed.</li>
+            <li><strong>Health checks.</strong> Route 53 can check your endpoint and fail over to a backup IP if the primary goes down. The configuration is a few clicks; the alternative at most DNS providers is a script.</li>
+          </ul>
+          <p>None of this changes how the records resolve — it just makes the recurring AWS workflows (cert renewal, deploys behind an ALB, multi-region failover) noticeably less manual.</p>
+        </div>
+      </div>
+
+      <h2>When this is the wrong call</h2>
+      <p><strong>You don't run AWS workloads.</strong> If everything is on Vercel / Netlify / Fly / DigitalOcean, the AWS-only features in Step 6 buy you nothing. Cloudflare DNS is faster globally and free; stay there.</p>
+      <p><strong>You want email at the domain and prefer simpler tooling.</strong> Route 53 doesn't sell email; managing MX + DKIM in the AWS console is dense compared to Cloudflare's email-routing forwarder. If email simplicity matters, the saved console time outweighs the AWS integration features.</p>
+      <p><strong>Cost-sensitive personal projects.</strong> $0.50/month/zone × N domains adds up. Cloudflare DNS is free. For 20 personal domains, that's $120/year of avoidable spend.</p>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/deploy-a-static-site-to-aws-s3-cloudfront.html" class="tutorial-next-card">
+            <h3>Deploy a static site to S3 + CloudFront</h3>
+            <p>The classic AWS static-hosting pattern, now that you have DNS at Route 53</p>
+          </a>
+          <a href="/tutorials/connect-domain-to-server-with-dns.html" class="tutorial-next-card">
+            <h3>Connect your domain to a server with DNS</h3>
+            <p>A and CNAME records, TTLs, propagation — the general DNS background</p>
+          </a>
+          <a href="/tutorials/buy-a-domain-from-aws-route53.html" class="tutorial-next-card">
+            <h3>Buy a domain from Route 53</h3>
+            <p>If you'd rather start at Route 53 instead of moving DNS later</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

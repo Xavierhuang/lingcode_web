@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Re-upload an iOS app to the App Store — LingCode Tutorials</title>
+  <meta name="description" content="Ship a new version of your iOS app to the public App Store. Bump the build, archive, upload, update metadata, submit for review. Beginner-friendly with every link.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/reupload-an-ios-app-to-the-app-store.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/reupload-an-ios-app-to-the-app-store.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/reupload-an-ios-app-to-the-app-store.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/reupload-an-ios-app-to-the-app-store.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Re-upload an iOS app to the App Store",
+  "description": "Ship an update to the public App Store. Same archive-and-upload flow as TestFlight, plus App Store Review (1–3 days) and a few extra metadata steps. About 15 minutes of your time + Apple's review window.",
+  "url": "https://lingcode.dev/tutorials/reupload-an-ios-app-to-the-app-store.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/reupload-an-ios-app-to-the-app-store.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Create a new App Store release",
+      "url": "https://lingcode.dev/tutorials/reupload-an-ios-app-to-the-app-store.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Update \"What's New in This Version\"",
+      "url": "https://lingcode.dev/tutorials/reupload-an-ios-app-to-the-app-store.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Update screenshots and metadata (only if changed)",
+      "url": "https://lingcode.dev/tutorials/reupload-an-ios-app-to-the-app-store.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Pick a release strategy",
+      "url": "https://lingcode.dev/tutorials/reupload-an-ios-app-to-the-app-store.html#step-4"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Re-upload an iOS app to the App Store",
+      "item": "https://lingcode.dev/tutorials/reupload-an-ios-app-to-the-app-store.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/reupload-an-ios-app-to-the-app-store.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">Native Mac IDE</a>
+      <span>/</span>
+      <span>Re-upload an iOS app to the App Store</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Re-upload an iOS app to the App Store</h1>
+      <p class="intro">Ship an update to the public App Store. Same archive-and-upload flow as TestFlight, plus App Store Review (1–3 days) and a few extra metadata steps. About 15 minutes of your time + Apple's review window.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Before you start</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>If you're new to shipping iOS, read <a href="/tutorials/reupload-an-ios-build-to-testflight.html">Re-upload an iOS build to TestFlight</a> first — same prerequisites apply (Mac, Xcode, Apple Developer Program, App Store Connect record). The App Store flow assumes your app is already live in the store; this tutorial covers <em>shipping an update</em>.</p>
+          <p>If this is your <strong>very first App Store submission</strong>, the flow is similar but adds the initial app metadata creation. <a href="https://developer.apple.com/app-store/submissions/" target="_blank" rel="noopener">Apple's first-submission guide ↗</a> covers it; come back here for the re-upload pattern.</p>
+        </div>
+      </div>
+
+      <h2>Bump the version</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Same as TestFlight uploads. In Xcode → target → <strong>General → Identity</strong>:</p>
+          <ul>
+            <li><strong>Version</strong> (<code>CFBundleShortVersionString</code>) — bump it. For a public release this should change (e.g., 1.2.0 → 1.3.0 or 1.2.1).</li>
+            <li><strong>Build</strong> (<code>CFBundleVersion</code>) — increment by 1.</li>
+          </ul>
+          <p><strong>Apple expects a real Version bump for App Store submissions.</strong> "1.2.0 → 1.2.0" gets rejected; "1.2.0 → 1.2.1" or "1.2.0 → 1.3.0" works.</p>
+          <p><a href="https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleshortversionstring" target="_blank" rel="noopener">CFBundleShortVersionString docs ↗</a> · <a href="https://semver.org/" target="_blank" rel="noopener">Semantic versioning primer ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Archive and upload</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Identical to TestFlight:</p>
+          <ul>
+            <li>Set destination to <strong>Any iOS Device (arm64)</strong>.</li>
+            <li>Menu <strong>Product → Archive</strong>.</li>
+            <li>In the Organizer window: <strong>Validate App</strong> first (catches signing/entitlement bugs).</li>
+            <li>Then <strong>Distribute App → App Store Connect → Upload</strong>.</li>
+          </ul>
+          <p>Alternative uploaders: <a href="https://apps.apple.com/us/app/transporter/id1450874784" target="_blank" rel="noopener">Transporter app ↗</a> (drag IPA, click Deliver) or <code>xcrun altool</code> with an <a href="/tutorials/set-up-app-store-connect-key.html">App Store Connect API key</a>.</p>
+          <p>See the full archive/upload walkthrough in <a href="/tutorials/reupload-an-ios-build-to-testflight.html">Re-upload an iOS build to TestFlight</a>.</p>
+        </div>
+      </div>
+
+      <h2>Wait for build processing</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Apple processes the build in 5–30 minutes. Watch in <a href="https://appstoreconnect.apple.com" target="_blank" rel="noopener">App Store Connect ↗</a> → your app → <strong>TestFlight</strong> tab. When you see the new build there with status <em>Ready to Submit</em>, you can attach it to an App Store release.</p>
+        </div>
+      </div>
+
+      <h2>Create a new App Store release</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>In App Store Connect → your app → <strong>App Store</strong> tab (left sidebar).</p>
+          <p>Click the <strong>+ Version</strong> button next to the version dropdown (top left). Enter your new Version (e.g., <code>1.2.1</code>) — must match what's in your build's <code>CFBundleShortVersionString</code>.</p>
+          <p>This creates a new "version page" that you'll fill out and submit.</p>
+        </div>
+      </div>
+
+      <h2>Attach the build</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Scroll down to <strong>Build</strong> section on the new version page. Click <strong>+ (Add Build)</strong>. Pick the build you just uploaded.</p>
+          <p>If your build doesn't appear, processing isn't finished yet — wait a few more minutes and refresh.</p>
+        </div>
+      </div>
+
+      <h2>Update "What's New in This Version"</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>In the <strong>What's New in This Version</strong> field, write user-facing release notes. These show in the App Store on the version's update screen.</p>
+          <p>Good notes are:</p>
+          <ul>
+            <li><strong>Specific</strong> — "Fixed the crash when opening Settings while offline" beats "Bug fixes."</li>
+            <li><strong>Short</strong> — 3–5 bullet points max.</li>
+            <li><strong>User-focused</strong> — describe outcomes, not implementation. "Faster project loading" beats "Refactored project parser."</li>
+          </ul>
+          <p>Localize for every language you've added if you have translations. <a href="https://developer.apple.com/app-store/localization/" target="_blank" rel="noopener">App Store localization docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Update screenshots and metadata (only if changed)</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>You don't have to update screenshots/description/keywords on every release — only when something user-facing changed enough to warrant new images.</p>
+          <p>If you do need new screenshots:</p>
+          <ul>
+            <li><strong>Required sizes</strong> — at least one set of iPhone screenshots (6.7" or 6.9" for newest models). iPad if you ship to iPad. <a href="https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications/" target="_blank" rel="noopener">Current screenshot specs ↗</a>.</li>
+            <li><strong>Generate them</strong> — Xcode → Window → Devices and Simulators → screenshot from a Simulator; or use <a href="https://docs.fastlane.tools/getting-started/ios/screenshots/" target="_blank" rel="noopener">fastlane snapshot ↗</a> for automation.</li>
+            <li><strong>Frame them (optional)</strong> — tools like <a href="https://docs.fastlane.tools/actions/frameit/" target="_blank" rel="noopener">fastlane frameit ↗</a> or <a href="https://www.shotbot.io/" target="_blank" rel="noopener">Shotbot ↗</a> add device frames + text overlays.</li>
+          </ul>
+          <p>You can also update: <strong>Description</strong>, <strong>Keywords</strong> (100 chars total, comma-separated), <strong>Support URL</strong>, <strong>Marketing URL</strong>, <strong>Promotional Text</strong> (170 chars, can be edited any time without resubmitting). Optional but worth keeping fresh.</p>
+        </div>
+      </div>
+
+      <h2>Pick a release strategy</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>Scroll to <strong>Version Release</strong> section. Three options:</p>
+          <ul>
+            <li><strong>Manually release this version</strong> — after approval, your update sits at "Pending Developer Release" until you click a button. Right for coordinated launches.</li>
+            <li><strong>Automatically release this version</strong> — goes live the moment Apple approves it. Right for routine updates.</li>
+            <li><strong>Automatically release after App Review using phased release for automatic updates</strong> — releases to users in waves over 7 days (1% day 1, then 2%, 5%, 10%, 20%, 50%, 100%). Right for risky updates; lets you catch regressions before everyone gets them.</li>
+          </ul>
+          <p>For most updates, <strong>phased release</strong> is the safe default. You can pause it at any percentage if something breaks. <a href="https://developer.apple.com/help/app-store-connect/manage-your-apps-availability/release-a-version-update-in-phases/" target="_blank" rel="noopener">Phased release docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Answer the "Did anything change" questions</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>App Store Connect will surface a checklist of things that may need updating. The big ones:</p>
+          <ul>
+            <li><strong>Privacy policy URL</strong> — required; must be live and reachable.</li>
+            <li><strong>App Privacy</strong> — data collection disclosures. Update if you added new tracking/data collection. <a href="https://developer.apple.com/app-store/app-privacy-details/" target="_blank" rel="noopener">App Privacy docs ↗</a>.</li>
+            <li><strong>Age Rating</strong> — re-answer if content changed.</li>
+            <li><strong>Export Compliance</strong> — usually inherits from your build. <a href="https://developer.apple.com/documentation/security/complying-with-encryption-export-regulations" target="_blank" rel="noopener">Encryption export docs ↗</a>.</li>
+            <li><strong>Content Rights</strong> — confirm you have rights to all content you ship.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Submit for review</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>When every required field has a green check, the <strong>Add for Review</strong> button (top right) becomes active. Click it. The version moves to <em>Waiting for Review</em>.</p>
+          <p>Then click <strong>Submit to App Review</strong>. The version status flows: <em>Waiting for Review → In Review → Pending Developer Release</em> (if manual) or <em>Ready for Sale</em> (if auto).</p>
+        </div>
+      </div>
+
+      <h2>The review window</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <p>App Store Review timing:</p>
+          <ul>
+            <li><strong>~24 hours</strong> typical (per <a href="https://developer.apple.com/support/app-review/" target="_blank" rel="noopener">Apple's own published metrics ↗</a>)</li>
+            <li><strong>1–3 days</strong> realistic range for normal updates</li>
+            <li><strong>Up to 7 days</strong> for first submissions, big changes, or edge-case content</li>
+          </ul>
+          <p>If rejected, you get a message in the <strong>Resolution Center</strong> (App Store Connect → your app → top nav) explaining why. Reply with the fix or an explanation; resubmit. Most rejections are fixable in one revision cycle.</p>
+        </div>
+      </div>
+
+      <h2>Common rejection reasons</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Guideline 4.0 – Design / 4.3 – Design Spam</strong> — looks too similar to an existing app or generic. Rare; usually for cookie-cutter apps.</li>
+            <li><strong>Guideline 2.1 – Performance: App Completeness</strong> — crashes during review, broken sign-in, placeholder content. The reviewer couldn't use the app. <strong>Most common rejection.</strong></li>
+            <li><strong>Guideline 5.1.1 – Privacy</strong> — collecting data not declared in App Privacy; missing privacy policy.</li>
+            <li><strong>Guideline 3.1.1 – In-App Purchase</strong> — using something other than IAP for digital goods, or trying to direct users to external payment.</li>
+            <li><strong>Metadata Rejection</strong> — screenshots show a different app than is being submitted; description has competitor names; promotional text claims unsupported features.</li>
+          </ul>
+          <p>Full ruleset: <a href="https://developer.apple.com/app-store/review/guidelines/" target="_blank" rel="noopener">App Store Review Guidelines ↗</a>.</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Give reviewers a test account.</strong> If your app requires sign-in, add a test username + password in <strong>App Review Information → Sign-In required → Demo Account</strong>. Reviewers without working access reject for "App Completeness." This is the easiest rejection to avoid.
+      </div>
+
+      <h2>After approval</h2>
+      <div class="step">
+        <div class="step-num">13</div>
+        <div class="step-body">
+          <p>Watch sales / downloads / crash rate after release:</p>
+          <ul>
+            <li><strong>App Store Connect → Analytics</strong> for downloads + revenue.</li>
+            <li><strong>Xcode Organizer → Crashes</strong> tab for crash reports, grouped by stack trace.</li>
+            <li><strong>Xcode Organizer → Metrics</strong> for launch time, battery, scrolling performance.</li>
+          </ul>
+          <p>If you chose phased release and Crashes shows a regression in the new version, you can <strong>halt the phased release</strong> in App Store Connect, or submit a hotfix.</p>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>You can submit a Hotfix expedited review</strong> if the live version has a critical bug. App Store Connect → your app → top-right menu → <strong>Request Expedited Review</strong>. Apple decides whether to grant it. Use sparingly — they track abuse.
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://developer.apple.com/app-store/review/guidelines/" target="_blank" rel="noopener">App Store Review Guidelines ↗</a></li>
+        <li><a href="https://developer.apple.com/app-store/submissions/" target="_blank" rel="noopener">App Store submission process ↗</a></li>
+        <li><a href="https://help.apple.com/app-store-connect/" target="_blank" rel="noopener">App Store Connect Help ↗</a></li>
+        <li><a href="https://developer.apple.com/support/app-review/" target="_blank" rel="noopener">App Review timing &amp; statistics ↗</a></li>
+        <li><a href="https://developer.apple.com/design/human-interface-guidelines/" target="_blank" rel="noopener">Human Interface Guidelines ↗</a></li>
+        <li><a href="https://docs.fastlane.tools/getting-started/ios/release/" target="_blank" rel="noopener">fastlane: App Store release ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/reupload-an-ios-build-to-testflight.html" class="tutorial-next-card">
+            <h3>Re-upload an iOS build to TestFlight</h3>
+            <p>Beta first, App Store second — the right order</p>
+          </a>
+          <a href="/tutorials/reupload-an-android-app.html" class="tutorial-next-card">
+            <h3>Re-upload an Android app to Play Console</h3>
+            <p>The Play Store equivalent of this flow</p>
+          </a>
+          <a href="/tutorials/upload-to-testflight-with-the-agent.html" class="tutorial-next-card">
+            <h3>Upload to TestFlight with the agent</h3>
+            <p>Let the LingCode agent drive the upload from chat</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

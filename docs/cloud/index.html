@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode Cloud documentation — managed backend, auth, storage, functions, hosting | Docs</title>
+  <meta name="description" content="The complete guide to LingCode Cloud: provision a managed Postgres backend, add auth and storage, run serverless functions, host full-stack apps, and ship — with the SDK and REST reference. Start here.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/">
+  <meta property="og:title" content="LingCode Cloud documentation">
+  <meta property="og:description" content="Provision a managed Postgres backend, add auth and storage, run serverless functions, host full-stack apps, and ship.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .docs-cloud-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin: 24px 0 8px; }
+    .docs-cloud-card { display: block; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); text-decoration: none; transition: border-color .15s ease, transform .15s ease; }
+    .docs-cloud-card:hover { border-color: var(--signal); transform: translateY(-2px); }
+    .docs-cloud-card h3 { margin: 0 0 6px; font-size: 1rem; color: var(--text); }
+    .docs-cloud-card p { margin: 0; font-size: 0.875rem; color: var(--text-dim); line-height: 1.5; }
+    .docs-cloud-card .card-eyebrow { font-family: "Geist Mono", monospace; font-size: 0.7rem; letter-spacing: .04em; text-transform: uppercase; color: var(--signal); display: block; margin-bottom: 8px; }
+    .docs-step { counter-increment: docstep; position: relative; padding-left: 44px; margin: 22px 0; }
+    .docs-step::before { content: counter(docstep); position: absolute; left: 0; top: -2px; width: 30px; height: 30px; border-radius: 50%; background: var(--signal); color: #fff; font-weight: 600; display: grid; place-items: center; font-size: 0.95rem; }
+    .docs-steps { counter-reset: docstep; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <span>LingCode Cloud</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Start here</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>LingCode Cloud</h1>
+      <p class="tldr"><strong>TL;DR:</strong> LingCode Cloud is a managed backend for the apps you build in LingCode — a private Postgres database with auth, file storage, realtime, vector search, a secrets vault, serverless functions, and full-stack app hosting. You reach it through one zero-dependency <a href="/docs/cloud/api-reference.html">SDK</a> (Supabase/Firebase-shaped) or over <a href="/docs/cloud/api-reference.html#rest">REST</a>. Provision a backend, point the SDK at its <strong>URL + anon key</strong>, and call <code>from('table').select()</code>. No server to run, no keys in the browser.</p>
+      <p class="intro">This is the home for everything LingCode Cloud. If you've used Firebase or Supabase the model will feel familiar: a database you reach over HTTPS, auth and storage that come with it, and somewhere to run the bit of server logic that can't live in the browser. The pages below go product-by-product; start with the five-minute walkthrough here, then dive into whichever piece you need.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>What's in the box</h2>
+      <p>Every backend is provisioned with the full set — there's nothing to install or turn on per feature:</p>
+      <ul>
+        <li><strong>Postgres database</strong> — a private schema with row-level security, reached through a thin table-CRUD gateway (no raw SQL from the client). <a href="/docs/cloud/database.html">Database guide →</a></li>
+        <li><strong>Auth</strong> — email/password, magic links, email OTP, and Google/GitHub/Apple OAuth, plus TOTP MFA. <a href="/docs/cloud/auth.html">Auth guide →</a></li>
+        <li><strong>Storage</strong> — public and private buckets, inline or direct-to-storage uploads up to GB scale. <a href="/docs/cloud/storage.html">Storage guide →</a></li>
+        <li><strong>Functions</strong> — seven zero-deploy builtins (email, SMS, TTS, Stripe Checkout, HTTP fetch…) plus custom serverless functions in a Deno sandbox. <a href="/docs/cloud/functions.html">Functions guide →</a></li>
+        <li><strong>Realtime</strong> — subscribe to row changes over Server-Sent Events, RLS-filtered. <a href="/docs/cloud/realtime.html">Realtime guide →</a></li>
+        <li><strong>Vector search</strong> — pgvector similarity search, managed embeddings, and hybrid full-text+semantic ranking. <a href="/docs/cloud/vector-search.html">Vector guide →</a></li>
+        <li><strong>Secrets vault</strong> — AES-256-GCM encrypted vendor keys your functions read server-side. <a href="/docs/cloud/secrets.html">Secrets guide →</a></li>
+        <li><strong>App hosting</strong> — deploy static frontends and full-stack Worker/SSR apps to <code>*.run.lingcode.dev</code> with custom domains. <a href="/docs/cloud/hosting.html">Hosting guide →</a></li>
+      </ul>
+
+      <div class="info-box">
+        <h3>One mental model to hold</h3>
+        <p>The client SDK talks to a <strong>thin data gateway</strong>, not to Postgres directly. That gateway is deliberately table-at-a-time CRUD — it's how the anon key can ship safely in your browser bundle while row-level security does the gatekeeping on the server. Anything genuinely relational (JOINs, views, indexes, constraints) lives one level down in your <strong>migrations</strong>. Keep that split in mind and most surprises disappear.</p>
+      </div>
+
+      <h2>Getting started in five minutes</h2>
+      <p>The fastest path is from inside LingCode — the <a href="/try.html">/try</a> playground and the Mac IDE both provision a backend for you and pre-inject the client as <code>window.lingcode</code>. Here's the whole loop, including how to wire it into your own app.</p>
+
+      <div class="docs-steps">
+        <div class="docs-step">
+          <h3>Provision a backend</h3>
+          <p>In the Mac IDE or <a href="/try.html">/try</a>, ask the agent to add a backend (or use <strong>Connect a managed backend</strong>). It calls <code>provision_backend</code> and hands you a <strong>data URL</strong> (<code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code>) and a public <strong>anon key</strong>. You can also manage backends at <a href="/backends.html">lingcode.dev/backends</a>. See <a href="/tutorials/connect-a-managed-backend.html">Connect a managed backend</a>.</p>
+        </div>
+        <div class="docs-step">
+          <h3>Create your schema</h3>
+          <p>Tables come from <strong>migrations</strong>, not runtime calls. Run SQL from the console's <strong>SQL</strong> tab, or let the agent call <code>apply_migration</code>:</p>
+          <pre><code>create table todos (
+  id         bigint generated always as identity primary key,
+  user_id    uuid,
+  title      text not null,
+  done       boolean not null default false,
+  created_at timestamptz not null default now()
+);</code></pre>
+          <p>This is also where indexes, views, constraints, and row-level-security policies live. See <a href="/tutorials/manage-database-migrations.html">Manage database migrations</a>.</p>
+        </div>
+        <div class="docs-step">
+          <h3>Connect the SDK</h3>
+          <p>Load the one-file SDK and create a client with your two values. Inside <code>/try</code> and the Mac preview, skip this — <code>window.lingcode</code> already exists.</p>
+          <pre><code>&lt;script src="https://lingcode.dev/sdk/lingcode-v1.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const lingcode = LingCode.createClient(
+    'https://lingcode.dev/api/cloud/be/&lt;your-backend-id&gt;',
+    '&lt;your-anon-key&gt;'
+  );
+  await lingcode.ready; // settles any sign-in redirect first
+&lt;/script&gt;</code></pre>
+        </div>
+        <div class="docs-step">
+          <h3>Read and write</h3>
+          <p>Every call returns <code>{ data, error }</code>. Filters chain before the verb; <code>update</code>/<code>delete</code> require one.</p>
+          <pre><code>await lingcode.from('todos').insert({ title: 'Buy milk' });
+
+const { data, error } = await lingcode
+  .from('todos')
+  .eq('done', false)
+  .order('created_at', { ascending: false })
+  .limit(50)
+  .select();</code></pre>
+        </div>
+        <div class="docs-step">
+          <h3>Add auth, storage, realtime</h3>
+          <p>Same client, more surface — each has its own guide:</p>
+          <pre><code>await lingcode.auth.signUp({ email, password });
+await lingcode.storage.from('public').upload('avatars/me.png', file);
+const off = lingcode.from('todos').subscribe(({ type, row }) => render(type, row));</code></pre>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>The anon key is public by design.</strong> It belongs in your client bundle — RLS on the server, not key secrecy, is what protects data. Your <em>private</em> keys (Stripe secret, third-party API keys) go in the backend's <a href="/docs/cloud/secrets.html">Secrets vault</a> and are read only from <a href="/docs/cloud/functions.html">functions</a>, which run server-side.
+      </div>
+
+      <h2>Browse the guides</h2>
+      <p>Each page follows the same shape: what the product is and why, a step-by-step guide, and runnable samples grounded in the real SDK and endpoints.</p>
+
+      <div class="docs-cloud-grid">
+        <a class="docs-cloud-card" href="/docs/cloud/auth.html">
+          <span class="card-eyebrow">Identity</span>
+          <h3>Authentication</h3>
+          <p>Email/password, magic links, OTP, Google/GitHub/Apple OAuth, TOTP MFA, and the access-token model.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/database.html">
+          <span class="card-eyebrow">Data</span>
+          <h3>Database</h3>
+          <p>Tables, the chainable query builder, filter operators, migrations, RLS, and the no-JOIN/upsert rule.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/storage.html">
+          <span class="card-eyebrow">Files</span>
+          <h3>Storage</h3>
+          <p>Public vs private buckets, inline uploads, and direct-to-storage presigned PUTs for GB-scale files.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/functions.html">
+          <span class="card-eyebrow">Compute</span>
+          <h3>Functions</h3>
+          <p>Seven zero-deploy builtins plus custom Deno-sandboxed functions — limits, secrets, and how to invoke.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/hosting.html">
+          <span class="card-eyebrow">Deploy</span>
+          <h3>App hosting</h3>
+          <p>Ship static frontends and full-stack Worker/SSR apps to <code>*.run.lingcode.dev</code> with custom domains.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/realtime.html">
+          <span class="card-eyebrow">Live</span>
+          <h3>Realtime</h3>
+          <p>Subscribe to INSERT/UPDATE/DELETE over SSE, RLS-filtered so users only see their own rows.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/vector-search.html">
+          <span class="card-eyebrow">AI</span>
+          <h3>Vector search</h3>
+          <p>pgvector similarity, managed embeddings, and hybrid full-text + semantic ranking for RAG.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/secrets.html">
+          <span class="card-eyebrow">Security</span>
+          <h3>Secrets vault</h3>
+          <p>AES-256-GCM encrypted vendor keys, set in the console and read server-side from functions.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/push.html">
+          <span class="card-eyebrow">Engage</span>
+          <h3>Push notifications</h3>
+          <p>Web Push (VAPID) — feature-detect, subscribe a user, and send from your server or a function.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/telemetry.html">
+          <span class="card-eyebrow">Measure</span>
+          <h3>Analytics</h3>
+          <p>First-party events, screens, traces, and error reporting — tied to a user id, stored in your backend.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/config.html">
+          <span class="card-eyebrow">Control</span>
+          <h3>Remote config</h3>
+          <p>Feature flags, tunable values, and A/B experiment variants — change behavior without a redeploy.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/security.html">
+          <span class="card-eyebrow">Security</span>
+          <h3>Security &amp; RLS</h3>
+          <p>Why the anon key is safe, and copy-paste row-level-security policies so users only see their own rows.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/best-practices.html">
+          <span class="card-eyebrow">Production</span>
+          <h3>Best practices</h3>
+          <p>Data modeling, pagination, indexing, the security checklist, and quotas — what to get right before you ship.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/troubleshooting.html">
+          <span class="card-eyebrow">Reference</span>
+          <h3>Troubleshooting</h3>
+          <p>Every error code — what it means and the one-line fix — grouped by product.</p>
+        </a>
+        <a class="docs-cloud-card" href="/docs/cloud/api-reference.html">
+          <span class="card-eyebrow">Reference</span>
+          <h3>API reference</h3>
+          <p>The full SDK surface and every <code>/api/cloud/be/&lt;id&gt;/…</code> REST endpoint, with shapes.</p>
+        </a>
+      </div>
+
+      <div class="info-box">
+        <h3>Prefer to learn by doing?</h3>
+        <p>The <a href="/tutorials.html">tutorials</a> walk concrete tasks end-to-end: <a href="/tutorials/deploy-to-lingcode-cloud.html">deploy an app</a>, <a href="/tutorials/use-lingcode-cloud-in-your-own-app.html">use the SDK in your own project</a>, <a href="/tutorials/sign-in-with-google-oauth.html">add Google sign-in</a>, <a href="/tutorials/connect-a-custom-domain.html">connect a custom domain</a>, and <a href="/tutorials/scan-your-backend-with-advisors.html">scan a backend with advisors</a>.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

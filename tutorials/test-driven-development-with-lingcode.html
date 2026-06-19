@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test-driven development with LingCode</title>
+  <meta name="description" content="TDD with an AI assistant solves a different problem than TDD with a human writer — it stops LingCode from writing plausible-looking code that doesn't actually work. The test is the spec; LingCode can't fake passing.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/test-driven-development-with-lingcode.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/test-driven-development-with-lingcode.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/test-driven-development-with-lingcode.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/test-driven-development-with-lingcode.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Test-driven development with LingCode",
+  "description": "TDD with a human writer is about design pressure. TDD with an AI assistant is about something else: it's the cheapest defense against plausible-looking code that doesn't actually work. Write the test first, and LingCode can't fake passing.",
+  "url": "https://lingcode.dev/tutorials/test-driven-development-with-lingcode.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/test-driven-development-with-lingcode.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Test-driven development with LingCode"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Tips & tricks",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Test-driven development",
+      "item": "https://lingcode.dev/tutorials/test-driven-development-with-lingcode.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/test-driven-development-with-lingcode.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Tips &amp; tricks</a>
+      <span>/</span>
+      <span>Test-driven development</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-19</span>
+      </div>
+      <h1>Test-driven development with LingCode</h1>
+      <p class="intro">TDD with a human writer is about design pressure. TDD with an AI assistant is about something else: it's the cheapest defense against plausible-looking code that doesn't actually work. Write the test first, and LingCode can't fake passing.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Why TDD with LingCode solves a different problem</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>Classic TDD literature pitches the red-green-refactor loop as a design discipline — writing the test first forces you to think about the interface before the implementation. That's still true. But when you're pairing with LingCode, a sharper benefit shows up:</p>
+          <ul>
+            <li><strong>LingCode writes code that <em>looks</em> right by default.</strong> Method names match, types line up, the structure resembles working examples it's seen. Whether the logic actually does what you asked is a different question.</li>
+            <li><strong>"Looks right" passes review faster than "is right."</strong> If you skim a reasonable-looking function and ship it, you've shipped on plausibility, not correctness.</li>
+            <li><strong>A test that fails before the function exists is unfakeable.</strong> LingCode can't satisfy a red test by writing prose; it has to write logic that makes the assertions hold.</li>
+          </ul>
+          <p>So TDD with LingCode is, before anything else, an anti-hallucination tool. The skill in this tutorial keeps LingCode on the red-green-refactor loop so you can audit the output by running it, not by reading it carefully enough to spot a subtle bug.</p>
+        </div>
+      </div>
+
+      <h2>What you need</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>LingCode</strong> — <a href="/LingCode-Installer.dmg" download>download the installer</a>.</li>
+            <li><strong>A test runner</strong> already wired into the project — pytest, jest, XCTest, go test, cargo test, etc. Don't introduce one mid-flight.</li>
+            <li><strong>A feature description small enough to express as one or two test cases</strong>. If you can't, you need to split the work, not skip the tests.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>RED — write a failing test before any implementation</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>The first step is asking LingCode for a test, not a function. Be explicit about wanting it to fail:</p>
+          <pre><code>Write the first failing test for &lt;feature&gt;. Do NOT write the
+implementation. The test must:
+- Reference the public API by name (file, function, signature)
+  even if it doesn't exist yet.
+- Assert behavior the user actually cares about, not internal
+  structure.
+- Run and fail with a "no such symbol" / "not implemented" /
+  "expected X got Y" error — not a syntax error.
+
+Then run the test and paste the exact failure output.</code></pre>
+          <p>The "paste the exact failure output" step is the audit. If LingCode says "test written, it fails" without showing the failure, run it yourself. A common drift mode is writing a test that crashes before reaching any assertion — that's not a real red, and it doesn't constrain the implementation.</p>
+          <div class="warn-box">
+            <strong>If LingCode wrote a test that already passes, the test is wrong.</strong> Either it's testing a feature that already exists (you're not actually building something new) or the assertions are too weak. Stop and rewrite before continuing.
+          </div>
+        </div>
+      </div>
+
+      <h2>GREEN — minimal implementation, nothing more</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Once you have a verified red, ask LingCode for the smallest change that makes the test pass:</p>
+          <pre><code>The test is red. Write the minimum implementation to make this
+ONE test pass. Constraints:
+- No code for behavior the test doesn't exercise yet.
+- No extra abstractions ("in case we need them later").
+- No error handling for cases this test doesn't cover.
+
+Run the test. Paste the exact output. Confirm green.</code></pre>
+          <p>"No code for behavior the test doesn't exercise yet" is the rule that prevents LingCode from helpfully adding edge cases that aren't tested and might be wrong. If the test covers happy-path string input and LingCode adds a null check, that null check is untested code — drop it or write a test for it.</p>
+        </div>
+      </div>
+
+      <h2>Add one test at a time</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Now extend coverage one assertion at a time. The discipline is: <em>each new red</em> exposes a missing behavior; <em>each new green</em> adds exactly enough code to cover it:</p>
+          <pre><code>Add ONE more test case. Pick the next unhandled behavior:
+- An edge case (empty input, boundary value, off-by-one).
+- A different equivalence class (negative number, unicode,
+  missing field).
+- An error path (invalid input, dependency failure).
+
+Confirm it fails. Then add minimum code to make it pass.
+Confirm everything is still green.
+
+Repeat until every behavior in &lt;feature spec&gt; has at least
+one test.</code></pre>
+          <p>The temptation is to write five tests at once and then implement them all together. Resist it. Multi-test-at-once collapses back into "write the function, hope the tests pass" — exactly the workflow TDD is designed to prevent.</p>
+        </div>
+      </div>
+
+      <h2>Watch for "false green" — the most common failure mode</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>A test passing doesn't always mean the test is doing what you think. False greens come from three places, and LingCode produces all three reliably:</p>
+          <ul>
+            <li><strong>The test mocks the thing under test.</strong> A mock that returns the expected value will always make any assertion pass. If the function being tested is itself a mock, you're testing the mock.</li>
+            <li><strong>The assertion is too weak.</strong> <code>assertTrue(result)</code> passes for any truthy value. <code>assertEqual(result, expected)</code> with a hand-computed expected is the right shape.</li>
+            <li><strong>Setup matches the assertion.</strong> If the test inserts the value it later asserts is present, the test passes regardless of whether the function under test ran at all.</li>
+          </ul>
+          <p>The cheapest way to catch a false green is to break the implementation on purpose and re-run:</p>
+          <pre><code>For each test that just turned green, mutate the implementation
+in one of these ways and confirm the test now fails:
+- Replace the return value with a hard-coded wrong value.
+- Comment out the body and return early.
+- Skip the side effect the function should produce.
+
+If the test still passes after a destructive mutation, the test
+is not actually exercising the behavior. Fix the test.</code></pre>
+          <p>This is mutation testing in miniature — and it's the single highest-yield habit when pairing with LingCode. Five seconds of "break it, re-run, confirm red" saves an afternoon of investigating why a "fully tested" function ships a bug.</p>
+        </div>
+      </div>
+
+      <h2>REFACTOR — only with all tests green</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Once the test suite covers the behavior and is fully green, refactoring is safe. Ask LingCode to improve structure without changing behavior:</p>
+          <pre><code>All tests are green. Refactor the implementation for:
+- Name clarity.
+- Removing duplication (DRY only when names converge — don't
+  over-extract).
+- Extracting helper functions that have a single reason to
+  change.
+- Replacing conditional pyramids with early returns.
+
+After each refactor step, re-run the full suite. If a test
+goes red, the refactor changed behavior — revert and try
+again. Don't "fix" the test to match new behavior.</code></pre>
+          <p>"Don't fix the test to match new behavior" is the rule. The test is the spec. If a refactor breaks the spec, the refactor is wrong, not the spec.</p>
+        </div>
+      </div>
+
+      <h2>When to skip TDD</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>TDD is the default for logic. It's overkill — or actively harmful — for a few cases:</p>
+          <ul>
+            <li><strong>Exploration spikes.</strong> Throwaway code answering "is this approach feasible?" doesn't need tests; it needs to be deleted as soon as you've learned.</li>
+            <li><strong>UI tweaks.</strong> Pixel-pushing in SwiftUI / Compose / HTML is verified by eye, not by assertion. Write a test if there's a state machine; don't write one for "make the padding bigger."</li>
+            <li><strong>Configuration changes.</strong> Editing JSON, YAML, or build scripts is verified by running the build, not by unit-testing the config.</li>
+          </ul>
+          <p>Have LingCode ask up front:</p>
+          <pre><code>Before starting, classify the task:
+- LOGIC: anything with branches, state changes, or
+  computed return values. Use TDD.
+- EXPLORATION: throwaway code to learn. Skip TDD; delete after.
+- UI: pure presentation. Verify by eye.
+- CONFIG: build / env / data. Verify by running.
+
+For LOGIC, do not write implementation code without a failing
+test first.</code></pre>
+        </div>
+      </div>
+
+      <h2>The interaction with systematic debugging</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>When a bug shows up in code that wasn't written TDD-first, the cheapest path is to retrofit one test: write a failing test that reproduces the bug, then fix until green. That failing test is also the regression test the debugging protocol asks for — same artifact, double duty.</p>
+          <p>Bugs in TDD-built code show up too, but they show up earlier and smaller — usually as a missing equivalence class no one thought to test. Add the test, watch it fail, fix it. The loop is the same as feature work.</p>
+          <div class="tip-box">
+            <strong>A test suite written entirely by red-green-refactor is its own design document.</strong> A new contributor reading it knows what behavior is committed to versus what's incidental implementation — because uncommitted behavior has no test.
+          </div>
+        </div>
+      </div>
+
+      <h2>Use this in LingCode</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>The TDD discipline is packaged as a skill — drop it into your skills folder and LingCode will reach for it before writing logic:</p>
+          <pre><code>---
+name: test-driven-development
+description: Use when implementing any feature or bugfix, before writing implementation code. Triggers: 'write tests', 'add test coverage', 'TDD', new feature, new function, regression fix, 'verify it works', 'test first'. Actions: red (write failing test, paste output to verify real red), green-minimum (smallest code that passes), mutation-test each new green (catch false greens), refactor only while green. Reframes TDD as anti-hallucination tool — stops AI from writing plausible code that doesn't actually work. The test is the spec; AI can't fake passing.
+---
+
+Write logic via red-green-refactor. With an AI assistant, TDD's
+primary value is as an anti-hallucination tool — a failing test
+is the one constraint plausible-looking code can't fake.
+
+Classify first: LOGIC (use TDD), EXPLORATION / UI / CONFIG
+(skip, verify another way).
+
+For LOGIC:
+
+1. RED. Write the first failing test before any implementation.
+   Reference the public API by name. Assert user-visible
+   behavior, not internal structure. Run it. Paste the exact
+   failure output. If it already passes, the test is wrong —
+   rewrite.
+
+2. GREEN. Write the MINIMUM implementation to make this one
+   test pass. No code for untested behavior. No "in case"
+   abstractions. Run it. Paste the exact pass output.
+
+3. ONE-AT-A-TIME. Add the next failing test (edge case,
+   equivalence class, error path). Confirm red. Add minimum
+   code. Confirm green. Repeat until the spec is covered.
+
+4. WATCH FOR FALSE GREEN. For each new green test, mutate the
+   implementation destructively (wrong return value, no-op,
+   skipped side effect). If the test still passes, the test
+   isn't exercising the behavior. Fix the test.
+
+5. REFACTOR. Only with all tests green. Improve names, remove
+   real duplication, simplify control flow. Re-run after each
+   step. If a test goes red, REVERT the refactor — do not
+   "fix" the test.
+
+For bugs in pre-existing code: write a failing test that
+reproduces the bug, then fix until green. The test becomes
+the regression test.</code></pre>
+          <p>Save as <code>~/.lingcode/skills/test-driven-development/SKILL.md</code> — see <a href="/tutorials/install-a-skill.html">Install a skill</a> for the exact location and how skills get discovered.</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/debug-systematically-with-lingcode.html" class="tutorial-next-card">
+            <h3>Debug systematically</h3>
+            <p>When a bug ships, the failing test you write to reproduce it doubles as a TDD red — same loop, different starting point</p>
+          </a>
+          <a href="/tutorials/give-and-receive-code-review-with-lingcode.html" class="tutorial-next-card">
+            <h3>Give and receive code review</h3>
+            <p>TDD'd code reviews faster — most "are you sure this handles X" questions already have a test answering them</p>
+          </a>
+          <a href="/tutorials/brainstorm-before-you-build.html" class="tutorial-next-card">
+            <h3>Brainstorm before you build</h3>
+            <p>TDD answers "does it work" — brainstorming answers "are we building the right thing." Both come before the green</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

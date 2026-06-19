@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode Cloud API reference — SDK + REST | Docs</title>
+  <meta name="description" content="The complete LingCode Cloud API reference: the JavaScript SDK surface (data, auth, storage, functions, vector, realtime, push, telemetry, config) and every /api/cloud/be/<id>/… REST endpoint with method, path, and shape.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/api-reference.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/api-reference.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/api-reference.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/api-reference.html">
+  <meta property="og:title" content="LingCode Cloud API reference">
+  <meta property="og:description" content="The JavaScript SDK surface and every REST endpoint for LingCode Cloud, with shapes.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .ref-toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 18px; margin: 18px 0 8px; padding: 0; list-style: none; }
+    .ref-toc a { font-size: 0.85rem; color: var(--text-dim); text-decoration: none; font-family: "Geist Mono", monospace; }
+    .ref-toc a:hover { color: var(--signal); }
+    .ref-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.85rem; }
+    .ref-table th, .ref-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .ref-table th { font-family: "Geist Mono", monospace; font-size: 0.72rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim); }
+    .ref-table td code { white-space: nowrap; }
+    .http-m { font-family: "Geist Mono", monospace; font-weight: 600; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; }
+    .http-get { background: rgba(50,160,90,.16); color: #2e9e5b; }
+    .http-post { background: rgba(70,120,220,.16); color: #4678dc; }
+    .http-put { background: rgba(200,140,40,.18); color: #c88c28; }
+    .http-del { background: rgba(210,70,70,.16); color: #d24646; }
+    .tutorial-next-card { border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>API reference</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-intermediate">● Reference</span>
+        <span class="badge badge-date">Updated 2026-06-11</span>
+      </div>
+      <h1>API reference</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Two ways to reach a backend. The <a href="#sdk">JavaScript SDK</a> (loaded from <code>https://lingcode.dev/sdk/lingcode-v1.js</code>) is the primary interface — <code>data</code>, <code>auth</code>, <code>storage</code>, <code>functions</code>, <code>vector</code>, <code>push</code>, <code>telemetry</code>, and <code>config</code> all hang off one client. Under it is a plain <a href="#rest">REST API</a> at <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/…</code> that the SDK calls — documented here for non-JS clients.</p>
+      <p class="intro">This page is the flat reference. For the why and the worked examples, follow the per-product guides — each is linked from its section here. Every signature below is taken from the shipped SDK type definitions; every endpoint from the live routes.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2 id="sdk">JavaScript SDK</h2>
+      <p>The SDK is a single zero-dependency file. Load it and create a client with your backend's <strong>data URL</strong> and public <strong>anon key</strong> (both from <a href="/backends.html">lingcode.dev/backends</a> → your backend). Inside <a href="/try.html">/try</a> and the Mac preview the client is pre-injected as <code>window.lingcode</code>.</p>
+      <pre><code>&lt;script src="https://lingcode.dev/sdk/lingcode-v1.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const lingcode = LingCode.createClient(url, anonKey, options?);
+&lt;/script&gt;</code></pre>
+
+      <h3>createClient(url, anonKey, options?)</h3>
+      <ul>
+        <li><code>url: string</code> — the backend data URL, <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code>.</li>
+        <li><code>anonKey: string</code> — the public anon key (safe to ship in the browser).</li>
+        <li><code>options.detectSessionInUrl?: boolean</code> — default <code>true</code>; set <code>false</code> to skip reading <code>?lc_session</code>/<code>?lc_magic</code> from the URL on construct.</li>
+      </ul>
+      <p>Returns a <code>LingCodeClient</code>:</p>
+      <table class="ref-table">
+        <thead><tr><th>Member</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>url</code></td><td><code>string</code></td><td>The backend data URL.</td></tr>
+          <tr><td><code>anonKey</code></td><td><code>string</code></td><td>The anon key in use.</td></tr>
+          <tr><td><code>backendId</code></td><td><code>string</code></td><td>The backend id parsed from the URL.</td></tr>
+          <tr><td><code>ready</code></td><td><code>Promise&lt;LingCodeClient&gt;</code></td><td>Resolves after any auth redirect in the URL is consumed. <code>await</code> it once on load.</td></tr>
+          <tr><td><code>from(table)</code></td><td><code>QueryBuilder</code></td><td>Start a data query.</td></tr>
+          <tr><td><code>auth</code> · <code>storage</code> · <code>functions</code> · <code>vector</code> · <code>push</code> · <code>telemetry</code> · <code>config</code></td><td>namespaces</td><td>See below.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box">
+        <h3>The result envelope</h3>
+        <p>Every async data/auth/storage call resolves to <code>{ data, error }</code> — check <code>error</code> before using <code>data</code>. On failure, <code>error</code> is a <code>LingCodeError</code> with <code>code: string | null</code> (a server code like <code>"where_required"</code> or <code>"object_not_found"</code>) and <code>status: number</code> (the HTTP status, <code>0</code> for client-side errors).</p>
+      </div>
+
+      <ul class="ref-toc">
+        <li><a href="#sdk-data">from() / data</a></li>
+        <li><a href="#sdk-auth">auth</a></li>
+        <li><a href="#sdk-storage">storage</a></li>
+        <li><a href="#sdk-functions">functions</a></li>
+        <li><a href="#sdk-vector">vector</a></li>
+        <li><a href="#sdk-push">push</a></li>
+        <li><a href="#sdk-telemetry">telemetry</a></li>
+        <li><a href="#sdk-config">config</a></li>
+      </ul>
+
+      <h3 id="sdk-data">Data — <code>from(table)</code> → QueryBuilder</h3>
+      <p>Chain filters and modifiers, then a terminal op. <code>update()</code> and <code>delete()</code> require a filter. Full guide: <a href="/docs/cloud/database.html">Database</a>.</p>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Signature</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>eq · neq · gt · gte · lt · lte</td><td><code>(column, value) =&gt; this</code></td><td>Comparison filters; multiple AND together.</td></tr>
+          <tr><td>like · ilike</td><td><code>(column, value: string) =&gt; this</code></td><td>Substring match; <code>ilike</code> is case-insensitive.</td></tr>
+          <tr><td>in</td><td><code>(column, values: any[]) =&gt; this</code></td><td>Membership.</td></tr>
+          <tr><td>is</td><td><code>(column, null | "not_null") =&gt; this</code></td><td>IS NULL / IS NOT NULL.</td></tr>
+          <tr><td>match</td><td><code>(filters: Record&lt;string,any&gt;) =&gt; this</code></td><td>Several equality filters at once.</td></tr>
+          <tr><td>order</td><td><code>(column, { ascending? }) =&gt; this</code></td><td>Sort.</td></tr>
+          <tr><td>limit</td><td><code>(n: number) =&gt; this</code></td><td>Cap rows (≤ 200 per page).</td></tr>
+          <tr><td>range</td><td><code>(from: number, to: number) =&gt; this</code></td><td>Paginate by index.</td></tr>
+          <tr><td>select</td><td><code>() =&gt; Promise&lt;Result&lt;T[]&gt;&gt;</code></td><td>Read.</td></tr>
+          <tr><td>insert</td><td><code>(row | row[]) =&gt; Promise&lt;Result&lt;T[]&gt;&gt;</code></td><td>Create.</td></tr>
+          <tr><td>update</td><td><code>(patch) =&gt; Promise&lt;Result&lt;T[]&gt;&gt;</code></td><td>Requires a filter.</td></tr>
+          <tr><td>delete</td><td><code>() =&gt; Promise&lt;Result&lt;T[]&gt;&gt;</code></td><td>Requires a filter.</td></tr>
+          <tr><td>subscribe</td><td><code>(onChange, onError?) =&gt; Unsubscribe</code></td><td>Live INSERT/UPDATE/DELETE, RLS-filtered. See <a href="/docs/cloud/realtime.html">Realtime</a>.</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="sdk-auth">auth — <code>client.auth</code></h3>
+      <p>Full guide: <a href="/docs/cloud/auth.html">Authentication</a>. <code>Session = { user: { id, email } | null, token }</code>.</p>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Signature</th></tr></thead>
+        <tbody>
+          <tr><td>signUp</td><td><code>({ email, password }) =&gt; Promise&lt;Result&lt;Session&gt;&gt;</code></td></tr>
+          <tr><td>signIn · signInWithPassword</td><td><code>({ email, password }) =&gt; Promise&lt;Result&lt;Session&gt;&gt;</code></td></tr>
+          <tr><td>signInWithOAuth</td><td><code>(provider: "google"|"github"|"apple"|string, { redirectTo? }) =&gt; void</code> — top-level navigation; session auto-stored on return.</td></tr>
+          <tr><td>getProviders</td><td><code>() =&gt; Promise&lt;Record&lt;string, { available, source? }&gt;&gt;</code></td></tr>
+          <tr><td>sendMagicLink</td><td><code>({ email, redirectTo? }) =&gt; Promise&lt;Result&lt;{ sent }&gt;&gt;</code></td></tr>
+          <tr><td>verifyMagicLink</td><td><code>(token) =&gt; Promise&lt;Result&lt;Session&gt;&gt;</code></td></tr>
+          <tr><td>sendOtp</td><td><code>({ email }) =&gt; Promise&lt;Result&lt;{ sent }&gt;&gt;</code></td></tr>
+          <tr><td>verifyOtp</td><td><code>({ email, code }) =&gt; Promise&lt;Result&lt;Session&gt;&gt;</code></td></tr>
+          <tr><td>getUser</td><td><code>() =&gt; User | null</code></td></tr>
+          <tr><td>getToken</td><td><code>() =&gt; string | null</code></td></tr>
+          <tr><td>lastError</td><td><code>() =&gt; string | null</code> — OAuth error code from the last redirect.</td></tr>
+          <tr><td>signOut</td><td><code>() =&gt; Promise&lt;{ error: null }&gt;</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="sdk-storage">storage — <code>client.storage.from(bucket)</code></h3>
+      <p>Bucket is <code>"public"</code> or <code>"private"</code>. Full guide: <a href="/docs/cloud/storage.html">Storage</a>.</p>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Signature</th></tr></thead>
+        <tbody>
+          <tr><td>upload</td><td><code>(path, file: Blob|File|ArrayBuffer|string, { contentType? }) =&gt; Promise&lt;Result&lt;{ bucket, path, bytes, url }&gt;&gt;</code></td></tr>
+          <tr><td>download</td><td><code>(path) =&gt; Promise&lt;Result&lt;Blob&gt;&gt;</code></td></tr>
+          <tr><td>getPublicUrl</td><td><code>(path) =&gt; string</code></td></tr>
+          <tr><td>remove</td><td><code>(path) =&gt; Promise&lt;Result&lt;{ removed }&gt;&gt;</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="sdk-functions">functions — <code>client.functions</code></h3>
+      <p>Full guide: <a href="/docs/cloud/functions.html">Functions</a>.</p>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Signature</th></tr></thead>
+        <tbody>
+          <tr><td>invoke</td><td><code>&lt;T&gt;(slug: string, body?: any) =&gt; Promise&lt;Result&lt;T&gt;&gt;</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="sdk-vector">vector — <code>client.vector</code></h3>
+      <p>Full guide: <a href="/docs/cloud/vector-search.html">Vector search</a>.</p>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Signature</th></tr></thead>
+        <tbody>
+          <tr><td>search</td><td><code>({ table, column, embedding: number[], limit?, metric?: "cosine"|"l2"|"ip" }) =&gt; Promise&lt;Result&lt;T[]&gt;&gt;</code></td></tr>
+          <tr><td>embed</td><td><code>(input: string | string[]) =&gt; Promise&lt;Result&lt;{ embedding, embeddings, model, dimensions }&gt;&gt;</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="sdk-push">push — <code>client.push</code></h3>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Signature</th></tr></thead>
+        <tbody>
+          <tr><td>isSupported</td><td><code>() =&gt; boolean</code></td></tr>
+          <tr><td>subscribe</td><td><code>({ serviceWorker? }) =&gt; Promise&lt;Result&lt;any&gt;&gt;</code> — registers the service worker + PushManager subscription, then stores it.</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="sdk-telemetry">telemetry — <code>client.telemetry</code></h3>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Signature</th></tr></thead>
+        <tbody>
+          <tr><td>logEvent</td><td><code>(name, params?: Record&lt;string, string|number|boolean&gt;) =&gt; void</code></td></tr>
+          <tr><td>logScreen</td><td><code>(name) =&gt; void</code></td></tr>
+          <tr><td>trace</td><td><code>(name, ms: number) =&gt; void</code></td></tr>
+          <tr><td>recordError</td><td><code>(err: Error | { message?, stack? } | string) =&gt; void</code></td></tr>
+          <tr><td>setUserId</td><td><code>(id: string | null) =&gt; void</code></td></tr>
+          <tr><td>setUserProperties</td><td><code>(props) =&gt; void</code></td></tr>
+          <tr><td>flush</td><td><code>() =&gt; Promise&lt;Result&gt;</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="sdk-config">config — <code>client.config</code></h3>
+      <p>Remote config + experiment variants.</p>
+      <table class="ref-table">
+        <thead><tr><th>Member</th><th>Signature</th></tr></thead>
+        <tbody>
+          <tr><td>ready</td><td><code>Promise&lt;ConfigApi&gt;</code> — resolves once config has loaded.</td></tr>
+          <tr><td>get</td><td><code>&lt;T&gt;(key, def?: T) =&gt; T</code></td></tr>
+          <tr><td>all</td><td><code>() =&gt; Record&lt;string, any&gt;</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="rest">REST API</h2>
+      <p>The SDK calls these. Use them directly from any non-JS client. Base URL is <code>https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;</code> for the app-facing data plane.</p>
+      <div class="info-box">
+        <h3>Authentication</h3>
+        <p>Send the <strong>anon key</strong> as <code>Authorization: Bearer &lt;anon-key&gt;</code> (or <code>?apikey=&lt;anon-key&gt;</code>) for anonymous, RLS-public access. After a user signs in, send their <strong>session token</strong> as <code>Authorization: Bearer &lt;user-token&gt;</code> so requests run as that user. The MFA, token-refresh, and sign-out endpoints require the user token.</p>
+      </div>
+
+      <h3>Data</h3>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Path</th><th>Wraps</th></tr></thead>
+        <tbody>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/select</code></td><td><code>from().select()</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/insert</code></td><td><code>from().insert()</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/update</code></td><td><code>from().update()</code> (filter required)</td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/delete</code></td><td><code>from().delete()</code> (filter required)</td></tr>
+        </tbody>
+      </table>
+      <p>Bodies carry the table, filters, and row/patch. The runtime data plane is table-CRUD — no JOINs, no upserts, ≤ 200 rows per page (see <a href="/docs/cloud/database.html">Database</a>).</p>
+
+      <h3>Auth</h3>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Path</th><th>Body / notes</th></tr></thead>
+        <tbody>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/signup</code></td><td><code>{ email, password }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/signin</code></td><td><code>{ email, password }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/magiclink/request</code></td><td><code>{ email, redirect_url }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/magiclink/verify</code></td><td><code>{ token }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/otp/request</code></td><td><code>{ email }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/otp/verify</code></td><td><code>{ email, code }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/apple/native</code></td><td><code>{ identity_token }</code> — native Apple Sign In</td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/token/refresh</code></td><td><code>{ refresh_token }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/signout</code></td><td><code>{ refresh_token }</code> or <code>{ all: true }</code> · user token</td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/mfa/enroll</code></td><td>→ <code>{ secret, qr_code }</code> · user token</td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/mfa/verify</code></td><td><code>{ code }</code> → session at AAL2 · user token</td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/auth/mfa/challenge</code></td><td>user token</td></tr>
+          <tr><td><span class="http-m http-get">GET</span></td><td><code>/auth/mfa/factors</code></td><td>user token</td></tr>
+          <tr><td><span class="http-m http-del">DELETE</span></td><td><code>/auth/mfa/factors/:factorId</code></td><td>user token</td></tr>
+          <tr><td><span class="http-m http-get">GET</span></td><td><code>/auth/providers</code></td><td>→ <code>{ google, github, apple: { available, source } }</code></td></tr>
+          <tr><td><span class="http-m http-get">GET</span></td><td><code>/auth/oauth/:provider/start?redirect_url=…</code></td><td>302 → provider consent</td></tr>
+        </tbody>
+      </table>
+      <p>OAuth completes at <code>GET/POST /api/cloud/auth/oauth/:provider/callback</code>, which redirects back to your <code>redirect_url</code> with <code>?lc_session=&lt;jwt&gt;</code> on success or <code>?lc_error=&lt;code&gt;</code> on failure.</p>
+
+      <h3>Storage</h3>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Path</th><th>Body / notes</th></tr></thead>
+        <tbody>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/storage/upload</code></td><td><code>{ bucket?, path, content_type?, data_b64 }</code> → <code>{ bucket, path, bytes, url }</code></td></tr>
+          <tr><td><span class="http-m http-get">GET</span></td><td><code>/storage/object?bucket=…&amp;path=…</code></td><td>the file (302 to CDN for public objects)</td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/storage/remove</code></td><td><code>{ bucket?, path }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/storage/create-upload-url</code></td><td><code>{ bucket?, path, content_type? }</code> → <code>{ uploadUrl, method:"PUT", headers, bucket, path }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/storage/finalize</code></td><td><code>{ bucket?, path }</code> → <code>{ bucket, path, bytes, url }</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Vector &amp; search</h3>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Path</th><th>Body</th></tr></thead>
+        <tbody>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/vector/embed</code></td><td><code>{ input }</code> → <code>{ embedding, embeddings, model, dimensions }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/vector/search</code></td><td><code>{ table, column, embedding, limit?, metric? }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/search/text</code></td><td><code>{ table, column, query, is_tsvector?, limit? }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/search/hybrid</code></td><td><code>{ table, text_column, vector_column, query, embedding, … }</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Functions</h3>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Path</th><th>Body</th></tr></thead>
+        <tbody>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/functions/:slug</code></td><td><code>{ input? }</code> → <code>{ ok, data }</code> · builtins + custom</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Realtime</h3>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Path</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><span class="http-m http-get">GET</span></td><td><code>/realtime?table=foo,bar</code></td><td>SSE (<code>text/event-stream</code>); emits <code>event: change</code> / <code>data: { table, type, row }</code>; ~25s heartbeat. See <a href="/docs/cloud/realtime.html">Realtime</a>.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Push, telemetry &amp; config</h3>
+      <table class="ref-table">
+        <thead><tr><th>Method</th><th>Path</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><span class="http-m http-get">GET</span></td><td><code>/push/vapid-public</code></td><td>→ <code>{ key }</code> (VAPID public key)</td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/push/subscribe</code></td><td><code>{ subscription }</code></td></tr>
+          <tr><td><span class="http-m http-post">POST</span></td><td><code>/telemetry</code></td><td><code>{ events: [...] }</code></td></tr>
+          <tr><td><span class="http-m http-get">GET</span></td><td><code>/config?client_id=…</code></td><td>→ remote config values</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box">
+        <h3>Owner / console endpoints</h3>
+        <p>Backend administration — secrets, function source, provider config, schema migrations, usage — lives under a separate owner-authenticated tree (<code>/api/cloud/account/backends/&lt;backend-id&gt;/…</code>) and is driven by the console at <a href="/backends.html">lingcode.dev/backends</a>, not by the public anon key. The app-facing surface above is what you call from your code.</p>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/docs/cloud/" class="tutorial-next-card">
+            <h3>Cloud overview</h3>
+            <p>The five-minute getting-started and the full guide index</p>
+          </a>
+          <a href="/docs/cloud/database.html" class="tutorial-next-card">
+            <h3>Database guide</h3>
+            <p>The query builder and the table-CRUD model in depth</p>
+          </a>
+          <a href="/tutorials/use-lingcode-cloud-in-your-own-app.html" class="tutorial-next-card">
+            <h3>Use the SDK in your own app</h3>
+            <p>Wire the client into any project, end to end</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vector search with Pinecone — LingCode Tutorials</title>
+  <meta name="description" content="Store embeddings, do semantic search, build RAG. Pinecone is the managed vector DB; same shape applies to Qdrant, Weaviate, pgvector.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/vector-search-with-pinecone.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/vector-search-with-pinecone.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/vector-search-with-pinecone.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/vector-search-with-pinecone.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Vector search with Pinecone",
+  "description": "Embed documents into vectors, store in Pinecone , query by semantic similarity. The foundation of RAG, recommendation, semantic search, and \"find documents like this one.\"",
+  "url": "https://lingcode.dev/tutorials/vector-search-with-pinecone.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/vector-search-with-pinecone.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Vector search with Pinecone"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Vector search with Pinecone",
+      "item": "https://lingcode.dev/tutorials/vector-search-with-pinecone.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/vector-search-with-pinecone.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Vector search with Pinecone</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Vector search with Pinecone</h1>
+      <p class="intro">Embed documents into vectors, store in <a href="https://www.pinecone.io/" target="_blank" rel="noopener">Pinecone</a>, query by semantic similarity. The foundation of RAG, recommendation, semantic search, and "find documents like this one."</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>The 60-second mental model</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Embedding</strong> = a function that turns text (or image) into a fixed-length array of floats (e.g. 1536 for OpenAI's <code>text-embedding-3-small</code>). Similar meaning → close vectors.</li>
+            <li><strong>Vector DB</strong> = stores millions of those arrays and answers "which N vectors are closest to this one?" in &lt;100ms.</li>
+            <li><strong>Pick Pinecone when</strong> — you want a managed service, no infra to run, a generous free tier, and well-documented SDKs.</li>
+            <li><strong>Alternatives</strong> — <a href="https://qdrant.tech/" target="_blank" rel="noopener">Qdrant</a> (open source, fastest single-node), <a href="https://weaviate.io/" target="_blank" rel="noopener">Weaviate</a> (open source, modular), <a href="https://github.com/pgvector/pgvector" target="_blank" rel="noopener">pgvector</a> (Postgres extension — already in your DB!), <a href="https://supabase.com/docs/guides/database/extensions/pgvector" target="_blank" rel="noopener">Supabase + pgvector</a> (free for small data), <a href="https://www.trychroma.com/" target="_blank" rel="noopener">Chroma</a> (Python-first prototyping).</li>
+            <li><strong>Don't use a vector DB if</strong> — you have &lt;10K docs and they fit in RAM. Just embed everything on boot, do cosine similarity in-process. Avoids the network hop entirely.</li>
+            <li><strong>Sign up</strong> — <a href="https://app.pinecone.io/" target="_blank" rel="noopener">app.pinecone.io</a>. Google/GitHub login.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Create an index</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Console → <strong>Create Index</strong>. Required choices:</p>
+          <ul>
+            <li><strong>Dimensions</strong> — must match your embedding model. <code>text-embedding-3-small</code> = 1536. <code>text-embedding-3-large</code> = 3072. Cohere <code>embed-v3</code> = 1024. <strong>You can't change this later</strong> — wrong choice means rebuilding the index.</li>
+            <li><strong>Metric</strong> — <code>cosine</code> (default, normalized similarity), <code>euclidean</code>, or <code>dotproduct</code>. Use <code>cosine</code> unless your embedding model docs say otherwise.</li>
+            <li><strong>Cloud</strong> — AWS / GCP / Azure. Pick the same as your app to minimize latency.</li>
+            <li><strong>Type</strong> — <strong>Serverless</strong> (pay-per-query, scales to zero, default) or <strong>Pod</strong> (dedicated, predictable cost, legacy). New projects → serverless.</li>
+          </ul>
+          <p>Copy the index name and host URL. From <strong>API Keys</strong>, copy the key.</p>
+          <pre><code>PINECONE_API_KEY=…
+PINECONE_INDEX=my-docs
+OPENAI_API_KEY=…   # for embeddings</code></pre>
+        </div>
+      </div>
+
+      <h2>Generate embeddings</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>You need <em>something</em> to produce vectors. <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI's embedding API</a> is the default; <a href="https://docs.cohere.com/docs/embeddings" target="_blank" rel="noopener">Cohere</a>, <a href="https://docs.voyageai.com/" target="_blank" rel="noopener">Voyage</a>, and open-source models via <a href="https://www.sbert.net/" target="_blank" rel="noopener">sentence-transformers</a> are alternatives.</p>
+          <pre><code>npm install openai @pinecone-database/pinecone</code></pre>
+          <pre><code>import OpenAI from "openai";
+const openai = new OpenAI();
+
+async function embed(text) {
+  const r = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: text,
+  });
+  return r.data[0].embedding;  // float[1536]
+}</code></pre>
+          <p>Batch when you can — embedding 100 strings in one call is 30× cheaper than 100 calls:</p>
+          <pre><code>const r = await openai.embeddings.create({
+  model: "text-embedding-3-small",
+  input: chunks,  // array of strings, max 2048 inputs per call
+});
+const vectors = r.data.map(d =&gt; d.embedding);</code></pre>
+        </div>
+      </div>
+
+      <h2>Chunk your documents</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Don't embed a 50-page PDF as one vector — meaning gets averaged into mush. Split into ~500-token chunks with ~50-token overlap (so context isn't cut mid-sentence).</p>
+          <pre><code>function chunkText(text, size = 1500, overlap = 150) {
+  const chunks = [];
+  let i = 0;
+  while (i &lt; text.length) {
+    chunks.push(text.slice(i, i + size));
+    i += size - overlap;
+  }
+  return chunks;
+}</code></pre>
+          <p>For real production chunking that respects paragraph + sentence boundaries, use <a href="https://js.langchain.com/docs/concepts/text_splitters/" target="_blank" rel="noopener">LangChain's RecursiveCharacterTextSplitter</a> or <a href="https://docs.llamaindex.ai/en/stable/module_guides/loading/node_parsers/modules/" target="_blank" rel="noopener">LlamaIndex node parsers</a>.</p>
+          <div class="tip-box">
+            <strong>Chunking is the single biggest determinant of retrieval quality.</strong> Bad chunks (too big, too small, split mid-paragraph) → bad search results, no matter how good your DB is.
+          </div>
+        </div>
+      </div>
+
+      <h2>Upsert vectors</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <pre><code>import { Pinecone } from "@pinecone-database/pinecone";
+
+const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
+const index = pc.index(process.env.PINECONE_INDEX);
+
+async function ingestDocument(docId, text) {
+  const chunks = chunkText(text);
+  const vectors = await embedBatch(chunks);
+
+  await index.upsert(
+    chunks.map((chunk, i) =&gt; ({
+      id: `${docId}#${i}`,             // deterministic ID — re-ingesting overwrites
+      values: vectors[i],
+      metadata: {
+        docId,
+        text: chunk,                    // store the chunk for retrieval
+        chunkIndex: i,
+        createdAt: Date.now(),
+      },
+    })),
+  );
+}</code></pre>
+          <p>Metadata patterns:</p>
+          <ul>
+            <li><strong>Always store the source text</strong> in metadata — retrieval gives you the chunk back so you can show it to the LLM</li>
+            <li><strong>Tag with filters</strong> — <code>userId</code>, <code>workspaceId</code>, <code>documentType</code>, <code>tags: ["draft", "public"]</code>. Pinecone filters on metadata server-side; cheap.</li>
+            <li><strong>Don't store huge blobs</strong> — metadata has a 40KB limit per vector. For PDFs, store a pointer to S3/R2.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Query — semantic search</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <pre><code>async function search(query, userId) {
+  const queryVec = await embed(query);
+
+  const result = await index.query({
+    vector: queryVec,
+    topK: 5,
+    includeMetadata: true,
+    filter: { userId: { $eq: userId } },  // multi-tenant guard
+  });
+
+  return result.matches.map(m =&gt; ({
+    text: m.metadata.text,
+    docId: m.metadata.docId,
+    score: m.score,  // 0..1 cosine similarity
+  }));
+}</code></pre>
+          <p>Filter operators: <code>$eq</code>, <code>$ne</code>, <code>$gt</code>, <code>$lt</code>, <code>$in</code>, <code>$nin</code>, <code>$and</code>, <code>$or</code>. Full reference: <a href="https://docs.pinecone.io/guides/data/understanding-metadata" target="_blank" rel="noopener">Pinecone metadata filtering</a>.</p>
+        </div>
+      </div>
+
+      <h2>Hook up to an LLM (RAG)</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Retrieval-Augmented Generation: search → stuff results into prompt → ask LLM.</p>
+          <pre><code>async function answer(question, userId) {
+  const docs = await search(question, userId);
+  const context = docs.map(d =&gt; `[${d.docId}]\n${d.text}`).join("\n\n---\n\n");
+
+  const r = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: "Answer using only the context below. Cite [docId] inline. If the context doesn't contain the answer, say so.",
+      },
+      { role: "user", content: `Context:\n${context}\n\nQuestion: ${question}` },
+    ],
+  });
+
+  return r.choices[0].message.content;
+}</code></pre>
+          <p>For richer RAG flows (query rewriting, multi-hop, re-ranking) use a framework: <a href="https://js.langchain.com/" target="_blank" rel="noopener">LangChain</a> or <a href="https://docs.llamaindex.ai/" target="_blank" rel="noopener">LlamaIndex</a>. For the simple "search + stuff" shape above, framework is overhead.</p>
+        </div>
+      </div>
+
+      <h2>Hybrid search (semantic + keyword)</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>Pure vector search misses exact-match queries. "ZeroMQ" embedded looks similar to "RabbitMQ"; a user looking for ZeroMQ docs wants ZeroMQ specifically. Hybrid combines BM25 (keyword) + cosine (semantic).</p>
+          <p>Pinecone supports hybrid via <a href="https://docs.pinecone.io/guides/search/hybrid-search" target="_blank" rel="noopener">sparse-dense vectors</a> on serverless indexes. Generate sparse vectors with <a href="https://docs.pinecone.io/guides/inference/understanding-inference#sparse-embedding-models" target="_blank" rel="noopener">Pinecone Inference</a> or <a href="https://github.com/dorianbrown/rank_bm25" target="_blank" rel="noopener">rank-bm25</a>.</p>
+          <p>If your needs are simpler, run both searches in parallel and merge — reciprocal rank fusion is 20 lines of code and works well.</p>
+        </div>
+      </div>
+
+      <h2>Common failures</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Top results look unrelated</strong> — usually a chunking problem (too big), not a DB problem. Try smaller chunks with overlap. Inspect the actual returned text — don't trust the score in isolation.</li>
+            <li><strong>Slow query → too many vectors per query</strong> — <code>topK: 100</code> is rarely useful. 5–10 is the sweet spot for RAG. Larger <code>topK</code> + re-rank with <a href="https://docs.cohere.com/docs/rerank" target="_blank" rel="noopener">Cohere Rerank</a> if quality demands it.</li>
+            <li><strong>"Embedding dimension doesn't match index"</strong> — you switched models. Pinecone indexes are dimension-locked. Create a new index with the right dimension and re-ingest.</li>
+            <li><strong>Stale vectors after document edit</strong> — you edited a source document; old chunks still exist with the old text. Use deterministic IDs (<code>${docId}#${i}</code>) and <code>upsert</code> overwrites. Also delete chunks beyond the new chunk count.</li>
+            <li><strong>Multi-tenant leak</strong> — every query must include the user/workspace filter. Forgetting it once leaks documents across customers. Wrap the SDK in a per-user helper that injects the filter; never call <code>index.query</code> directly from app code.</li>
+            <li><strong>Embedding cost surprise</strong> — re-ingesting 1M chunks at OpenAI prices = ~$20. Not bad, but unexpected the third time you trigger it. Cache embeddings keyed by content hash.</li>
+            <li><strong>Free tier eviction</strong> — Pinecone serverless free tier has storage limits. Hitting them silently degrades recall. Monitor index size in console.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pinecone Serverless free tier</strong> — 2 GB storage, 2M read units / 1M write units per month. Enough for &lt;100K-vector apps.</li>
+            <li><strong>Beyond free</strong> — $0.33/GB/mo storage, $16 per 1M read units, $4 per 1M write units. A read unit ≈ one similarity comparison.</li>
+            <li><strong>Embeddings cost more than the DB</strong> — OpenAI <code>text-embedding-3-small</code> is $0.02 per 1M tokens; embedding 1M docs (avg 500 tokens) = $10. Re-embedding everything is the expensive part.</li>
+            <li><strong>Pgvector on existing Postgres = free</strong> — if you already run Postgres (Supabase / Neon / RDS) and have &lt;10M vectors, pgvector is the cheapest option. Latency is similar at small scale; degrades faster at large scale.</li>
+            <li><strong>Self-host Qdrant = $5–20/mo VPS</strong> — open source, single binary, fastest single-node performance. You operate it.</li>
+          </ul>
+          <p>Pricing: <a href="https://www.pinecone.io/pricing/" target="_blank" rel="noopener">pinecone.io/pricing</a>.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <ul>
+            <li><a href="https://docs.pinecone.io/" target="_blank" rel="noopener">Pinecone docs home</a></li>
+            <li><a href="https://docs.pinecone.io/reference/api/introduction" target="_blank" rel="noopener">REST API reference</a></li>
+            <li><a href="https://github.com/pinecone-io/pinecone-ts-client" target="_blank" rel="noopener">TypeScript SDK</a> · <a href="https://github.com/pinecone-io/pinecone-python-client" target="_blank" rel="noopener">Python SDK</a></li>
+            <li><a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI embeddings guide</a></li>
+            <li><a href="https://docs.pinecone.io/integrations" target="_blank" rel="noopener">Pinecone integrations</a> — LangChain, LlamaIndex, Haystack adapters</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>Don't reach for a vector DB until you've tried in-memory.</strong> For &lt;10K vectors, <code>cosine(query, every_vector)</code> in your app is faster than the network hop to Pinecone, and free. Vector DBs earn their keep at scale — but most apps never get there.
+      </div>
+
+      <div class="tutorial-next">
+        <h3>What's next</h3>
+        <div class="tutorial-next-cards">
+          <a href="/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h4>Expose your vector DB as an MCP server</h4>
+            <p>Let any AI agent (LingCode, Claude, Cursor) query your knowledge base.</p>
+          </a>
+          <a href="/tutorials/cache-and-rate-limit-with-upstash.html" class="tutorial-next-card">
+            <h4>Cache embeddings with Upstash</h4>
+            <p>Hash + cache embeddings keyed by content — pay for OpenAI calls once.</p>
+          </a>
+          <a href="/tutorials/upload-files-to-s3-or-r2.html" class="tutorial-next-card">
+            <h4>Store source files in S3/R2</h4>
+            <p>Metadata holds the chunk; the original PDF lives in object storage.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

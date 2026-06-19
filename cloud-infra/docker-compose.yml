@@ -1,0 +1,68 @@
+# LingCode Cloud — Phase 1 data plane (local / dev).
+#
+# Brings up the LingCode-operated data plane on YOUR host:
+#   - postgres   : the shared Postgres cluster that holds every tenant's
+#                  schema (be_<backend_id>). The control plane connects as
+#                  the `cloud_admin` role to provision schemas/roles.
+#   - postgrest  : the REST data API. NOT on the Phase-1 data path yet — in
+#                  Phase 1 generated apps read/write through the control-plane
+#                  proxy (/api/cloud/be/:id/*). PostgREST is here so Phase 2
+#                  can swap it in as the public per-tenant gateway. Left
+#                  running + documented; harmless if unused.
+#
+# This stack is for LingCode-operated hosts only. It must NOT run on the
+# small lingcode.dev marketing droplet (~8.7G) — use a separate, sized host.
+#
+# Usage (local):
+#   cd website/cloud-infra && docker compose up -d
+#   # then point the control plane at it:
+#   export CLOUD_PG_ADMIN_URL="postgres://cloud_admin:devpass@localhost:5544/lingcloud"
+#   export CLOUD_JWT_SECRET="$(openssl rand -hex 32)"   # >=32 chars, also set in postgrest below
+#   export CLOUD_POSTGREST_URL="http://localhost:5545"  # Phase 2 gateway base
+#
+# SECURITY: the passwords + trust settings below are DEV defaults. For prod,
+# use real secrets, TLS, PgBouncer in front, and lock the network down.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16  # postgres:16 + pgvector (semantic search)
+    container_name: lingcloud-postgres
+    environment:
+      POSTGRES_USER: cloud_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpass}
+      POSTGRES_DB: lingcloud
+    # Bind to the private interface only (bootstrap-remote.sh sets BIND_ADDR to
+    # the droplet's private IP). Never expose Postgres on 0.0.0.0 in prod.
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:5544:5432"
+    volumes:
+      - lingcloud_pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloud_admin -d lingcloud"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Phase 2 gateway (present but off the Phase-1 data path). PostgREST signs
+  # requests with the same CLOUD_JWT_SECRET the control plane mints anon JWTs
+  # with. PGRST_DB_SCHEMAS is intentionally just `public` here — the dynamic
+  # per-tenant schema reload is a Phase-2 task (see README).
+  postgrest:
+    image: postgrest/postgrest:v12.2.3
+    container_name: lingcloud-postgrest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: "postgres://authenticator:devpass@postgres:5432/lingcloud"
+      PGRST_DB_ANON_ROLE: "cloud_anon"
+      PGRST_DB_SCHEMAS: "public"
+      PGRST_JWT_SECRET: "${CLOUD_JWT_SECRET:-change-me-to-at-least-32-chars-secret}"
+      PGRST_DB_CONFIG: "false"
+    # Off the Phase-1 data path; bound to localhost so it isn't public.
+    ports:
+      - "127.0.0.1:5545:3000"
+
+volumes:
+  lingcloud_pgdata:

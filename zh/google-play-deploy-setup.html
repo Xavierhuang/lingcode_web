@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magic Deploy 配置：Google Play Service Account 指南 | LingCode</title>
+  <meta name="description" content="一步步教你为 LingCode Magic Deploy 填写 Service Account JSON、软件包名、轨道与签名密钥库。几分钟内把 Android 应用上传到 Google Play。">
+  <meta name="keywords" content="Google Play Magic Deploy, Service Account JSON, LingCode Android 发布, AAB, Gradle, Play Console API">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/google-play-deploy-setup.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/google-play-deploy-setup.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/google-play-deploy-setup.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/google-play-deploy-setup.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/google-play-deploy-setup.html">
+  <meta property="og:title" content="Magic Deploy 配置：Google Play Service Account 指南">
+  <meta property="og:description" content="去哪找 Service Account JSON、软件包名、密钥库与轨道，让 LingCode 把你的 Android 应用上传到 Google Play。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Magic Deploy 配置——Google Play Service Account 指南">
+  <meta name="twitter:description" content="填写 Service Account JSON、软件包名与密钥库。几分钟内用 LingCode 发布 Android 应用。">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "inLanguage": "zh-CN",
+    "name": "为 LingCode Magic Deploy 配置 Google Play Service Account",
+    "description": "如何创建 Google Play Service Account、下载 JSON 密钥、配置正式发布签名，并从 LingCode Magic Deploy 上传 Android App Bundle。",
+    "step": [
+      { "@type": "HowToStep", "name": "在 Google Play Console 注册应用", "text": "创建 Google Play 开发者账号，在 Play Console 注册应用，软件包名需与应用 build.gradle 中的 applicationId 完全一致。" },
+      { "@type": "HowToStep", "name": "先手动上传一次 AAB", "text": "在人工上传至少一个构建之前，Play Console 不允许仅通过 Service Account API 上传。请先手动上传任意签名的 AAB，以解锁 API 路径。" },
+      { "@type": "HowToStep", "name": "创建 Service Account 并下载 JSON", "text": "在 Play Console 打开 设置 → API 访问，创建 Service Account，下载 JSON 密钥，并为该账号授予对本应用的发布权限。" },
+      { "@type": "HowToStep", "name": "配置正式发布签名", "text": "要么在 app/build.gradle 中添加 signingConfigs.release，要么把密钥库交给 LingCode，由它在构建时以 Gradle 属性注入凭据。" },
+      { "@type": "HowToStep", "name": "粘贴到 LingCode 并部署", "text": "在 LingCode 打开 Magic Deploy，选择 Google Play，填写 Service Account JSON、软件包名、轨道以及（如需）密钥库字段，然后点击 Deploy to Google Play。" }
+    ],
+    "publisher": { "@type": "Organization", "name": "LingCode" }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .blog-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.875rem; }
+    .blog-content pre code { background: none; padding: 0; }
+    .field-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .field-table th, .field-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .field-table th { color: var(--text-muted); font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field-table td { color: var(--text); }
+    .field-table td:first-child { font-family: ui-monospace, monospace; color: var(--signal); white-space: nowrap; }
+    .callout { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .callout p { margin: 0; color: var(--text); }
+    .callout strong { color: var(--signal); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+    .sibling-nav { max-width: 800px; margin: 0 auto; padding: 20px 32px 0; }
+    .sibling-nav-inner { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .sibling-nav-label { font-size: 0.8125rem; color: var(--text-muted); margin-right: 8px; }
+    .sibling-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 0.8125rem; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
+    .sibling-pill:hover { color: var(--text); border-color: var(--signal); text-decoration: none; }
+    .sibling-pill.current { background: var(--signal); color: #fff; border-color: var(--signal); cursor: default; }
+    .sibling-pill.current:hover { color: #fff; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <header class="nav-bar">
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-hidden="true">
+    <div class="nav-inner">
+      <a href="/zh/" class="nav-logo">灵码</a>
+      <label for="nav-toggle" class="nav-burger" aria-label="切换菜单">
+        <span class="nav-burger-line" aria-hidden="true"></span>
+        <span class="nav-burger-line" aria-hidden="true"></span>
+        <span class="nav-burger-line" aria-hidden="true"></span>
+      </label>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="/zh/#demos">演示</a>
+        <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+        <a href="/zh/docs.html">文档</a>
+        <a href="/google-play-deploy-setup.html" class="nav-cta">English</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <nav class="sibling-nav" aria-label="部署指南">
+      <div class="sibling-nav-inner">
+        <span class="sibling-nav-label">部署指南：</span>
+        <a href="/zh/magic-deploy-setup.html" class="sibling-pill">App Store</a>
+        <a href="/zh/google-play-deploy-setup.html" class="sibling-pill current" aria-current="page">Google Play</a>
+        <a href="/magic-deploy-web-platforms.html" class="sibling-pill">Web</a>
+        <a href="/magic-deploy-scripts.html" class="sibling-pill">脚本</a>
+      </div>
+    </nav>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">指南</p>
+        <h1>Magic Deploy 配置 — Google Play</h1>
+        <p>LingCode 把 Android 应用上传到 Google Play 所需的 Service Account JSON、软件包名、密钥库与轨道——都在哪里获取。</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2>你在填什么</h2>
+      <p>在 LingCode 中点击 <strong>Magic Deploy</strong> 并选择 <strong>Google Play</strong> 时，最多会看到七个字段。前三个为必填；若 <code>build.gradle</code> 已配置正式发布签名，则后面四个密钥库字段可以不填。</p>
+
+      <table class="field-table">
+        <thead>
+          <tr><th>字段</th><th>含义</th><th>去哪获取</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Service account JSON</td><td>创建 Service Account 时 Google 生成的私钥文件。</td><td>Play Console → 设置 → API 访问 → 创建 Service Account → 下载 JSON</td></tr>
+          <tr><td>软件包名</td><td>应用的 <code>applicationId</code>，例如 <code>com.example.app</code>。</td><td>必须与 <code>app/build.gradle</code> 中的 <code>applicationId</code> 完全一致。</td></tr>
+          <tr><td>轨道（Track）</td><td>构建发布到哪条轨道：<code>internal</code>、<code>alpha</code>、<code>beta</code> 或 <code>production</code>。</td><td>在 LingCode 内选择。默认为 <code>internal</code>。</td></tr>
+          <tr><td>Keystore 文件</td><td>用于签署正式发布 AAB 的 <code>.jks</code> 或 <code>.keystore</code>。</td><td>用 <code>keytool</code> 生成一次（或项目中已有）。</td></tr>
+          <tr><td>Keystore 密码</td><td>密钥库文件本身的密码。</td><td>运行 <code>keytool -genkeypair</code> 时设置。</td></tr>
+          <tr><td>Key alias</td><td>密钥库内该条密钥的名称，例如 <code>release</code>。</td><td>运行 <code>keytool -genkeypair</code> 时设置。</td></tr>
+          <tr><td>Key 密码</td><td>该条密钥的密码。</td><td>运行 <code>keytool -genkeypair</code> 时设置（常与 Keystore 密码相同）。</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p><strong>应用内两处快捷方式能省很多时间。</strong> Magic Deploy 会把 Service Account JSON 做一次 <em>预检</em>——若文件损坏或缺少 <code>client_email</code> / <code>private_key</code>，立刻可见，而不必等到 OAuth 阶段才莫名其妙失败。字段旁的 <strong>Auto-bump versionCode</strong> 会在每次构建前改写 <code>app/build.gradle</code> 里的 <code>versionCode</code>，消除最常见的第二次部署失败（<em>「Version code X has already been used」</em>）。默认关闭——首次部署时勾选即可。</p>
+      </div>
+
+      <div class="callout">
+        <p><strong>为什么 Google 用 Service Account 而不是 API Key？</strong> 普通 API Key 是单一密钥，持有者能做账号允许的一切——泄露只能轮换并祈祷。Google 的 <a href="/glossary.html#service-account">Service Account</a> 是 Google Cloud IAM 里的真实身份：你可授予窄权限（例如「仅向该应用的内测轨道上传构建」），并独立吊销或轮换密钥。LingCode 与 Google 之间运行的 <a href="/glossary.html#jwt">JWT</a> → <a href="/glossary.html#oauth">OAuth 2.0</a> 流程会把 JWT 换成约一小时有效的访问令牌——即便令牌泄露也会很快过期。术语不熟？见 <a href="/glossary.html">术语表</a>。</p>
+      </div>
+
+      <h2>开始之前——一次性 Play Console 配置</h2>
+      <p>在 Service Account 能上传任何东西之前，Google Play Console 里必须先有三样东西。省略任一项都会在后面遇到令人困惑的错误。</p>
+      <ol>
+        <li><strong>Google Play 开发者账号。</strong> 在 <a href="https://play.google.com/console/signup" rel="noopener noreferrer">play.google.com/console/signup</a> 注册。需一次性支付 25 美元。请使用你打算长期持有该应用的 Google 账号——日后转移所有权可行但很麻烦。</li>
+        <li><strong>Play Console 中的应用记录。</strong> 在 Play Console 点击 <strong>创建应用</strong>，填写名称、默认语言、应用或游戏、免费或付费等。此处填写的 <em>软件包名</em> 必须与 <code>app/build.gradle</code> 中的 <code>applicationId</code> 完全一致，且<strong>之后不可更改</strong>。</li>
+        <li><strong>至少手动上传过一次 AAB。</strong> 在人工上传过至少一个签名构建之前，Play 不允许仅凭 Service Account 上传。本地构建签名 AAB（<code>./gradlew bundleRelease</code>），拖入 Play Console → 测试 → 内部测试 → 创建版本，一次即可。不必正式发布——只要上传即解锁 API 路径。</li>
+      </ol>
+
+      <div class="callout">
+        <p><strong>跳过首次手动上传是「一切正常但 Console 里什么都没有」的头号原因。</strong> API 可能照常接受上传并提交编辑，你在 Play Console 仍看不到构建。请先手动上传一次。</p>
+      </div>
+
+      <h2>Android 工程必须具备这些设置</h2>
+      <p>Play Console 侧配置正确，但若 <code>./gradlew bundleRelease</code> 产不出 LingCode 期望的 AAB，仍然无法部署。首次部署前请逐项核对。</p>
+
+      <h3><code>app/build.gradle</code> 中的 <code>applicationId</code></h3>
+      <p>这相当于 Android 的 Bundle Identifier，必须与你在 Play Console 输入的软件包名完全一致。应用上架后，<strong>该值不可更改</strong>——Google 会把不同的 <code>applicationId</code> 视为完全不同的应用。</p>
+      <pre><code>android {
+    defaultConfig {
+        applicationId "com.example.app"
+        // …
+    }
+}</code></pre>
+
+      <h3><code>versionCode</code> 与 <code>versionName</code></h3>
+      <p>二者都在 <code>defaultConfig</code> 中。<code>versionCode</code> 是 Play 用来排序上传的整数；<code>versionName</code> 是面向用户的版本号字符串。</p>
+      <pre><code>defaultConfig {
+    versionCode 42        // must be greater than every previous upload
+    versionName "1.2.3"   // shown to users in the Play Store
+}</code></pre>
+      <p><strong>每次上传都必须增大 <code>versionCode</code>。</strong> 重复使用同一 <code>versionCode</code> 是第二次部署 silent 失败的最常见原因——Play 在服务端拒绝并报「Version code X has already been used」。</p>
+
+      <h3><code>minSdkVersion</code> 与 <code>compileSdkVersion</code></h3>
+      <p>Play Console 对 <code>targetSdkVersion</code> 有逐年提高的底线（目前通常为 API 33+）。若项目的 <code>targetSdkVersion</code> 低于当前底线，上传可能被接受但发布无法铺开。当前最低要求见 <a href="https://developer.android.com/google/play/requirements/target-sdk" rel="noopener noreferrer">developer.android.com/google/play/requirements/target-sdk</a>。</p>
+
+      <h3><code>bundleRelease</code> Gradle 任务</h3>
+      <p>LingCode 会运行 <code>./gradlew bundleRelease</code>，并期望产物位于 <code>app/build/outputs/bundle/release/app-release.aab</code>。标准 Android Studio 工程通常开箱即用。若你重命名了 <code>app</code> 模块、使用了 product flavor，或多模块工程中可上传的 AAB 在别处产出，需要自行调整：</p>
+      <ul>
+        <li><strong>重命名模块：</strong>LingCode 会查找 <code>app/build/outputs/bundle/release/app-release.aab</code> 与 <code>build/outputs/bundle/release/app-release.aab</code>。把模块改回标准布局，或临时把 AAB 符号链接到期望路径。</li>
+        <li><strong>Product flavors：</strong><code>bundleRelease</code> 会为每个 flavor 构建。若你只需要某一个 AAB——关闭 Magic Deploy 自行运行 <code>./gradlew bundle&lt;Flavor&gt;Release</code>，或在 Gradle 中设定默认 flavor。</li>
+      </ul>
+
+      <h3>Gradle Wrapper（<code>gradlew</code>）</h3>
+      <p>LingCode 优先使用 <code>./gradlew</code>，而非系统的 <code>gradle</code>。若工程没有 wrapper，请添加：</p>
+      <pre><code>gradle wrapper --gradle-version 8.5</code></pre>
+      <p>（版本号选你项目已知可构建的版本。）使用 wrapper 可避免 PATH 上任意版本的 Gradle，并与 CI / 同事环境一致。</p>
+
+      <h2>步骤 1 — 创建 Service Account 并下载 JSON 密钥</h2>
+      <p>与 Google Play 通信时，LingCode 会以 Service Account 身份认证。它在 Play Console 内创建——<em>不是</em>在单独的 Google Cloud Console 里从零开始，尽管 Service Account 本身是 Cloud 概念。</p>
+      <ol>
+        <li>登录 <a href="https://play.google.com/console" rel="noopener noreferrer">play.google.com/console</a>。</li>
+        <li>左侧边栏打开 <strong>设置 → API 访问</strong>。</li>
+        <li>在 <strong>Service accounts</strong> 下点击 <strong>Create new service account</strong>。Play Console 会弹出对话框链接到 Google Cloud；按指引创建 Service Account（名称任意——<em>「LingCode Magic Deploy」</em> 即可），回到 Play Console 标签页点击 <strong>Done</strong>。</li>
+        <li>回到 <strong>API 访问</strong> 页面，在列表中找到新建的 Service Account，点击 <strong>Manage Play Console permissions</strong>（或 <strong>Grant access</strong>）。</li>
+        <li>在 <strong>App permissions</strong> 标签点击 <strong>Add app</strong>，选择此前注册的应用。</li>
+        <li>在 <strong>Account permissions</strong> 标签至少勾选 <strong>Release apps to testing tracks</strong> 与 <strong>Release apps to production</strong>。保存。</li>
+        <li>回到 Google Cloud Console，打开该 Service Account 的 <strong>Keys</strong> 标签，<strong>Add key → Create new key → JSON</strong>，下载文件并妥善备份。</li>
+      </ol>
+      <p>在 LingCode 中点击 <strong>Service account JSON</strong> 旁的 <strong>Browse…</strong>，选择下载的文件。</p>
+
+      <div class="callout">
+        <p><strong>JSON 密钥文件相当于密码。</strong> 不要提交到 Git，不要粘贴到 Slack。若泄露，在 Cloud Console 删除该密钥——Service Account 仍可继续用，只需换新密钥。</p>
+      </div>
+
+      <h2>步骤 2 — 选择发布轨道</h2>
+      <p><strong>轨道（Track）</strong> 下拉框决定 Play 把上传放到哪里。LingCode 默认为 <code>internal</code>——在试用 Magic Deploy 本身时最快、最安全。</p>
+      <ul>
+        <li><code>internal</code> — 最多 100 名许可名单测试用户。无审核，即时可用。前几次上传建议用它。</li>
+        <li><code>alpha</code> — 封闭式测试轨道，通常规模更大，仍为许可名单。</li>
+        <li><code>beta</code> — 开放式测试，持有链接即可加入。</li>
+        <li><code>production</code> — 在 Play 商店可见。需经 Google 审核（通常数小时至数日）。</li>
+      </ul>
+      <p>之后可随时在 Play Console 内把构建从 <code>internal</code> 提升到更高轨道，无需重新上传。</p>
+
+      <h2>步骤 3 — 配置正式发布签名</h2>
+      <p>Google Play 只接受已签名的 AAB。有两种常见做法——按你现有流程选择。</p>
+
+      <h3>方案 A — 在 <code>build.gradle</code> 内签名（若已有密钥库推荐）</h3>
+      <p>在 <code>app/build.gradle</code> 中添加 <code>signingConfigs.release</code> 块：</p>
+      <pre><code>android {
+    signingConfigs {
+        release {
+            storeFile file("/absolute/path/to/release.keystore")
+            storePassword "…"
+            keyAlias "release"
+            keyPassword "…"
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            // …
+        }
+    }
+}</code></pre>
+      <p>若采用此方案，请将 LingCode 中四个密钥库字段<strong>留空</strong>。LingCode 只运行 <code>./gradlew bundleRelease</code>，由 Gradle 从构建文件读取签名配置。</p>
+
+      <h3>方案 B — 由 LingCode 在构建时注入密钥库</h3>
+      <p>若不想把密码硬编码进 <code>build.gradle</code>，让构建文件从 Gradle 属性读取：</p>
+      <pre><code>android {
+    signingConfigs {
+        release {
+            storeFile file(project.findProperty("RELEASE_STORE_FILE") ?: "release.keystore")
+            storePassword project.findProperty("RELEASE_STORE_PASSWORD") ?: ""
+            keyAlias project.findProperty("RELEASE_KEY_ALIAS") ?: ""
+            keyPassword project.findProperty("RELEASE_KEY_PASSWORD") ?: ""
+        }
+    }
+    buildTypes {
+        release { signingConfig signingConfigs.release }
+    }
+}</code></pre>
+      <p>然后在 LingCode 中填写全部四个密钥库字段。构建时 LingCode 会以 <code>-PRELEASE_STORE_FILE=…</code>、<code>-PRELEASE_STORE_PASSWORD=…</code>、<code>-PRELEASE_KEY_ALIAS=…</code>、<code>-PRELEASE_KEY_PASSWORD=…</code> 传给 Gradle。除本地 <code>gradle</code> 进程参数外，这些值不会离开你的 Mac。</p>
+
+      <h3>还没有密钥库？</h3>
+      <p>用 JDK 自带的 <code>keytool</code> 生成：</p>
+      <pre><code>keytool -genkeypair -v \
+  -keystore release.keystore \
+  -alias release \
+  -keyalg RSA -keysize 2048 \
+  -validity 10000</code></pre>
+      <p>把文件保存在有备份的位置。<strong>若丢失此密钥库，你将无法再向 Play 更新该应用</strong>——Google 用签名证明新版本确实来自你。请至少在两个地方备份。</p>
+
+      <h2>步骤 4 — 点击 Deploy</h2>
+      <p>Service Account JSON、软件包名与签名就绪后，<strong>Deploy to Google Play</strong> 按钮会变为可用。随后 LingCode 会：</p>
+      <ul>
+        <li>定位 Android 工程（在打开的文件夹根目录查找 <code>build.gradle</code> 或 <code>build.gradle.kts</code>）。</li>
+        <li>运行 <code>./gradlew bundleRelease</code>（若无 wrapper 则用 <code>gradle bundleRelease</code>）；若选方案 B，则以 <code>-P</code> 属性传入签名凭据。</li>
+        <li>读取 <code>app/build/outputs/bundle/release/app-release.aab</code>。</li>
+        <li>用 Service Account 私钥签署 JWT，在 Google OAuth 端点换取作用于 <code>androidpublisher</code> 的访问令牌。</li>
+        <li>创建新编辑、上传 AAB，并在所选轨道上提交该编辑。</li>
+      </ul>
+      <p>成功后约一两分钟内（Google 处理时间，非 LingCode）构建会出现在 Play Console → 测试 → <em>你的轨道</em> → 版本。随后可铺开、提升到其他轨道或提交审核。</p>
+
+      <h2>阅读进度日志</h2>
+      <p>Magic Deploy 运行时，右侧面板会流式输出 <code>gradlew</code> 的实时日志以及 LingCode 对 Google 服务器的每次 HTTP 调用。前缀为 <code>[Google Play]</code> 的行是 LingCode 标记；其余为工具原始输出。</p>
+      <p>一次成功运行大致如下：</p>
+      <pre><code>[Google Play] Building signed AAB...
+&gt; Task :app:bundleRelease
+BUILD SUCCESSFUL in 45s
+[Google Play] Getting access token...
+[Google Play] Creating edit...
+[Google Play] Uploading AAB...
+[Google Play] Committing edit...
+[Google Play] Upload complete. Check Google Play Console for the new build.</code></pre>
+      <p><strong>失败时请滚动到日志底部。</strong> LingCode 的短报错（如「Build failed. Check errors above.」）只是指针；真正原因通常在原始输出的最后二十行——往往是 <code>FAILURE:</code> 开头的 Gradle 行，或 HTTP 状态码（Google API）。</p>
+
+      <h2>分阶段排错</h2>
+      <p>失败按阶段划分较清晰，各自对策不同。</p>
+
+      <h3>构建阶段（<code>gradlew bundleRelease</code>）</h3>
+      <table class="field-table">
+        <thead><tr><th>日志含</th><th>原因</th><th>处理</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>No Android project found</td>
+            <td>LingCode 在打开文件夹根目录未找到 <code>build.gradle</code> 或 <code>build.gradle.kts</code>。</td>
+            <td>打开包含 <code>gradlew</code> 的文件夹，而非其父目录。若在 monorepo 中，可临时直接打开 Android 子目录。</td>
+          </tr>
+          <tr>
+            <td>Permission denied: ./gradlew</td>
+            <td>Wrapper 脚本不可执行。</td>
+            <td>在项目根目录执行 <code>chmod +x gradlew</code>。</td>
+          </tr>
+          <tr>
+            <td>Could not find method signingConfig()</td>
+            <td>Gradle 语法混用——把 Groovy 与 Kotlin DSL 片段混在了一起。</td>
+            <td>按文件扩展名使用匹配语法：<code>build.gradle</code> 为 Groovy，<code>build.gradle.kts</code> 为 Kotlin。</td>
+          </tr>
+          <tr>
+            <td>Keystore file '…' not found</td>
+            <td>Magic Deploy 中的密钥库路径，或 <code>RELEASE_STORE_FILE</code> 指向的路径，在磁盘上解析失败。</td>
+            <td>使用指向 <code>.jks</code> 或 <code>.keystore</code> 的<strong>绝对路径</strong>。相对路径相对 Gradle 模块目录解析，容易踩坑。</td>
+          </tr>
+          <tr>
+            <td>Failed to read key &lt;alias&gt; from store: Keystore was tampered with, or password was incorrect</td>
+            <td>Keystore 密码或 Key 密码错误。</td>
+            <td>在终端运行 <code>keytool -list -keystore release.keystore</code>，按提示输入 Keystore 密码以验证。</td>
+          </tr>
+          <tr>
+            <td>No key with alias "…" found</td>
+            <td>密钥库中不存在该 alias。</td>
+            <td><code>keytool -list -keystore release.keystore</code> 会列出全部 alias，将正确名称填入 Key alias 字段。</td>
+          </tr>
+          <tr>
+            <td>AAB not found at app/build/outputs/bundle/release/app-release.aab</td>
+            <td>Gradle 构建成功但未在预期路径产出 AAB——常见原因是 app 模块不叫 <code>app</code>，或 product flavor 改变了输出文件名。</td>
+            <td>将模块改名为 <code>app</code>，或用 Gradle <code>Copy</code> 任务把 AAB 放到该路径。若按 flavor 构建，可暂时手动运行 <code>./gradlew bundle&lt;Flavor&gt;Release</code>。</td>
+          </tr>
+          <tr>
+            <td>Execution failed for task ':app:lintVitalRelease'</td>
+            <td>Gradle 配置将某条 lint 标为错误，阻塞正式发布构建。</td>
+            <td>修复 lint，或临时加入 <code>android.lintOptions.checkReleaseBuilds false</code> 以解锁（再排期彻底修复）。</td>
+          </tr>
+          <tr>
+            <td>Java heap space / OutOfMemoryError</td>
+            <td>Gradle Daemon 堆内存对你的项目过小。</td>
+            <td>在 <code>gradle.properties</code> 中加入 <code>org.gradle.jvmargs=-Xmx4g</code>。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>OAuth 阶段（JWT → access token）</h3>
+      <table class="field-table">
+        <thead><tr><th>日志含</th><th>原因</th><th>处理</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>OAuth failed: invalid_grant</td>
+            <td>LingCode 用 Service Account 私钥签署的 JWT 被拒绝。常见为 JSON 损坏或来自错误项目。</td>
+            <td>在 Service Account 的 Keys 标签重新下载 JSON。勿手工编辑——部分编辑器会插入不可见字符。</td>
+          </tr>
+          <tr>
+            <td>OAuth failed: invalid_scope</td>
+            <td>该 Google Cloud 项目未启用 <code>androidpublisher</code> API。</td>
+            <td>Cloud Console → API 和服务 → 库，搜索并启用 <strong>Google Play Android Developer API</strong>。</td>
+          </tr>
+          <tr>
+            <td>OAuth failed: 401 Unauthorized</td>
+            <td>Service Account 私钥已被吊销或删除。</td>
+            <td>在 Keys 标签生成新 JSON 密钥，并在 Magic Deploy 中重新附加。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Create Edit 阶段</h3>
+      <table class="field-table">
+        <thead><tr><th>日志含</th><th>原因</th><th>处理</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Create edit failed: 404 applicationNotFound</td>
+            <td>Play Console 中不存在该 <code>packageName</code>——可能是拼写错误，或尚未创建应用。</td>
+            <td>先在 Play Console 创建应用记录（<strong>Create app</strong>），软件包名与 <code>build.gradle</code> 中 <code>applicationId</code> <em>完全一致</em>。</td>
+          </tr>
+          <tr>
+            <td>Create edit failed: 403 developerDoesNotOwnApplication</td>
+            <td>Service Account 尚未与此应用在 Play Console 关联。</td>
+            <td>Play Console → 设置 → API 访问 → 你的 Service Account → <strong>Manage Play Console permissions → App permissions → Add app</strong>，添加该应用。</td>
+          </tr>
+          <tr>
+            <td>Create edit failed: 403 insufficientScopes</td>
+            <td>Service Account 的 <em>账号权限</em>过窄。</td>
+            <td>同一页 <strong>Account permissions</strong> 标签——至少勾选「Release apps to testing tracks」。管理员角色亦可。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>上传 AAB 阶段</h3>
+      <table class="field-table">
+        <thead><tr><th>日志含</th><th>原因</th><th>处理</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Upload failed: 403 apkNotificationMessageKeyUpgradeVersionConflict / versionCodeTooLow</td>
+            <td>AAB 中 <code>versionCode</code> 未大于 Play 上已有版本。</td>
+            <td>提高 <code>app/build.gradle</code> 中的 <code>versionCode</code> 并重试——或勾选面板中的 <strong>Auto-bump versionCode</strong>，由 LingCode 每次部署自动递增。</td>
+          </tr>
+          <tr>
+            <td>Upload failed: 400 apkUploadApkNotSigned</td>
+            <td>AAB 未签名（或使用 debug 密钥签名）。</td>
+            <td>要么在 Magic Deploy 填齐四个密钥库字段，要么在 <code>build.gradle</code> 配置 <code>signingConfigs.release</code>。不要两套同时硬顶——可能冲突。</td>
+          </tr>
+          <tr>
+            <td>Upload failed: 400 apkSignedWithDifferentCertificate</td>
+            <td>签名证书与 Google 为该应用记录的证书不一致。</td>
+            <td>使用原密钥库签名；若已丢失，通过 <strong>Play Console → 设置 → App 签名 → 申请重置上传密钥</strong>（由 Google 人工审核）。</td>
+          </tr>
+          <tr>
+            <td>Upload failed: 413 Request Entity Too Large</td>
+            <td>AAB 超过 150 MB 上限。</td>
+            <td>启用 R8/ProGuard 压缩，精简大资源，或使用 Play Asset Delivery。</td>
+          </tr>
+          <tr>
+            <td>Upload failed: network error / timed out</td>
+            <td>网络慢或不稳定；LingCode 对上传请求有 600 秒超时。</td>
+            <td>重试。若多次上传同一 AAB，Play 去重常会快速返回。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Commit Edit 阶段</h3>
+      <table class="field-table">
+        <thead><tr><th>日志含</th><th>原因</th><th>处理</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Commit failed: 400 validationError</td>
+            <td>验证阶段 Play 拒绝了编辑——常见为应用记录缺少必填项（内容分级、隐私政策网址、目标受众等）。</td>
+            <td>在 Play Console 打开应用，完成 <strong>政策与计划</strong>、<strong>应用内容</strong> 中带红点的部分。上传已成功；修复后可于 Console 手动提交编辑。</td>
+          </tr>
+          <tr>
+            <td>Commit failed: 409 editAlreadyCommitted</td>
+            <td>上一次尝试已提交该编辑；当前重试无事可做。</td>
+            <td>通常可忽略。查看 Play Console——构建多半已在。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>上传成功后会发生什么</h2>
+      <p>Magic Deploy 完成后，构建会出现在 <strong>Play Console → 你的应用 → 测试 → &lt;你的轨道&gt; → 版本</strong>。与 App Store Connect 不同，AAB 通常没有单独的「处理中」状态——约一两分钟内即可用。随后：</p>
+      <ul>
+        <li><strong>内部测试</strong> — 许可名单用户可通过加入链接立即安装。无审核。</li>
+        <li><strong>封闭式测试（alpha）</strong> — 仍为许可名单，但首次通常需审核（一般 &lt; 24 小时）。</li>
+        <li><strong>开放式测试（beta）</strong> — 持有链接即可加入。该轨道首次发布需审核。</li>
+        <li><strong>正式版</strong> — 在 Play 商店可见。由 Google 审核（数小时至数日）。可在同一页分阶段铺开（例如 10% → 50% → 100%）。</li>
+      </ul>
+      <p>可在 Play Console 内将构建从低轨道提升到高轨道而无需重新上传——打开目标轨道的版本页，点击 <strong>Create new release → Add from library</strong>。</p>
+
+      <h2>速查：出问题该去哪改</h2>
+      <table class="field-table">
+        <thead><tr><th>现象</th><th>去哪处理</th></tr></thead>
+        <tbody>
+          <tr><td>Deploy 按钮一直灰</td><td>缺少软件包名或 Service Account JSON。两者齐全后 LingCode 才会启用按钮。</td></tr>
+          <tr><td>"No Android project found"</td><td>打开含 <code>gradlew</code> / <code>build.gradle</code> 的文件夹，而非父目录。</td></tr>
+          <tr><td>构建阶段失败</td><td>在终端用相同 <code>-P</code> 参数运行 Magic Deploy 日志里打印的 <code>./gradlew bundleRelease</code>。Gradle 报错与 LingCode 内一致，终端里更易调试。</td></tr>
+          <tr><td>AAB 已构建但找不到</td><td>模块不叫 <code>app</code>，或 flavor 产出不同文件名。重命名或符号链接到 <code>app/build/outputs/bundle/release/app-release.aab</code>。</td></tr>
+          <tr><td>OAuth / 401</td><td>重新下载 Service Account JSON 并在 Magic Deploy 中附加。</td></tr>
+          <tr><td>403 developerDoesNotOwnApplication</td><td>Play Console → 设置 → API 访问 → 你的 Service Account → App permissions → 添加该应用。</td></tr>
+          <tr><td>versionCodeTooLow</td><td>增大 <code>app/build.gradle</code> 中的 <code>versionCode</code>，任意更大整数均可。</td></tr>
+          <tr><td>上传成功但 Console 无构建</td><td>尚未完成首次手动上传。本地构建签名 AAB，拖入 Play Console → 内部测试 → 创建新版本，一次即可。</td></tr>
+          <tr><td>Commit 报 validationError</td><td>打开 Play Console，处理 <strong>政策与计划</strong> / <strong>应用内容</strong> 红点，再手动提交编辑（文件已上传）。</td></tr>
+          <tr><td>仍卡住</td><td>把日志中的完整 gradle 命令复制到终端执行；若是 API 错误，用 <code>curl</code> 带上 access token 调同一端点查看完整响应体。</td></tr>
+        </tbody>
+      </table>
+
+      <h2>常见错误（速查清单）</h2>
+      <ul>
+        <li><strong>"No Android project found."</strong> 打开的工程根目录没有 <code>build.gradle</code> 或 <code>build.gradle.kts</code>。请直接打开 Android 工程（含 <code>gradlew</code> 的那个目录），而非父目录。</li>
+        <li><strong>"AAB not found at <code>app/build/outputs/bundle/release/app-release.aab</code>."</strong> app 模块未产出 AAB——常见于多模块工程 <code>bundleRelease</code> 产到了别处，或模块不叫 <code>app</code>。将模块改名为 <code>app</code>，或增加汇总 release bundle 的 <code>app</code> 子工程。</li>
+        <li><strong>"Create edit failed …"</strong> 软件包名与 <code>applicationId</code> 不一致，或 Service Account 尚未在 <strong>Play Console → 设置 → API 访问 → App permissions</strong> 关联该应用。</li>
+        <li><strong>上传成功但永远没有构建。</strong> 跳过了首次手动上传。请先手工上传任意签名 AAB，再重试。</li>
+        <li><strong>带签名提示的 "Build failed"。</strong> 要么方案 A 的 <code>build.gradle</code> 指向了本机不存在的密钥库路径，要么方案 B 的 <code>-P</code> 与 <code>build.gradle</code> 预期不一致。用 LingCode 相同参数在终端运行 <code>./gradlew bundleRelease</code>，Gradle 错误更具体。</li>
+        <li><strong>Service Account 权限不足。</strong> 向导默认勾选常为只读。请在 Account permissions 标签至少勾选 <em>Release apps to testing tracks</em>。</li>
+      </ul>
+
+      <h2>安全须知</h2>
+      <p>Service Account JSON 与密钥库均为凭据。LingCode 仅在你触发的部署过程中把它们发送到 <code>oauth2.googleapis.com</code> 与 <code>androidpublisher.googleapis.com</code>（即 Google），否则文件只保留在你的 Mac。</p>
+      <p>若设备丢失或人员离职，请轮换 Service Account 密钥（Cloud Console → IAM → Service accounts → Keys，删除旧钥并生成新钥）。若怀疑密钥库备份泄露，请停止用它发新版——在未通过 Play App Signing 官方流程的情况下，Google 不允许随意更换应用签名密钥。</p>
+
+      <h2>延伸阅读</h2>
+      <p>本页概念的一手资料，来自 Google：</p>
+      <ul>
+        <li><a href="/glossary.html">LingCode 部署术语表</a>——本页每个术语的定义。</li>
+        <li><a href="https://developers.google.com/android-publisher" rel="noopener noreferrer">Google Play Developer API</a> — LingCode 用于创建编辑、上传 AAB、提交版本的 REST API。</li>
+        <li><a href="https://developers.google.com/identity/protocols/oauth2/service-account" rel="noopener noreferrer">OAuth 2.0 for Server-to-Server Applications</a> — Service Account 使用的 JWT 承载流程。</li>
+        <li><a href="https://developer.android.com/studio/publish/app-signing" rel="noopener noreferrer">Sign your app</a>（Android Developers）——密钥库生成、签名配置与 Play App Signing。</li>
+        <li><a href="https://developer.android.com/guide/app-bundle" rel="noopener noreferrer">About Android App Bundles</a> — AAB 的定位及 Play 如何按设备拆分 APK。</li>
+        <li><a href="https://support.google.com/googleplay/android-developer/answer/9859752" rel="noopener noreferrer">Manage your Play testing tracks</a> — 内部 / alpha / beta / 正式版轨道的实务说明。</li>
+      </ul>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">准备好交付了吗？</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;">还要发 iOS 或 Mac？见 <a href="/zh/magic-deploy-setup.html">App Store Connect API Key 指南</a>。或浏览 <a href="/zh/features.html">完整 Magic Deploy 功能</a>。</p>
+        <a href="/zh/">下载 LingCode Mac 版</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-logo">灵码</span>
+      <nav class="footer-links">
+        <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+        <a href="/zh/blog.html">技能参考</a>
+        <a href="/zh/magic-deploy-setup.html">Magic Deploy（App Store）</a>
+        <a href="/zh/google-play-deploy-setup.html">Magic Deploy（Android）</a>
+        <a href="/magic-deploy-web-platforms.html">Magic Deploy（Web）</a>
+        <a href="/magic-deploy-scripts.html">部署脚本</a>
+        <a href="/glossary.html">术语表</a>
+        <a href="/annotated-examples.html">注释示例</a>
+        <a href="/zh/claude-sessions.html">Claude 会话</a>
+        <a href="/zh/remote-control.html">远程控制</a>
+        <a href="/zh/support.html">支持</a>
+        <a href="/LingCode-v2.7.0-Installer.dmg" download>下载 Mac 版</a>
+        <a href="https://apps.apple.com/us/app/lingcode/id6757243830" rel="noopener noreferrer">App Store</a>
+      </nav>
+      <span class="footer-copy">100% Swift · 无 Electron · 为 Mac 打造</span>
+    </div>
+  </footer>
+
+  <script src="../nav.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

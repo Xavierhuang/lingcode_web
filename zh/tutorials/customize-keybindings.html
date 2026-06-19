@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在 LingCode 中自定义快捷键</title>
+  <meta name="description" content="LingCode 读取 ~/.claude/keybindings.json —— 重新绑定快捷键、添加和弦按键，五分钟内将你在 Cursor/VS Code/Vim 中积累的肌肉记忆迁移过来。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/customize-keybindings.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/customize-keybindings.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/customize-keybindings.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-19T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="在 LingCode 中自定义快捷键">
+  <meta property="og:description" content="LingCode 读取 ~/.claude/keybindings.json —— 重新绑定快捷键、添加和弦按键，五分钟内将你在 Cursor/VS Code/Vim 中积累的肌肉记忆迁移过来。">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/customize-keybindings.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "在 LingCode 中自定义快捷键",
+  "description": "LingCode 内置了合理的默认快捷键，但如果你的肌肉记忆来自 Cursor、VS Code、JetBrains 或 Vim，这些默认设置可能会让你别扭好几周。只需花五分钟编辑 ~/.claude/keybindings.json，就能省去多年的摩擦。",
+  "url": "https://lingcode.dev/zh/tutorials/customize-keybindings.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-19",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/customize-keybindings.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "在 LingCode 中自定义快捷键"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "自定义快捷键",
+      "item": "https://lingcode.dev/zh/tutorials/customize-keybindings.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/customize-keybindings.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/zh/tutorials.html">原生 Mac IDE</a>
+      <span>/</span>
+      <span>自定义快捷键</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-19</span>
+      </div>
+      <h1>在 LingCode 中自定义快捷键</h1>
+      <p class="intro">LingCode 内置了合理的默认快捷键，但如果你的肌肉记忆来自 Cursor、VS Code、JetBrains 或 Vim，这些默认设置可能会让你别扭好几周。只需花五分钟编辑 <code>~/.claude/keybindings.json</code>，就能省去多年的摩擦。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>为什么用文件，而不是菜单</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>大多数编辑器把快捷键藏在一个带搜索框的设置界面里，每行都有一个小小的"编辑"按钮。改一个绑定还好，改十个就很痛苦，换了电脑还无法迁移。</p>
+          <p>LingCode 将快捷键保存在 <code>~/.claude/keybindings.json</code> 这个纯 JSON 文件里。你可以：</p>
+          <ul>
+            <li>用你喜欢的文本编辑器直接修改。</li>
+            <li>与上周的版本做差异比较。</li>
+            <li>放入 dotfiles 仓库，在多台 Mac 之间同步。</li>
+            <li>给某个和弦键位加个 TODO 注释，以后再回来处理。</li>
+          </ul>
+          <p>格式非常简洁：一个由 <code>{keys, command}</code> 对象组成的数组，仅此而已。看懂一条，其他的都一样。</p>
+        </div>
+      </div>
+
+      <h2>打开配置文件</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>在终端中执行：</p>
+          <pre><code>mkdir -p ~/.claude
+touch ~/.claude/keybindings.json
+open -e ~/.claude/keybindings.json</code></pre>
+          <p>如果文件是全新的空文件，粘贴以下骨架并保存：</p>
+          <pre><code>[
+]</code></pre>
+          <p>空数组的含义是"使用所有默认值，不覆盖任何设置"。你添加的每一条记录，要么替换某个默认绑定，要么注册一个全新的快捷键。LingCode 会在文件保存后热重载，无需重启。</p>
+        </div>
+      </div>
+
+      <h2>单条绑定的结构</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>每条绑定是一个包含两个字段的对象：</p>
+          <pre><code>{
+  "keys": "cmd+k",
+  "command": "chat.focus"
+}</code></pre>
+          <ul>
+            <li><strong><code>keys</code></strong> — 按键组合。修饰键为 <code>cmd</code>、<code>shift</code>、<code>alt</code>（即 Option）、<code>ctrl</code>，用 <code>+</code> 连接。键名全小写（<code>k</code>、<code>enter</code>、<code>escape</code>、<code>tab</code>、<code>up</code>、<code>down</code>、<code>left</code>、<code>right</code>、<code>f1</code>…<code>f12</code>）。</li>
+            <li><strong><code>command</code></strong> — 要触发的操作。你可以在聊天中问 LingCode：<em>"list all keybinding commands"</em>，查看完整命令列表。</li>
+          </ul>
+          <p>这就是全部语法。以下是几个常见重绑定的示例：</p>
+          <pre><code>[
+  { "keys": "cmd+p",         "command": "file.quickOpen"    },
+  { "keys": "cmd+shift+p",   "command": "command.palette"   },
+  { "keys": "cmd+b",         "command": "sidebar.toggle"    },
+  { "keys": "cmd+j",         "command": "terminal.toggle"   },
+  { "keys": "cmd+enter",     "command": "chat.submit"       },
+  { "keys": "cmd+l",         "command": "chat.focus"        }
+]</code></pre>
+        </div>
+      </div>
+
+      <h2>重新绑定发送键</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>最常被问到的重绑定：聊天消息如何发送。默认是 <kbd>Return</kbd> 发送，<kbd>Shift+Return</kbd> 换行。如果你来自一个以多行输入为主的编辑器，可能更习惯反过来——<kbd>Return</kbd> 换行，<kbd>Cmd+Return</kbd> 发送：</p>
+          <pre><code>[
+  { "keys": "enter",     "command": "chat.newline" },
+  { "keys": "cmd+enter", "command": "chat.submit"  }
+]</code></pre>
+          <p>保存文件，聚焦到聊天输入框，绑定立即生效。无需重启 LingCode。</p>
+          <div class="tip-box">
+            <strong>同一个键可以在不同上下文中触发不同命令</strong>（例如聊天输入框与编辑器）。LingCode 会根据当前聚焦的视图来决定执行哪个绑定。如果重绑定似乎没有生效，点击你期望触发的视图后再试一次。
+          </div>
+        </div>
+      </div>
+
+      <h2>和弦绑定——两次按键的快捷方式</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>和弦是两个按键组合的连续输入：先按第一个，再在短时间内按第二个。当单键快捷键已经不够用时非常实用。两个组合之间用空格分隔：</p>
+          <pre><code>[
+  { "keys": "cmd+k cmd+s", "command": "settings.open"        },
+  { "keys": "cmd+k cmd+t", "command": "theme.pick"           },
+  { "keys": "cmd+k z",     "command": "zenMode.toggle"       },
+  { "keys": "cmd+k cmd+r", "command": "keybindings.open"     }
+]</code></pre>
+          <p>VS Code 用户会认出 <code>cmd+k</code> 前缀这个约定——它的存在是因为经过十年的编辑器发展历程，其他助记键已经几乎用完了。</p>
+        </div>
+      </div>
+
+      <h2>迁移你的编辑器快捷键</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>你不需要手动逐一翻译。直接问 LingCode：</p>
+          <pre><code>I came from Cursor. Read ~/.claude/keybindings.json and add the
+core Cursor shortcuts I'm probably missing — at minimum:
+- cmd+k for the inline AI prompt
+- cmd+l for chat focus
+- cmd+i for inline suggestions
+- cmd+. for quick fix
+- cmd+; for the model picker
+
+Don't remove any existing bindings. Show me the diff before
+saving.</code></pre>
+          <p>同样的提示词适用于"I came from VS Code"、"I came from JetBrains"、"I came from Vim"。LingCode 熟知各编辑器的标准快捷键集，会追加而非覆盖——但前提是你要求它先展示差异，这样可以避免意外的冲突覆盖。</p>
+          <div class="warn-box">
+            <strong>同一个键在相同上下文中无法触发两个不相关的命令。</strong>如果你为内联 AI 添加了 <code>cmd+k</code>，而 LingCode 默认的 <code>cmd+k</code> 和弦前缀与之冲突，则最后一条记录优先生效。编辑后务必重新查看文件，确认实际绑定的是什么。
+          </div>
+        </div>
+      </div>
+
+      <h2>跨机器同步</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>这个文件就是纯 JSON——把它放进你的 dotfiles 仓库：</p>
+          <pre><code>cd ~/dotfiles
+ln -s ~/.claude/keybindings.json claude-keybindings.json
+git add claude-keybindings.json
+git commit -m "Add LingCode keybindings"</code></pre>
+          <p>在新 Mac 上，反向建立符号链接：</p>
+          <pre><code>mkdir -p ~/.claude
+ln -sf ~/dotfiles/claude-keybindings.json ~/.claude/keybindings.json</code></pre>
+          <p>你的快捷键配置可以随着 shell 配置、编辑器设置和别名一起迁移。把它们当作一套整体来维护。</p>
+        </div>
+      </div>
+
+      <h2>当某个绑定突然失效</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>按发生频率排列，三种最可能的原因：</p>
+          <ul>
+            <li><strong>JSON 格式错误。</strong>一个多余的逗号会让整个文件失效。用 <code>python3 -m json.tool ~/.claude/keybindings.json</code> 检查。</li>
+            <li><strong>焦点上下文不对。</strong>该绑定只在某些视图中生效。点击你期望触发的视图后再试。</li>
+            <li><strong>macOS 或其他应用先抢占了该按键。</strong>系统快捷键（<code>cmd+space</code>、<code>cmd+tab</code>）和全局工具（Raycast、Alfred、Rectangle）的优先级更高。检查系统设置 → 键盘 → 键盘快捷键。</li>
+          </ul>
+          <p>在排除以上三点之前，不要急于怀疑是绑定本身的问题。</p>
+        </div>
+      </div>
+
+      <h2>在 LingCode 中使用此功能</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>整个工作流——定位、编辑、重绑定、和弦、同步——已被打包为一个技能。将其放入你的技能文件夹，然后在 LingCode 中说"rebind a shortcut"或"customize keybindings"即可调用：</p>
+          <pre><code>---
+name: keybindings-help
+description: Use when the user wants to customize keyboard shortcuts, rebind keys, add chord bindings, or modify ~/.claude/keybindings.json. Triggers: 'rebind ctrl+s', 'add a chord shortcut', 'change the submit key', 'customize keybindings', 'remap key', 'I'm used to Cursor / VS Code / Vim keys', 'keyboard shortcuts'. Actions: edit ~/.claude/keybindings.json, add {keys, command} entry, import Cursor/VS Code/Vim conventions, sync to dotfiles, debug malformed JSON / focus-context issues / OS-level shortcut grabs.
+---
+
+Customize LingCode's keyboard shortcuts by editing
+~/.claude/keybindings.json directly.
+
+Format: a JSON array of objects, each with two fields:
+- keys: the keystroke. Modifiers cmd, shift, alt, ctrl joined with +.
+  Key names lowercase (k, enter, escape, tab, arrows, f1..f12).
+  Chords are two combos separated by a space ("cmd+k cmd+s").
+- command: the action to fire. Run "list all keybinding commands" in
+  chat to discover them.
+
+Workflow:
+1. Create ~/.claude/keybindings.json if it doesn't exist; seed with
+   an empty array [].
+2. Identify the user's source-editor convention (Cursor, VS Code,
+   JetBrains, Vim) so the proposed bindings match their muscle
+   memory.
+3. Append entries — never silently replace existing ones unless
+   asked. Show a diff first.
+4. Validate with `python3 -m json.tool` before declaring done.
+5. The file hot-reloads on save — no restart needed.
+
+If a binding doesn't fire, check: JSON validity, focus context (chat
+input vs editor vs terminal), and OS/global app shortcuts (Raycast,
+Alfred, System Settings → Keyboard Shortcuts) that may grab the key
+first.</code></pre>
+          <p>保存为 <code>~/.lingcode/skills/keybindings-help/SKILL.md</code> —— 有关具体路径及技能如何被发现，请参阅<a href="/zh/tutorials/install-a-skill.html">安装技能</a>教程。</p>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>获取 LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/customize-permissions-and-env-vars-in-settings.html" class="tutorial-next-card">
+            <h3>自定义权限与环境变量</h3>
+            <p>另一个配置文件 settings.json 控制审批提示和环境变量</p>
+          </a>
+          <a href="/zh/tutorials/add-custom-hooks.html" class="tutorial-next-card">
+            <h3>添加自定义钩子</h3>
+            <p>在生命周期事件中运行脚本——提交前代码检查、工具调用后日志记录、会话启动时初始化</p>
+          </a>
+          <a href="/zh/tutorials/permission-modes.html" class="tutorial-next-card">
+            <h3>权限模式</h3>
+            <p>在默认、接受编辑和计划模式之间切换，以适应不同类型的工作</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。专为想要快速发布的创始人和需要真正工具的工程师打造。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">高校合作</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

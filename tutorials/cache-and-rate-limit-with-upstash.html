@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cache and rate-limit with Upstash Redis — LingCode Tutorials</title>
+  <meta name="description" content="Serverless Redis over HTTP. Cache hot queries, throttle abusive IPs, queue background jobs — without running a Redis box.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/cache-and-rate-limit-with-upstash.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Cache and rate-limit with Upstash Redis",
+  "description": "Upstash is serverless Redis over HTTP. No connection pool, no port to keep open, no idle box. Cache hot queries, throttle abusive callers, queue background work — pay only for requests.",
+  "url": "https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Pick Upstash when",
+      "url": "https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Create a database",
+      "url": "https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Use it from Cloudflare Workers / Vercel Edge",
+      "url": "https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html#step-3"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Cache and rate-limit with Upstash",
+      "item": "https://lingcode.dev/tutorials/cache-and-rate-limit-with-upstash.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/cache-and-rate-limit-with-upstash.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Cache and rate-limit with Upstash</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Cache and rate-limit with Upstash Redis</h1>
+      <p class="intro"><a href="https://upstash.com/" target="_blank" rel="noopener">Upstash</a> is serverless Redis over HTTP. No connection pool, no port to keep open, no idle box. Cache hot queries, throttle abusive callers, queue background work — pay only for requests.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>Pick Upstash when</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick Upstash when</strong> — you run on Vercel/Cloudflare/Lambda and can't keep a TCP Redis connection open across invocations. Their HTTP/REST API is the only Redis you can use from edge functions.</li>
+            <li><strong>Alternatives</strong> — <a href="https://redis.io/cloud/" target="_blank" rel="noopener">Redis Cloud</a> (the official option, TCP-only, $$), <a href="https://railway.com/template/redis" target="_blank" rel="noopener">Redis on Railway/Fly/Render</a> (you operate it, cheap), self-host on a VPS (cheapest, most work), <a href="https://developers.cloudflare.com/kv/" target="_blank" rel="noopener">Cloudflare KV</a> (eventually consistent, edge-replicated, much narrower API).</li>
+            <li><strong>Free tier</strong> — 10K requests/day, 256 MB. Enough to ship a real product.</li>
+            <li><strong>Sign up</strong> — <a href="https://console.upstash.com/login" target="_blank" rel="noopener">console.upstash.com/login</a>. GitHub login. No credit card required.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Create a database</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Console → <strong>Create database</strong>. Pick:</p>
+          <ul>
+            <li><strong>Type</strong> — Regional (cheaper, single region, ~5–20ms) or Global (replicated to multiple regions, ~5ms anywhere, costs more)</li>
+            <li><strong>Region</strong> — pick the one closest to your <em>server</em>, not your users (your app already routes user traffic)</li>
+            <li><strong>Eviction</strong> — leave on. If you hit the memory limit, oldest keys get evicted instead of writes failing</li>
+          </ul>
+          <p>After creation, you'll see <strong>UPSTASH_REDIS_REST_URL</strong> and <strong>UPSTASH_REDIS_REST_TOKEN</strong>. Add both to <code>.env</code>.</p>
+        </div>
+      </div>
+
+      <h2>Cache hot queries</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>Install the client:</p>
+          <pre><code>npm install @upstash/redis</code></pre>
+          <p>Wrap any expensive query:</p>
+          <pre><code>import { Redis } from "@upstash/redis";
+
+const redis = Redis.fromEnv();
+
+async function getTopProducts() {
+  const cached = await redis.get&lt;Product[]&gt;("top-products");
+  if (cached) return cached;
+
+  const fresh = await db.query("SELECT * FROM products ORDER BY sales DESC LIMIT 20");
+  await redis.set("top-products", fresh, { ex: 60 }); // 60s TTL
+  return fresh;
+}</code></pre>
+          <p>Patterns that matter:</p>
+          <ul>
+            <li><strong>Always set a TTL</strong> (<code>ex</code> = seconds). Without it you're permanent-caching, and stale data is worse than slow data.</li>
+            <li><strong>Cache the answer to a question, not the entire object</strong> — <code>user:123:plan</code> not <code>user:123</code>. You can invalidate one field without nuking the rest.</li>
+            <li><strong>Invalidate on write</strong> — when the source-of-truth row changes, <code>redis.del(key)</code>. Don't rely on TTL alone for user-facing data.</li>
+            <li><strong>Cache the negative</strong> — "no rows found" is also worth caching, briefly. Otherwise a 404 path becomes your slowest path.</li>
+          </ul>
+          <p>Full API: <a href="https://upstash.com/docs/redis/sdks/ts/getstarted" target="_blank" rel="noopener">Upstash TS SDK docs</a>. Mirrors Redis commands 1-to-1: <code>get</code>, <code>set</code>, <code>incr</code>, <code>lpush</code>, <code>zadd</code>, etc.</p>
+        </div>
+      </div>
+
+      <h2>Rate-limit any endpoint</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Install the rate-limit helper:</p>
+          <pre><code>npm install @upstash/ratelimit</code></pre>
+          <p>Middleware that limits each IP to 10 requests per 10 seconds (sliding window):</p>
+          <pre><code>import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(10, "10 s"),
+  analytics: true, // dashboard graphs
+});
+
+// Express
+app.use(async (req, res, next) =&gt; {
+  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+
+  res.setHeader("X-RateLimit-Limit", limit);
+  res.setHeader("X-RateLimit-Remaining", remaining);
+  res.setHeader("X-RateLimit-Reset", reset);
+
+  if (!success) {
+    return res.status(429).json({ error: "Too many requests" });
+  }
+  next();
+});</code></pre>
+          <p>Limiter options:</p>
+          <ul>
+            <li><code>fixedWindow(n, "1 m")</code> — counts per fixed minute. Cheapest, but bursty at boundaries.</li>
+            <li><code>slidingWindow(n, "10 s")</code> — smooth, prevents boundary bursts. <strong>Default.</strong></li>
+            <li><code>tokenBucket(n, "1 s", capacity)</code> — allows bursts up to capacity, refills at rate. Use for APIs that should allow short bursts.</li>
+          </ul>
+          <p>Identifier choices:</p>
+          <ul>
+            <li><strong>IP</strong> — rough; defeated by VPNs/proxies; still catches scraper-grade abuse</li>
+            <li><strong>User ID</strong> — preferred for authenticated routes</li>
+            <li><strong>API key</strong> — required for public APIs; lets you set per-key limits</li>
+            <li><strong>Both</strong> — separate limiters with different windows (e.g., "5/min per IP <em>and</em> 100/hour per user")</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Use it from Cloudflare Workers / Vercel Edge</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Both SDKs work unchanged in edge runtimes — HTTP/REST means no TCP socket. Wire env vars in your platform:</p>
+          <ul>
+            <li><strong>Vercel</strong> — Project → Settings → Environment Variables. The <a href="https://vercel.com/integrations/upstash" target="_blank" rel="noopener">Upstash Vercel integration</a> auto-populates them.</li>
+            <li><strong>Cloudflare Workers</strong> — <code>wrangler secret put UPSTASH_REDIS_REST_URL</code> + <code>wrangler secret put UPSTASH_REDIS_REST_TOKEN</code>.</li>
+            <li><strong>Fly.io</strong> — <code>fly secrets set UPSTASH_REDIS_REST_URL=…</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Background jobs with QStash</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>If you also need delayed/scheduled work, <a href="https://upstash.com/docs/qstash/overall/getstarted" target="_blank" rel="noopener">QStash</a> is the message queue on the same dashboard. It's an HTTP-based job runner: you POST a job, QStash retries until your endpoint returns 200.</p>
+          <pre><code>import { Client } from "@upstash/qstash";
+
+const qstash = new Client({ token: process.env.QSTASH_TOKEN });
+
+// Send "welcome email" 5 min after signup
+await qstash.publishJSON({
+  url: "https://yourapp.com/api/jobs/welcome-email",
+  body: { userId: user.id },
+  delay: 300, // seconds
+});</code></pre>
+          <p>Alternatives: <a href="/tutorials/background-jobs-with-inngest.html">Inngest</a> (more workflow-shaped, better debugging UI), <a href="https://www.trigger.dev/" target="_blank" rel="noopener">Trigger.dev</a>, <a href="https://temporal.io/" target="_blank" rel="noopener">Temporal</a> (enterprise). QStash is the simplest of the bunch.</p>
+        </div>
+      </div>
+
+      <h2>Common failures</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>"Free tier exhausted" mid-day</strong> — 10K req/day = ~7 req/min. A rate-limiter that uses 2 Redis reads per request burns it fast. Either upgrade ($0.20/100K req) or cache the rate-limit check in-memory for short windows.</li>
+            <li><strong>Stale cache after a write</strong> — your DB updated, but cache still serves old. Add a <code>redis.del(cacheKey)</code> on the write path, not just rely on TTL.</li>
+            <li><strong>Rate limit hits real users behind shared NATs</strong> — colleges, corporate proxies, mobile carriers can put thousands of users behind one IP. For consumer apps, rate-limit by user ID once auth is established; only IP-limit unauth routes.</li>
+            <li><strong>Multi-region: writes from US, reads from EU</strong> — Regional DB only lives in one region. Either pick the Global tier (replicated, ~$0.40/100K req) or move workloads to the same region as the DB.</li>
+            <li><strong>Cold-start latency on Vercel</strong> — first Redis call after a cold start is ~80ms (TLS handshake + region routing). Subsequent calls are ~5ms. Don't measure your cache hit-rate on a single request.</li>
+            <li><strong>Token in client code</strong> — <code>UPSTASH_REDIS_REST_TOKEN</code> is admin-level. Never expose to the browser. For client-side rate limiting use a server-side proxy or Upstash's <a href="https://upstash.com/docs/redis/sdks/ts/auth" target="_blank" rel="noopener">read-only tokens</a>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Free</strong> — 10K req/day, 256 MB, single region. Real-product viable.</li>
+            <li><strong>Pay-as-you-go</strong> — $0.20 per 100K requests, $0.25/GB storage/mo, no minimum. Most small apps stay under $5/mo.</li>
+            <li><strong>Global (multi-region)</strong> — $0.40 per 100K. Get if you need &lt;20ms reads from anywhere.</li>
+            <li><strong>Pro</strong> — $280/mo flat, includes 100M requests, dedicated resources. For when pay-as-you-go gets noisy.</li>
+            <li><strong>QStash</strong> — separate billing: 500 messages/day free, $1 per 100K after.</li>
+          </ul>
+          <p>Pricing: <a href="https://upstash.com/pricing" target="_blank" rel="noopener">upstash.com/pricing</a>.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <ul>
+            <li><a href="https://upstash.com/docs/redis/overall/getstarted" target="_blank" rel="noopener">Upstash Redis docs</a></li>
+            <li><a href="https://upstash.com/docs/redis/sdks/ratelimit-ts/overview" target="_blank" rel="noopener">@upstash/ratelimit reference</a></li>
+            <li><a href="https://upstash.com/docs/qstash/overall/getstarted" target="_blank" rel="noopener">QStash docs</a></li>
+            <li><a href="https://github.com/upstash/redis-js" target="_blank" rel="noopener">redis-js on GitHub</a></li>
+            <li><a href="https://redis.io/docs/latest/commands/" target="_blank" rel="noopener">Redis commands reference</a> — Upstash supports the full standard surface.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>Mental model.</strong> Redis is a key-value store with data structures (lists, sets, sorted sets, hashes, streams). Cache is just the most common use. Once you have it provisioned, you'll find a dozen places to use it: session storage, leaderboards, pub/sub, deduplication windows, feature-flag overrides.
+      </div>
+
+      <div class="tutorial-next">
+        <h3>What's next</h3>
+        <div class="tutorial-next-cards">
+          <a href="/tutorials/background-jobs-with-inngest.html" class="tutorial-next-card">
+            <h4>Background jobs with Inngest</h4>
+            <p>Workflow-shaped job runner — better debug UX than QStash for complex flows.</p>
+          </a>
+          <a href="/tutorials/set-up-sentry-error-tracking.html" class="tutorial-next-card">
+            <h4>Error tracking with Sentry</h4>
+            <p>Rate-limit misfires cause user pain. Sentry catches the 429s you didn't expect.</p>
+          </a>
+          <a href="/tutorials/log-management-with-axiom.html" class="tutorial-next-card">
+            <h4>Log management with Axiom</h4>
+            <p>Grep your rate-limit decisions over time — who got throttled, when, why.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

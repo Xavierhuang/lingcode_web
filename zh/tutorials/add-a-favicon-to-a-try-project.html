@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>为 /try 项目添加 favicon — LingCode 教程</title>
+  <meta name="description" content="Favicon 通常是一个装满 PNG 文件的 /static 文件夹。/try 项目没有静态文件夹——资源只能内联。本文介绍内联 SVG 和 base64 数据 URL 的解决方案、2026 年值得发布的四种 favicon 变体，以及一行代码升级为 PWA 的方法。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/add-a-favicon-to-a-try-project.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/add-a-favicon-to-a-try-project.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/add-a-favicon-to-a-try-project.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605171400">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-17T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/add-a-favicon-to-a-try-project.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "为 /try 项目添加 favicon",
+  "description": "Favicon 通常是一个装满 PNG 文件的文件夹，浏览器会将其作为独立文件逐一请求。/try 项目是一个以对话驱动的沙盒环境——它没有可上传二进制文件的静态资源文件夹。解决方法是在 HTML 中多加一行：内联 SVG 或 base64 数据 URL，让 favicon 随文档一起发布",
+  "url": "https://lingcode.dev/zh/tutorials/add-a-favicon-to-a-try-project.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-17",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/add-a-favicon-to-a-try-project.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "为 /try 项目添加 favicon"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "搜索",
+      "item": "https://lingcode.dev/search.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "原生 Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html?level=beginner"
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "name": "为 /try 项目添加 favicon",
+      "item": "https://lingcode.dev/zh/tutorials/add-a-favicon-to-a-try-project.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/add-a-favicon-to-a-try-project.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">原生 Mac IDE</a>
+      <span>/</span>
+      <span>为 /try 项目添加 favicon</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-05-17</span>
+      </div>
+      <h1>为 /try 项目添加 favicon</h1>
+      <p class="intro">Favicon 通常是一个装满 PNG 文件的文件夹，浏览器会逐一发起独立的 HTTP 请求来获取它们。/try 项目是一个以对话驱动的沙盒环境，没有可上传二进制文件的静态资源文件夹。解决方法是在 HTML 中多加一行：内联 SVG 或 base64 数据 URL，让图标随文档一起发布。本文介绍该如何处理这个约束、为什么这样做，以及一个让 AI 代理帮你完成的简单提示语。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p><a href="/try.html">/try</a> 是 LingCode 的网页原型工具——你描述一个网站，代理负责编写 HTML/CSS/JS，预览实时更新，点击"发布"按钮即可部署到公开 URL。项目的内容就是代理生成的代码，而不是一个可以手动填充文件的文件夹。这对于以对话迭代的方式开发来说非常顺畅，只是在添加真正的 favicon 时有一点小约束。本教程将介绍这个约束以及三行代码的解决方案。</p>
+
+      <h2>你将学到什么</h2>
+      <ul>
+        <li>为什么 /try 不支持上传 favicon.ico 文件（以及它支持什么格式）</li>
+        <li>2026 年浏览器实际会查找的四种 favicon 变体</li>
+        <li>如何用内联 SVG 发布可用的 favicon（现代推荐方式）</li>
+        <li>针对尚不支持 SVG favicon 的浏览器的 data URL 降级方案</li>
+        <li>一行代码升级为可安装 PWA</li>
+      </ul>
+
+      <h2>第一步：了解约束</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>/try 发布的是代码，不是二进制文件</h3>
+          <p>传统的 favicon 配置是这样的：将 <code>favicon.ico</code>、<code>apple-touch-icon.png</code> 和 <code>icon-192.png</code> 放入 <code>/static</code> 文件夹，再在 <code>&lt;head&gt;</code> 中引用它们。浏览器会为每个文件发起单独的 HTTP 请求。</p>
+          <p>/try 项目没有可从对话外部填充的 <code>/static</code> 文件夹。项目的内容就是代理生成的 HTML/CSS/JS——你在对话中发送的图片附件会被代理以 data URL 的形式内联到代码中，而不是作为独立文件发布。这意味着<em>传统的</em> favicon 流程（放入 .ico 文件、引用它）在这里并不适用。</p>
+          <p>好消息是：所有现代浏览器都支持内联 SVG 或 base64 data URL 格式的 favicon。你根本不需要单独的文件。在 <code>&lt;head&gt;</code> 中加一行就能达到同样的效果，而这正是 /try 可以发布的内容。</p>
+        </div>
+      </div>
+
+      <h2>第二步：浏览器实际会查找什么</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>2026 年只需四种变体</h3>
+          <p>如果你读过早期的 favicon 教程，可能会看到列出 10 到 14 种尺寸来"完整支持各种浏览器"。其中大多数针对的是已经不再存在的浏览器和设备。2026 年实际需要的只有四种：</p>
+          <table>
+            <thead>
+              <tr><th>变体</th><th>使用场景</th><th>格式</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>icon</code></td>
+                <td>桌面浏览器标签页、书签</td>
+                <td>SVG（推荐）或 32×32 PNG</td>
+              </tr>
+              <tr>
+                <td><code>apple-touch-icon</code></td>
+                <td>iOS Safari"添加到主屏幕"</td>
+                <td>180×180 PNG，不透明</td>
+              </tr>
+              <tr>
+                <td><code>manifest</code></td>
+                <td>Android Chrome"添加到主屏幕"、PWA</td>
+                <td>192×192 + 512×512 PNG，通过 <code>manifest.json</code> 引用</td>
+              </tr>
+              <tr>
+                <td><code>theme-color</code></td>
+                <td>移动端浏览器界面（URL 栏颜色）</td>
+                <td>通过 <code>&lt;meta&gt;</code> 标签指定一个十六进制颜色值</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>你可以只用第一种发布一个 v0 版本的网站。其他三种是针对特定场景的升级项（iOS 用户添加到主屏幕、PWA 可安装性、移动端品牌化界面）。</p>
+        </div>
+      </div>
+
+      <h2>第三步：发布 v0 版 SVG favicon</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>一行代码，无需单独文件</h3>
+          <p>对于 /try 网站，最简单可用的 favicon 是内联 SVG。将以下内容添加到 <code>index.html</code> 的 <code>&lt;head&gt;</code> 中：</p>
+          <pre><code>&lt;link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'&gt;&lt;text y='26' font-size='28'&gt;🚀&lt;/text&gt;&lt;/svg&gt;"&gt;</code></pre>
+          <p>这是一个 32×32 的 SVG，将一个火箭表情渲染为 favicon——无需单独文件，无需上传，过去三年发布的所有 Chromium、Firefox 和 Safari 均支持。你可以替换表情，或者将 <code>&lt;text&gt;</code> 换成 <code>&lt;circle&gt;</code> 或 <code>&lt;path&gt;</code> 来使用真实 logo。URL 编码的 SVG 可以任意复杂，现代浏览器会直接在行内解析它。</p>
+          <p>如果需要非表情的 logo，可以在 /try 对话中向代理发送以下提示：</p>
+          <pre><code>Add a favicon to this site. Use an inline SVG showing the letter "L"
+in white on a #5B6CFF circle. Put the link tag in &lt;head&gt;.</code></pre>
+          <p>代理编辑完成后，你将在 /try 预览标签页中立刻看到 favicon 出现。如果没有显示，请强制刷新预览 iframe（浏览器会对 favicon 进行积极的缓存）。</p>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        <strong>为什么 v0 场景优先选 SVG 而非 base64 PNG。</strong>内联 SVG 在 HTML 中是人类可读的——想改颜色或形状，只需修改一个字符。Base64 PNG 是不透明的编码；要做任何改动，都得重新生成 PNG、重新编码，再替换掉一长串字符串。对于快速迭代的原型，SVG 是明显更优的选择。只有当你需要特定的位图效果（照片风格、SVG 难以实现的渐变）时，才需要切换到 base64 PNG。
+      </div>
+
+      <div class="tip-box">
+        <strong>不想自己设计 SVG？/try 可以帮你生成图片。</strong>/try 代理内置了一个 <code>generate_image</code> 工具，接入了 Pollinations AI（免费，无需 API key）。发送"<em>generate a favicon-style image: minimalist purple rocket, flat design, square, 512×512</em>"，代理会返回一个托管图片 URL，并直接嵌入到你的 HTML 中。对于标签页 favicon，这个 URL 可以直接用作 <code>&lt;link rel="icon" href="https://image.pollinations.ai/...."&gt;</code>——不过在生产环境中，建议让代理将结果下载并内联为 base64，这样你的 favicon 就不会依赖第三方服务的持续可用性。
+      </div>
+
+      <h2>第四步：为 iOS 添加 apple-touch-icon</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>再加一行，这次用 base64 PNG</h3>
+          <p>iOS Safari 在"添加到主屏幕"时会忽略 SVG favicon。它需要一个 180×180 的不透明 PNG。由于 /try 无法将 PNG 作为独立文件托管，需要将其编码为 data URL：</p>
+          <pre><code>&lt;link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgo...[long string]..."&gt;</code></pre>
+          <p>手动生成 base64 非常繁琐。直接让代理来做：</p>
+          <pre><code>Add an apple-touch-icon for iOS. 180×180, white "L" on a #5B6CFF
+background, no transparency. Encode as a base64 data URL and add the
+link tag.</code></pre>
+          <p>代理会生成 base64 字符串并为你注入 <code>&lt;link&gt;</code> 标签。生成的 HTML 会变大（一个 180×180 PNG 的 base64 编码约有 10 到 20KB 的文本），但这是一次性的体积增加，而不是每次请求都要额外获取的资源。</p>
+        </div>
+      </div>
+
+      <h2>第五步：升级为可安装 PWA</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>内联 manifest，无需单独的 JSON 文件</h3>
+          <p>要在 Android 上支持"添加到主屏幕"（并让 Chrome 显示安装提示），你需要一个 Web manifest。传统做法是引用一个 <code>/manifest.json</code> 文件。在 /try 中，将其内联为 link 标签上的 data URL：</p>
+          <pre><code>&lt;link rel="manifest" href='data:application/json,{"name":"My Site","short_name":"MySite","start_url":"/","display":"standalone","background_color":"%23ffffff","theme_color":"%235B6CFF","icons":[{"src":"data:image/svg+xml,&lt;svg ...&gt;","sizes":"any","type":"image/svg+xml"}]}'&gt;
+&lt;meta name="theme-color" content="#5B6CFF"&gt;</code></pre>
+          <p>这是一个最小可用的 PWA manifest：包含名称、起始 URL、独立显示模式和一个图标。data URL 中的 <code>%23</code> 只是颜色值中 <code>#</code> 的 URL 编码。配置完成后，Android 上的 Chrome 会在菜单中提供"安装应用"选项，iOS Safari 用户也能在主屏幕上看到正确命名的图标。</p>
+          <p>这类任务代理处理得很好——只需粘贴需求，一次就能得到正确的编码结果：</p>
+          <pre><code>Make this site PWA-installable. Add an inline web manifest in the
+&lt;head&gt; with name "My Site", standalone display mode, theme color
+#5B6CFF, and the existing SVG favicon as the manifest icon. Also add
+a theme-color meta tag.</code></pre>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>不要在 /try 项目中引用外部 favicon 服务。</strong>"使用 icons8.com"或"使用 CDN favicon"在本地可能正常，但发布后会失败——许多服务会限制外链或进行速率限制。发布后的 URL 会带来这些服务原本没有预料到的流量模式，你那个"<em>昨天还能用</em>"的 favicon 就会停止加载。将所有对已发布网站至关重要的资源全部内联。
+      </div>
+
+      <h2>第六步：在发布 URL 上验证</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>30 秒完成三项检查</h3>
+          <p>点击发布后，在公开 URL 上进行以下三项检查：</p>
+          <ol>
+            <li><strong>在无痕标签页中打开发布的 URL</strong>，查看标签栏中的 favicon。如果显示的是默认的地球图标，说明 link 标签没有进入已发布的 HTML——检查你的编辑是否在发布前已生效。</li>
+            <li><strong>仅限 iOS：</strong>在手机 Safari 中打开该 URL，点击分享按钮，选择"添加到主屏幕"。确认预览中显示的是你的 apple-touch-icon（而不是页面截图）。</li>
+            <li><strong>Chrome DevTools → Application → Manifest：</strong>确认 manifest 解析正确。如果看到"<em>Site cannot be installed</em>"，说明内联 JSON 存在语法错误——通常是缺少引号或有未编码的字符。将 DevTools 的报错粘贴给代理，它会帮你修复。</li>
+          </ol>
+        </div>
+      </div>
+
+      <h2>下一步</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/zh/tutorials/create-an-ios-or-mac-app-icon.html" class="tutorial-next-card">
+            <h3>创建 iOS 或 Mac 应用图标</h3>
+            <p>如果你的 /try 原型升级为原生应用，图标流程会有所不同</p>
+          </a>
+          <a href="/zh/tutorials/create-an-android-adaptive-icon.html" class="tutorial-next-card">
+            <h3>创建 Android 自适应图标</h3>
+            <p>同样的升级路径，Android 端</p>
+          </a>
+          <a href="/zh/tutorials/create-a-custom-sf-symbol.html" class="tutorial-next-card">
+            <h3>创建自定义 SF Symbol</h3>
+            <p>适用于 Apple 平台应用内图标</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发工具。为想要快速发布的创始人和追求真实工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不选 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">产品介绍</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode — 一体化原生 Mac IDE：AI 改动动不了你的项目</title>
+  <meta name="description" content="一体化原生 Mac IDE，取代 Xcode、Android Studio、VS Code 与 Cursor——并且 AI 改动永远可恢复。对 project.pbxproj、Info.plist、Gradle 文件、entitlements 做编辑前快照，按 hunk 审阅，跨多文件语义化撤销。内置 Claude Code、Codex、Gemini CLI。无 Electron。">
+  <meta name="keywords" content="一体化IDE, Mac原生IDE, AI代码编辑器, Swift IDE, Kotlin IDE, iOS开发, Android开发, Gradle, Handoff, 快捷指令, Claude Code, Codex, Gemini CLI, LSP, Agent模式, MCP, Cursor替代品, 无Electron, 数据库工具, Postgres, App Store 发布, Google Play 发布">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/zh/">
+  <meta property="og:title" content="LingCode — 一体化原生 Mac IDE：AI 改动动不了你的项目">
+  <meta property="og:description" content="原生 Mac IDE，取代 Xcode + Android Studio + VS Code + Cursor——并且 AI 改动永远可恢复。编辑前快照、按 hunk 审阅、语义化撤销。内置 Claude Code、Codex、Gemini CLI。无 Electron。免费。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:site_name" content="LingCode">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "LingCode",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS, iOS",
+    "description": "原生 Mac IDE，用于日常取代 Xcode、Android Studio、VS Code 与 Cursor。编辑、构建、运行、调试并交付 iOS、macOS、Android——内置 Claude Code、Codex、Gemini CLI、数据库工具以及一键 App Store 与 Play 上架流程。",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Organization", "name": "HainanMandi Tech" },
+    "url": "https://lingcode.dev/zh/",
+    "softwareVersion": "2.0",
+    "keywords": "原生 Mac IDE, AI 编程, Claude Code, LSP, Swift, Handoff, 无 Electron"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://lingcode.dev/zh/#website",
+        "url": "https://lingcode.dev/zh/",
+        "name": "LingCode",
+        "publisher": { "@id": "https://lingcode.dev/#organization" },
+        "inLanguage": "zh-CN"
+      }
+    ]
+  }
+  </script>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+
+  <header class="site-header site-header--with-banner">
+    <div class="announcement-bar" role="region" aria-label="产品公告">
+      <span class="announcement-dot"></span>
+      <strong>上新</strong> — 全提供方工具循环 + MCP、<code>lingcode acp-serve</code>（Zed / gemini-cli）、<code>lingcode serve</code> HTTP SSE、输入延迟优化。<a href="/zh/cli.html" class="announcement-link">CLI 文档 →</a>
+    </div>
+    <div class="nav-bar">
+      <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-hidden="true">
+      <div class="nav-inner">
+        <a href="/zh/" class="nav-logo">灵码</a>
+        <label for="nav-toggle" class="nav-burger" aria-label="切换菜单">
+          <span class="nav-burger-line" aria-hidden="true"></span>
+          <span class="nav-burger-line" aria-hidden="true"></span>
+          <span class="nav-burger-line" aria-hidden="true"></span>
+        </label>
+        <nav class="nav-links" aria-label="主导航">
+          <a href="/zh/try.html">在线试用</a>
+          <a href="#demos">演示</a>
+          <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+          <a href="/zh/docs.html">文档</a>
+          <a href="/" class="nav-cta">English</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- 主视觉 -->
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          取代 Xcode + Android Studio + VS Code + Cursor
+        </div>
+        <h1>原生 Mac IDE<br class="hero-br">为你所有要做的事而生。</h1>
+        <p class="hero-sub">一体化原生 Mac IDE，<strong style="color: var(--text); font-weight: 600;">AI 改动动不了你的项目</strong>。取代 <strong style="color: var(--text); font-weight: 600;">Xcode、Android Studio、VS Code 与 Cursor</strong>——<strong style="color: var(--text); font-weight: 600;">iOS 模拟器</strong>、<strong style="color: var(--text); font-weight: 600;">Android 模拟器</strong>、LLDB、Gradle，以及 <strong style="color: var(--text); font-weight: 600;">Claude Code</strong>、<strong style="color: var(--text); font-weight: 600;">Codex</strong>、<strong style="color: var(--text); font-weight: 600;">Gemini CLI</strong> 全部原生内置。无 Electron。</p>
+        <div class="hero-actions">
+          <a href="/LingCode-v2.7.0-Installer.dmg" download class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            免费下载 Mac 版
+          </a>
+          <a href="https://apps.apple.com/us/app/lingcode/id6757243830" class="btn btn-ghost" rel="noopener noreferrer">App Store (iPhone &amp; iPad)</a>
+        </div>
+        <p class="hero-hint">macOS 14+ · Apple Silicon &amp; Intel · xcodebuild &amp; Gradle · iOS 模拟器 &amp; Android 模拟器 · LLDB + Kotlin 调试器 · English &amp; 中文 · 零遥测</p>
+      </div>
+    </section>
+
+    <!-- 数据 -->
+    <section class="stats">
+      <div class="stats-inner">
+        <div class="stat">
+          <span class="stat-num" data-count="3" data-suffix="">3</span>
+          <span class="stat-label">内置 AI 智能体 — Claude Code、Codex 和 Gemini CLI</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num" data-count="60" data-suffix="+">60+</span>
+          <span class="stat-label">Agent 可驱动的原生 Swift 工具</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num" data-count="30" data-suffix="+">30+</span>
+          <span class="stat-label">内置斜杠命令，另可自定义</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num" data-count="120" data-suffix=" fps">120 fps</span>
+          <span class="stat-label">ProMotion 屏幕原生 Metal 渲染</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num" data-count="0" data-suffix="%">0%</span>
+          <span class="stat-label">分析上报 — 你的 Key，你的算力</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 新功能 -->
+    <section id="whats-new" class="whats-new fade-section">
+      <div class="section-container">
+        <p class="section-eyebrow">v2 亮点</p>
+        <h2 class="section-heading">持续打磨，<br>每周都在更好。</h2>
+        <div class="changelog-grid">
+          <div class="changelog-card">
+            <span class="changelog-tag changelog-tag--feature">功能</span>
+            <h3>Diff 高亮</h3>
+            <p>内联 diff 视图为新增、删除和修改区域上色，并在每个 hunk 旁标注强调色。审阅 Agent 改动像正式 Code Review，不再是一大段等宽纯文本。</p>
+          </div>
+          <div class="changelog-card">
+            <span class="changelog-tag changelog-tag--feature">功能</span>
+            <h3>Go &amp; Rust 语法</h3>
+            <p>Tree-sitter 新增 Go 与 Rust 语法，加入现有 Swift、Kotlin、JS/TS、Python、Java 行列。完整高亮、符号大纲，以及参与代码库索引。</p>
+          </div>
+          <div class="changelog-card">
+            <span class="changelog-tag changelog-tag--improvement">优化</span>
+            <h3>可调面板</h3>
+            <p>拖动任意分隔条——侧边栏、AI 聊天、终端、底部面板——任意调宽。布局按工作区保存，重新打开自动恢复。</p>
+          </div>
+          <div class="changelog-card">
+            <span class="changelog-tag changelog-tag--feature">功能</span>
+            <h3>字体选择器</h3>
+            <p>在设置中从系统所有等宽字体中挑选。连字、字重、行高全可调；编辑器、终端、diff 全部实时跟随。</p>
+          </div>
+          <div class="changelog-card">
+            <span class="changelog-tag changelog-tag--feature">功能</span>
+            <h3>内联聊天栏</h3>
+            <p>在任意选区上按快捷键，在编辑器侧边打开一个专注的聊天框——不切换面板、不丢上下文。最适合做快速重构和定点提问。</p>
+          </div>
+          <div class="changelog-card">
+            <span class="changelog-tag changelog-tag--improvement">优化</span>
+            <h3>中文站和本地化</h3>
+            <p>完整简体中文营销站上线 <code>/zh</code>，并对菜单、设置、AI 聊天界面做 App 内本地化。英文与中文并行交付。</p>
+          </div>
+          <div class="changelog-card">
+            <span class="changelog-tag changelog-tag--feature">功能</span>
+            <h3>lingcode 命令行</h3>
+            <p>在任意终端里驱动 LingCode。交互式 REPL 可用 Claude 完整 Agent SDK,或对接 OpenAI、Groq、Ollama 等任意 OpenAI 兼容端点。<a href="/zh/cli.html" style="color: var(--signal); text-decoration: none;">文档 →</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 演示视频 -->
+    <section id="demos" class="demos fade-section">
+      <div class="section-container">
+        <p class="section-eyebrow">见识它的运作</p>
+        <h2 class="section-heading">工作流，而不是功能列表。</h2>
+        <div class="demo-grid">
+          <div class="demo-card demo-card--vertical">
+            <h3>30 秒看懂 LingCode</h3>
+            <p class="demo-desc">日常工作流——从打开项目到部署上线，一镜到底。</p>
+            <video class="demo-video demo-video--vertical" controls playsinline preload="metadata" poster="/thumbnails/promotion.jpg" muted loop>
+              <source src="/promotion.mp4" type="video/mp4">
+              你的浏览器不支持 video 标签。
+            </video>
+          </div>
+          <div class="demo-card demo-card--wide">
+            <h3>AI 智能体读懂你的整个 IDE</h3>
+            <p class="demo-desc">构建状态、运行控制台、当前文件、Git、凭证——智能体读取这一切，然后动手。在聊天里说"把它发布到 TestFlight"，看着它完成。</p>
+            <video class="demo-video" controls playsinline preload="none" poster="/thumbnails/IDEawarenessdemo.jpg">
+              <source src="/IDEawarenessdemo.mp4" type="video/mp4">
+              你的浏览器不支持 video 标签。
+            </video>
+          </div>
+          <div class="demo-card demo-card--wide">
+            <h3>快速概览</h3>
+            <p class="demo-desc">两分钟看懂原生 AI 编程。</p>
+            <video class="demo-video" controls playsinline preload="none" poster="/thumbnails/convertyourwebappintoiosappinminutes.jpg">
+              <source src="/convertyourwebappintoiosappinminutes.mp4" type="video/mp4">
+              你的浏览器不支持 video 标签。
+            </video>
+          </div>
+          <div class="demo-card">
+            <h3>Magic Deploy</h3>
+            <p class="demo-desc">粘贴 Token，剩下的交给 LingCode。</p>
+            <video class="demo-video" controls playsinline preload="none" poster="/thumbnails/MagicDeployment.jpg">
+              <source src="/MagicDeployment.mp4" type="video/mp4">
+              你的浏览器不支持 video 标签。
+            </video>
+          </div>
+          <div class="demo-card">
+            <h3>Magic Install</h3>
+            <p class="demo-desc">检测 npm、pip、Cargo、CocoaPods 等 20+ 包管理器。一键安装。</p>
+            <video class="demo-video" controls playsinline preload="none" poster="/thumbnails/magic_install.jpg">
+              <source src="/magic_install.mp4" type="video/mp4">
+              你的浏览器不支持 video 标签。
+            </video>
+          </div>
+          <div class="demo-card">
+            <h3>Magic Push</h3>
+            <p class="demo-desc">暂存、AI 生成提交信息、推送——全都从 Git 面板完成。</p>
+            <video class="demo-video" controls playsinline preload="none" poster="/thumbnails/magic_push.jpg">
+              <source src="/magic_push.mp4" type="video/mp4">
+              你的浏览器不支持 video 标签。
+            </video>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 信任基石：工作保护 -->
+    <section id="work-protection" class="features fade-section" aria-labelledby="trust-pillar-heading-zh">
+      <div class="section-container">
+        <p class="section-eyebrow">信任基石</p>
+        <h2 id="trust-pillar-heading-zh" class="section-heading">项目经得起 AI 折腾。</h2>
+        <p class="features-intro-link" style="margin-top: -8px; margin-bottom: 28px;">AI 可能悄悄搞坏一个 Xcode 工程、写乱 <code>AndroidManifest.xml</code>、或者把 Gradle 配置拍扁。LingCode 假定它一定会出错，于是每次改动都在你注意到之前就能回退。</p>
+        <div class="feature-grid">
+
+          <div class="feature-card feature-card--highlight">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <h3>编辑前快照</h3>
+            <p>Agent 落笔之前，<code>project.pbxproj</code>、<code>Info.plist</code>、<code>build.gradle</code>、<code>AndroidManifest.xml</code> 与 <code>*.entitlements</code> 的原始副本会先写入 <code>~/Library/Application Support/LingCode/WorkProtection/</code>。恢复面板一键还原，和 Git 无关——即便没提交也能救回来。</p>
+          </div>
+
+          <div class="feature-card feature-card--highlight">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <h3>按 hunk 接受 / 还原</h3>
+            <p>每一次 AI 编辑都会在文件上显示带语法高亮的 diff 卡片。每个 hunk 独立接受或还原——不再是"全部通过"或"全部丢弃"。审阅 40 个文件的重构也不用把控制权交出去。</p>
+          </div>
+
+          <div class="feature-card feature-card--highlight">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+            </div>
+            <h3>语义化时间回溯撤销</h3>
+            <p>专为 AI 操作维护的多文件撤销栈，与编辑器原生撤销互相独立。一步回退跨文件重构——即使你之后继续打字也不会丢失你自己的编辑。</p>
+          </div>
+
+        </div>
+        <p class="features-intro-link" style="margin-top: 28px;">再加 Worktree 隔离用于高风险实验、读前写强制、Agent 执行前的五层安全闸。<a href="/zh/features.html#work-protection" style="color: var(--signal);">查看完整信任模型 →</a></p>
+      </div>
+    </section>
+
+    <!-- 功能网格 -->
+    <section id="features" class="features fade-section">
+      <div class="section-container">
+        <p class="section-eyebrow">编辑器 + Agent</p>
+        <h2 class="section-heading">你期望的 AI 功能——<br>没有 Electron 的负担。</h2>
+        <p class="features-intro-link"><a href="/zh/features.html">完整功能列表（Mac &amp; iPad）</a></p>
+        <div class="feature-grid">
+
+          <div class="feature-card feature-card--wide">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <h3>四种聊天模式</h3>
+            <p>60+ 原生 Swift 工具：构建、运行、调试、读取代码库、直接编辑文件。四种模式：<strong>Agent</strong>（自主执行、逐步审批）、<strong>Plan</strong>（先设计再编辑）、<strong>Ask</strong>（问答、不修改）、<strong>Debug</strong>（专注排错）。3 级 Token 递增、自动上下文压缩、跨会话结构化记忆。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+            </div>
+            <h3>Worktree 隔离</h3>
+            <p>把 Agent 送进一个独立的 git worktree 做高风险实验。做完之后合并、保留分支或丢弃——主分支毫发无损。完整信任模型见 <a href="#work-protection" style="color: var(--signal);">上方章节</a>。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 6.1H3M21 12.1H3M15.1 18H3"/></svg>
+            </div>
+            <h3>Android 开发</h3>
+            <p>Gradle 构建、AVD 模拟器、<code>adb</code> 安装、<code>logcat</code> 实时流、Kotlin/JDWP 调试器、签名 AAB 输出——同一个 Mac 应用，无需 Android Studio。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <h3>规则 (.mdc)</h3>
+            <p>支持 WORKSPACE.md、.cursorrules、.cursor/rules——直接导入你的 Cursor 规则，无需迁移。</p>
+          </div>
+
+          <div class="feature-card feature-card--wide">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <h3>Magic 工作流</h3>
+            <p><strong>Install</strong> — 检测 npm、pip、Cargo、CocoaPods 等。<strong>Git</strong> — 暂存、AI 提交信息、推送。<strong>Deploy</strong> — 引导部署到常见托管平台。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+            </div>
+            <h3>技能</h3>
+            <p>斜杠命令和工作流脚本：/review、/commit、/security、/mode、/help，也支持自定义。Cursor 兼容——LingCode 直接读取 <code>.cursor/skills</code>、<code>.agents/skills</code>、<code>~/.cursor/skills</code> 中的 SKILL.md 文件。输入 / 即可开始。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+            </div>
+            <h3>扩展</h3>
+            <p>VS Code 风格的扩展商店。LSP（Swift、Python、TypeScript、Go、Rust、C++）、插件（Prettier、ESLint、Next.js、Vue）和工具。一键安装。</p>
+          </div>
+
+          <div class="feature-card feature-card--highlight">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M5 21v-2a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v2"/></svg>
+            </div>
+            <h3>多 Claude Code 会话</h3>
+            <p>并行 Claude Code 标签页——每个会话独立运行。</p>
+          </div>
+
+          <div class="feature-card feature-card--wide">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/><line x1="19" y1="12" x2="5" y2="12"/></svg>
+            </div>
+            <h3>LSP 智能感知 + FIM ghost 补全</h3>
+            <p>真正的 language server（SourceKit、Kotlin、TS、Python、Go、Rust）：前缀补全、诊断、跳转到定义。<strong>加上 Copilot 风格的 AI ghost 文本</strong>，使用 FIM（中间填充）——补全同时理解你已经敲下的和光标后面的内容，不只看前缀。可接云端或本地模型。Tab 接受，Escape 取消。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
+            </div>
+            <h3>HTTP 代理检查器</h3>
+            <p>localhost 正向代理，用于调试你 App 的明文 HTTP 流量——无需安装根证书。实时捕获方法、URL、请求头、请求体和响应状态。Agent 在排查抖动的请求时可读取最近的事务。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </div>
+            <h3>浅色与深色主题</h3>
+            <p>浅色模式覆盖每一处——编辑器、终端、AI 聊天、diff、审批对话框。终端配有专属浅色 ANSI 调色板。跟随系统外观或手动切换。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            </div>
+            <h3>会话持久化</h3>
+            <p>AI 标签页及其对话在退出和重启间保留。Cmd+Q 时同步落盘，重新打开自动恢复。从你离开的地方继续。</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- 四方对比表 -->
+    <section class="compat fade-section">
+      <div class="section-container compat-inner">
+        <div class="compat-text">
+          <p class="section-eyebrow">为什么二选一？</p>
+          <h2>Xcode + Android Studio +<br>VS Code + Cursor。<br>一个应用。</h2>
+          <p>不再在四个应用之间切换。LingCode 一站搞定——Claude Code、Codex、Gemini CLI 原生内置。</p>
+        </div>
+        <div class="compat-table-wrap">
+          <table class="compat-table">
+            <thead>
+              <tr>
+                <th>功能</th>
+                <th>灵码</th>
+                <th>Xcode</th>
+                <th>Android Studio</th>
+                <th>VS Code</th>
+                <th>Cursor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="6" style="font-weight:600;padding-top:12px">Apple 构建与发布</td></tr>
+              <tr><td>xcodebuild 集成</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>iOS 模拟器</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>LLDB 调试器</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>代码签名与团队</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>归档与 App Store 导出</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>SPM 包管理器</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>Scheme 编辑器</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>覆盖率边栏</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>Build Settings 编辑器</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>Entitlements 与 Capabilities</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td colspan="6" style="font-weight:600;padding-top:12px">Android 构建与发布</td></tr>
+              <tr><td>Gradle 构建与安装</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>Android 模拟器 (AVD)</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>Kotlin / JDWP 调试器</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td><code>adb</code> 与 logcat 实时流</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>Play Console 签名 AAB</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>APK Analyzer</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td colspan="6" style="font-weight:600;padding-top:12px">AI 与 Agent</td></tr>
+              <tr><td>AI 内联编辑</td><td class="yes">✓</td><td class="no">✗</td><td class="no">通过 Gemini</td><td class="no">通过 Copilot</td><td class="yes">✓</td></tr>
+              <tr><td>AI Agent 模式</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">Copilot 测试版</td><td class="yes">✓</td></tr>
+              <tr><td>内置 Claude Code</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>内置 Codex</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>内置 Gemini CLI</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>带代码库上下文的 AI 聊天</td><td class="yes">✓</td><td class="no">✗</td><td class="no">通过 Gemini</td><td class="no">通过 Copilot</td><td class="yes">✓</td></tr>
+              <tr><td>多 AI 会话</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>Agent 驱动整个 IDE（原生工具）</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>结构化记忆（按项目，7 个类别）</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>Cursor 兼容的 SKILL.md 加载</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+              <tr><td>远程 Agent 桥接 (SSE)</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>前/后 Agent 钩子</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>3 级上下文自动压缩</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>系统提示词缓存（动态边界）</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>纵深防御安全（5 层）</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>跨文件自动补全上下文</td><td class="yes">✓</td><td class="no">✗</td><td class="no">通过插件</td><td class="no">通过 LSP</td><td class="yes">✓</td></tr>
+              <tr><td colspan="6" style="font-weight:600;padding-top:12px">编辑器与平台</td></tr>
+              <tr><td>原生 Mac 应用</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">JVM</td><td class="no">Electron</td><td class="no">Electron</td></tr>
+              <tr><td>扩展商店</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">IntelliJ</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+              <tr><td>多语言 LSP</td><td class="yes">✓</td><td class="no">仅 Swift</td><td class="no">JVM 为主</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+              <tr><td>Handoff、小组件、快捷指令</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>零遥测</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>Magic Deploy + Push（基于 Token，引导式）</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>检查点 / 时间线回滚</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+              <tr><td>iCloud 偏好设置同步</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+              <tr><td>启动时间</td><td class="yes">&lt; 1 秒</td><td class="yes">~3 秒</td><td class="no">~10 秒</td><td class="no">~2 秒</td><td class="no">~4 秒</td></tr>
+              <tr><td>价格</td><td class="yes">免费</td><td class="yes">免费</td><td class="yes">免费</td><td class="yes">免费</td><td class="no">$20/月+</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 价格 -->
+    <section id="pricing" class="pricing-section fade-section">
+      <div class="section-container">
+        <p class="section-eyebrow">价格</p>
+        <h2 class="section-heading">你的 Key。你的算力。<br>无需订阅。</h2>
+        <div class="pricing-grid">
+          <div class="pricing-card pricing-card--free">
+            <div class="pricing-tier">免费</div>
+            <div class="pricing-price">$0<span class="pricing-period"> / 永久</span></div>
+            <p class="pricing-desc">你需要的一切。使用你自己的 API Key（Anthropic、OpenAI、DeepSeek、Gemini 或任何兼容提供商）。</p>
+            <ul class="pricing-list">
+              <li>✓ 完整 Agent 模式 — 60+ 原生 Swift 工具</li>
+              <li>✓ iOS、macOS 与 Android 同一 IDE</li>
+              <li>✓ 工作保护：快照 + 逐块还原 + 时间回溯撤销</li>
+              <li>✓ LSP 智能感知（Swift、Python、TS、Go、Rust…）</li>
+              <li>✓ 多 Claude Code 会话</li>
+              <li>✓ MCP 服务器支持 + 扩展商店</li>
+              <li>✓ Agent 钩子 + 5 层安全机制</li>
+              <li>✓ 结构化记忆 + 自动上下文压缩</li>
+              <li>✓ 远程 Agent 桥接</li>
+              <li>✓ Magic Deploy、Install &amp; Push</li>
+              <li>✓ 检查点 &amp; 会话历史</li>
+              <li>✓ Vim 风格模态编辑（可选）</li>
+              <li>✓ DAP 调试器 — 断点、单步、变量、监视</li>
+              <li>✓ Handoff、小组件、快捷指令</li>
+              <li>✓ iCloud 偏好设置同步</li>
+            </ul>
+            <a href="/LingCode-v2.7.0-Installer.dmg" download class="btn btn-primary" style="width:100%;text-align:center;margin-top:auto;">免费下载</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 用户评价 -->
+    <section id="testimonials" class="testimonials fade-section">
+      <div class="section-container">
+        <p class="section-eyebrow">开发者的选择</p>
+        <h2 class="section-heading">为 Apple Silicon<br>和 Apple 工作流而生。</h2>
+        <div class="quote-grid">
+          <div class="quote-card">
+            <div class="quote-stars">★★★★★</div>
+            <p>"它真正使用了原生 API 和操作系统功能——不是又一个套着 Mac 图标的 Chromium 盒子。"</p>
+            <span class="quote-attr">iOS 工程师</span>
+          </div>
+          <div class="quote-card">
+            <div class="quote-stars">★★★★★</div>
+            <p>"Magic Deploy：粘贴 Token，点击部署。我以前在 Vercel 配置上花一小时，现在 30 秒搞定。"</p>
+            <span class="quote-attr">全栈开发者</span>
+          </div>
+          <div class="quote-card">
+            <div class="quote-stars">★★★★★</div>
+            <p>"我的 API Key 留在本地。没有订阅，没有遥测，没有'我们在用你的代码训练'。"</p>
+            <span class="quote-attr">安全工程师</span>
+          </div>
+          <div class="quote-card">
+            <div class="quote-stars">★★★★★</div>
+            <p>"Agent 钩子让我可以自动批准安全命令、拦截危险命令，不用整天点对话框。"</p>
+            <span class="quote-attr">Staff 工程师</span>
+          </div>
+          <div class="quote-card">
+            <div class="quote-stars">★★★★★</div>
+            <p>"跨文件自动补全终于能理解我三个文件之外定义的类型了。感觉真的很智能。"</p>
+            <span class="quote-attr">Swift 开发者</span>
+          </div>
+          <div class="quote-card">
+            <div class="quote-stars">★★★★★</div>
+            <p>"不到一秒启动，内存占用比 Cursor 低 5 倍，60+ 原生工具能直接构建、运行、调试。MacBook Air 风扇从不转。"</p>
+            <span class="quote-attr">独立开发者</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 下载 -->
+    <section id="download" class="download-cta fade-section">
+      <div class="section-container download-inner">
+        <h2>免费试用。</h2>
+        <p>下载。添加 Key。代码留在你的 Mac 上。</p>
+        <a href="/LingCode-v2.7.0-Installer.dmg" download class="btn btn-primary btn-lg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          下载 LingCode Mac 版
+        </a>
+        <p class="download-meta">macOS 14 (Sonoma) 或更高 · Apple Silicon &amp; Intel</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="footer-logo">灵码</span>
+        <span class="footer-tagline">Swift 原生 AI IDE · 仅 macOS · 无 Electron</span>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <span class="footer-col-heading">产品</span>
+          <a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a>
+          <a href="#whats-new">新功能</a>
+          <a href="/LingCode-v2.7.0-Installer.dmg" download>下载 Mac 版</a>
+          <a href="https://apps.apple.com/us/app/lingcode/id6757243830" rel="noopener noreferrer">App Store (iPad)</a>
+        </div>
+        <div class="footer-col">
+          <span class="footer-col-heading">了解</span>
+          <a href="/zh/blog.html">技能参考</a>
+          <a href="/zh/claude-sessions.html">Claude 会话</a>
+          <a href="/zh/remote-control.html">远程控制</a>
+          <a href="/zh/features.html#security">安全模型</a>
+        </div>
+        <div class="footer-col">
+          <span class="footer-col-heading">支持</span>
+          <a href="/zh/support.html">帮助 &amp; FAQ</a>
+          <a href="/zh/signup.html">注册</a>
+          <a href="/zh/signin.html">登录</a>
+          <a href="mailto:support@lingcode.dev">support@lingcode.dev</a>
+        </div>
+        <div class="footer-col">
+          <span class="footer-col-heading">法律</span>
+          <a href="/zh/privacy.html">隐私政策</a>
+          <a href="/docs/terms.html">服务条款</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2024&ndash;2026 HainanMandi Tech. 保留所有权利。</span>
+      <span>用 ♥ 为 Mac 打造。</span>
+    </div>
+  </footer>
+
+  <script src="../nav.js" defer></script>
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('fade-in');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.fade-section').forEach(el => observer.observe(el));
+
+    function animateCounter(el, target, suffix, duration) {
+      const start = performance.now();
+      const isFloat = target % 1 !== 0;
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const v = p * target;
+        el.textContent = (isFloat ? v.toFixed(1) : Math.round(v)) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+    const statObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseFloat(el.dataset.count);
+          const suffix = el.dataset.suffix || '';
+          animateCounter(el, target, suffix, 1200);
+          statObs.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('.stat-num[data-count]').forEach(el => statObs.observe(el));
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

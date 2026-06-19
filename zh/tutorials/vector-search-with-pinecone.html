@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用 Pinecone 实现向量搜索 — LingCode 教程</title>
+  <meta name="description" content="存储向量嵌入、实现语义搜索、构建 RAG。Pinecone 是托管向量数据库；同样的模式也适用于 Qdrant、Weaviate 和 pgvector。">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/vector-search-with-pinecone.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/vector-search-with-pinecone.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/vector-search-with-pinecone.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/vector-search-with-pinecone.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "使用 Pinecone 实现向量搜索",
+  "description": "将文档嵌入为向量，存储到 Pinecone，按语义相似度查询。这是 RAG、推荐系统、语义搜索以及"查找相似文档"功能的基础。",
+  "url": "https://lingcode.dev/zh/tutorials/vector-search-with-pinecone.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/zh/tutorials/vector-search-with-pinecone.html"
+  },
+  "inLanguage": "zh-CN",
+  "@type": "TechArticle",
+  "headline": "使用 Pinecone 实现向量搜索"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "首页",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "教程",
+      "item": "https://lingcode.dev/zh/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "后端集成",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "使用 Pinecone 实现向量搜索",
+      "item": "https://lingcode.dev/zh/tutorials/vector-search-with-pinecone.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/vector-search-with-pinecone.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">后端集成</a>
+      <span>/</span>
+      <span>使用 Pinecone 实现向量搜索</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-intermediate">● 中级</span>
+        <span class="badge badge-date">更新于 2026-05-13</span>
+      </div>
+      <h1>使用 Pinecone 实现向量搜索</h1>
+      <p class="intro">将文档嵌入为向量，存储到 <a href="https://www.pinecone.io/" target="_blank" rel="noopener">Pinecone</a>，按语义相似度查询。这是 RAG、推荐系统、语义搜索以及"查找相似文档"功能的基础。</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>60 秒速成心智模型</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>嵌入（Embedding）</strong> = 将文本（或图像）转换为固定长度浮点数组的函数（例如 OpenAI 的 <code>text-embedding-3-small</code> 输出 1536 维）。语义相近 → 向量距离近。</li>
+            <li><strong>向量数据库</strong> = 存储数百万个向量数组，并在 100ms 内回答"哪 N 个向量与这个最接近？"。</li>
+            <li><strong>选择 Pinecone 的场景</strong> — 你需要一个托管服务，无需自己运维基础设施，有慷慨的免费额度，且文档和 SDK 完善。</li>
+            <li><strong>替代方案</strong> — <a href="https://qdrant.tech/" target="_blank" rel="noopener">Qdrant</a>（开源，单节点最快）、<a href="https://weaviate.io/" target="_blank" rel="noopener">Weaviate</a>（开源，模块化）、<a href="https://github.com/pgvector/pgvector" target="_blank" rel="noopener">pgvector</a>（Postgres 扩展——直接用现有数据库！）、<a href="https://supabase.com/docs/guides/database/extensions/pgvector" target="_blank" rel="noopener">Supabase + pgvector</a>（小数据量免费）、<a href="https://www.trychroma.com/" target="_blank" rel="noopener">Chroma</a>（Python 优先的原型工具）。</li>
+            <li><strong>不需要向量数据库的情况</strong> — 文档少于 10K 条且全部能放入内存时，启动时嵌入全部文档，在进程内做余弦相似度计算即可，完全省去网络开销。</li>
+            <li><strong>注册</strong> — <a href="https://app.pinecone.io/" target="_blank" rel="noopener">app.pinecone.io</a>，支持 Google/GitHub 登录。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>创建索引</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>控制台 → <strong>Create Index</strong>，需要做以下选择：</p>
+          <ul>
+            <li><strong>维度（Dimensions）</strong> — 必须与你的嵌入模型匹配。<code>text-embedding-3-small</code> = 1536，<code>text-embedding-3-large</code> = 3072，Cohere <code>embed-v3</code> = 1024。<strong>创建后无法更改</strong> — 选错了只能重建索引。</li>
+            <li><strong>距离度量（Metric）</strong> — <code>cosine</code>（默认，归一化相似度）、<code>euclidean</code> 或 <code>dotproduct</code>。除非嵌入模型文档另有说明，否则使用 <code>cosine</code>。</li>
+            <li><strong>云服务商</strong> — AWS / GCP / Azure，选与你应用相同的云以降低延迟。</li>
+            <li><strong>类型</strong> — <strong>Serverless</strong>（按查询计费，可缩容至零，默认推荐）或 <strong>Pod</strong>（专用资源，成本可预测，旧模式）。新项目选 serverless。</li>
+          </ul>
+          <p>复制索引名称和 host URL。在 <strong>API Keys</strong> 中复制密钥。</p>
+          <pre><code>PINECONE_API_KEY=…
+PINECONE_INDEX=my-docs
+OPENAI_API_KEY=…   # for embeddings</code></pre>
+        </div>
+      </div>
+
+      <h2>生成嵌入向量</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>你需要一个能生成向量的服务。<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI 的嵌入 API</a> 是默认选择；<a href="https://docs.cohere.com/docs/embeddings" target="_blank" rel="noopener">Cohere</a>、<a href="https://docs.voyageai.com/" target="_blank" rel="noopener">Voyage</a> 以及通过 <a href="https://www.sbert.net/" target="_blank" rel="noopener">sentence-transformers</a> 使用开源模型也是可行的替代方案。</p>
+          <pre><code>npm install openai @pinecone-database/pinecone</code></pre>
+          <pre><code>import OpenAI from "openai";
+const openai = new OpenAI();
+
+async function embed(text) {
+  const r = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: text,
+  });
+  return r.data[0].embedding;  // float[1536]
+}</code></pre>
+          <p>尽量批量处理 — 一次调用嵌入 100 条字符串比分 100 次调用便宜约 30 倍：</p>
+          <pre><code>const r = await openai.embeddings.create({
+  model: "text-embedding-3-small",
+  input: chunks,  // array of strings, max 2048 inputs per call
+});
+const vectors = r.data.map(d =&gt; d.embedding);</code></pre>
+        </div>
+      </div>
+
+      <h2>分块处理文档</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>不要把一份 50 页的 PDF 作为单个向量嵌入 — 这样语义信息会被平均成一锅粥。应将其拆分为约 500 token 的片段，并保留约 50 token 的重叠（避免上下文在句子中间被截断）。</p>
+          <pre><code>function chunkText(text, size = 1500, overlap = 150) {
+  const chunks = [];
+  let i = 0;
+  while (i &lt; text.length) {
+    chunks.push(text.slice(i, i + size));
+    i += size - overlap;
+  }
+  return chunks;
+}</code></pre>
+          <p>在生产环境中若需要尊重段落和句子边界的精细分块，可使用 <a href="https://js.langchain.com/docs/concepts/text_splitters/" target="_blank" rel="noopener">LangChain 的 RecursiveCharacterTextSplitter</a> 或 <a href="https://docs.llamaindex.ai/en/stable/module_guides/loading/node_parsers/modules/" target="_blank" rel="noopener">LlamaIndex 节点解析器</a>。</p>
+          <div class="tip-box">
+            <strong>分块策略是决定检索质量的最关键因素。</strong>糟糕的分块（太大、太小、在段落中间截断）会导致搜索结果很差，无论你用的是多好的数据库。
+          </div>
+        </div>
+      </div>
+
+      <h2>写入（Upsert）向量</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <pre><code>import { Pinecone } from "@pinecone-database/pinecone";
+
+const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
+const index = pc.index(process.env.PINECONE_INDEX);
+
+async function ingestDocument(docId, text) {
+  const chunks = chunkText(text);
+  const vectors = await embedBatch(chunks);
+
+  await index.upsert(
+    chunks.map((chunk, i) =&gt; ({
+      id: `${docId}#${i}`,             // deterministic ID — re-ingesting overwrites
+      values: vectors[i],
+      metadata: {
+        docId,
+        text: chunk,                    // store the chunk for retrieval
+        chunkIndex: i,
+        createdAt: Date.now(),
+      },
+    })),
+  );
+}</code></pre>
+          <p>元数据使用建议：</p>
+          <ul>
+            <li><strong>始终在元数据中存储原始文本</strong> — 检索时可以将文本块直接传给大模型。</li>
+            <li><strong>添加过滤标签</strong> — <code>userId</code>、<code>workspaceId</code>、<code>documentType</code>、<code>tags: ["draft", "public"]</code>。Pinecone 在服务端对元数据做过滤，开销很小。</li>
+            <li><strong>不要存储大体积数据</strong> — 每个向量的元数据上限为 40KB。对于 PDF 文件，存储指向 S3/R2 的指针即可。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>查询 — 语义搜索</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <pre><code>async function search(query, userId) {
+  const queryVec = await embed(query);
+
+  const result = await index.query({
+    vector: queryVec,
+    topK: 5,
+    includeMetadata: true,
+    filter: { userId: { $eq: userId } },  // multi-tenant guard
+  });
+
+  return result.matches.map(m =&gt; ({
+    text: m.metadata.text,
+    docId: m.metadata.docId,
+    score: m.score,  // 0..1 cosine similarity
+  }));
+}</code></pre>
+          <p>过滤运算符：<code>$eq</code>、<code>$ne</code>、<code>$gt</code>、<code>$lt</code>、<code>$in</code>、<code>$nin</code>、<code>$and</code>、<code>$or</code>。完整参考：<a href="https://docs.pinecone.io/guides/data/understanding-metadata" target="_blank" rel="noopener">Pinecone 元数据过滤</a>。</p>
+        </div>
+      </div>
+
+      <h2>接入大模型（RAG）</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>检索增强生成（RAG）：搜索 → 将结果塞入提示词 → 询问大模型。</p>
+          <pre><code>async function answer(question, userId) {
+  const docs = await search(question, userId);
+  const context = docs.map(d =&gt; `[${d.docId}]\n${d.text}`).join("\n\n---\n\n");
+
+  const r = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: "Answer using only the context below. Cite [docId] inline. If the context doesn't contain the answer, say so.",
+      },
+      { role: "user", content: `Context:\n${context}\n\nQuestion: ${question}` },
+    ],
+  });
+
+  return r.choices[0].message.content;
+}</code></pre>
+          <p>若需要更复杂的 RAG 流程（查询改写、多跳推理、重排序），可使用框架：<a href="https://js.langchain.com/" target="_blank" rel="noopener">LangChain</a> 或 <a href="https://docs.llamaindex.ai/" target="_blank" rel="noopener">LlamaIndex</a>。对于上面这种简单的"搜索+填充"模式，引入框架反而是额外负担。</p>
+        </div>
+      </div>
+
+      <h2>混合搜索（语义 + 关键词）</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p>纯向量搜索会漏掉精确匹配的查询。例如"ZeroMQ"嵌入后与"RabbitMQ"向量接近，但用户查找 ZeroMQ 文档时需要的就是 ZeroMQ。混合搜索结合 BM25（关键词）和余弦相似度（语义）。</p>
+          <p>Pinecone 通过 <a href="https://docs.pinecone.io/guides/search/hybrid-search" target="_blank" rel="noopener">稀疏-稠密向量</a> 在 serverless 索引上支持混合搜索。可使用 <a href="https://docs.pinecone.io/guides/inference/understanding-inference#sparse-embedding-models" target="_blank" rel="noopener">Pinecone Inference</a> 或 <a href="https://github.com/dorianbrown/rank_bm25" target="_blank" rel="noopener">rank-bm25</a> 生成稀疏向量。</p>
+          <p>如果需求比较简单，也可以并行跑两种搜索，再合并结果 — 互惠排名融合（reciprocal rank fusion）不超过 20 行代码，效果不错。</p>
+        </div>
+      </div>
+
+      <h2>常见问题</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>返回结果看起来毫不相关</strong> — 通常是分块问题（太大），而不是数据库问题。尝试更小的块并加入重叠。检查实际返回的文本内容，不要只看分数。</li>
+            <li><strong>查询很慢 → 每次查询向量数太多</strong> — <code>topK: 100</code> 几乎没用，5–10 是 RAG 的最佳区间。如果对质量有更高要求，可以用较大的 <code>topK</code> 配合 <a href="https://docs.cohere.com/docs/rerank" target="_blank" rel="noopener">Cohere Rerank</a> 重排序。</li>
+            <li><strong>"Embedding dimension doesn't match index"</strong> — 你切换了模型。Pinecone 索引的维度是锁定的。创建一个新索引并重新写入数据。</li>
+            <li><strong>文档编辑后向量过期</strong> — 你修改了源文档，但旧的文本块还以旧内容存在。使用确定性 ID（<code>${docId}#${i}</code>）配合 <code>upsert</code> 覆盖写入，同时删除超出新分块数量的旧块。</li>
+            <li><strong>多租户数据泄露</strong> — 每次查询都必须带上用户/工作区过滤条件。一旦遗漏就会跨客户泄露文档。将 SDK 封装为每用户的辅助函数并自动注入过滤器，永远不要在业务代码中直接调用 <code>index.query</code>。</li>
+            <li><strong>嵌入费用超出预期</strong> — 重新写入 100 万个文本块按 OpenAI 定价约 $20，不算贵，但第三次触发时就会觉得意外。按内容哈希缓存嵌入结果。</li>
+            <li><strong>免费层被驱逐</strong> — Pinecone serverless 免费层有存储上限，超出后检索召回率会悄悄下降。在控制台中监控索引大小。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>价格实情</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pinecone Serverless 免费层</strong> — 2 GB 存储，每月 200 万读单元 / 100 万写单元。足够支撑不到 10 万个向量的应用。</li>
+            <li><strong>超出免费额度后</strong> — 存储 $0.33/GB/月，读单元 $16/百万次，写单元 $4/百万次。一个读单元约等于一次相似度比较。</li>
+            <li><strong>嵌入成本高于数据库</strong> — OpenAI <code>text-embedding-3-small</code> 为 $0.02/百万 token；嵌入 100 万篇文档（平均 500 token）= $10。重新嵌入所有数据才是贵的部分。</li>
+            <li><strong>在现有 Postgres 上用 pgvector = 免费</strong> — 如果你已经在用 Postgres（Supabase / Neon / RDS），且向量数少于 1000 万，pgvector 是最便宜的选择。小规模时延迟相近，大规模时性能下降更快。</li>
+            <li><strong>自托管 Qdrant = 每月 $5–20 VPS</strong> — 开源，单二进制文件，单节点性能最快，需要自己运维。</li>
+          </ul>
+          <p>定价详情：<a href="https://www.pinecone.io/pricing/" target="_blank" rel="noopener">pinecone.io/pricing</a>。</p>
+        </div>
+      </div>
+
+      <h2>官方参考资料</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <ul>
+            <li><a href="https://docs.pinecone.io/" target="_blank" rel="noopener">Pinecone 文档首页</a></li>
+            <li><a href="https://docs.pinecone.io/reference/api/introduction" target="_blank" rel="noopener">REST API 参考</a></li>
+            <li><a href="https://github.com/pinecone-io/pinecone-ts-client" target="_blank" rel="noopener">TypeScript SDK</a> · <a href="https://github.com/pinecone-io/pinecone-python-client" target="_blank" rel="noopener">Python SDK</a></li>
+            <li><a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI 嵌入指南</a></li>
+            <li><a href="https://docs.pinecone.io/integrations" target="_blank" rel="noopener">Pinecone 集成</a> — LangChain、LlamaIndex、Haystack 适配器</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>在尝试向量数据库之前，先试试内存计算。</strong>向量数少于 1 万时，在应用内对每个向量做 <code>cosine(query, every_vector)</code> 比请求 Pinecone 还快，而且免费。向量数据库在规模化后才物有所值 — 但大多数应用根本到不了那个量级。
+      </div>
+
+      <div class="tutorial-next">
+        <h3>接下来</h3>
+        <div class="tutorial-next-cards">
+          <a href="/zh/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h4>将向量数据库暴露为 MCP 服务器</h4>
+            <p>让任何 AI 智能体（LingCode、Claude、Cursor）都能查询你的知识库。</p>
+          </a>
+          <a href="/zh/tutorials/cache-and-rate-limit-with-upstash.html" class="tutorial-next-card">
+            <h4>用 Upstash 缓存嵌入向量</h4>
+            <p>按内容哈希缓存嵌入结果 — OpenAI 调用费用只付一次。</p>
+          </a>
+          <a href="/zh/tutorials/upload-files-to-s3-or-r2.html" class="tutorial-next-card">
+            <h4>将源文件存储在 S3/R2</h4>
+            <p>元数据存文本块，原始 PDF 放在对象存储里。</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>原生 AI 应用开发。为想要快速交付的创始人和需要真实工具的工程师而生。</p>
+    </div>
+    <div class="footer-col">
+      <h4>产品</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">定价</a></li>
+        <li><a href="/changelog.html">更新日志</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>开发者</h4>
+      <ul>
+        <li><a href="/docs.html">文档</a></li>
+        <li><a href="/tutorials.html">教程</a></li>
+        <li><a href="/getting-started.html">入门</a></li>
+        <li><a href="/cli.html">CLI 参考</a></li>
+        <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>社区</h4>
+      <ul>
+        <li><a href="/community.html">周五工作坊</a></li>
+        <li><a href="/community.html">面向高校</a></li>
+        <li><a href="/examples.html">案例展示</a></li>
+        <li><a href="/blog.html">博客</a></li>
+        <li><a href="/support.html">支持</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>公司</h4>
+      <ul>
+        <li><a href="/manifesto.html">宣言</a></li>
+        <li><a href="/pitch.html">融资演示</a></li>
+        <li><a href="/privacy.html">隐私政策</a></li>
+        <li><a href="/signin.html">登录</a></li>
+        <li><a href="/signup.html">注册</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

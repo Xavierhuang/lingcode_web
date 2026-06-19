@@ -1,0 +1,87 @@
+# alerts.yml — Prometheus alerting rules → Alertmanager → ALERT_WEBHOOK.
+#
+# IMPORTANT: exporter metric NAMES vary by exporter version. After first scrape,
+# verify each metric exists on the live exporter (Prometheus → Graph, or curl
+# the exporter /metrics) and adjust names here — a rule referencing a missing
+# metric silently never fires. Backup-age/restore alerts stay on the existing
+# cron webhook (pgbackrest-backup.sh / disk-alert.sh), not here.
+
+groups:
+  - name: lingcloud-availability
+    rules:
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "Postgres exporter target down"
+          description: "Cannot scrape postgres_exporter — Postgres or the exporter is down."
+      - alert: PgBouncerDown
+        expr: up{job="pgbouncer"} == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations: { summary: "PgBouncer exporter target down" }
+      - alert: APIDown
+        expr: up{job="lingcode-api"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations: { summary: "LingCode API /metrics unreachable" }
+
+  - name: lingcloud-database
+    rules:
+      - alert: ConnectionsNearMax
+        expr: sum(pg_stat_database_numbackends) / on() pg_settings_max_connections > 0.8
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Postgres connections > 80% of max_connections"
+          description: "PgBouncer should cap this — investigate pool sizing if sustained."
+      - alert: ReplicationSlotInactive
+        expr: pg_replication_slot_retained_active == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Replication slot {{ $labels.slot_name }} has no consumer"
+          description: "The standby isn't streaming — it may be down. Re-seed if the slot is invalidated."
+      - alert: ReplicationSlotRetainingWAL
+        expr: pg_replication_slot_retained_retained_bytes > 8e9
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Replication slot pinning > 8GB WAL (near max_slot_wal_keep_size)"
+          description: "Approaching slot invalidation + disk pressure on the primary."
+
+  - name: lingcloud-pgbouncer
+    rules:
+      - alert: PgBouncerClientsWaiting
+        expr: pgbouncer_pools_client_waiting_connections > 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "PgBouncer clients waiting for a server connection (pool saturated)"
+          description: "default_pool_size may be too small for sustained load."
+
+  - name: lingcloud-host
+    rules:
+      - alert: DiskNearFull
+        expr: min(node_filesystem_avail_bytes{fstype=~"ext4|xfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs"}) < 0.15
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Data-plane disk < 15% free"
+          description: "The 2026-05-25 corruption was disk pressure — free space now."
+
+  - name: lingcloud-api
+    rules:
+      - alert: APIErrorRateHigh
+        expr: |
+          sum(rate(lingcode_http_requests_total{status=~"5.."}[5m]))
+            / sum(rate(lingcode_http_requests_total[5m])) > 0.05
+        for: 5m
+        labels: { severity: warning }
+        annotations: { summary: "API 5xx rate > 5% (5m)" }
+      - alert: APILatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(lingcode_http_request_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 10m
+        labels: { severity: warning }
+        annotations: { summary: "API p95 latency > 2s (5m)" }

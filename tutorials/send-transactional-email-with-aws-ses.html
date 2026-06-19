@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send transactional email with AWS SES — LingCode Tutorials</title>
+  <meta name="description" content="AWS SES is the cheapest email at scale: $0.10 per 1K. Less polish than Resend or Postmark; you do more setup. Pick it when you're already on AWS and per-email cost matters.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/send-transactional-email-with-aws-ses.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-05-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-01-01T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Send transactional email with AWS SES",
+  "description": "$0.10 per 1,000 emails — by far the cheapest credible email API. The trade-off: more AWS-flavored setup (IAM, sandbox-mode exit request, DNS verification per region), and less polish than dev-first services. Right when per-email cost matters at scale.",
+  "url": "https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-05-13",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "HainanMandi Tech",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "HowTo",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Verify your sending domain",
+      "url": "https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html#step-1"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Create IAM credentials for SES",
+      "url": "https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html#step-2"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Install the SDK",
+      "url": "https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html#step-3"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Send your first email",
+      "url": "https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html#step-4"
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Backend integrations",
+      "item": "https://lingcode.dev/tutorials.html?level=intermediate"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Send transactional email with AWS SES",
+      "item": "https://lingcode.dev/tutorials/send-transactional-email-with-aws-ses.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/send-transactional-email-with-aws-ses.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Backend integrations</a>
+      <span>/</span>
+      <span>Send transactional email with AWS SES</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-05-13</span>
+      </div>
+      <h1>Send transactional email with AWS SES</h1>
+      <p class="intro">$0.10 per 1,000 emails — by far the cheapest credible email API. The trade-off: more AWS-flavored setup (IAM, sandbox-mode exit request, DNS verification per region), and less polish than dev-first services. Right when per-email cost matters at scale.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>When to pick SES</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>Pick SES when</strong> — you send a lot of email (100K+/month), you're already on AWS, or cost is the #1 factor.</li>
+            <li><strong>Pick <a href="/tutorials/send-transactional-email-with-resend.html">Resend</a></strong> for fastest setup + dev-first DX at small/medium scale.</li>
+            <li><strong>Pick <a href="/tutorials/send-transactional-email-with-postmark.html">Postmark</a></strong> if best inbox placement matters most.</li>
+            <li><strong>Pick <a href="/tutorials/send-transactional-email-with-sendgrid.html">SendGrid</a></strong> for big enterprise feature set.</li>
+          </ul>
+          <p>The unit economics: SES sends 1,000 emails for $0.10. Resend sends 1,000 emails for $1.00 (10×). Postmark, $10 (100×). At 100K emails/month, the difference is $10 vs. $100 vs. $1,000. SES wins on cost; the others win on developer time.</p>
+        </div>
+      </div>
+
+      <h2>Activate SES in your AWS account</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>Sign in to AWS Console. Search for <strong>SES</strong>. Pick the region closest to your users (e.g., <code>us-east-1</code>). <a href="https://console.aws.amazon.com/ses/" target="_blank" rel="noopener">SES console ↗</a>.</p>
+          <p>SES is per-region — verifications and sending stats don't cross regions. Pick one and stick with it.</p>
+        </div>
+      </div>
+
+      <h2>Verify your sending domain</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>SES → <strong>Verified identities → Create identity → Domain</strong>. Type your domain. Pick <strong>Easy DKIM</strong> with RSA-2048.</p>
+          <p>SES generates 3 CNAME records. Add them at your <a href="/tutorials/connect-domain-to-server-with-dns.html">DNS provider</a>. SES auto-checks every 24h; usually verifies within an hour.</p>
+          <p>You can also verify a single email address (for testing) — <strong>Create identity → Email address</strong> → AWS sends a confirmation link. Quick but limited; production should use domain verification.</p>
+        </div>
+      </div>
+
+      <h2>Get out of sandbox mode</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>New SES accounts start in <strong>sandbox mode</strong>:</p>
+          <ul>
+            <li>You can only send to <em>verified</em> email addresses.</li>
+            <li>200 emails/day limit.</li>
+            <li>1 email/second rate.</li>
+          </ul>
+          <p>This is so AWS can vet you before you start sending to strangers. To exit, <strong>Account dashboard → Request production access</strong>. Fill in the form:</p>
+          <ul>
+            <li><strong>Mail type</strong> — Transactional.</li>
+            <li><strong>Website URL</strong> — your product.</li>
+            <li><strong>Use case description</strong> — be specific. "Password reset emails and receipts for users of yourapp.com." Vague answers get rejected.</li>
+            <li><strong>Bounce / complaint handling</strong> — describe your plan (Step 7).</li>
+          </ul>
+          <p>AWS responds within 24 hours, sometimes minutes. Approval brings limits to 50K/day initially, scaling automatically as you build reputation.</p>
+        </div>
+      </div>
+
+      <h2>Create IAM credentials for SES</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>Don't use your AWS root credentials. Create an IAM user with a minimum permission policy:</p>
+          <ol>
+            <li><a href="https://console.aws.amazon.com/iam/" target="_blank" rel="noopener">IAM console ↗</a> → <strong>Users → Create user</strong>.</li>
+            <li>Name: <code>ses-sender-prod</code> (or similar).</li>
+            <li>Attach policies directly → <strong>AmazonSESFullAccess</strong> (or scope further with a custom inline policy for only <code>ses:SendEmail</code> + <code>ses:SendRawEmail</code>).</li>
+            <li>Create user → <strong>Security credentials</strong> tab → <strong>Create access key</strong> → Application running outside AWS.</li>
+          </ol>
+          <p>Save the access key + secret to env:</p>
+          <pre><code>AWS_ACCESS_KEY_ID=AKIAxxxxxxxxxxxxxxxx
+AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+AWS_REGION=us-east-1</code></pre>
+          <p>If your app already runs on AWS (EC2, Lambda, etc.), use an IAM Role instead of long-lived credentials. Standard AWS practice.</p>
+        </div>
+      </div>
+
+      <h2>Install the SDK</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <pre><code>npm install @aws-sdk/client-sesv2</code></pre>
+          <p>SES has v1 and v2 APIs. Use v2 — newer, better defaults, supports all current features. Other languages: <a href="https://docs.aws.amazon.com/ses/latest/dg/send-email.html#send-email-libraries" target="_blank" rel="noopener">boto3, AWS SDK for Java, Go, .NET ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Send your first email</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <pre><code>import {
+  SESv2Client,
+  SendEmailCommand,
+} from "@aws-sdk/client-sesv2";
+
+const ses = new SESv2Client({ region: process.env.AWS_REGION });
+
+await ses.send(new SendEmailCommand({
+  FromEmailAddress: "hello@yourdomain.com",
+  Destination: { ToAddresses: ["recipient@example.com"] },
+  Content: {
+    Simple: {
+      Subject: { Data: "Hello from AWS SES" },
+      Body: {
+        Text: { Data: "Plain text version" },
+        Html: { Data: "&lt;p&gt;HTML body&lt;/p&gt;" },
+      },
+    },
+  },
+}));</code></pre>
+          <p>The AWS SDK auto-reads credentials from env vars or IAM Role. Check sending stats in the SES console → <strong>Reputation metrics</strong>.</p>
+        </div>
+      </div>
+
+      <h2>Handle bounces + complaints (mandatory)</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <p><strong>AWS will suspend your SES account</strong> if your bounce rate exceeds 5% or complaint rate exceeds 0.1%. You must process these signals.</p>
+          <p>Standard setup:</p>
+          <ol>
+            <li><strong>SES → Configuration sets</strong> → Create a configuration set named e.g. <code>default-prod</code>.</li>
+            <li>Configure <strong>Event destinations</strong> → SNS topic for Bounce + Complaint events.</li>
+            <li>In your app, subscribe an HTTP endpoint to the SNS topic. <a href="https://docs.aws.amazon.com/sns/latest/dg/sns-http-https-endpoint-as-subscriber.html" target="_blank" rel="noopener">SNS HTTP subscribers ↗</a>.</li>
+            <li>When a bounce/complaint event arrives, mark the recipient as unsendable in your DB. Stop sending to them.</li>
+          </ol>
+          <p>Pass the configuration set on each send:</p>
+          <pre><code>await ses.send(new SendEmailCommand({
+  FromEmailAddress: "hello@yourdomain.com",
+  Destination: { ToAddresses: ["..."] },
+  Content: { /* ... */ },
+  ConfigurationSetName: "default-prod",
+}));</code></pre>
+          <p>Without this, you'll get suspended at some point. Not optional.</p>
+        </div>
+      </div>
+
+      <h2>Templates (if you want them)</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <p>SES supports server-side templates with Mustache-like syntax. Create:</p>
+          <pre><code>import { CreateEmailTemplateCommand } from "@aws-sdk/client-sesv2";
+
+await ses.send(new CreateEmailTemplateCommand({
+  TemplateName: "welcome",
+  TemplateContent: {
+    Subject: "Welcome to {{appName}}",
+    Html: "&lt;p&gt;Hi {{name}}, welcome!&lt;/p&gt;",
+    Text: "Hi {{name}}, welcome!",
+  },
+}));</code></pre>
+          <p>Send with template:</p>
+          <pre><code>import { SendEmailCommand } from "@aws-sdk/client-sesv2";
+
+await ses.send(new SendEmailCommand({
+  FromEmailAddress: "hello@yourdomain.com",
+  Destination: { ToAddresses: [user.email] },
+  Content: {
+    Template: {
+      TemplateName: "welcome",
+      TemplateData: JSON.stringify({ name: user.name, appName: "MyApp" }),
+    },
+  },
+}));</code></pre>
+          <p>SES templates are functional but the editor experience is minimal. Many teams render HTML in their app (with React Email, MJML, or similar) and pass the rendered string to <code>Simple.Body.Html</code>.</p>
+        </div>
+      </div>
+
+      <h2>SMTP interface (if you can't use the SDK)</h2>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <p>SES also offers SMTP credentials — useful when integrating with software that only speaks SMTP (WordPress, Postfix relays, legacy systems).</p>
+          <p>SES console → <strong>SMTP settings → Create SMTP credentials</strong>. Generates a username + password specific to SMTP. Connect to:</p>
+          <pre><code>Host: email-smtp.us-east-1.amazonaws.com
+Port: 587 (STARTTLS) or 465 (SSL)
+Auth: the username/password just generated</code></pre>
+          <p><a href="https://docs.aws.amazon.com/ses/latest/dg/smtp-connect.html" target="_blank" rel="noopener">SMTP docs ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Monitor reputation</h2>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <p>SES console → <strong>Reputation metrics</strong>:</p>
+          <ul>
+            <li><strong>Bounce rate</strong> — keep under 5%. Suspension at 10%.</li>
+            <li><strong>Complaint rate</strong> — keep under 0.1%. Suspension at 0.5%.</li>
+            <li><strong>Spam complaints</strong> — anyone marking your mail as spam in their client.</li>
+          </ul>
+          <p>Set <strong>CloudWatch alarms</strong> on these. AWS will notify you well before suspension if you set them up right. Without alarms, you discover the problem when your sending stops working.</p>
+        </div>
+      </div>
+
+      <h2>Common failures</h2>
+      <div class="step">
+        <div class="step-num">11</div>
+        <div class="step-body">
+          <ul>
+            <li><strong>"Email address not verified"</strong> — you're still in sandbox mode, or sending from an unverified address. Verify domain (Step 2) or exit sandbox (Step 3).</li>
+            <li><strong>"AccessDenied"</strong> — IAM user lacks <code>ses:SendEmail</code>. Update the policy.</li>
+            <li><strong>"MessageRejected"</strong> — body too large (10 MB limit), unsupported character encoding, or the configuration set doesn't exist.</li>
+            <li><strong>"Throttling"</strong> — exceeded your account's send rate. Check current limits at <strong>Account dashboard</strong>. Auto-scaling kicks in over time as reputation builds.</li>
+            <li><strong>Sandbox-mode emails arriving but production-mode emails missing</strong> — region mismatch. SES is per-region; client must use the same region as your verifications.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <strong>SES is the AWS-iest of email APIs.</strong> Expect to learn some IAM, CloudWatch, and SNS along the way. If you're not already comfortable with AWS, Resend or Postmark will get you sending in 5 minutes; SES might take 2 hours. The payoff is 10–100× cheaper per email at scale.
+      </div>
+
+      <h2>Pricing reality</h2>
+      <div class="step">
+        <div class="step-num">12</div>
+        <div class="step-body">
+          <p>$0.10 per 1,000 outbound emails. $0.10 per 1,000 inbound (if you receive). $0.12 per GB of attachments.</p>
+          <p>Free tier: 62,000 emails/month free <em>if sent from an EC2 instance</em>. Otherwise, paid from email 1 (but $0.10/1K is already so cheap it barely matters).</p>
+          <p><a href="https://aws.amazon.com/ses/pricing/" target="_blank" rel="noopener">SES pricing ↗</a>.</p>
+        </div>
+      </div>
+
+      <h2>Official references</h2>
+      <ul>
+        <li><a href="https://docs.aws.amazon.com/ses/" target="_blank" rel="noopener">AWS SES docs ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/sesv2/latest/APIReference/" target="_blank" rel="noopener">SES v2 API reference ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html" target="_blank" rel="noopener">Production access request ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/ses/latest/dg/configuration-sets.html" target="_blank" rel="noopener">Configuration sets ↗</a></li>
+        <li><a href="https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/ses-examples.html" target="_blank" rel="noopener">JS SDK examples ↗</a></li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/send-transactional-email-with-resend.html" class="tutorial-next-card">
+            <h3>Send email with Resend</h3>
+            <p>Much faster setup at small/medium scale; React Email templates</p>
+          </a>
+          <a href="/tutorials/send-transactional-email-with-postmark.html" class="tutorial-next-card">
+            <h3>Send email with Postmark</h3>
+            <p>Better inbox placement at small/medium scale</p>
+          </a>
+          <a href="/tutorials/send-transactional-email-with-sendgrid.html" class="tutorial-next-card">
+            <h3>Send email with SendGrid</h3>
+            <p>Enterprise alternative at similar pricing tiers</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JWT Auth in 5 Minutes | LingCode</title>
+  <meta name="description" content="What a JWT is, why deploy tools use it everywhere, how Apple's App Store Connect API and Google's service account flow both use it — with worked examples.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/learn-jwt-auth.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="JWT Auth in 5 Minutes">
+  <meta property="og:description" content="The JSON Web Token in plain English, with worked examples from Apple and Google deploy APIs.">
+  <meta property="og:url" content="https://lingcode.dev/learn-jwt-auth.html">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 40px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.5rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; max-width: 640px; margin: 0 auto; }
+    .blog-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.375rem; margin: 40px 0 16px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--signal); }
+    .blog-content h2:first-of-type { margin-top: 24px; padding-top: 0; border-top: none; }
+    .blog-content p { margin: 0 0 16px; line-height: 1.75; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; font-size: 0.85rem; line-height: 1.55; }
+    .blog-content pre code { background: none; padding: 0; color: var(--text); }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.75; }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .jwt-piece { display: block; background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--signal); border-radius: 6px; padding: 12px 16px; margin: 8px 0; font-family: ui-monospace, monospace; font-size: 0.8rem; word-break: break-all; }
+    .jwt-piece .label { display: block; color: var(--text-muted); font-family: inherit; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <main>
+    <section class="blog-hero">
+      <div class="section-container">
+        <p class="section-eyebrow">Deep dive · Deploy fundamentals</p>
+        <h1>JWT auth in 5 minutes</h1>
+        <p>Why every deploy tool uses JSON Web Tokens — and why they beat API keys for automated clients.</p>
+      </div>
+    </section>
+
+    <article class="blog-content">
+      <h2>The problem JWTs solve</h2>
+      <p>If an automated client — your CI pipeline, LingCode, a deploy script — needs to prove "I'm authorized to upload builds for team X," it has three options:</p>
+      <ul>
+        <li><strong>Store a password.</strong> Rejected: passwords are for humans, sent over the wire, rotate rarely, and can't be scoped to a narrow capability.</li>
+        <li><strong>Store an API key.</strong> Better, but still a long-lived bearer secret — if it leaks from a log, anyone holding it can act as you until you rotate.</li>
+        <li><strong>Prove a signature from a private key you hold.</strong> The server gives you a public half; you sign short-lived assertions with the matching private half. If an assertion leaks, it expires in minutes. If your private key leaks, you rotate it.</li>
+      </ul>
+      <p>Option 3 is what a <a href="/glossary.html#jwt">JWT</a> enables. Apple's <a href="/glossary.html#app-store-connect">App Store Connect API</a> and Google's <a href="/glossary.html#play-console">Play Console API</a> both rely on it.</p>
+
+      <h2>What a JWT is, physically</h2>
+      <p>A JWT is three base64-encoded strings glued with dots:</p>
+      <code class="jwt-piece"><span class="label">Example JWT (abbreviated)</span>eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI2OWE2ZGU4Zi0wM2Y3LTQ3ZTMifQ.mBH4vWJqU...</code>
+      <p>Those three parts are:</p>
+
+      <code class="jwt-piece"><span class="label">1. Header — decoded</span>{ "alg": "ES256", "typ": "JWT" }</code>
+      <p>Says how the token is signed. <code>ES256</code> (ECDSA with P-256) is what Apple uses; <code>RS256</code> (RSA-2048) is what Google service accounts use. These matter because the verifying server needs to use the matching algorithm.</p>
+
+      <code class="jwt-piece"><span class="label">2. Payload — decoded</span>{ "iss": "69a6de8f-03f7-47e3-...", "aud": "appstoreconnect-v1", "exp": 1765000000 }</code>
+      <p>The claims. <code>iss</code> = who's making the claim (your <a href="/glossary.html#issuer-id">Issuer ID</a> for Apple, your service account email for Google), <code>aud</code> = intended recipient, <code>exp</code> = when it stops being valid (usually 5–60 minutes from now). The server ignores anything after <code>exp</code>.</p>
+
+      <code class="jwt-piece"><span class="label">3. Signature</span>mBH4vWJqUQxS7nR...</code>
+      <p>The first two parts, signed with your private key. Anyone with your <em>public</em> key (which Apple or Google already has on file, since you uploaded it as the <code>.p8</code> or service-account key) can verify the signature matches. Anyone without your <em>private</em> key cannot forge a signature.</p>
+
+      <h2>Why this is strictly better than an API key</h2>
+      <ul>
+        <li><strong>Your private key never crosses the network.</strong> You sign locally; the server verifies with the public half. Compare that to API keys, which travel in full on every request.</li>
+        <li><strong>Tokens expire.</strong> A leaked JWT from a log is useless in an hour. A leaked API key is dangerous until someone notices and rotates.</li>
+        <li><strong>Servers can't lie about what you authorized.</strong> The claims (<code>iss</code>, <code>aud</code>, etc.) are signed by you — a compromised server can't re-issue tokens claiming you authorized something you didn't.</li>
+        <li><strong>Key rotation is cheap.</strong> Revoke the old public key in Apple's or Google's console and generate a new keypair — no coordination with other systems that might be storing the old key.</li>
+      </ul>
+
+      <h2>Apple and Google use JWTs differently</h2>
+      <p><strong>Apple (App Store Connect API)</strong> wants a JWT <em>on every request</em>. You sign a fresh JWT (typically 15-min expiry) per call and put it in the <code>Authorization: Bearer &lt;jwt&gt;</code> header. There's no token exchange — Apple verifies and processes each request individually.</p>
+      <p><strong>Google (Play Developer API)</strong> does a two-step dance. You sign a JWT once, POST it to <code>oauth2.googleapis.com/token</code>, and receive an <a href="/glossary.html#oauth">OAuth 2.0</a> access token back (valid 1 hour). Then you use that access token as <code>Authorization: Bearer</code> on your API calls. It's more round-trips but gives Google a revocation point for the intermediate token.</p>
+      <p>Both flows prove the same thing: "I hold the private key matching the public key you have on file, and this request/session is authorized right now."</p>
+
+      <h2>What this looks like in LingCode</h2>
+      <p>When you paste a <a href="/glossary.html#p8">.p8 file</a> into Magic Deploy for App Store upload, LingCode:</p>
+      <ol>
+        <li>Reads the ES256 private key from the <code>.p8</code>.</li>
+        <li>Constructs a payload with your <a href="/glossary.html#issuer-id">Issuer ID</a> and an <code>exp</code> 15 minutes in the future.</li>
+        <li>Base64-encodes header + payload, hashes the result, signs with the key, appends the signature.</li>
+        <li>Hands the whole thing to <code>xcrun altool</code> as an environment variable, which puts it on every API call during upload.</li>
+      </ol>
+      <p>For Google Play, the <a href="/glossary.html#service-account">service account</a>'s private_key (RSA) takes the place of the .p8, and LingCode handles the extra JWT → access-token exchange before hitting the Play Developer API.</p>
+
+      <h2>The takeaway</h2>
+      <p>JWTs aren't magic. They're a compact, standardized way to say "I can sign this, so you know it came from me, and it won't be valid in a few minutes." That property is what lets automated clients like LingCode talk to Apple's and Google's APIs without storing long-lived bearer secrets — exactly the property you want when a build server eventually gets compromised and someone reads the logs.</p>
+
+      <div class="blog-cta">
+        <p style="margin: 0 0 12px;">More deep dives:</p>
+        <p style="margin: 0 0 16px; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6;"><a href="/learn-code-signing.html">How App Store code signing actually works</a> · <a href="/learn-version-code.html">Why versionCode breaks your second deploy</a> · <a href="/learn-service-accounts.html">What a service account really is</a></p>
+        <a href="/deploy.html">Pick a deploy target →</a>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

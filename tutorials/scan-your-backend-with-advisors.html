@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I find security and performance issues in my LingCode Cloud backend? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="Use the LingCode Cloud console Advisors scan to catch security gaps (RLS disabled, unsafe policies) and performance issues (missing primary key, duplicate or unindexed-FK indexes) in your backend's schema — and how to fix each.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/scan-your-backend-with-advisors.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/scan-your-backend-with-advisors.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/scan-your-backend-with-advisors.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-02T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-02T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/scan-your-backend-with-advisors.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Scan your backend with Advisors",
+  "description": "The LingCode Cloud console Advisors scan flags security (RLS disabled, policies without RLS, mutable function search_path) and performance (no primary key, duplicate indexes, unindexed foreign keys) issues across a backend's schema, with fixes.",
+  "url": "https://lingcode.dev/tutorials/scan-your-backend-with-advisors.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-02",
+  "dateModified": "2026-06-02",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": { "@type": "Organization", "name": "HainanMandi Tech", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/tutorials/scan-your-backend-with-advisors.html" },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Scan your backend with Advisors"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Search", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "Backend integrations", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Scan your backend with Advisors", "item": "https://lingcode.dev/tutorials/scan-your-backend-with-advisors.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/scan-your-backend-with-advisors.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Scan your backend with Advisors</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Beginner</span>
+        <span class="badge badge-date">Updated 2026-06-02</span>
+      </div>
+      <h1>How do I find security &amp; performance issues in my backend?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> In the console (<a href="/backends.html">lingcode.dev/backends</a> → <strong>Database</strong>) click <strong>Advisors</strong>. It scans your backend's schema and flags <strong>security</strong> issues (a table with row-level security off, policies that exist while RLS is disabled, functions with a mutable search_path) and <strong>performance</strong> ones (no primary key, duplicate indexes, multiple permissive policies, unindexed foreign keys) — each with a fix. Re-run after changes; the green "no issues" state means the dangerous stuff is handled.</p>
+      <p class="intro">The scariest bugs in a backend aren't loud — they're the table you forgot to put row-level security on, quietly readable by anyone with the public key. Advisors is a one-click scan that surfaces exactly that class of problem (plus the slow-query kind) before a user finds it for you. Think of it as a linter for your database.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>This applies to a <a href="/tutorials/connect-a-managed-backend.html">managed backend</a>. Advisors reads your schema (it never changes anything) and reports findings grouped by <strong>Security</strong> and <strong>Performance</strong>, ordered worst-first. It pairs with the <a href="/tutorials/connect-a-managed-backend.html">RLS policy templates</a>: templates help you <em>apply</em> safe access rules; Advisors tells you where you <em>forgot</em> to.</p>
+
+      <h2>What it checks</h2>
+      <p><strong>Security</strong></p>
+      <ul>
+        <li><strong>RLS disabled</strong> (error) — a table has row-level security off, so every row is readable/writable by anyone with the anon key. Fix: enable RLS and add a policy (use the templates).</li>
+        <li><strong>Policies exist but RLS is off</strong> (error) — you wrote policies, but they do nothing because RLS isn't enabled. Fix: <code>ALTER TABLE … ENABLE ROW LEVEL SECURITY;</code></li>
+        <li><strong>Mutable function search_path</strong> (warn) — a function without a pinned <code>search_path</code> can be hijacked. Fix: <code>SET search_path = ''</code> in the function.</li>
+      </ul>
+      <p><strong>Performance</strong></p>
+      <ul>
+        <li><strong>No primary key</strong> — row updates/deletes and realtime tracking work better with one.</li>
+        <li><strong>Duplicate index</strong> — identical indexes waste space and slow writes; drop all but one.</li>
+        <li><strong>Multiple permissive policies</strong> — several permissive policies for the same role+action all run on every query; combine them.</li>
+        <li><strong>Unindexed foreign key</strong> — joins and cascade deletes scan the whole table; add an index on the FK column(s).</li>
+      </ul>
+
+      <h2>Run it, fix it, re-run</h2>
+      <ol>
+        <li>Open <a href="/backends.html">lingcode.dev/backends</a> → <strong>Database</strong> → <strong>Advisors</strong>. Read the findings worst-first.</li>
+        <li>Fix the errors first — usually "enable RLS + add a policy." You can apply a policy from the templates, or ask the agent ("turn on RLS for <code>notes</code> so each user only sees their own rows").</li>
+        <li>Click <strong>Advisors</strong> again — a resolved issue drops off the list. The goal is no <em>errors</em>; warnings and info are judgment calls.</li>
+      </ol>
+
+      <div class="info-box">
+        <h3>The one that matters most</h3>
+        <p>If you read nothing else: an <strong>RLS-disabled</strong> table on a backend reachable by a public anon key is a data leak waiting to happen. Advisors flags it as an error for a reason — fix those before you ship. The <a href="/tutorials/connect-a-managed-backend.html">managed backend</a> gives every project RLS-capable Postgres; Advisors makes sure you actually used it.</p>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>Connect a managed backend</h3>
+            <p>RLS, policies, and the templates Advisors checks against</p>
+          </a>
+          <a href="/tutorials/require-mfa-on-your-backend.html" class="tutorial-next-card">
+            <h3>Require MFA</h3>
+            <p>Harden the auth side once the data side is locked down</p>
+          </a>
+          <a href="/tutorials/semantic-and-hybrid-search.html" class="tutorial-next-card">
+            <h3>Semantic &amp; hybrid search</h3>
+            <p>Where the "unindexed" advisories tend to show up</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col"><h4>Product</h4><ul><li><a href="/try.html">Web (/try)</a></li><li><a href="/cli.html">CLI</a></li><li><a href="/features.html">Mac IDE</a></li><li><a href="/pricing.html">Pricing</a></li><li><a href="/changelog.html">Changelog</a></li></ul></div>
+    <div class="footer-col"><h4>Developers</h4><ul><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li><li><a href="/getting-started.html">Getting started</a></li><li><a href="/cli.html">CLI reference</a></li><li><a href="/why-not-cursor.html">Why not Cursor</a></li></ul></div>
+    <div class="footer-col"><h4>Community</h4><ul><li><a href="/community.html">Friday workshops</a></li><li><a href="/community.html">For universities</a></li><li><a href="/examples.html">Showcase</a></li><li><a href="/blog.html">Blog</a></li><li><a href="/support.html">Support</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="/manifesto.html">Manifesto</a></li><li><a href="/pitch.html">Pitch</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/signin.html">Sign in</a></li><li><a href="/signup.html">Sign up</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>
