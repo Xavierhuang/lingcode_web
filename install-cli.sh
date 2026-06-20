@@ -16,7 +16,7 @@ set -eu
 # Version pin for the Linux/Windows TS CLI. Bump this when promoting an
 # RC to stable. Mac path is unaffected — Mac uses the unversioned
 # `lingcode-cli-latest-*` Swift symlink.
-LINGCODE_TS_VERSION="${LINGCODE_TS_VERSION:-v0.9.0-rc17}"
+LINGCODE_TS_VERSION="${LINGCODE_TS_VERSION:-v0.9.0-rc18}"
 
 OS_RAW="$(uname -s)"
 case "$OS_RAW" in

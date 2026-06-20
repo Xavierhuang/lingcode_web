@@ -20,7 +20,7 @@
 $ErrorActionPreference = "Stop"
 
 # Version pin. Bump this when promoting an RC to stable.
-$LingcodeVersion = if ($env:LINGCODE_TS_VERSION) { $env:LINGCODE_TS_VERSION } else { "v0.9.0-rc17" }
+$LingcodeVersion = if ($env:LINGCODE_TS_VERSION) { $env:LINGCODE_TS_VERSION } else { "v0.9.0-rc18" }
 
 # Detect arch. PowerShell exposes $env:PROCESSOR_ARCHITECTURE
 # (AMD64, ARM64, x86). We don't ship 32-bit; refuse it.
