@@ -81,7 +81,7 @@ ssh "$USER@$HOST" "KEEP_DMGS=$KEEP_DMGS; cd '$REMOTE_PATH' && $(declare -f prune
 echo "Deploying $WEBSITE_DIR to $USER@$HOST:$REMOTE_PATH"
 echo "(excluding website/server/ — run the Node admin API separately, not from nginx root)"
 if command -v rsync >/dev/null 2>&1; then
-  rsync -avz --exclude='server/' --exclude='marketing/' --exclude='.DS_Store' -e ssh "$WEBSITE_DIR/" "$USER@$HOST:$REMOTE_PATH/"
+  rsync -avz --exclude='.git' --exclude='server/' --exclude='marketing/' --exclude='.DS_Store' -e ssh "$WEBSITE_DIR/" "$USER@$HOST:$REMOTE_PATH/"
 else
   echo "rsync not found; falling back to scp (may upload website/server — remove it on the server if present)"
   scp -r website/* "$USER@$HOST:$REMOTE_PATH/"
