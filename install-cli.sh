@@ -13,10 +13,11 @@
 
 set -eu
 
-# Version pin for the Linux/Windows TS CLI. Bump this when promoting an
-# RC to stable. Mac path is unaffected — Mac uses the unversioned
-# `lingcode-cli-latest-*` Swift symlink.
-LINGCODE_TS_VERSION="${LINGCODE_TS_VERSION:-v0.9.0-rc18}"
+# Linux/Windows binaries are served from GitHub Releases. By default we fetch the
+# version-less `releases/latest` alias (always the newest build) — no pin to keep
+# in sync. Set LINGCODE_TS_VERSION (with a leading "v", e.g. v0.9.0-rc18) to
+# install a SPECIFIC version; `lingcode upgrade` sets it to pin the target.
+LINGCODE_GH_REPO="${LINGCODE_GH_REPO:-Xavierhuang/lingcode_windows_cli}"
 
 OS_RAW="$(uname -s)"
 case "$OS_RAW" in
@@ -73,8 +74,14 @@ if [ "$OS" = "darwin" ]; then
   TARBALL_URL="${LINGCODE_TARBALL_URL:-https://lingcode.dev/lingcode-cli-latest-${OS}-${ARCH}.tar.gz}"
   ARCHIVE_EXT="tar.gz"
 else
-  # Linux path: new TS/Bun-compiled .zip from the v0.9.x stream.
-  TARBALL_URL="${LINGCODE_TARBALL_URL:-https://lingcode.dev/lingcode-${OS}-${ARCH}${LINUX_LIBC}-${LINGCODE_TS_VERSION}.zip}"
+  # Linux path: Bun-compiled .zip from GitHub Releases. With LINGCODE_TS_VERSION
+  # set, grab that exact version; otherwise the `releases/latest` alias = newest.
+  if [ -n "${LINGCODE_TS_VERSION:-}" ]; then
+    DEFAULT_URL="https://github.com/${LINGCODE_GH_REPO}/releases/download/${LINGCODE_TS_VERSION}/lingcode-${OS}-${ARCH}${LINUX_LIBC}-${LINGCODE_TS_VERSION}.zip"
+  else
+    DEFAULT_URL="https://github.com/${LINGCODE_GH_REPO}/releases/latest/download/lingcode-${OS}-${ARCH}${LINUX_LIBC}.zip"
+  fi
+  TARBALL_URL="${LINGCODE_TARBALL_URL:-$DEFAULT_URL}"
   ARCHIVE_EXT="zip"
 fi
 

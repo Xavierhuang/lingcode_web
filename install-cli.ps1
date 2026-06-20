@@ -19,8 +19,11 @@
 
 $ErrorActionPreference = "Stop"
 
-# Version pin. Bump this when promoting an RC to stable.
-$LingcodeVersion = if ($env:LINGCODE_TS_VERSION) { $env:LINGCODE_TS_VERSION } else { "v0.9.0-rc18" }
+# Windows binaries are served from GitHub Releases. Default = the version-less
+# `releases/latest` alias (newest build, no pin to maintain). Set
+# LINGCODE_TS_VERSION (e.g. v0.9.0-rc18) to install a specific version.
+$LingcodeGhRepo  = if ($env:LINGCODE_GH_REPO) { $env:LINGCODE_GH_REPO } else { "Xavierhuang/lingcode_windows_cli" }
+$LingcodeVersion = $env:LINGCODE_TS_VERSION  # empty = latest
 
 # Detect arch. PowerShell exposes $env:PROCESSOR_ARCHITECTURE
 # (AMD64, ARM64, x86). We don't ship 32-bit; refuse it.
@@ -58,8 +61,14 @@ $arch = switch ($env:PROCESSOR_ARCHITECTURE) {
     }
 }
 
-$archiveName = "lingcode-windows-$arch-$LingcodeVersion.zip"
-$downloadUrl = if ($env:LINGCODE_TARBALL_URL) { $env:LINGCODE_TARBALL_URL } else { "https://lingcode.dev/$archiveName" }
+# With a specific version, fetch the versioned asset under that release tag;
+# otherwise the `releases/latest` alias resolves to the newest build.
+if ($LingcodeVersion) {
+    $defaultUrl = "https://github.com/$LingcodeGhRepo/releases/download/$LingcodeVersion/lingcode-windows-$arch-$LingcodeVersion.zip"
+} else {
+    $defaultUrl = "https://github.com/$LingcodeGhRepo/releases/latest/download/lingcode-windows-$arch.zip"
+}
+$downloadUrl = if ($env:LINGCODE_TARBALL_URL) { $env:LINGCODE_TARBALL_URL } else { $defaultUrl }
 
 $installRoot = Join-Path $env:LOCALAPPDATA "Programs\lingcode"
 $binDir      = $installRoot   # The .exe lives directly here after extraction.
