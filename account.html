@@ -41,6 +41,17 @@
     .account-banner.ok { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.35); color: var(--text); }
     .account-banner.muted { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); }
 
+    /* ─── API key card ─── */
+    .apikey-box { display: flex; gap: 8px; margin: 4px 0 0; }
+    .apikey-box input {
+      flex: 1; min-width: 0;
+      font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.85rem; color: var(--text); background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+    }
+    .apikey-box button.copied { color: var(--signal, #00d084); border-color: var(--signal, #00d084); }
+    .apikey-note { color: var(--text-dim); font-size: 0.78rem; margin: 10px 0 0; }
+
     /* ─── Danger zone ─── */
     .danger-zone { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; }
     .btn-danger {
@@ -455,11 +466,19 @@
           '<div class="account-row"><span>Email</span><strong>' + escapeHtml(d.email) + '</strong></div>' +
           sub + period + interval + hosted +
         '</div>' +
-        '<div class="account-card">' +
+        // API key — shows/copies/rotates the single api_access_token used for
+        // the LingModel API and the `lingcode` CLI. Filled async by the
+        // POST /api/account/cli-token call in the wiring block below.
+        '<div class="account-card" id="apikey-card">' +
           '<div class="account-card-head"><h2>API key</h2></div>' +
-          '<p class="account-billing" style="margin:0 0 14px">Your LingModel API key — paste it into the Mac app (Settings → LingModel) for BYOK, or use it with the CLI.</p>' +
+          '<p class="account-billing">Use this key to call the LingModel API and to sign in to the <code>lingcode</code> CLI. Keep it secret — anyone with it can use your account.</p>' +
+          '<div class="apikey-box">' +
+            '<input id="apikey-input" type="text" readonly value="Loading…" aria-label="Your API key">' +
+            '<button type="button" class="btn btn-ghost" id="apikey-copy">Copy</button>' +
+          '</div>' +
+          '<p class="apikey-note" id="apikey-note"></p>' +
           '<div class="account-actions account-actions-tight">' +
-            '<a class="btn btn-primary btn-lg" href="/cli-token.html">Get / manage API key →</a>' +
+            '<button type="button" class="btn btn-danger" id="apikey-regen">Regenerate</button>' +
           '</div>' +
         '</div>' +
         // Saved-prototypes card placeholder \u2014 filled async by renderSavedPrototypes()
@@ -481,6 +500,67 @@
       // Failures are silent (the card just stays hidden).
       renderSavedPrototypes();
       renderCloudApps();
+
+      // ── API key card: load / copy / regenerate via POST+DELETE /api/account/cli-token ──
+      (function () {
+        var input = document.getElementById('apikey-input');
+        var copyBtn = document.getElementById('apikey-copy');
+        var regenBtn = document.getElementById('apikey-regen');
+        var note = document.getElementById('apikey-note');
+        if (!input || !copyBtn || !regenBtn) return;
+
+        function fail(msg) { input.value = ''; if (note) note.textContent = msg; }
+
+        // POST is idempotent — returns the existing key or mints one. Safe on load.
+        fetch('/api/account/cli-token', { method: 'POST', credentials: 'same-origin' })
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+          .then(function (x) {
+            if (x.ok && x.j && x.j.ok && x.j.token) input.value = x.j.token;
+            else fail('Could not load your API key. Reload the page or sign in again.');
+          })
+          .catch(function () { fail('Could not load your API key. Check your connection.'); });
+
+        var copyOrig = copyBtn.textContent;
+        function flashCopied() {
+          copyBtn.classList.add('copied'); copyBtn.textContent = '✓ Copied';
+          setTimeout(function () { copyBtn.classList.remove('copied'); copyBtn.textContent = copyOrig; }, 1400);
+        }
+        // execCommend fallback for when the async Clipboard API is unavailable or
+        // rejects (common on Windows/Firefox when the document isn't focused).
+        function legacyCopy() {
+          input.focus(); input.select();
+          try { input.setSelectionRange(0, input.value.length); } catch (_) {}
+          var ok = false;
+          try { ok = document.execCommand('copy'); } catch (_e) { ok = false; }
+          if (ok) flashCopied();
+          return ok;
+        }
+        copyBtn.addEventListener('click', function () {
+          if (!input.value) return;
+          // navigator.clipboard.writeText returns a Promise — a sync try/catch
+          // won't catch a rejection, so handle it and fall back explicitly.
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(input.value).then(flashCopied, legacyCopy);
+          } else {
+            legacyCopy();
+          }
+        });
+
+        var regenOrig = regenBtn.textContent;
+        regenBtn.addEventListener('click', function () {
+          if (!window.confirm('Regenerate your API key? The current key stops working immediately.')) return;
+          regenBtn.disabled = true; regenBtn.textContent = 'Regenerating…';
+          if (note) note.textContent = '';
+          fetch('/api/account/cli-token', { method: 'DELETE', credentials: 'same-origin' })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (x) {
+              if (x.ok && x.j && x.j.ok && x.j.token) input.value = x.j.token;
+              else if (note) note.textContent = 'Could not regenerate the key. Try again.';
+            })
+            .catch(function () { if (note) note.textContent = 'Could not regenerate the key. Check your connection.'; })
+            .then(function () { regenBtn.disabled = false; regenBtn.textContent = regenOrig; });
+        });
+      })();
 
       var openApp = document.getElementById('btn-open-lingcode');
       var openAppMsg = document.getElementById('open-app-msg');

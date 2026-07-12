@@ -697,7 +697,11 @@ function createInferenceRouter(db) {
     // ANTHROPIC_BASE_URL without rewriting auth headers.
     if (!req.headers.authorization && req.headers['x-api-key']) {
       const k = String(req.headers['x-api-key']).trim();
-      if (k.startsWith('lcat_')) req.headers.authorization = 'Bearer ' + k;
+      // Alias ANY non-empty x-api-key to Bearer, not just lcat_-prefixed ones,
+      // so old-format api_access_tokens (issued before the lcat_ prefix) work in
+      // the IDE too. Safe: getUserFromRequest still validates the token against
+      // the users table, so a bogus key is still rejected below.
+      if (k) req.headers.authorization = 'Bearer ' + k;
     }
     const user = getUserFromRequest(db, req);
     if (!user) {
