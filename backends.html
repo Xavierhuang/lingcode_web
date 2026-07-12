@@ -565,9 +565,16 @@
           + '<div class="kv"><span class="k">Body</span><input id="pu-bodytxt" value="It works 🎉" style="flex:1;padding:6px 8px"/></div>'
           + '<div class="kv"><span class="k">URL</span><input id="pu-url" value="/" style="flex:1;padding:6px 8px"/></div>'
           + '<div style="margin-top:8px"><button class="btn2 primary" id="pu-send">Send to all subscribers</button> <span id="pu-result" class="faint"></span></div></div>'
-          + '<div class="card"><h2>Mobile push (BYO Firebase)</h2><p class="muted" style="margin:0 0 8px">Optional — only if you also ship a native Android app. Paste a Firebase service-account JSON; it’s encrypted at rest. ' + (d.fcm_configured ? '<b>Configured ✓</b>' : 'Not configured.') + '</p>'
+          + '<div class="card"><h2>Android push (BYO Firebase)</h2><p class="muted" style="margin:0 0 8px">Optional — only if you also ship a native Android app. Paste a Firebase service-account JSON; it’s encrypted at rest. ' + (d.fcm_configured ? '<b>Configured ✓</b>' : 'Not configured.') + '</p>'
           + '<textarea id="pu-fcm" class="sql" spellcheck="false" placeholder=\'{ "type": "service_account", "project_id": "...", "client_email": "...", "private_key": "..." }\' style="min-height:120px;width:100%;font-family:ui-monospace,monospace"></textarea>'
-          + '<div style="margin-top:8px;display:flex;gap:8px"><button class="btn2" id="pu-fcm-save">Save FCM</button>' + (d.fcm_configured ? '<button class="btn2 danger" id="pu-fcm-clear">Remove</button>' : '') + '</div></div>';
+          + '<div style="margin-top:8px;display:flex;gap:8px"><button class="btn2" id="pu-fcm-save">Save FCM</button>' + (d.fcm_configured ? '<button class="btn2 danger" id="pu-fcm-clear">Remove</button>' : '') + '</div></div>'
+          + '<div class="card"><h2>iOS push (BYO Apple APNs)</h2><p class="muted" style="margin:0 0 8px">Optional — only if you also ship a native iOS app. Create a <b>Key</b> in the Apple Developer portal (Keys → APNs), download the <code>.p8</code>, and paste its contents below with the Key ID, your Team ID, and the app’s bundle ID. The key is encrypted at rest. ' + (d.apns_configured ? '<b>Configured ✓</b>' : 'Not configured.') + '</p>'
+          + '<div class="kv"><span class="k">Key ID</span><input id="pu-apns-keyid" value="' + esc(d.apns_key_id || '') + '" placeholder="ABC123DEFG" style="flex:1;padding:6px 8px"/></div>'
+          + '<div class="kv"><span class="k">Team ID</span><input id="pu-apns-teamid" value="' + esc(d.apns_team_id || '') + '" placeholder="DEF456GHIJ" style="flex:1;padding:6px 8px"/></div>'
+          + '<div class="kv"><span class="k">Topic</span><input id="pu-apns-topic" value="' + esc(d.apns_topic || '') + '" placeholder="com.yourcompany.app (bundle ID)" style="flex:1;padding:6px 8px"/></div>'
+          + '<div class="kv"><span class="k">Environment</span><label style="margin-right:12px"><input type="radio" name="pu-apns-env" value="production"' + (d.apns_env === 'sandbox' ? '' : ' checked') + '/> Production</label><label><input type="radio" name="pu-apns-env" value="sandbox"' + (d.apns_env === 'sandbox' ? ' checked' : '') + '/> Sandbox (dev builds)</label></div>'
+          + '<textarea id="pu-apns-p8" class="sql" spellcheck="false" placeholder="-----BEGIN PRIVATE KEY-----&#10;…&#10;-----END PRIVATE KEY-----" style="min-height:120px;width:100%;font-family:ui-monospace,monospace"></textarea>'
+          + '<div style="margin-top:8px;display:flex;gap:8px"><button class="btn2" id="pu-apns-save">Save APNs</button>' + (d.apns_configured ? '<button class="btn2 danger" id="pu-apns-clear">Remove</button>' : '') + '</div></div>';
         document.getElementById('pu-send').onclick = function () {
           var res = document.getElementById('pu-result'); res.textContent = 'Sending…';
           apiW(base() + '/push/send', 'POST', { title: document.getElementById('pu-title').value, body: document.getElementById('pu-bodytxt').value, url: document.getElementById('pu-url').value }).then(function (r) {
@@ -585,6 +592,24 @@
         if (clearBtn) clearBtn.onclick = function () {
           if (!confirm('Remove the stored Firebase credentials?')) return;
           apiW(base() + '/push/config', 'PUT', { fcm_service_account: null }).then(function (r) { if (r.ok) { toast('Removed', 'ok'); loadPush(); } });
+        };
+        var apnsSave = document.getElementById('pu-apns-save');
+        if (apnsSave) apnsSave.onclick = function () {
+          var envEl = document.querySelector('input[name="pu-apns-env"]:checked');
+          apiW(base() + '/push/config', 'PUT', { apns: {
+            p8: document.getElementById('pu-apns-p8').value,
+            key_id: document.getElementById('pu-apns-keyid').value.trim(),
+            team_id: document.getElementById('pu-apns-teamid').value.trim(),
+            topic: document.getElementById('pu-apns-topic').value.trim(),
+            env: envEl ? envEl.value : 'production',
+          } }).then(function (r) {
+            if (r.ok) { toast('APNs saved', 'ok'); loadPush(); } else toast((r.j && (r.j.message || r.j.error)) || 'Save failed', 'err');
+          });
+        };
+        var apnsClear = document.getElementById('pu-apns-clear');
+        if (apnsClear) apnsClear.onclick = function () {
+          if (!confirm('Remove the stored Apple APNs key?')) return;
+          apiW(base() + '/push/config', 'PUT', { apns: null }).then(function (r) { if (r.ok) { toast('Removed', 'ok'); loadPush(); } });
         };
       });
     }
@@ -1243,9 +1268,28 @@
       m.innerHTML = '<div class="cx-h"><h1>Authentication</h1></div>'
         + '<div class="card"><h2>Users</h2><div id="au-body"><p class="muted">Loading…</p></div></div>'
         + '<div class="card"><h2>Social sign-in</h2><p class="muted" style="margin:0 0 10px">Google &amp; GitHub work out of the box. Bring your own OAuth app to use your own branding / consent screen; Apple requires your own credentials.</p><div id="au-providers">' + skel(3) + '</div></div>'
+        + '<div class="card"><h2>Allowed sign-in redirect origins</h2><p class="muted" style="margin:0 0 10px">Origins your app is served from that may receive the OAuth session after sign-in. <code>localhost</code> and <code>*.lingcode.dev</code> are always allowed — add any other host (e.g. <code>your-app.workers.dev</code>) here, comma-separated.</p><div id="au-origins"><p class="faint">Loading…</p></div></div>'
         + '<div class="card"><h2>Email templates</h2><p class="muted" style="margin:0 0 10px">Customize the managed magic-link and one-time-code emails. Keep the required placeholder or the email can’t be sent.</p><div id="au-email">' + skel(3) + '</div></div>'
         + '<div class="card"><h2>Multi-factor authentication</h2><p class="muted" style="margin:0 0 10px">When required, signed-in users must verify a TOTP code (authenticator app) before the data API will serve their requests. Apps enroll factors via <code>auth.enrollMfa()</code> / <code>auth.verifyMfa()</code>.</p><div id="au-mfa"><p class="faint">Loading…</p></div></div>';
-      loadAuthUsers(); loadProviders(); loadEmailTemplates(); loadAuthSettings();
+      loadAuthUsers(); loadProviders(); loadRedirectOrigins(); loadEmailTemplates(); loadAuthSettings();
+    }
+    // ── Allowed sign-in redirect origins — uses /auth/redirect-origins (GET/PUT) ─
+    function loadRedirectOrigins() {
+      api(base() + '/auth/redirect-origins').then(function (r) {
+        var box = document.getElementById('au-origins'); if (!box) return;
+        if (!r.ok) { box.innerHTML = '<p class="muted">Couldn’t load redirect origins.</p>'; return; }
+        var origins = (r.j && r.j.data && r.j.data.origins) || [];
+        box.innerHTML = '<label class="faint" style="display:block">Extra allowed origins (comma-separated)'
+          + '<input id="ro-input" value="' + esc(origins.join(', ')) + '" placeholder="your-app.workers.dev, app.example.com" style="display:block;width:100%;margin-top:4px;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-family:Geist Mono,monospace;font-size:.76rem;box-sizing:border-box"/></label>'
+          + '<div style="text-align:right;margin-top:10px"><button class="btn2 sm primary" id="ro-save">Save</button></div>';
+        document.getElementById('ro-save').onclick = function () {
+          var origins = (document.getElementById('ro-input').value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+          apiW(base() + '/auth/redirect-origins', 'PUT', { origins: origins }).then(function (r) {
+            if (r.ok) { toast('Redirect origins saved', 'ok'); loadRedirectOrigins(); }
+            else toast((r.j && (r.j.message || r.j.error)) || 'Failed', 'err');
+          });
+        };
+      });
     }
     // ── MFA-required toggle — uses /auth-settings (GET/PUT) ─────────────
     function loadAuthSettings() {
@@ -1282,18 +1326,47 @@
         if (!r.ok) { box.innerHTML = '<p class="muted">Couldn’t load providers.</p>'; return; }
         var d = (r.j && r.j.data) || {}; var byo = d.byo || {}; var managed = d.managed || {}; var cbBase = d.callback_base || '';
         box.innerHTML = OAUTH_PROVIDERS.map(function (p) {
-          var key = p[0], cfg = byo[key]; var hasByo = !!cfg;
-          var badge = hasByo ? '<span class="lvl info">your app' + (cfg.enabled ? '' : ' · off') + '</span>' : (managed[key] ? '<span class="lvl info" style="opacity:.8">managed ✓</span>' : '<span class="lvl">unavailable</span>');
-          var cb = cbBase + '/' + key + '/callback';
+          var key = p[0], label = p[1], cfg = byo[key]; var hasByo = !!cfg;
+          var hasManaged = !!managed[key];
           var apple = key === 'apple';
-          return '<div class="card" style="background:var(--c-panel-2);margin:10px 0 0;padding:14px 16px">'
-            + '<div class="kv" style="margin:0 0 8px"><b style="flex:1">' + esc(p[1]) + '</b>' + badge + '</div>'
-            + '<label style="font-size:.76rem;color:var(--c-muted)">Client ID<input data-pid="' + key + '" data-f="client_id" value="' + esc(cfg ? cfg.client_id : '') + '" placeholder="' + (managed[key] ? 'leave blank to use managed' : '') + '" style="display:block;width:100%;margin-top:4px;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-family:Geist Mono,monospace;font-size:.76rem;box-sizing:border-box"/></label>'
-            + '<label style="font-size:.76rem;color:var(--c-muted);margin-top:8px;display:block">Client secret' + (apple ? ' / .p8 key' : '') + '<input data-pid="' + key + '" data-f="client_secret" type="password" placeholder="' + (hasByo ? '•••••• (leave blank to keep)' : 'paste secret') + '" style="display:block;width:100%;margin-top:4px;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-family:Geist Mono,monospace;font-size:.76rem;box-sizing:border-box"/></label>'
+          // Active mode: your own app if BYO creds exist, else LingCode's shared
+          // app when available (Google/GitHub), else own (Apple has no managed app).
+          var mode = hasByo ? 'own' : (hasManaged ? 'managed' : 'own');
+          var cb = cbBase + '/' + key + '/callback';
+          var badge = hasByo
+            ? '<span class="lvl info">Your app' + (cfg.enabled ? '' : ' · off') + '</span>'
+            : (hasManaged ? '<span class="lvl info" style="opacity:.85">LingCode app</span>' : '<span class="lvl">Not set up</span>');
+          var inp = 'display:block;width:100%;margin-top:4px;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-family:Geist Mono,monospace;font-size:.76rem;box-sizing:border-box';
+          var seg = 'flex:1;justify-content:center;gap:6px;border:1px solid var(--c-border-2);border-radius:7px;padding:7px 8px;cursor:pointer';
+          // Mode toggle — only where a shared managed app exists (Google/GitHub).
+          var toggle = hasManaged
+            ? '<div class="kv" style="gap:8px;margin:0 0 10px">'
+              + '<label class="seg" style="' + seg + '"><input type="radio" name="mode-' + key + '" data-mode="' + key + '" value="managed"' + (mode === 'managed' ? ' checked' : '') + '/>LingCode’s app <span class="faint">· no setup</span></label>'
+              + '<label class="seg" style="' + seg + '"><input type="radio" name="mode-' + key + '" data-mode="' + key + '" value="own"' + (mode === 'own' ? ' checked' : '') + '/>My own app <span class="faint">· custom branding</span></label>'
+              + '</div>'
+            : '';
+          // Managed explainer (shown when the "LingCode’s app" mode is active).
+          var managedNote = hasManaged
+            ? '<div data-note="' + key + '"' + (mode === 'managed' ? '' : ' style="display:none"') + '>'
+              + '<p style="margin:0 0 8px;line-height:1.5;font-size:.8rem"><b>✓ Ready now — no setup.</b> <span class="faint">Your users can sign in with ' + esc(label) + ' today through LingCode’s shared app; the ' + esc(label) + ' consent screen shows “LingCode.” Pick <b>My own app</b> to show your own brand instead.</span></p>'
+              + (hasByo ? '<button class="btn2 sm danger" data-rm="' + key + '">Switch to LingCode’s app (removes your credentials)</button>' : '')
+              + '</div>'
+            : '';
+          // BYO fields (shown when the "My own app" mode is active; always for Apple).
+          var fields = '<div data-fields="' + key + '"' + (mode === 'own' ? '' : ' style="display:none"') + '>'
+            + (apple
+                ? '<p class="faint" style="margin:0 0 8px;line-height:1.5">Apple has no shared LingCode app — you must provide your own Services ID and key.</p>'
+                : '<p class="faint" style="margin:0 0 8px;line-height:1.5">Paste your own ' + esc(label) + ' OAuth credentials so the consent screen shows <b>your</b> app’s name and logo.</p>')
+            + '<label style="font-size:.76rem;color:var(--c-muted)">Client ID<input data-pid="' + key + '" data-f="client_id" value="' + esc(cfg ? cfg.client_id : '') + '" placeholder="your ' + esc(label) + ' client ID" style="' + inp + '"/></label>'
+            + '<label style="font-size:.76rem;color:var(--c-muted);margin-top:8px;display:block">Client secret' + (apple ? ' / .p8 key' : '') + '<input data-pid="' + key + '" data-f="client_secret" type="password" placeholder="' + (hasByo ? '•••••• (leave blank to keep)' : 'paste secret') + '" style="' + inp + '"/></label>'
             + (apple ? '<div class="kv" style="margin-top:8px;gap:8px"><input data-pid="apple" data-f="team_id" placeholder="Team ID" style="flex:1;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-size:.76rem"/><input data-pid="apple" data-f="key_id" placeholder="Key ID" style="flex:1;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-size:.76rem"/><input data-pid="apple" data-f="bundle_id" placeholder="Bundle ID" style="flex:1;background:var(--c-panel);border:1px solid var(--c-border-2);border-radius:7px;padding:7px 10px;font-size:.76rem"/></div>' : '')
             + '<div class="kv" style="margin-top:10px"><label class="seg faint" style="flex:1"><input type="checkbox" data-pid="' + key + '" data-f="enabled"' + (!cfg || cfg.enabled ? ' checked' : '') + '/> Enabled</label>'
             + '<button class="btn2 sm primary" data-save="' + key + '">Save</button>' + (hasByo ? ' <button class="btn2 sm danger" data-rm="' + key + '">Remove</button>' : '') + '</div>'
             + '<p class="faint" style="margin:8px 0 0">Redirect/callback URL → <code class="mono">' + esc(cb) + '</code> <button class="btn2 sm" data-copy="' + esc(cb) + '">Copy</button></p>'
+            + '</div>';
+          return '<div class="card" style="background:var(--c-panel-2);margin:10px 0 0;padding:14px 16px">'
+            + '<div class="kv" style="margin:0 0 8px"><b style="flex:1">' + esc(label) + '</b>' + badge + '</div>'
+            + toggle + managedNote + fields
             + '</div>';
         }).join('');
         Array.prototype.forEach.call(box.querySelectorAll('[data-copy]'), function (el) { el.onclick = function () { navigator.clipboard.writeText(el.getAttribute('data-copy') || ''); toast('Copied', 'ok'); }; });
@@ -1301,6 +1374,13 @@
         Array.prototype.forEach.call(box.querySelectorAll('[data-rm]'), function (el) { el.onclick = function () {
           var key = el.getAttribute('data-rm'); if (!confirm('Remove your ' + key + ' OAuth config?')) return;
           apiW(base() + '/auth/providers/' + key, 'DELETE').then(function (r) { if (r.ok) { toast('Removed', 'ok'); loadProviders(); } else toast('Failed', 'err'); });
+        }; });
+        // Mode toggle: show the managed explainer or the BYO fields per selection.
+        Array.prototype.forEach.call(box.querySelectorAll('[data-mode]'), function (el) { el.onchange = function () {
+          var key = el.getAttribute('data-mode'), own = el.value === 'own';
+          var note = box.querySelector('[data-note="' + key + '"]'); var fields = box.querySelector('[data-fields="' + key + '"]');
+          if (note) note.style.display = own ? 'none' : '';
+          if (fields) fields.style.display = own ? '' : 'none';
         }; });
       });
     }
@@ -1416,8 +1496,20 @@
       };
       document.getElementById('s-drop').onclick = function () {
         var k = beName(b);
-        if (prompt('This permanently deletes the backend and ALL its data.\nType "' + k + '" to confirm:') !== k) return;
-        apiW(base(), 'DELETE').then(function (r) { if (!r.ok) { toast((r.j && (r.j.message || r.j.error)) || 'Failed', 'err'); return; } S.active = null; S.table = null; load(); });
+        // In-DOM modal instead of window.prompt() — prompt() silently returns null
+        // inside the app's WKWebView (no native text panel), so "nothing happens".
+        modal('Delete backend',
+          '<p class="muted" style="margin:0 0 10px">This permanently deletes <b>' + esc(k) + '</b> and <b>ALL</b> its data (database, storage, auth users). This cannot be undone.</p>'
+          + '<label>Type <b>' + esc(k) + '</b> to confirm<input id="del-confirm" autocomplete="off" spellcheck="false" placeholder="' + esc(k) + '"/></label>',
+          function (ov, msg) {
+            var typed = (ov.querySelector('#del-confirm').value || '').trim();
+            if (typed !== k) { msg.textContent = 'Name does not match — type "' + k + '" exactly.'; return; }
+            msg.textContent = 'Deleting…';
+            apiW(base(), 'DELETE').then(function (r) {
+              if (!r.ok) { msg.textContent = (r.j && (r.j.message || r.j.error)) || 'Delete failed.'; return; }
+              ov.remove(); toast('Backend deleted', 'ok'); S.active = null; S.table = null; load();
+            });
+          }, 'Delete backend');
       };
       var sd = document.getElementById('s-domains');
       if (sd) sd.onclick = manageCloudDomains;

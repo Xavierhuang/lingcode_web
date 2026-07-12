@@ -89,7 +89,12 @@
 
       <div class="info-box">
         <h3>One mental model to hold</h3>
-        <p>The client SDK talks to a <strong>thin data gateway</strong>, not to Postgres directly. That gateway is deliberately table-at-a-time CRUD — it's how the anon key can ship safely in your browser bundle while row-level security does the gatekeeping on the server. Anything genuinely relational (JOINs, views, indexes, constraints) lives one level down in your <strong>migrations</strong>. Keep that split in mind and most surprises disappear.</p>
+        <p>The client SDK talks to a <strong>data gateway</strong>, not to Postgres directly. The gateway does single-table CRUD plus batch insert and <strong>upsert</strong>; for a genuinely relational read (JOINs, aggregates, full-text ranking) you define a SQL function in a <strong>migration</strong> and call it with <code>rpc()</code> — the SQL stays server-side, RLS enforced. That split — CRUD/upsert/rpc over the wire, schema and SQL in migrations — is how the anon key ships safely in your browser bundle. Keep it in mind and most surprises disappear.</p>
+      </div>
+
+      <div class="info-box">
+        <h3>What LingCode Cloud does <em>not</em> host</h3>
+        <p>It's an <strong>edge/serverless</strong> platform, not a general-purpose server host — so "it hosts everything" is the wrong mental model. Full-stack apps run as <strong>Cloudflare V8 isolates, not Node.js</strong>, which rules out: a long-running Node process, a persistent WebSocket server, background queues/workers, any single request over ~30s, and non-JS backends (Python/Django, Rails, Go). A plain Express/<code>next start</code> server won't run as-is — port it to a Worker-targeting framework (Hono, TanStack Start, or an OpenNext adapter). Work that doesn't fit (scrapers, long ingest pipelines, minutes-long jobs) runs on a server <em>you</em> operate and writes into the managed backend over the gateway. Everything else — static sites, SSR apps, data, auth, storage, short functions and cron — runs here.</p>
       </div>
 
       <h2>Getting started in five minutes</h2>
@@ -196,7 +201,7 @@ const off = lingcode.from('todos').subscribe(({ type, row }) => render(type, row
         <a class="docs-cloud-card" href="/docs/cloud/push.html">
           <span class="card-eyebrow">Engage</span>
           <h3>Push notifications</h3>
-          <p>Web Push (VAPID) — feature-detect, subscribe a user, and send from your server or a function.</p>
+          <p>Web Push (VAPID) plus native iOS (APNs) and Android (FCM) — subscribe a user and send from your server or a function.</p>
         </a>
         <a class="docs-cloud-card" href="/docs/cloud/telemetry.html">
           <span class="card-eyebrow">Measure</span>
@@ -288,7 +293,7 @@ const off = lingcode.from('todos').subscribe(({ type, row }) => render(type, row
     </div>
   </div>
   <div class="footer-bottom">
-    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
     <span>native · fast · honest</span>
   </div>
 </footer>

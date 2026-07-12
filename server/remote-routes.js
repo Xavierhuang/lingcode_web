@@ -11,10 +11,14 @@ const { getUserFromRequest } = require('./auth-helpers');
 const { isServeHostOnline } = require('./collab-server');
 
 const NAME_MAX = 120;
+const SHARE_TTL_MS = 24 * 60 * 60 * 1000; // view-only share links auto-expire in 24h
+
+function publicOrigin() {
+  return String(process.env.PUBLIC_ORIGIN || '').replace(/\/$/, '') || 'https://lingcode.dev';
+}
 
 function wsBaseOrigin() {
-  const publicOrigin = String(process.env.PUBLIC_ORIGIN || '').replace(/\/$/, '') || 'https://lingcode.dev';
-  return publicOrigin.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
+  return publicOrigin().replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
 }
 
 function apiTokenFor(db, userId) {
@@ -95,6 +99,46 @@ function registerRemoteRoutes(app, db) {
       ? `${wsBase}/ws/collab/${host.id}/__serve?token=${encodeURIComponent(apiToken)}`
       : `${wsBase}/ws/collab/${host.id}/__serve`;
     res.json({ ok: true, host: { id: host.id, name: host.name }, wsUrl, online: isServeHostOnline(host.id) });
+  });
+
+  // POST /api/remote/hosts/:id/share — owner mints a read-only "view-only" link.
+  // The token is an unguessable bearer credential the relay validates on connect
+  // and pins to a read-only viewer role. Auto-expires in 24h; revocable.
+  app.post('/api/remote/hosts/:id/share', (req, res) => {
+    const u = requireUser(req, res);
+    if (!u) return;
+    const host = db.prepare('SELECT id, owner_id FROM remote_hosts WHERE id = ?').get(req.params.id);
+    if (!host || host.owner_id !== u.id) return res.status(404).json({ ok: false, error: 'not_found' });
+    const token = crypto.randomBytes(24).toString('base64url');
+    const now = Date.now();
+    const expiresAt = now + SHARE_TTL_MS;
+    db.prepare('INSERT INTO remote_host_shares (token, host_id, owner_id, permission, created_at, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)')
+      .run(token, host.id, u.id, 'view', now, expiresAt);
+    res.json({ ok: true, token, url: `${publicOrigin()}/remote/?share=${encodeURIComponent(token)}`, expires_at: expiresAt });
+  });
+
+  // GET /api/remote/share/:token — redeem a share link. NO auth: the token IS the
+  // credential. Returns the read-only wsUrl + host name + online status.
+  app.get('/api/remote/share/:token', (req, res) => {
+    const token = String(req.params.token || '');
+    const sh = db.prepare('SELECT host_id, expires_at, revoked FROM remote_host_shares WHERE token = ?').get(token);
+    if (!sh || sh.revoked) return res.status(404).json({ ok: false, error: 'invalid_token' });
+    if (sh.expires_at && Date.now() > sh.expires_at) return res.status(410).json({ ok: false, error: 'expired' });
+    const host = db.prepare('SELECT id, name FROM remote_hosts WHERE id = ?').get(sh.host_id);
+    if (!host) return res.status(404).json({ ok: false, error: 'not_found' });
+    const wsBase = wsBaseOrigin();
+    const wsUrl = `${wsBase}/ws/collab/${host.id}/__serve?share=${encodeURIComponent(token)}`;
+    res.json({ ok: true, host: { id: host.id, name: host.name }, wsUrl, readOnly: true, online: isServeHostOnline(host.id) });
+  });
+
+  // DELETE /api/remote/hosts/:id/shares — revoke all view-only links (owner-only).
+  app.delete('/api/remote/hosts/:id/shares', (req, res) => {
+    const u = requireUser(req, res);
+    if (!u) return;
+    const host = db.prepare('SELECT id, owner_id FROM remote_hosts WHERE id = ?').get(req.params.id);
+    if (!host || host.owner_id !== u.id) return res.status(404).json({ ok: false, error: 'not_found' });
+    const r = db.prepare('UPDATE remote_host_shares SET revoked = 1 WHERE host_id = ? AND revoked = 0').run(host.id);
+    res.json({ ok: true, revoked: r.changes });
   });
 
   // DELETE /api/remote/hosts/:id — forget a host (owner-only).

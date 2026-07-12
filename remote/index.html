@@ -4,6 +4,10 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Remote Coding — LingCode</title>
+<!-- xterm.js powers the interactive terminal mirror (lc-term-* frames). -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
 <style>
   :root { --bg:#0d1117; --panel:#161b22; --border:#30363d; --fg:#e6edf3; --muted:#8b949e; --accent:#2f81f7; --green:#3fb950; --red:#f85149; }
   * { box-sizing: border-box; }
@@ -42,6 +46,26 @@
   .empty { color:var(--muted); padding:40px 16px; text-align:center; }
   a { color:var(--accent); }
 
+  /* Composer icon buttons (mic / photo) + attachment thumbnails. */
+  .iconbtn { background:#21262d; color:var(--fg); padding:8px 10px; font-size:16px; line-height:1; }
+  .iconbtn.rec { background:var(--red); color:#fff; animation:pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity:.5; } }
+  .attachments { display:flex; flex-wrap:wrap; gap:8px; padding:8px 16px 0; }
+  .attachments:empty { display:none; }
+  .chip { position:relative; }
+  .chip img { width:52px; height:52px; object-fit:cover; border-radius:8px; border:1px solid var(--border); display:block; }
+  .chip .rm { position:absolute; top:-6px; right:-6px; width:18px; height:18px; min-width:0; border-radius:50%; background:var(--red); color:#fff; padding:0; font-size:12px; font-weight:700; line-height:18px; }
+  .msg.user .sent-thumbs { margin-top:6px; display:flex; flex-wrap:wrap; gap:6px; }
+  .msg.user .sent-thumbs img { width:120px; max-width:60%; border-radius:8px; border:1px solid var(--border); display:block; }
+
+  /* Markdown-rendered assistant text (the .body.md span manages its own
+     whitespace via <br>/<pre>, so it opts out of the .msg pre-wrap). */
+  .msg .body.md { white-space:normal; }
+  .msg .body.md b { font-weight:700; }
+  .msg .body.md a { color:var(--accent); word-break:break-word; }
+  .msg pre.code { white-space:pre; overflow-x:auto; background:#0b0f14; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin:6px 0; font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .msg code.inline { background:#21262d; border-radius:4px; padding:1px 5px; font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace; }
+
   /* ── Mobile: stack the panes (host list on top, chat fills the rest) ────────
      The desktop layout is a fixed 240px sidebar beside the chat; on a phone that
      squeezes the chat to a sliver and pushes Send/Stop off-screen. Below 640px we
@@ -77,17 +101,26 @@
     <div id="hosts"></div>
   </aside>
   <main class="main">
+    <div id="viewbanner" style="display:none;padding:8px 16px;border-bottom:1px solid var(--border);background:#1f6feb22;color:var(--fg);font-size:13px;">👁 <span id="viewbanner-text">Read-only view</span></div>
     <div id="modebar" style="display:none;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);align-items:center;">
       <button id="mode-agent" class="ghost" style="padding:5px 12px;">New agent</button>
       <button id="mode-live" class="ghost" style="padding:5px 12px;">Live sessions</button>
+      <button id="share" class="ghost" style="padding:5px 12px;display:none;">🔗 Share view-only</button>
+      <button id="unshare" class="ghost" style="padding:5px 12px;display:none;">Stop sharing</button>
       <span id="mode-hint" class="who" style="margin-left:auto;"></span>
     </div>
     <div id="transcript" class="transcript"><div class="empty">Pick an online host to start coding remotely.</div></div>
+    <div id="attachments" class="attachments"></div>
     <div class="composer">
-      <select id="provider" title="Model provider" disabled>
+      <!-- Vestigial: New agent now drives the IDE's own Claude Code session, so
+           there's no client-side provider choice. Hidden; kept to avoid churn. -->
+      <select id="provider" title="Model provider" disabled style="display:none">
         <option value="lingmodel">LingModel</option>
         <option value="claude">Claude</option>
       </select>
+      <button id="mic" class="iconbtn" title="Dictate with your voice" disabled style="display:none">🎤</button>
+      <button id="photo" class="iconbtn" title="Attach a photo" disabled>📷</button>
+      <input id="file" type="file" accept="image/*" multiple hidden />
       <textarea id="input" placeholder="Ask the agent to do something… (⌘/Ctrl+Enter to send)" disabled></textarea>
       <button id="send" disabled>Send</button>
       <button id="cancel" class="ghost" disabled>Stop</button>
@@ -103,11 +136,51 @@
   const api = (p, opts={}) => fetch(p, { credentials: 'include', ...opts });
   const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
 
+  // Read-only viewer mode: opened via a "?share=<token>" view-only link. The
+  // viewer watches a session but the relay drops any control frames it sends.
+  const shareToken = new URLSearchParams(location.search).get('share');
+  const readOnlyView = !!shareToken;
+
   let ws = null, currentHost = null, queryId = null, sseBuf = '', curAssistantEl = null;
-  let mode = 'agent';          // 'agent' (headless) | 'live' (mirror an open tab)
+  let mode = 'agent';          // 'agent' (new session) | 'live' (mirror an open tab)
   let attachedDocId = null;    // documentId of the live session being mirrored
+  let attachedProvider = 'claude'; // 'claude' | 'codex' — picks the renderer + answer shape
+  let liveAgents = [];         // last lc-agent-list-result sessions
+  let liveTerms = [];          // last lc-term-list-result terminals
+  let attachedTermId = null;   // terminalId of the live terminal being mirrored
+  let term = null;             // xterm.js Terminal instance (terminal mode only)
+  let termFit = null;          // xterm FitAddon — fits the grid to the page
   let liveAwaitingList = false; // true while waiting for the host's session list
+  let pendingNew = null;       // first payload {text,attachments,thumbs} once a "New agent" tab is live
   const pending = new Map(); // requestId → perm element
+  const promptQueue = [];      // follow-up payloads typed while the session is busy
+  let lastStreaming = false;   // last snapshot's streaming state (to detect idle edge)
+  const attachState = [];      // staged image attachments: {name, dataB64, thumb}
+  // Reconnect: phones background tabs constantly, dropping the socket. We keep
+  // wanting the connection alive and retry with backoff, re-attaching the live
+  // session transparently so a pocketed phone doesn't kill the session.
+  let currentHostObj = null;   // the host we intend to stay connected to
+  let wantConnected = false;   // true while we should keep (re)connecting
+  let reconnectAttempts = 0;
+  let reconnectTimer = null;
+
+  // ── auto-scroll ────────────────────────────────────────────────────────────
+  // The live mirror re-renders the whole transcript on every snapshot (~6 Hz).
+  // Scrolling synchronously inside that rebuild lands before the browser flushes
+  // layout (mobile Safari batches it), so scrollHeight is stale and we stop short
+  // of the bottom. Instead: coalesce to one rAF-deferred scroll per frame, and
+  // only follow when the user is already pinned near the bottom (so scrolling up
+  // to read isn't yanked back down).
+  let stickToBottom = true, scrollQueued = false;
+  transcript.addEventListener('scroll', () => {
+    stickToBottom = transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight < 60;
+  });
+  function scrollToBottom(force) {
+    if (force) stickToBottom = true;
+    if (!stickToBottom || scrollQueued) return;
+    scrollQueued = true;
+    requestAnimationFrame(() => { scrollQueued = false; transcript.scrollTop = transcript.scrollHeight; });
+  }
 
   function addMsg(role, text, cls) {
     const el = document.createElement('div');
@@ -115,7 +188,7 @@
     if (role) { const r = document.createElement('div'); r.className = 'role'; r.textContent = role; el.appendChild(r); }
     const body = document.createElement('span'); body.textContent = text || ''; el.appendChild(body);
     transcript.appendChild(el);
-    transcript.scrollTop = transcript.scrollHeight;
+    scrollToBottom();
     return body;
   }
   function clearTranscript() { transcript.innerHTML = ''; }
@@ -145,25 +218,73 @@
   }
 
   // ── connect to a host's serve tunnel over the collab relay ─────────────────
-  async function connect(host) {
-    const r = await api(`/api/remote/hosts/${host.id}/room`);
-    if (!r.ok) { alert('Could not get room for that host.'); return; }
-    const j = await r.json();
-    if (ws) { try { ws.close(); } catch (_) {} ws = null; }
-    currentHost = host.id;
+  function setComposerEnabled(on) {
+    for (const id of ['input', 'send', 'provider', 'photo', 'mic']) $(id).disabled = !on;
+  }
+
+  // User-initiated connect (picking a host). Tears down any prior connection and
+  // starts a fresh one we then keep alive across drops.
+  function connect(host) {
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    currentHostObj = host;
+    wantConnected = true;
+    reconnectAttempts = 0;
     clearTranscript();
     addMsg('', `Connecting to ${host.name}…`, 'tool');
-    loadHosts();
+    openSocket(false);
+  }
+
+  // Open (or re-open) the socket to currentHostObj. isReconnect=true resumes the
+  // mirrored session silently instead of resetting the UI.
+  async function openSocket(isReconnect) {
+    const host = currentHostObj;
+    if (!host) return;
+    // Drop any existing socket WITHOUT triggering its reconnect path.
+    if (ws) { try { ws.onclose = null; ws.close(); } catch (_) {} ws = null; }
+    let j;
+    try {
+      // Viewers redeem the share token (no auth); owners use the owner-only room.
+      const endpoint = shareToken ? `/api/remote/share/${encodeURIComponent(shareToken)}` : `/api/remote/hosts/${host.id}/room`;
+      const r = await api(endpoint);
+      if (!r.ok) throw new Error('room');
+      j = await r.json();
+    } catch (_) {
+      if (!isReconnect) addMsg('', readOnlyView ? 'This view-only link is invalid, expired, or was revoked.' : 'Could not get room for that host.', 'error');
+      if (!readOnlyView) scheduleReconnect(); // a dead share link shouldn't retry forever
+      return;
+    }
+    if (readOnlyView && j.host) {
+      currentHostObj = j.host;
+      $('viewbanner-text').textContent = 'Viewing ' + (j.host.name || 'host') + ' · read-only';
+    }
+    currentHost = (currentHostObj && currentHostObj.id) || host.id;
+    if (!isReconnect && !readOnlyView) loadHosts();
     ws = new WebSocket(j.wsUrl);
     ws.binaryType = 'arraybuffer';
     ws.onopen = () => {
+      reconnectAttempts = 0;
       $('conn').textContent = '● connected';
-      $('input').disabled = false; $('send').disabled = false; $('provider').disabled = false;
       $('modebar').style.display = 'flex';
-      setMode(mode);
+      if (readOnlyView) {
+        // Watch-only: composer hidden, no "New agent". Resume the watched session
+        // on reconnect, else show the live-session list to pick one.
+        if (isReconnect && attachedDocId) sendFrame({ type: 'lc-agent-attach', documentId: attachedDocId });
+        else setMode('live');
+        return;
+      }
+      setComposerEnabled(true);
+      $('share').style.display = ''; // owner: offer a view-only share link
+      // On a reconnect with a live session, re-attach silently so the transcript
+      // resumes; otherwise (fresh connect, or browsing) (re)enter the mode.
+      if (isReconnect && attachedDocId) sendFrame({ type: 'lc-agent-attach', documentId: attachedDocId });
+      else setMode(mode);
     };
-    ws.onclose = () => { $('conn').textContent = '○ disconnected'; $('input').disabled = true; $('send').disabled = true; $('provider').disabled = true; };
-    ws.onerror = () => addMsg('', 'Connection error.', 'error');
+    ws.onclose = () => {
+      setComposerEnabled(false);
+      if (wantConnected) { $('conn').textContent = '○ reconnecting…'; scheduleReconnect(); }
+      else $('conn').textContent = '○ disconnected';
+    };
+    ws.onerror = () => {}; // onclose handles recovery
     ws.onmessage = (ev) => {
       let text;
       if (typeof ev.data === 'string') text = ev.data;
@@ -173,6 +294,24 @@
       onFrame(f);
     };
   }
+
+  function scheduleReconnect() {
+    if (!wantConnected || reconnectTimer) return;
+    reconnectAttempts++;
+    // 1s, 1.6s, 2.6s … capped at 15s, with jitter to avoid thundering herds.
+    const delay = Math.min(15000, 1000 * Math.pow(1.6, reconnectAttempts - 1)) + Math.floor(Math.random() * 500);
+    reconnectTimer = setTimeout(() => { reconnectTimer = null; openSocket(true); }, delay);
+  }
+
+  // Phones suspend backgrounded tabs; the moment we're visible again, retry now
+  // rather than waiting out the backoff.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !wantConnected) return;
+    if (ws && ws.readyState <= 1) return; // CONNECTING or OPEN — leave it
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    reconnectAttempts = 0;
+    openSocket(true);
+  });
 
   function sendFrame(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
 
@@ -198,8 +337,28 @@
       // Host live-pushes this on tab open/close/rename/state change. Only re-render
       // the list when the user is actually viewing it — never clobber an attached
       // session's transcript or "New agent" mode.
-      case 'lc-agent-list-result': if (mode === 'live' && !attachedDocId) renderSessionList(f.sessions); break;
-      case 'lc-agent-state': if (f.documentId === attachedDocId) renderSnapshot(f.snapshot || {}); break;
+      case 'lc-agent-list-result': liveAgents = f.sessions || []; if (mode === 'live' && !attachedDocId && !attachedTermId) renderLiveList(); break;
+      case 'lc-term-list-result': liveTerms = f.terminals || []; if (mode === 'live' && !attachedDocId && !attachedTermId) renderLiveList(); break;
+      case 'lc-term-output': if (term && f.terminalId === attachedTermId && f.dataB64) term.write(b64ToBytes(f.dataB64)); break;
+      case 'lc-term-size': break;  // informational only — the browser drives size via fitTerm()
+      case 'lc-term-detached': if (f.terminalId === attachedTermId) { addMsg('', 'Terminal closed.', 'tool'); detachTerminalView(); } break;
+      case 'lc-agent-state':
+        if (!attachedDocId && pendingNew && f.documentId) {
+          // Our "New agent" tab just opened on the Mac — adopt it and send the
+          // first prompt (with any photos); from here it behaves like a live session.
+          attachedDocId = f.documentId;
+          attachedProvider = f.provider || (f.snapshot && f.snapshot.provider) || 'claude';
+          renderSnapshot(f.snapshot || {});
+          liveCmd('send', { text: pendingNew.text, attachments: pendingNew.attachments });
+          showSent(pendingNew.text, pendingNew.thumbs);
+          pendingNew = null; lastStreaming = true;
+        } else if (f.documentId === attachedDocId) {
+          // Snapshot or state-frame carries the provider so the renderer can
+          // branch (Codex reasoning/tool shapes + answer encoding differ).
+          attachedProvider = f.provider || (f.snapshot && f.snapshot.provider) || attachedProvider;
+          renderSnapshot(f.snapshot || {});
+        }
+        break;
       case 'lc-agent-detached': addMsg('', 'Session ended.', 'tool'); attachedDocId = null; break;
       case 'lc-agent-error': addMsg('', f.message || 'agent error', 'error'); break;
     }
@@ -207,17 +366,24 @@
 
   // ── live-session mode: discover / attach / render / drive ────────────────────
   function setMode(m) {
-    mode = m; attachedDocId = null;
+    mode = m; attachedDocId = null; pendingNew = null;
+    detachTerminalView();
+    liveAgents = []; liveTerms = [];
+    promptQueue.length = 0; lastStreaming = false;
+    attachState.length = 0; renderAttachments();
     $('mode-agent').style.fontWeight = m === 'agent' ? '700' : '400';
     $('mode-live').style.fontWeight = m === 'live' ? '700' : '400';
-    if ($('provider')) $('provider').style.display = m === 'agent' ? '' : 'none';
+    // Provider no longer applies — "New agent" drives your IDE's Claude Code
+    // session (using the IDE's auth), so the picker is always hidden now.
+    if ($('provider')) $('provider').style.display = 'none';
     clearTranscript();
     if (m === 'live') {
       $('mode-hint').textContent = '';
       if (ws && ws.readyState === 1) {
         liveAwaitingList = true;
-        addMsg('', 'Loading your open Claude Code tabs…', 'tool');
+        addMsg('', 'Loading your open agent tabs and terminals…', 'tool');
         sendFrame({ type: 'lc-agent-list' });
+        sendFrame({ type: 'lc-term-list' });
         setTimeout(() => {
           if (liveAwaitingList && mode === 'live') {
             addMsg('', 'No response from your Mac. Live Sessions needs the host running a LingCode build with the live-session mirror (coming). "New agent" mode works now.', 'tool');
@@ -226,32 +392,53 @@
       }
     } else {
       $('mode-hint').textContent = '';
-      addMsg('', 'New agent — ask anything; it runs a fresh agent in your project.', 'tool');
+      addMsg('', 'New agent — opens a Claude Code tab in your open project and drives it here.', 'tool');
     }
   }
 
-  function renderSessionList(sessions) {
+  // Combined live picker: agent tabs (Claude/Codex) + interactive terminals.
+  // Driven by liveAgents / liveTerms, which the two list-result frames populate.
+  function renderLiveList() {
     liveAwaitingList = false;
     attachedDocId = null;
+    attachedTermId = null;
     clearTranscript();
-    if (!sessions || !sessions.length) {
-      addMsg('', 'No open Claude Code tabs on this Mac. Open one in LingCode, then tap Live sessions again.', 'tool');
+    if (!liveAgents.length && !liveTerms.length) {
+      addMsg('', 'No open agent tabs or terminals on this Mac. Open a Claude Code / Codex tab or a terminal in LingCode, then tap Live sessions again.', 'tool');
       return;
     }
-    addMsg('', 'Open Claude Code tabs — tap one to drive it:', 'tool');
-    for (const s of sessions) {
-      const el = document.createElement('div');
-      el.className = 'host' + (s.isStreaming ? ' online' : '');
-      el.innerHTML = '<span class="dot"></span><span class="name"></span><span class="badge"></span>';
-      el.querySelector('.name').textContent = s.displayName || s.documentId;
-      el.querySelector('.badge').textContent = s.needsInput ? 'needs input' : (s.isStreaming ? 'running' : 'idle');
-      el.onclick = () => attachSession(s.documentId, s.displayName);
-      transcript.appendChild(el);
+    if (liveAgents.length) {
+      addMsg('', 'Open agent tabs — tap one to drive it:', 'tool');
+      for (const s of liveAgents) {
+        const provider = s.provider || 'claude';
+        const el = document.createElement('div');
+        el.className = 'host' + (s.isStreaming ? ' online' : '');
+        el.innerHTML = '<span class="dot"></span><span class="name"></span><span class="badge"></span>';
+        el.querySelector('.name').textContent = (provider === 'codex' ? 'Codex · ' : 'Claude · ') + (s.displayName || s.documentId);
+        el.querySelector('.badge').textContent = s.needsInput ? 'needs input' : (s.isStreaming ? 'running' : 'idle');
+        el.onclick = () => attachSession(s.documentId, s.displayName, provider);
+        transcript.appendChild(el);
+      }
+    }
+    if (liveTerms.length) {
+      addMsg('', 'Open terminals — tap one to attach (interactive):', 'tool');
+      for (const t of liveTerms) {
+        const el = document.createElement('div');
+        el.className = 'host';
+        el.innerHTML = '<span class="dot"></span><span class="name"></span><span class="badge"></span>';
+        el.querySelector('.name').textContent = '🖥 ' + (t.name || t.terminalId);
+        el.querySelector('.badge').textContent = 'terminal';
+        el.onclick = () => attachTerminal(t.terminalId, t.name);
+        transcript.appendChild(el);
+      }
     }
   }
 
-  function attachSession(docId, name) {
+  function attachSession(docId, name, provider) {
+    detachTerminalView();   // leaving terminal mode → stop its stream, restore composer
     attachedDocId = docId;
+    attachedProvider = provider || 'claude';
+    promptQueue.length = 0; lastStreaming = false;
     clearTranscript();
     addMsg('', 'Attaching to ' + (name || docId) + '…', 'tool');
     $('mode-hint').textContent = name || '';
@@ -263,58 +450,275 @@
     sendFrame(Object.assign({ type: 'lc-agent-cmd', documentId: attachedDocId, cmd }, extra || {}));
   }
 
-  function blockEl(role, b) {
-    if (b.type === 'text') { if (b.text) addMsg(role === 'user' ? 'you' : 'assistant', b.text, role === 'user' ? 'user' : 'assistant'); }
-    else if (b.type === 'thinking') { if (b.text) addMsg('', '🧠 ' + b.text, 'tool'); }
-    else if (b.type === 'toolUse') { addMsg('', ('→ ' + (b.name || 'tool') + ' ' + (typeof b.input === 'string' ? b.input : JSON.stringify(b.input || {}))).slice(0, 400), 'tool'); }
-    else if (b.type === 'toolResult') { addMsg('', ((b.isError ? '⚠ ' : '✓ ') + String(b.content || '')).slice(0, 400), 'tool'); }
+  // ── interactive terminal mirror (xterm.js over lc-term-* frames) ─────────────
+  // Bytes are base64 on the wire (binary-safe through the JSON relay frames).
+  function b64ToBytes(b64) {
+    const bin = atob(b64);
+    const u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return u8;
+  }
+  function b64FromStr(s) {
+    // xterm onData yields a string whose char codes are the raw input bytes.
+    let out = '';
+    for (let i = 0; i < s.length; i++) out += String.fromCharCode(s.charCodeAt(i) & 0xff);
+    return btoa(out);
   }
 
-  // Full re-render of the mirrored session from a snapshot (pushed on-change).
-  function renderSnapshot(s) {
+  function attachTerminal(termId, name) {
+    if (typeof Terminal === 'undefined') { addMsg('', 'Terminal viewer failed to load (offline?). Try again on a connection.', 'error'); return; }
+    detachTerminalView();
+    attachedTermId = termId;
+    attachedDocId = null;
     clearTranscript();
-    const msgs = (s.messages || []).slice();
-    if (s.inFlight) msgs.push(s.inFlight);
-    for (const m of msgs) for (const b of (m.content || [])) blockEl(m.role, b);
-    if (s.pendingApproval) renderLiveApproval(s.pendingApproval);
-    if (s.pendingUserInput) renderLiveUserInput(s.pendingUserInput);
-    $('mode-hint').textContent = s.isStreaming ? 'running…' : (s.title || '');
+    $('mode-hint').textContent = (name || 'terminal');
+    // Hide the agent composer — terminal input comes from the xterm grid itself.
+    const composer = document.querySelector('.composer'); if (composer) composer.style.display = 'none';
+    const hostEl = document.createElement('div');
+    hostEl.id = 'termhost';
+    hostEl.style.cssText = 'height:100%;width:100%;padding:6px;';
+    transcript.appendChild(hostEl);
+    term = new Terminal({
+      fontSize: 13, cursorBlink: true, convertEol: false,
+      disableStdin: !!readOnlyView,
+      theme: { background: '#0d1117', foreground: '#e6edf3' },
+    });
+    termFit = (typeof FitAddon !== 'undefined') ? new FitAddon.FitAddon() : null;
+    if (termFit) { try { term.loadAddon(termFit); } catch (_) { termFit = null; } }
+    term.open(hostEl);
+    if (!readOnlyView) {
+      // Forward every keystroke / paste to the host PTY.
+      term.onData((d) => { if (attachedTermId) sendFrame({ type: 'lc-term-input', terminalId: attachedTermId, dataB64: b64FromStr(d) }); });
+    }
+    sendFrame({ type: 'lc-term-attach', terminalId: termId });
+    // Fit the grid to the page and tell the host to resize its PTY to match, so
+    // the shell / TUI reflows to fill the remote view instead of an 80×24 box.
+    fitTerm();
+    setTimeout(fitTerm, 80);   // re-fit once layout settles
   }
 
-  function renderLiveApproval(p) {
+  // Fit the xterm grid to its container and push the new size to the host PTY.
+  function fitTerm() {
+    if (!term || !attachedTermId) return;
+    if (termFit) { try { termFit.fit(); } catch (_) {} }
+    if (!readOnlyView) {
+      sendFrame({ type: 'lc-term-resize', terminalId: attachedTermId, cols: term.cols, rows: term.rows });
+    }
+  }
+
+  // Tear down the xterm view + tell the host to stop streaming (if attached).
+  function detachTerminalView() {
+    if (attachedTermId) sendFrame({ type: 'lc-term-detach', terminalId: attachedTermId });
+    attachedTermId = null;
+    if (term) { try { term.dispose(); } catch (_) {} term = null; }
+    termFit = null;
+    const composer = document.querySelector('.composer');
+    if (composer && !readOnlyView) composer.style.display = '';
+  }
+
+  // ── markdown (safe, minimal) ─────────────────────────────────────────────────
+  // Assistant text is rendered as markdown for readability. EVERYTHING is HTML-
+  // escaped first (agent output is untrusted); only fenced/inline code, bold, and
+  // http(s)/mailto links are emitted — no raw HTML, no javascript: URLs.
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+  function renderMarkdown(src) {
+    const code = [];
+    // Pull fenced code blocks out first so their contents aren't markdown-processed.
+    let t = String(src).replace(/```[ \t]*[\w+-]*[ \t]*\n([\s\S]*?)```/g, (m, body) => {
+      code.push('<pre class="code"><code>' + escapeHtml(body.replace(/\n$/, '')) + '</code></pre>');
+      return '\u0000' + (code.length - 1) + '\u0000';
+    });
+    t = escapeHtml(t);
+    t = t.replace(/`([^`\n]+)`/g, (m, c) => '<code class="inline">' + c + '</code>');
+    t = t.replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>');
+    t = t.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/g,
+      (m, txt, url) => '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + txt + '</a>');
+    t = t.replace(/\n/g, '<br>');
+    return t.replace(/\u0000(\d+)\u0000/g, (m, i) => code[+i]);
+  }
+
+  // ── message element + content blocks ─────────────────────────────────────────
+  function msgEl(role, text, cls, md) {
+    const el = document.createElement('div');
+    el.className = 'msg ' + (cls || role);
+    if (role) { const r = document.createElement('div'); r.className = 'role'; r.textContent = role; el.appendChild(r); }
+    const body = document.createElement('span'); body.className = 'body'; el.appendChild(body);
+    setBody(body, text, md);
+    return el;
+  }
+  function setBody(body, text, md) {
+    body._txt = text;
+    if (md) { body.classList.add('md'); body.innerHTML = renderMarkdown(text); }
+    else { body.textContent = text; }
+  }
+  function setMsgText(el, text, md) {
+    const body = el.querySelector('.body');
+    if (body && body._txt !== text) setBody(body, text, md);
+  }
+
+  // One snapshot content block → a reconcilable item {key, build, update?}, or null.
+  function blockItem(role, b, key) {
+    if (b.type === 'text') {
+      if (!b.text) return null;
+      const user = role === 'user', text = b.text, md = !user;
+      return { key, build: () => msgEl(user ? 'you' : 'assistant', text, user ? 'user' : 'assistant', md), update: (el) => setMsgText(el, text, md) };
+    }
+    // Claude emits `thinking`; Codex emits `reasoning`. Render both the same.
+    if (b.type === 'thinking' || b.type === 'reasoning') {
+      if (!b.text) return null;
+      const text = '🧠 ' + b.text;
+      return { key, build: () => msgEl('', text, 'tool', false), update: (el) => setMsgText(el, text, false) };
+    }
+    if (b.type === 'toolUse') {
+      // Codex tool blocks carry pre-formatted title + detail (no name/input);
+      // Claude blocks carry name + a structured input dict. Handle both.
+      let text;
+      if (b.title != null || b.detail != null) {
+        const run = b.running ? '… ' : '';
+        text = ('→ ' + run + (b.title || b.kind || 'tool') + (b.detail ? '  ' + b.detail : '')).slice(0, 400);
+      } else {
+        text = ('→ ' + (b.name || 'tool') + ' ' + (typeof b.input === 'string' ? b.input : JSON.stringify(b.input || {}))).slice(0, 400);
+      }
+      return { key, build: () => msgEl('', text, 'tool', false), update: (el) => setMsgText(el, text, false) };
+    }
+    if (b.type === 'toolResult') {
+      const text = ((b.isError ? '⚠ ' : '✓ ') + String(b.content || '')).slice(0, 400);
+      return { key, build: () => msgEl('', text, 'tool', false), update: (el) => setMsgText(el, text, false) };
+    }
+    return null;
+  }
+
+  // Keyed list reconciliation: update existing nodes in place (cheap; no scroll/
+  // selection loss), insert/remove only what changed, and drop ad-hoc (keyless)
+  // status messages — replaces the old clear-and-rebuild-the-whole-DOM-each-tick.
+  function reconcile(items) {
+    const existing = new Map();
+    for (const el of Array.from(transcript.children)) {
+      const k = el.getAttribute('data-key');
+      if (k) existing.set(k, el); else el.remove();
+    }
+    const wanted = new Set(items.map((it) => it.key));
+    for (const [k, el] of existing) if (!wanted.has(k)) el.remove();
+    let prev = null;
+    for (const it of items) {
+      let el = existing.get(it.key);
+      if (!el) { el = it.build(); el.setAttribute('data-key', it.key); }
+      else if (it.update) it.update(el);
+      const ref = prev ? prev.nextSibling : transcript.firstChild;
+      if (el !== ref) transcript.insertBefore(el, ref);
+      prev = el;
+    }
+  }
+
+  // Reconcile the mirrored session from a snapshot (pushed on-change ~6 Hz).
+  function renderSnapshot(s) {
+    const items = [];
+    for (const m of (s.messages || [])) {
+      let bi = 0;
+      for (const b of (m.content || [])) { const it = blockItem(m.role, b, 'm:' + m.id + ':' + bi); bi++; if (it) items.push(it); }
+    }
+    if (s.inFlight) {
+      let bi = 0;
+      for (const b of (s.inFlight.content || [])) { const it = blockItem('assistant', b, 'if:' + bi); bi++; if (it) items.push(it); }
+    }
+    // Queued follow-ups (client-side), then any pending approval / user-input.
+    promptQueue.forEach((q, i) => items.push({ key: 'q:' + i, build: () => sentEl((q.text || '📷 photo') + '  · queued', q.thumbs) }));
+    if (s.pendingApproval) { const p = s.pendingApproval; items.push({ key: 'ap:' + p.id, build: () => buildApproval(p) }); }
+    if (s.pendingUserInput) {
+      const u = s.pendingUserInput;
+      (u.questions || []).forEach((q, qi) => items.push({ key: 'ui:' + u.id + ':' + qi, build: () => buildUserInput(u, q, attachedProvider) }));
+    }
+    reconcile(items);
+    // Once the session goes idle (streaming true → false), release the next queued one.
+    const streaming = !!s.isStreaming;
+    if (lastStreaming && !streaming) flushQueue();
+    lastStreaming = streaming;
+    $('mode-hint').textContent = streaming ? 'running…' : (s.title || '');
+    scrollToBottom();
+  }
+
+  // Release the next queued payload to the attached session once it's idle.
+  function flushQueue() {
+    if (!promptQueue.length || !attachedDocId) return;
+    const p = promptQueue.shift();
+    liveCmd('send', { text: p.text, attachments: p.attachments });
+  }
+
+  // Send a payload {text, attachments, thumbs} to the attached session, or queue
+  // it if the agent is still running so prompts don't pile onto the host at once.
+  function sendToSession(p) {
+    if (lastStreaming) { promptQueue.push(p); showSent((p.text || '📷 photo') + '  · queued', p.thumbs); }
+    else { liveCmd('send', { text: p.text, attachments: p.attachments }); showSent(p.text, p.thumbs); lastStreaming = true; }
+  }
+
+  // Build a "you"-role message element (text + any photo thumbs).
+  function sentEl(text, thumbs) {
+    const el = document.createElement('div'); el.className = 'msg user';
+    const r = document.createElement('div'); r.className = 'role'; r.textContent = 'you'; el.appendChild(r);
+    if (text) { const b = document.createElement('span'); b.className = 'body'; b.textContent = text; el.appendChild(b); }
+    if (thumbs && thumbs.length) {
+      const row = document.createElement('div'); row.className = 'sent-thumbs';
+      for (const t of thumbs) { const im = document.createElement('img'); im.src = t; row.appendChild(im); }
+      el.appendChild(row);
+    }
+    return el;
+  }
+
+  // Optimistic render of a message the user just sent. Keyless, so the next
+  // snapshot reconcile drops it for the host's echo (text only — the host
+  // snapshot doesn't carry the image, which is why we show the thumb here).
+  function showSent(text, thumbs) { transcript.appendChild(sentEl(text, thumbs)); scrollToBottom(true); }
+
+  function buildApproval(p) {
     const el = document.createElement('div'); el.className = 'perm';
     el.innerHTML = '<div><b>Approve tool call?</b></div><div class="tool"></div>';
-    el.querySelector('.tool').textContent = ((p.title || p.toolName || 'tool') + '\n' + (typeof p.input === 'string' ? p.input : JSON.stringify(p.input || {}, null, 2))).slice(0, 600);
+    // Codex approvals carry a pre-formatted `detail` string; Claude carries a
+    // structured `input` dict. Prefer detail when present.
+    const detail = (p.detail != null) ? String(p.detail) : (typeof p.input === 'string' ? p.input : JSON.stringify(p.input || {}, null, 2));
+    el.querySelector('.tool').textContent = ((p.title || p.toolName || 'tool') + '\n' + detail).slice(0, 600);
     const allow = document.createElement('button'); allow.textContent = 'Allow';
     const deny = document.createElement('button'); deny.textContent = 'Deny'; deny.className = 'ghost';
     allow.onclick = () => { liveCmd('approve', { id: p.id }); allow.disabled = deny.disabled = true; };
     deny.onclick = () => { liveCmd('deny', { id: p.id }); allow.disabled = deny.disabled = true; };
     el.appendChild(allow);
-    if (p.hasSessionAllowSuggestion) {
+    if (p.hasSessionAllowSuggestion || p.allowsSessionApproval) {
       const always = document.createElement('button'); always.textContent = 'Always'; always.className = 'ghost';
       always.onclick = () => { liveCmd('approve', { id: p.id, alwaysAllow: true }); allow.disabled = deny.disabled = always.disabled = true; };
       el.appendChild(always);
     }
     el.appendChild(deny);
-    transcript.appendChild(el); transcript.scrollTop = transcript.scrollHeight;
+    if (readOnlyView) { el.querySelectorAll('button').forEach((b) => (b.disabled = true)); const n = document.createElement('div'); n.className = 'who'; n.style.marginTop = '6px'; n.textContent = 'Waiting for the owner — view only.'; el.appendChild(n); }
+    return el;
   }
 
-  function renderLiveUserInput(u) {
-    for (const q of (u.questions || [])) {
-      const el = document.createElement('div'); el.className = 'perm';
-      const head = document.createElement('div'); const b = document.createElement('b');
-      b.textContent = q.question || q.header || 'Question'; head.appendChild(b); el.appendChild(head);
-      for (const opt of (q.options || [])) {
-        const btn = document.createElement('button'); btn.className = 'ghost'; btn.textContent = opt.label;
-        btn.style.cssText = 'margin:4px 4px 0 0';
-        btn.onclick = () => { liveCmd('submitUserInput', { id: u.id, answers: { [q.question]: opt.label } }); el.querySelectorAll('button').forEach((x) => x.disabled = true); };
-        el.appendChild(btn);
-      }
-      transcript.appendChild(el);
+  function buildUserInput(u, q, provider) {
+    const isCodex = provider === 'codex';
+    const el = document.createElement('div'); el.className = 'perm';
+    const head = document.createElement('div'); const b = document.createElement('b');
+    b.textContent = q.question || q.prompt || q.header || 'Question'; head.appendChild(b); el.appendChild(head);
+    for (const opt of (q.options || [])) {
+      const btn = document.createElement('button'); btn.className = 'ghost'; btn.textContent = opt.label;
+      btn.style.cssText = 'margin:4px 4px 0 0';
+      btn.onclick = () => {
+        // Codex keys answers by question id with an array value; Claude keys by
+        // the question text with a single string. Match each loop's decoder.
+        const answers = isCodex ? { [q.id]: [opt.label] } : { [q.question]: opt.label };
+        liveCmd('submitUserInput', { id: u.id, answers });
+        el.querySelectorAll('button').forEach((x) => x.disabled = true);
+      };
+      el.appendChild(btn);
     }
+    if (readOnlyView) { el.querySelectorAll('button').forEach((x) => (x.disabled = true)); const n = document.createElement('div'); n.className = 'who'; n.style.marginTop = '6px'; n.textContent = 'Waiting for the owner — view only.'; el.appendChild(n); }
+    return el;
   }
   $('mode-agent').onclick = () => setMode('agent');
   $('mode-live').onclick = () => setMode('live');
+
+  // Re-fit the attached terminal when the window resizes (debounced).
+  let fitTimer = null;
+  window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitTerm, 120); });
 
   function drainSSE() {
     let i;
@@ -337,7 +741,7 @@
       case 'assistant_text':
         if (!curAssistantEl) curAssistantEl = addMsg('assistant', '');
         curAssistantEl.textContent += (p.text || '');
-        transcript.scrollTop = transcript.scrollHeight;
+        scrollToBottom();
         break;
       case 'thinking': addMsg('thinking', p.text || '', 'tool'); break;
       case 'tool_use': addMsg('', `→ ${p.name || 'tool'} ${typeof p.input === 'string' ? p.input : JSON.stringify(p.input || {})}`.slice(0, 400), 'tool'); break;
@@ -363,36 +767,121 @@
     };
     allow.onclick = () => resolve('allow'); deny.onclick = () => resolve('deny');
     el.appendChild(allow); el.appendChild(deny);
-    transcript.appendChild(el); transcript.scrollTop = transcript.scrollHeight;
+    transcript.appendChild(el); scrollToBottom(true);
   }
 
   function finishQuery() { curAssistantEl = null; $('cancel').disabled = true; }
 
   // ── composer ───────────────────────────────────────────────────────────────
   function ask() {
-    const ta = $('input'); const prompt = ta.value.trim();
-    if (!prompt || !ws || ws.readyState !== 1) return;
-    // Live mode: inject the prompt into the attached open tab's session.
-    if (mode === 'live') {
-      if (!attachedDocId) { addMsg('', 'Pick a live session first.', 'tool'); return; }
-      ta.value = '';
-      liveCmd('send', { text: prompt });
-      return;
-    }
-    ta.value = '';
-    addMsg('you', prompt, 'user');
-    curAssistantEl = null;
-    queryId = uuid();
-    const provider = ($('provider') && $('provider').value) || 'lingmodel';
-    // LingModel's upstream model requires thinking.type=enabled (it rejects the
-    // SDK's default otherwise); raw Claude accepts it either way, so only force it
-    // on for lingmodel.
-    sendFrame({ type: 'lc-serve-request', streamId: uuid(), method: 'POST', path: '/v1/agent/ask', body: { prompt, provider, queryId, permissionMode: 'default', thinking: provider === 'lingmodel' } });
+    if (!ws || ws.readyState !== 1) return;
+    const text = $('input').value.trim();
+    const attachments = attachState.map((a) => ({ name: a.name, dataB64: a.dataB64 }));
+    const thumbs = attachState.map((a) => a.thumb);
+    if (!text && !attachments.length) return;        // nothing to send
+    if (mode === 'live' && !attachedDocId) { addMsg('', 'Pick a live session first.', 'tool'); return; }
+    $('input').value = ''; attachState.length = 0; renderAttachments();
+    const payload = { text, attachments, thumbs };
+    // Already attached (live mode, or a "New agent" tab we've adopted): drive it.
+    if (attachedDocId) { sendToSession(payload); return; }
+    // New-agent mode, first message: open a fresh Claude Code (Web) tab in the
+    // Mac's open project; once it's live we adopt it (see 'lc-agent-state') and
+    // replay this payload. Follow-ups drive the same session like live mode.
+    pendingNew = payload;
+    addMsg('', 'Starting a new session in your project…', 'tool');
+    sendFrame({ type: 'lc-agent-cmd', cmd: 'new' });
   }
   $('send').onclick = ask;
   $('input').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); ask(); } });
+
+  // ── photo attachments ───────────────────────────────────────────────────────
+  // Pick from camera or library, downscale + JPEG-compress in-browser so the
+  // base64 we push through the relay stays small (Claude's vision sweet spot is
+  // ~1568px on the long edge), then stage as a removable thumbnail chip.
+  $('photo').onclick = () => $('file').click();
+  $('file').onchange = async () => {
+    for (const f of Array.from($('file').files || [])) {
+      if (!f.type || f.type.indexOf('image/') !== 0) continue;
+      try { attachState.push(await processImage(f)); } catch (_) { addMsg('', 'Could not read that image.', 'tool'); }
+    }
+    $('file').value = '';
+    renderAttachments();
+  };
+
+  function processImage(file) {
+    return new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onerror = reject;
+      fr.onload = () => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const MAX = 1568;
+          const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const jpeg = canvas.toDataURL('image/jpeg', 0.82);
+          const name = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+          resolve({ name, dataB64: jpeg.slice(jpeg.indexOf(',') + 1), thumb: jpeg });
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+
+  function renderAttachments() {
+    const box = $('attachments'); box.innerHTML = '';
+    attachState.forEach((a, i) => {
+      const chip = document.createElement('div'); chip.className = 'chip';
+      const im = document.createElement('img'); im.src = a.thumb; chip.appendChild(im);
+      const rm = document.createElement('button'); rm.className = 'rm'; rm.textContent = '×';
+      rm.title = 'Remove';
+      rm.onclick = () => { attachState.splice(i, 1); renderAttachments(); };
+      chip.appendChild(rm); box.appendChild(chip);
+    });
+  }
+
+  // ── voice dictation (Web Speech API) ─────────────────────────────────────────
+  // Browser-only: transcribe speech into the textarea, then the user sends as a
+  // normal prompt. Feature-detected — the mic button stays hidden where the API
+  // is absent (installed PWA, older browsers). iOS needs real Safari, not a PWA.
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recog = null, recording = false;
+  if (SR) {
+    $('mic').style.display = '';
+    $('mic').onclick = () => {
+      if (recording) { try { recog && recog.stop(); } catch (_) {} return; }
+      recog = new SR();
+      recog.lang = navigator.language || 'en-US';
+      recog.interimResults = true;
+      recog.continuous = false;
+      const ta = $('input');
+      const base = ta.value ? ta.value.replace(/\s+$/, '') + ' ' : '';
+      let finalText = '';
+      recog.onresult = (e) => {
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const r = e.results[i];
+          if (r.isFinal) finalText += r[0].transcript; else interim += r[0].transcript;
+        }
+        ta.value = base + finalText + interim;
+      };
+      recog.onerror = (e) => {
+        recording = false; $('mic').classList.remove('rec');
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') addMsg('', 'Microphone permission denied.', 'tool');
+        else if (e.error === 'no-speech') addMsg('', 'No speech detected — try again.', 'tool');
+      };
+      recog.onend = () => { recording = false; $('mic').classList.remove('rec'); ta.focus(); };
+      try { recog.start(); recording = true; $('mic').classList.add('rec'); } catch (_) {}
+    };
+  }
+
   $('cancel').onclick = () => {
-    if (mode === 'live') { liveCmd('stop'); return; }
+    // Both modes now drive a live session once attached — stop it the same way.
+    if (attachedDocId) { liveCmd('stop'); return; }
     if (queryId) sendFrame({ type: 'lc-serve-request', streamId: uuid(), method: 'POST', path: `/v1/agent/cancel/${queryId}`, body: {} });
   };
   $('refresh').onclick = (e) => {
@@ -404,8 +893,37 @@
     if (mode === 'live') setMode('live');
   };
 
+  // ── owner: view-only share link ──────────────────────────────────────────────
+  $('share').onclick = async () => {
+    if (!currentHost) return;
+    const r = await api('/api/remote/hosts/' + currentHost + '/share', { method: 'POST' });
+    if (!r.ok) { alert('Could not create a share link.'); return; }
+    const j = await r.json();
+    if (navigator.clipboard) { try { await navigator.clipboard.writeText(j.url); } catch (_) {} }
+    $('unshare').style.display = '';
+    alert('View-only link copied (expires in 24h):\n\n' + j.url + '\n\nAnyone with it can WATCH this session read-only — they cannot type, approve tools, or stop it. Tap “Stop sharing” to revoke.');
+  };
+  $('unshare').onclick = async () => {
+    if (!currentHost) return;
+    const r = await api('/api/remote/hosts/' + currentHost + '/shares', { method: 'DELETE' });
+    if (r.ok) { $('unshare').style.display = 'none'; alert('All view-only links for this host are now revoked.'); }
+  };
+
   // ── boot ─────────────────────────────────────────────────────────────────
-  (async () => { if (await loadMe()) { await loadHosts(); setInterval(loadHosts, 10000); } })();
+  if (readOnlyView) {
+    // View-only link: strip the owner chrome (sidebar, composer, New-agent) and
+    // connect straight to the shared host as a watcher.
+    document.querySelector('.sidebar').style.display = 'none';
+    document.querySelector('.composer').style.display = 'none';
+    $('mode-agent').style.display = 'none'; $('mode-live').style.display = 'none';
+    $('viewbanner').style.display = 'block';
+    mode = 'live';
+    currentHostObj = { id: '', name: 'host' };
+    wantConnected = true;
+    openSocket(false);
+  } else {
+    (async () => { if (await loadMe()) { await loadHosts(); setInterval(loadHosts, 10000); } })();
+  }
 })();
 </script>
 </body>

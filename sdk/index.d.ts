@@ -77,7 +77,16 @@ export interface ProviderInfo {
 }
 
 export interface AuthApi {
-  signUp(creds: { email: string; password: string }): Promise<Result<Session>>;
+  /**
+   * Create an account. Returns a Session normally; if the backend requires email
+   * verification, returns `{ pending_verification: true }` instead and emails a
+   * confirmation link to `redirectTo` (which receives `?lc_verify=<token>`).
+   */
+  signUp(creds: { email: string; password: string; redirectTo?: string }): Promise<Result<Session | { pending_verification: true; email: string }>>;
+  /** Confirm a signup email (the `?lc_verify=<token>`) and return a Session. */
+  verifyEmail(token: string | { token: string }): Promise<Result<Session>>;
+  /** Re-email the confirmation link. Always resolves ok (no account enumeration). */
+  resendVerification(opts: { email: string; redirectTo?: string }): Promise<Result<{ sent: boolean }>>;
   signIn(creds: { email: string; password: string }): Promise<Result<Session>>;
   signInWithPassword(creds: { email: string; password: string }): Promise<Result<Session>>;
   /** Top-level navigation to the provider; on return the session is auto-stored. */
@@ -131,6 +140,8 @@ export interface PushApi {
   isSupported(): boolean;
   /** Registers the service worker + subscribes via PushManager, then stores the subscription. */
   subscribe(opts?: { serviceWorker?: string }): Promise<Result<any>>;
+  /** Register a native device token (iOS/APNs or Android/FCM) for hybrid/native apps. */
+  registerNativeToken(opts: { kind: 'apns' | 'fcm'; token: string }): Promise<Result<any>>;
 }
 
 export interface TelemetryApi {

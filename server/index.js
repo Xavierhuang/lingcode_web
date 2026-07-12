@@ -25,7 +25,7 @@ const bcrypt = require('bcrypt');
 const Database = require('better-sqlite3');
 const Stripe = require('stripe');
 const http = require('http');
-const { migrateUsersTable, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable } = require('./migrate');
+const { migrateUsersTable, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, migrateComputeTables } = require('./migrate');
 const { initCollabServer } = require('./collab-server');
 const { registerCollabRoutes } = require('./collab-routes');
 const { registerRemoteRoutes } = require('./remote-routes');
@@ -89,6 +89,7 @@ migrateAppConfigTable(db);
 migrateAgentSdkTables(db);
 migrateFeedbackTable(db);
 migrateCloudBackendTables(db);
+migrateComputeTables(db); // after CloudBackend: compute_* tables FK prototype_backends
 migrateCloudAppsTables(db); // after CloudBackend: ALTERs custom_domains created there
 migrateProjectsTables(db); // after CloudBackend + CloudApps: unified project entity + backfill
 migrateCloudTelemetryTables(db); // analytics/perf/crash aggregates (backbone ①)
@@ -187,6 +188,15 @@ app.use((req, res, next) => {
   // (nginx allows 25–32m). Without this the 128KB global guard would 413 it
   // first ("Could not create short link: http_413").
   if (req.path.startsWith('/api/account/saved-prototypes')) {
+    return express.json({ limit: '16mb', verify: captureRawBody })(req, res, next);
+  }
+  // Cloud storage inline base64 upload (app: POST .../storage/upload; account
+  // console: POST .../storage/objects) carries a base64-encoded object up to the
+  // tier's maxObjectBytes — max_pro = 10MB → ~13.4MB base64. The 128KB global
+  // guard 413'd every real photo/file ("upload_failed"). 16mb here lets the body
+  // reach the handler, which enforces the actual per-tier byte cap
+  // (413 object_too_large) itself.
+  if (req.method === 'POST' && (/\/storage\/upload$/.test(req.path) || /\/storage\/objects$/.test(req.path))) {
     return express.json({ limit: '16mb', verify: captureRawBody })(req, res, next);
   }
   return express.json({ limit: '128kb', verify: captureRawBody })(req, res, next);
@@ -515,6 +525,7 @@ const PRICE_MAX_PRO_MONTHLY = String(process.env.STRIPE_PRICE_MAX_PRO_MONTHLY ||
 const PRICE_MAX_PRO_ANNUAL = String(process.env.STRIPE_PRICE_MAX_PRO_ANNUAL || '').trim();
 
 const LINGCODE_CALLBACK = 'lingcode://auth/callback';
+const LINGCODE_BABY_CALLBACK = 'lingcodebaby://auth/callback';
 
 function escapeHtml(s) {
   return String(s)
@@ -537,6 +548,7 @@ function normalizeRedirectUri(raw) {
 function classifyRedirectUri(uri) {
   const n = normalizeRedirectUri(uri);
   if (n === LINGCODE_CALLBACK) return 'mac';
+  if (n === LINGCODE_BABY_CALLBACK) return 'mac-mini';
   if (n === WEB_OAUTH_REDIRECT) return 'web';
   return null;
 }
@@ -573,6 +585,7 @@ app.use(sessionMiddleware);
 /**
  * Mac app opens this URL (LingCodeAuthSignInURL). User submits email; we redirect to lingcode://auth/callback
  * with access_token + email (+ state). Web uses the same form with redirect_uri = {PUBLIC_ORIGIN}/oauth/web-callback.
+ * LingCodeMini uses lingcodebaby://auth/callback.
  */
 app.get('/oauth/authorize', (req, res) => {
   const flow = classifyRedirectUri(req.query.redirect_uri || '');
@@ -2048,6 +2061,21 @@ registerCloudWorkerRoutes(app, db);
 const { registerWorkerCronRoutes, startWorkerCronScheduler } = require('./cloud-worker-cron');
 registerWorkerCronRoutes(app, db);
 startWorkerCronScheduler(db);
+// Compute tier (Sub-project 1): long-running container jobs against a backend's
+// Postgres via a privileged LINGCODE_DB_URL. Routes serve the control plane on
+// every box; the runner only activates where COMPUTE_RUNNER_ENABLED=1 (the VPC
+// worker droplet with Docker + private Postgres reach), so this wiring is safe on
+// the API box too.
+const { registerCloudComputeRoutes } = require('./cloud-compute');
+registerCloudComputeRoutes(app, db);
+const { startComputeRunner } = require('./cloud-compute-runner');
+startComputeRunner(db);
+// Compute scheduler (SP2): cron-driven runs with overlap control + retries. The
+// 60s tick runs on every API process (enqueue is idempotent per due-window);
+// claiming/executing only happens where the runner is enabled.
+const { registerComputeScheduleRoutes, startComputeScheduler } = require('./cloud-compute-scheduler');
+registerComputeScheduleRoutes(app, db);
+startComputeScheduler(db);
 
 // Managed-backend serverless functions: internal backend-access RPC endpoint
 // (powers ctx.db / ctx.storage inside functions) + scheduled-function CRUD and

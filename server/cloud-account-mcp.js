@@ -15,11 +15,12 @@
 
 const dataPlane = require('./cloud-data-plane');
 const { getUserFromRequest } = require('./auth-helpers');
-const { provisionBackend, getAccountBackend, purchasedStorageBytesForBackend } = require('./cloud-backend');
+const { provisionBackend, getAccountBackend, purchasedStorageBytesForBackend, teardownBackend } = require('./cloud-backend');
 const { roleAtLeast } = require('./project-access');
 const cloudOAuth = require('./cloud-oauth');
 const storage = require('./cloud-storage');
 const { limitsForTier, computeCapabilities } = require('./cloud-limits');
+const { computeTierShortfall } = require('./cloud-compute');
 const { recordSchemaMigration } = require('./cloud-audit');
 const { nextRunAfter } = require('./cloud-worker-cron');
 const crypto = require('crypto');
@@ -96,17 +97,31 @@ const TOOLS = [
   },
   {
     name: 'select',
-    description: 'Select rows from ONE table — NO JOINs (fetch separately and join in app code; for multi-table/aggregate queries make a VIEW via apply_migration or use the query tool). Returns at most 200 rows; page with limit/offset. Optional where (filter), order, limit, offset. where ops: {col:value}=eq, {col:{gt|gte|lt|lte|neq|like|ilike:v}}, {col:{in:[...]}}, {col:{is:"not_null"}}, {col:null}.',
+    description: 'Select rows from ONE table — NO JOINs in this tool. For a multi-table/aggregate/full-text-ranked read, write a SQL function via apply_migration and call it with the rpc tool (or make a VIEW and select from it). Returns at most 200 rows; page with limit/offset. Optional where (filter), order, limit, offset. where ops: {col:value}=eq, {col:{gt|gte|lt|lte|neq|like|ilike:v}}, {col:{in:[...]}}, {col:{is:"not_null"}}, {col:null}.',
     inputSchema: { type: 'object', properties: { table: { type: 'string' }, where: { type: 'object' }, order: {}, limit: { type: 'number' }, offset: { type: 'number' } }, required: ['table'], additionalProperties: false },
     needsBackend: true, minRole: 'viewer',
     run: (ctx, a) => dataPlane.proxySelect(ctx.backendId, String((a && a.table) || ''), { where: a && a.where, order: a && a.order, limit: a && a.limit, offset: a && a.offset, userId: null }),
   },
   {
     name: 'insert',
-    description: 'Insert a row into ONE table. Returns the inserted row. No upsert / ON CONFLICT — on a duplicate-key error, fetch the row then update instead.',
-    inputSchema: { type: 'object', properties: { table: { type: 'string' }, row: { type: 'object' } }, required: ['table', 'row'], additionalProperties: false },
+    description: 'Insert into ONE table. `row` is a single object OR an array of objects (batch insert — one transaction, up to the tier maxRowsPerWrite). Returns the inserted row(s). For idempotent writes by a unique key, use upsert.',
+    inputSchema: { type: 'object', properties: { table: { type: 'string' }, row: {} }, required: ['table', 'row'], additionalProperties: false },
     needsBackend: true, minRole: 'editor',
-    run: (ctx, a) => dataPlane.proxyInsert(ctx.backendId, String((a && a.table) || ''), a && a.row, { userId: null }),
+    run: (ctx, a) => dataPlane.proxyInsert(ctx.backendId, String((a && a.table) || ''), a && a.row, { userId: null, maxRows: limitsForTier(ctx.user.tier).maxRowsPerWrite }),
+  },
+  {
+    name: 'upsert',
+    description: 'Insert-or-update into ONE table via INSERT ... ON CONFLICT. `row` is a single object or an array (batch). `on_conflict` is the unique column(s) (string or array). merge (default true) updates the conflicting row from the incoming values; merge:false leaves it untouched (DO NOTHING). The idempotent-ingest primitive — the conflict target needs a unique/PK constraint (add one via apply_migration).',
+    inputSchema: { type: 'object', properties: { table: { type: 'string' }, row: {}, on_conflict: {}, merge: { type: 'boolean' } }, required: ['table', 'row', 'on_conflict'], additionalProperties: false },
+    needsBackend: true, minRole: 'editor',
+    run: (ctx, a) => dataPlane.proxyUpsert(ctx.backendId, String((a && a.table) || ''), a && a.row, { onConflict: a && a.on_conflict, merge: !(a && a.merge === false), userId: null, maxRows: limitsForTier(ctx.user.tier).maxRowsPerWrite }),
+  },
+  {
+    name: 'rpc',
+    description: 'Call a tenant-defined SQL function (created via apply_migration with CREATE FUNCTION) by name: SELECT * FROM <fn>(...). This is how an app runs a complex read the single-table CRUD/select tools can\'t — JOINs, CTEs, aggregations, full-text ts_rank, window functions — with the SQL kept server-side. `args` is a positional array OR a named-args object. Returns rows (≤1000).',
+    inputSchema: { type: 'object', properties: { fn: { type: 'string' }, args: {} }, required: ['fn'], additionalProperties: false },
+    needsBackend: true, minRole: 'viewer',
+    run: (ctx, a) => dataPlane.rpcCall(ctx.backendId, String((a && a.fn) || ''), (a && a.args) || [], { userId: null }),
   },
   {
     name: 'update',
@@ -152,7 +167,7 @@ const TOOLS = [
   },
   {
     name: 'describe_backend',
-    description: "Describe this project backend's capabilities and quotas. Covers the SERVER-SIDE COMPUTE TIER (compute): an encrypted secrets vault, built-in + custom serverless functions with their per-tier timeout, and full-stack Worker/SSR app hosting — so secrets, Stripe, email, and most server logic can run on LingCode Cloud WITHOUT an external server (don't tell users to keep a separate host without checking this). Also covers file-storage caps (maxObjectBytes for the inline base64 upload path, maxUploadBytes for the direct-to-Spaces presigned-PUT path, maxObjects, maxStorageBytes for the backend's total stored bytes across all objects), the public/private storage buckets, whether direct upload is available, and the other per-tier limits (tables/users/functions/emails). Call this to learn what the backend can actually do — e.g. whether a large file fits, or whether server code can move here — instead of guessing.",
+    description: "Describe this project backend's capabilities and quotas. Covers the SERVER-SIDE COMPUTE STORY (compute): an encrypted secrets vault, built-in + custom serverless functions with their per-tier timeout, full-stack Worker/SSR app hosting, AND the CONTAINER COMPUTE TIER (compute.containerCompute) — long-running container jobs with NO ~30s cap (800s+ batches, headless-Chromium scraping, OpenAI/ingestion loops) that get a privileged full-SQL Postgres connection (LINGCODE_DB_URL, no gateway caps) and a cron scheduler. So secrets, Stripe, email, MOST server logic, AND heavy/long-running pipelines can run on LingCode Cloud WITHOUT an external server (check compute.containerCompute.available + notSuitableFor before telling a user to keep a separate host). Also covers file-storage caps (maxObjectBytes for the inline base64 upload path, maxUploadBytes for the direct-to-Spaces presigned-PUT path, maxObjects, maxStorageBytes for the backend's total stored bytes across all objects), the public/private storage buckets, whether direct upload is available, and the other per-tier limits (tables/users/functions/emails). Call this to learn what the backend can actually do — e.g. whether a large file fits, or whether a long-running job or server can move here — instead of guessing.",
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     needsBackend: true, minRole: 'viewer',
     run: (ctx) => {
@@ -172,8 +187,34 @@ const TOOLS = [
           perUserIsolation: 'private bucket is namespaced + access-gated per signed-in app user; public bucket is shared/world-readable',
         },
         compute: computeCapabilities(ctx.user.tier),
+        // Non-null when this project's EXISTING compute jobs/schedules exceed the
+        // current owner's plan (e.g. after a transfer to a lower tier) — an explicit
+        // "upgrade to keep the pipeline running" reminder for agents to surface.
+        computeUpgrade: computeTierShortfall(ctx.db, ctx.backendId, ctx.user.tier),
         limits: lim,
       };
+    },
+  },
+  {
+    name: 'delete_backend',
+    description: "Permanently delete this project's backend (HARD DELETE — IRREVERSIBLE, DATA LOSS): drops the Postgres schema + tenant roles, purges all object storage, and removes every control-plane row (auth users, logs, usage, functions, schedules, secrets). Owner-only. Use to tear down a backend you no longer want (e.g. a stray/duplicate one). There is no undo — confirm with the user first, then pass the backend id as `confirm`.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        confirm: { type: 'string', description: "Must equal this backend's id, as a typed-confirmation guard against accidental deletion." },
+      },
+      required: ['confirm'],
+      additionalProperties: false,
+    },
+    needsBackend: true, minRole: 'owner',
+    run: async (ctx, a) => {
+      const confirm = String((a && a.confirm) || '');
+      if (confirm !== ctx.backendId) {
+        throw new Error(`delete_backend: confirm must equal the backend id ("${ctx.backendId}") to proceed — refusing to delete.`);
+      }
+      const r = await teardownBackend(ctx.db, ctx.backendId);
+      if (!r.ok) throw new Error(r.error || 'backend_delete_failed');
+      return { removed: true, backend_id: ctx.backendId };
     },
   },
   {

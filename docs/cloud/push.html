@@ -162,6 +162,35 @@ if (error) {
         <li><strong>A subscription is tied to the signed-in user.</strong> If you want to target someone later, <a href="/docs/cloud/auth.html">sign them in</a> first — otherwise there's no user to attach the subscription to.</li>
       </ul>
 
+      <h2>Native push (iOS &amp; Android)</h2>
+      <p>Web Push covers browsers and installed PWAs. If you also ship a <strong>native</strong> app, the same backend fans out to Apple's APNs (iOS) and Google's FCM (Android) — <code>push.send</code> reaches web, iOS, and Android subscribers in one call. Delivery has to terminate at Apple and Google, so you bring your own push credentials once, in the <a href="/backends.html">backend console → Push notifications</a>.</p>
+
+      <h3>iOS — Apple APNs</h3>
+      <p>In the <a href="https://developer.apple.com/account/resources/authkeys/list" target="_blank" rel="noopener">Apple Developer portal → Keys</a>, create a key with the <strong>Apple Push Notifications service (APNs)</strong> capability and download the <code>.p8</code>. In the console's <strong>iOS push (BYO Apple APNs)</strong> card, paste the <code>.p8</code> contents along with:</p>
+      <ul>
+        <li><strong>Key ID</strong> — the 10-character ID of the key you just created.</li>
+        <li><strong>Team ID</strong> — your Apple Developer Team ID.</li>
+        <li><strong>Topic</strong> — your app's bundle ID (e.g. <code>com.yourcompany.app</code>).</li>
+        <li><strong>Environment</strong> — <em>Production</em> for TestFlight/App-Store builds, <em>Sandbox</em> for development builds run from Xcode.</li>
+      </ul>
+      <div class="warn-box">
+        <strong>Sandbox vs Production must match the build.</strong> A device token from a build signed for development only delivers on the <em>Sandbox</em> environment; TestFlight/App-Store tokens only deliver on <em>Production</em>. Mismatched tokens fail with <code>BadDeviceToken</code> and the dead token is pruned automatically.
+      </div>
+
+      <h3>Android — Firebase FCM</h3>
+      <p>Native Android push must go through Firebase Cloud Messaging (there's no alternative transport). In the Firebase console, create a <strong>service account</strong> and download its JSON, then paste it into the <strong>Android push (BYO Firebase)</strong> card. The credential is encrypted at rest.</p>
+
+      <h3>Registering a native device token</h3>
+      <p>Your app obtains a device token from the OS (APNs registration on iOS, FCM on Android), then registers it against the signed-in user. Hybrid apps (React Native, Capacitor) can use the SDK:</p>
+      <pre><code>// after the OS hands you a device token
+await lingcode.push.registerNativeToken({ kind: 'apns', token: deviceToken }); // iOS
+await lingcode.push.registerNativeToken({ kind: 'fcm',  token: deviceToken }); // Android</code></pre>
+      <p>Pure-native apps can POST the same shape directly — no SDK required:</p>
+      <pre><code>POST https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/push/subscribe
+
+{ "subscription": { "kind": "apns", "token": "&lt;device-token&gt;" } }</code></pre>
+      <p>Sending is unchanged — the same <code>push.send</code> / <code>POST /push/send</code> you use for web fans out to every stored subscription regardless of platform.</p>
+
       <div class="tutorial-next">
         <h2>What's next</h2>
         <div class="tutorial-next-grid">
@@ -236,7 +265,7 @@ if (error) {
     </div>
   </div>
   <div class="footer-bottom">
-    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
     <span>native · fast · honest</span>
   </div>
 </footer>

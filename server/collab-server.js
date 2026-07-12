@@ -296,6 +296,12 @@ function cleanupServeStreamsFor(ws) {
  * @param {object} parsed              the decoded JSON frame
  */
 function handleServeTunnelFrame(ws, docName, parsed) {
+  // Read-only viewers may receive host→client frames but cannot drive the host:
+  // drop request/stdin (and never let them register as a host). Claim the frame
+  // as handled so it isn't forwarded.
+  if (ws._readOnly && (parsed.type === 'lc-serve-request' || parsed.type === 'lc-serve-stdin' || parsed.type === 'lc-serve-host-hello')) {
+    return true;
+  }
   switch (parsed.type) {
     case 'lc-serve-host-hello':
       ws._lcServeHost = true;
@@ -364,11 +370,21 @@ function serveSendFrame(ws, obj) {
  * @param {object} parsed
  */
 function handleAgentFrame(ws, docName, parsed) {
+  // Read-only viewers may list/attach/detach (to WATCH a session) but must never
+  // drive it: lc-agent-cmd carries send/approve/deny/stop, and lc-term-input
+  // injects keystrokes into the host PTY — drop both for viewers.
+  if (ws._readOnly && (parsed.type === 'lc-agent-cmd' || parsed.type === 'lc-term-input' || parsed.type === 'lc-term-resize')) return true;
   switch (parsed.type) {
+    // Client→host requests (lc-agent-* and the interactive terminal lc-term-*).
     case 'lc-agent-list':
     case 'lc-agent-attach':
     case 'lc-agent-detach':
-    case 'lc-agent-cmd': {
+    case 'lc-agent-cmd':
+    case 'lc-term-list':
+    case 'lc-term-attach':
+    case 'lc-term-detach':
+    case 'lc-term-input':
+    case 'lc-term-resize': {
       let set = agentClients.get(docName);
       if (!set) { set = new Set(); agentClients.set(docName, set); }
       set.add(ws);
@@ -379,10 +395,16 @@ function handleAgentFrame(ws, docName, parsed) {
       return true;
     }
 
+    // Host→client results, broadcast to the room's attached clients
+    // (lc-agent-* mirror state + lc-term-* terminal output/list/size).
     case 'lc-agent-list-result':
     case 'lc-agent-state':
     case 'lc-agent-detached':
-    case 'lc-agent-error': {
+    case 'lc-agent-error':
+    case 'lc-term-list-result':
+    case 'lc-term-output':
+    case 'lc-term-size':
+    case 'lc-term-detached': {
       const set = agentClients.get(docName);
       if (set) {
         for (const client of set) {
@@ -433,6 +455,10 @@ function handleCollabConnection(ws, req, user, role, prototypeId, fileId) {
   ws._collabUserId = user.id;
   ws._collabFileId = fileId;
   ws._collabProtoId = prototypeId;
+  // Read-only viewers (remote-coding "view-only" share links) may watch the
+  // serve/agent stream but their control frames are dropped (see the frame
+  // handlers). Only ever set true via a validated ?share token in the upgrade.
+  ws._readOnly = !!req._collabReadOnly;
 
   const docName = makeDocName(prototypeId, fileId);
 
@@ -544,6 +570,37 @@ function initCollabServer(httpServer, db, sessionMiddleware) {
       return;
     }
     const { prototypeId, fileId } = key;
+
+    // Read-only share link: ?share=<token> admits a (possibly signed-out) viewer
+    // pinned to a read-only role for exactly this host's room. The token is the
+    // credential — validated against remote_host_shares (not revoked/expired, and
+    // bound to this host id). No user/session required; control frames are dropped
+    // downstream. Checked before the owner auth path so a leaked token can never
+    // gain more than view access.
+    let shareToken = null;
+    try {
+      const qs = req.url.includes('?') ? req.url.split('?').slice(1).join('?') : '';
+      if (qs) shareToken = new URLSearchParams(qs).get('share');
+    } catch (_) { /* ignore malformed query */ }
+    if (shareToken) {
+      let valid = false;
+      try {
+        const sh = db.prepare('SELECT host_id, expires_at, revoked FROM remote_host_shares WHERE token = ?').get(shareToken);
+        valid = !!(sh && !sh.revoked && sh.host_id === prototypeId && (!sh.expires_at || sh.expires_at > Date.now()));
+      } catch (_) { valid = false; }
+      if (!valid) {
+        socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+      req._collabUser = { id: 'share:' + shareToken };
+      req._collabRole = 'viewer';
+      req._collabProtoId = prototypeId;
+      req._collabFileId = fileId;
+      req._collabReadOnly = true;
+      wss.handleUpgrade(req, socket, head, (ws) => { wss.emit('connection', ws, req); });
+      return;
+    }
 
     // Native clients (Mac app collab-bridge) cannot set custom WS handshake
     // headers. Promote ?token=... into Authorization so getUserFromRequest can

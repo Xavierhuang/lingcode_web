@@ -552,18 +552,37 @@ function registerCloudAppRoutes(app, db) {
   // (follows any CNAME) and reports whether it points at our edge yet — drives
   // the IDE's "Pending DNS → Verified" indicator. TLS is issued on-demand once
   // pointed=true, so that's the signal the domain is (about to be) live.
-  app.get('/api/account/cloud-apps/:id/custom-domains/:domain/status', async (req, res) => {
+  //
+  // ALSO probes https://{domain}/ (added 2026-06-29) so the dialog status badge
+  // can distinguish "DNS + TLS OK" (truly live) from "DNS OK but TLS fails"
+  // (Namecheap-apex wart, cert mid-issuance, origin down). HEAD-only, 5s timeout.
+  const customDomainStatusHandler = async (req, res) => {
     const ctx = appAccess(db, req, res, 'viewer'); if (!ctx) return;
     const id = ctx.row.id;
     const domain = String(req.params.domain || '').trim().toLowerCase();
     const row = db.prepare('SELECT 1 FROM custom_domains WHERE domain = ? AND app_id = ?').get(domain, id);
     if (!row) return res.status(404).json({ ok: false, error: 'not_found' });
 
+    const { probeHttps } = require('./cloud-domains');
     let addresses = [];
+    const httpsP = probeHttps(domain, 5000);  // parallel with DNS check
     try { addresses = await dns.resolve4(domain); } catch (_) { addresses = []; }
     const pointed = addresses.includes(EDGE_IP);
-    res.json({ ok: true, domain, pointed, addresses, expected: EDGE_IP });
-  });
+    const https = await httpsP;
+    // status mirrors cloud-workers' convention so the dialog's 3-state badge
+    // logic can read `status === 'active'` uniformly across app + worker types.
+    res.json({
+      ok: true, domain, status: pointed ? 'active' : 'pending',
+      pointed, addresses, expected: EDGE_IP,
+      httpsOk: https.ok, httpsStatus: https.status, httpsError: https.error,
+    });
+  };
+  // Registered at BOTH /status (legacy, kept for back-compat) and /check (the
+  // convention cloud-workers + the dashboard dialog use). Fixes a pre-existing
+  // silent-failure bug where the dashboard polled /check on cloud-apps domains
+  // and got 404, leaving the badge stuck on "Verifying…" forever.
+  app.get('/api/account/cloud-apps/:id/custom-domains/:domain/status', customDomainStatusHandler);
+  app.get('/api/account/cloud-apps/:id/custom-domains/:domain/check',  customDomainStatusHandler);
 
   // Detach a domain (owner).
   app.delete('/api/account/cloud-apps/:id/custom-domains/:domain', (req, res) => {

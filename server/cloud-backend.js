@@ -31,7 +31,7 @@ const MAX_OBJECT_PATH = 256;
 // (backend_email_templates); {{link}}, {{code}}, {{email}} are substituted at
 // send time. These defaults are the single source of truth for the GET route
 // and the senders, so the console always shows the real default to start from.
-const EMAIL_KINDS = ['magiclink', 'otp'];
+const EMAIL_KINDS = ['magiclink', 'otp', 'verify_email'];
 const EMAIL_DEFAULTS = {
   magiclink: {
     subject: 'Your sign-in link',
@@ -43,6 +43,12 @@ const EMAIL_DEFAULTS = {
     subject: 'Your sign-in code: {{code}}',
     html: `<p>Your sign-in code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:4px">{{code}}</p>
 <p>It expires in 10 minutes. If you didn't request it, you can ignore this email.</p>`,
+  },
+  verify_email: {
+    subject: 'Confirm your email',
+    html: `<p>Confirm your email to finish creating your account:</p><p><a href="{{link}}">Confirm email</a></p>
+<p>This link expires in 24 hours. If you didn't sign up, you can ignore this email.</p>
+<p style="color:#666;font-size:12px;">{{link}}</p>`,
   },
 };
 function applyTemplateVars(str, vars) {
@@ -149,7 +155,12 @@ function consolePreflight(req, res, db, prototypeId) {
 }
 
 function sendErr(res, err, route) {
-  const status = (err && err.status) || 500;
+  let status = (err && err.status) || 500;
+  // Postgres unique_violation (23505) → 409 Conflict. Data-plane insert/upsert
+  // clients treat 409 as "already exists" (idempotent write) — without this map
+  // a duplicate key surfaced as an opaque 500 and broke that idempotency (e.g. a
+  // repeat follow 500'd instead of no-op'ing).
+  if (status === 500 && err && (err.code === '23505' || /duplicate key value/i.test(err.message || ''))) status = 409;
   const httpStatus = status >= 400 && status < 500 ? status : 500;
   res.status(httpStatus).json({ ok: false, error: 'cloud_error', message: err?.message || `error during ${route}`, status });
 }
@@ -225,10 +236,21 @@ async function teardownBackend(db, id) {
   if (storage.isConfigured()) {
     try { await storage.removePrefix(id); } catch (_) { /* best-effort; orphan swept later */ }
   }
+  // Purge ALL control-plane rows for this backend. Hardcoding the table list
+  // silently orphaned rows every time a new backend_* table was added (logs,
+  // usage, functions, schedules, secrets, push subs, magic links, crashes,
+  // analytics, …). Instead, sweep every table that has a `backend_id` column.
+  // account_backends keys on `id` (it IS the backend), so it's handled explicitly.
   db.transaction(() => {
+    const tables = db.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+    ).all();
+    for (const { name } of tables) {
+      const hasBackendId = db.prepare(`PRAGMA table_info(${name})`).all()
+        .some((c) => c.name === 'backend_id');
+      if (hasBackendId) db.prepare(`DELETE FROM ${name} WHERE backend_id = ?`).run(id);
+    }
     db.prepare('DELETE FROM account_backends WHERE id = ?').run(id);
-    db.prepare('DELETE FROM backend_oauth_providers WHERE backend_id = ?').run(id);
-    db.prepare('DELETE FROM backend_objects WHERE backend_id = ?').run(id);
   })();
   return { ok: true };
 }
@@ -713,22 +735,28 @@ function registerCloudBackendRoutes(app, db) {
     res.json({ ok: true });
   });
 
-  // ── Auth settings: toggle whether this backend requires MFA (owner) ──
-  // Default off; when on, the data proxy rejects user tokens below aal2.
+  // ── Auth settings: MFA + email-verification requirements (owner) ──
+  // Both default off so existing apps are unaffected. mfa_required: data proxy
+  // rejects user tokens below aal2. require_email_verification: password signup
+  // emails a confirmation link and sign-in is blocked until confirmed.
   app.get('/api/cloud/account/backends/:backendId/auth-settings', (req, res) => {
     const ctx = accountBackend(req, res, "viewer"); if (!ctx) return;
-    const row = db.prepare('SELECT mfa_required FROM backend_auth_settings WHERE backend_id = ?').get(ctx.row.id);
-    res.json({ ok: true, data: { mfa_required: !!(row && row.mfa_required) } });
+    const row = db.prepare('SELECT mfa_required, require_email_verification FROM backend_auth_settings WHERE backend_id = ?').get(ctx.row.id);
+    res.json({ ok: true, data: { mfa_required: !!(row && row.mfa_required), require_email_verification: !!(row && row.require_email_verification) } });
   });
 
   app.put('/api/cloud/account/backends/:backendId/auth-settings', (req, res) => {
     const ctx = accountBackend(req, res, "owner"); if (!ctx) return;
-    const mfaRequired = (req.body && req.body.mfa_required) ? 1 : 0;
-    db.prepare(`INSERT INTO backend_auth_settings (backend_id, mfa_required, updated_at) VALUES (?, ?, ?)
-      ON CONFLICT(backend_id) DO UPDATE SET mfa_required = excluded.mfa_required, updated_at = excluded.updated_at`)
-      .run(ctx.row.id, mfaRequired, new Date().toISOString());
-    logEvent(db, ctx.row.id, 'auth', 'info', `MFA requirement ${mfaRequired ? 'enabled' : 'disabled'}`);
-    res.json({ ok: true, data: { mfa_required: !!mfaRequired } });
+    const b = req.body || {};
+    const cur = db.prepare('SELECT mfa_required, require_email_verification FROM backend_auth_settings WHERE backend_id = ?').get(ctx.row.id) || {};
+    // Preserve omitted fields so a partial PUT can toggle one without clobbering the other.
+    const mfaRequired = ('mfa_required' in b) ? (b.mfa_required ? 1 : 0) : (cur.mfa_required ? 1 : 0);
+    const requireVerify = ('require_email_verification' in b) ? (b.require_email_verification ? 1 : 0) : (cur.require_email_verification ? 1 : 0);
+    db.prepare(`INSERT INTO backend_auth_settings (backend_id, mfa_required, require_email_verification, updated_at) VALUES (?, ?, ?, ?)
+      ON CONFLICT(backend_id) DO UPDATE SET mfa_required = excluded.mfa_required, require_email_verification = excluded.require_email_verification, updated_at = excluded.updated_at`)
+      .run(ctx.row.id, mfaRequired, requireVerify, new Date().toISOString());
+    logEvent(db, ctx.row.id, 'auth', 'info', `Auth settings updated (mfa=${mfaRequired}, verify=${requireVerify})`);
+    res.json({ ok: true, data: { mfa_required: !!mfaRequired, require_email_verification: !!requireVerify } });
   });
 
   // ── Secrets: 3rd-party API keys for function templates (owner only) ──
@@ -798,6 +826,42 @@ function registerCloudBackendRoutes(app, db) {
       .run(ctx.row.id, hosts.join(','), new Date().toISOString());
     logEvent(db, ctx.row.id, 'control', 'info', `Fetch allow-list updated (${hosts.length} host${hosts.length === 1 ? '' : 's'})`);
     res.json({ ok: true, data: { hosts } });
+  });
+
+  // ── OAuth sign-in redirect-origin allow-list (owner) ────────────────
+  // Extra hostnames a backend accepts as OAuth redirect targets, on top of the
+  // always-allowed localhost + *.lingcode.dev (enforced in cloud-oauth.js
+  // redirectAllowed). Stored as normalized hostnames; matched by hostname equality.
+  app.get('/api/cloud/account/backends/:backendId/auth/redirect-origins', (req, res) => {
+    const ctx = accountBackend(req, res, "viewer"); if (!ctx) return;
+    const row = db.prepare('SELECT allowed_redirect_origins FROM backend_auth_settings WHERE backend_id = ?').get(ctx.row.id);
+    const origins = (row && row.allowed_redirect_origins) ? String(row.allowed_redirect_origins).split(',').map((s) => s.trim()).filter(Boolean) : [];
+    res.json({ ok: true, data: { origins } });
+  });
+
+  app.put('/api/cloud/account/backends/:backendId/auth/redirect-origins', (req, res) => {
+    const ctx = accountBackend(req, res, "owner"); if (!ctx) return;
+    const raw = req.body && req.body.origins;
+    const arr = Array.isArray(raw) ? raw : String(raw || '').split(',');
+    // Accept a full origin/URL (take its hostname) or a bare hostname; validate as
+    // a domain (no scheme/path/port); reject IP literals. Same shape as fetch-hosts.
+    const HOST_RE = /^(?=.{1,253}$)([a-z0-9](-?[a-z0-9]+)*\.)+[a-z]{2,}$/i;
+    const origins = []; const seen = new Set();
+    for (let o of arr) {
+      let h = String(o || '').trim();
+      if (!h) continue;
+      if (/^[a-z][a-z0-9+.-]*:\/\//i.test(h)) { try { h = new URL(h).hostname; } catch (_) { return res.status(400).json({ ok: false, error: 'invalid_origin', message: `Not a valid origin: ${o}` }); } }
+      h = h.toLowerCase().replace(/\.$/, '');
+      if (seen.has(h)) continue;
+      if (require('net').isIP(h) || !HOST_RE.test(h)) return res.status(400).json({ ok: false, error: 'invalid_origin', message: `Not a valid origin: ${o}` });
+      seen.add(h); origins.push(h);
+    }
+    if (origins.length > 50) return res.status(400).json({ ok: false, error: 'too_many_origins', message: 'max 50 origins' });
+    db.prepare(`INSERT INTO backend_auth_settings (backend_id, allowed_redirect_origins, updated_at) VALUES (?, ?, ?)
+      ON CONFLICT(backend_id) DO UPDATE SET allowed_redirect_origins = excluded.allowed_redirect_origins, updated_at = excluded.updated_at`)
+      .run(ctx.row.id, origins.join(','), new Date().toISOString());
+    logEvent(db, ctx.row.id, 'auth', 'info', `Redirect-origin allow-list updated (${origins.length} origin${origins.length === 1 ? '' : 's'})`);
+    res.json({ ok: true, data: { origins } });
   });
 
   // ── pgvector similarity search over the owner's own rows (admin scope) ─
@@ -893,6 +957,13 @@ function registerCloudBackendRoutes(app, db) {
     } catch (_) { return false; }
   }
 
+  function backendRequiresEmailVerification(backendId) {
+    try {
+      const r = db.prepare('SELECT require_email_verification FROM backend_auth_settings WHERE backend_id = ?').get(backendId);
+      return !!(r && r.require_email_verification);
+    } catch (_) { return false; }
+  }
+
   // opts.allowAal1: skip MFA enforcement so a signed-in user can still reach the
   // enroll/verify/refresh/signout routes before they have an aal2 token. Data
   // routes use the default (enforce) — when the backend requires MFA, a user
@@ -981,15 +1052,55 @@ function registerCloudBackendRoutes(app, db) {
     } catch (err) { sendErr(res, err, 'proxy_select'); }
   });
 
+  // Insert a single row (`row`) or many (`row` as an array — batch insert in one
+  // transaction). Per-tier maxRowsPerWrite caps the batch size.
   app.post('/api/cloud/be/:backendId/insert', async (req, res) => {
     const a = proxyAuth(req, res); if (!a) return;
     const table = String((req.body && req.body.table) || '');
     if (!table) return res.status(400).json({ ok: false, error: 'invalid_request', message: 'table required' });
     try {
-      const data = await dataPlane.proxyInsert(a.backendId, table, req.body && req.body.row, { userId: a.userId });
-      bumpUsage(db, a.backendId, { written: 1 });
+      const maxRows = limitsForTier(a.row.tier || 'free').maxRowsPerWrite;
+      const data = await dataPlane.proxyInsert(a.backendId, table, req.body && req.body.row, { userId: a.userId, maxRows });
+      bumpUsage(db, a.backendId, { written: data.rows.length || 1 });
       res.json({ ok: true, data: data.rows });
     } catch (err) { sendErr(res, err, 'proxy_insert'); }
+  });
+
+  // Upsert a single row or many via INSERT ... ON CONFLICT. Body: { table, row,
+  // onConflict: 'col' | ['col', ...], merge?: true }. merge=false → DO NOTHING.
+  app.post('/api/cloud/be/:backendId/upsert', async (req, res) => {
+    const a = proxyAuth(req, res); if (!a) return;
+    const table = String((req.body && req.body.table) || '');
+    if (!table) return res.status(400).json({ ok: false, error: 'invalid_request', message: 'table required' });
+    try {
+      const maxRows = limitsForTier(a.row.tier || 'free').maxRowsPerWrite;
+      const data = await dataPlane.proxyUpsert(a.backendId, table, req.body && req.body.row, {
+        // Accept both camelCase (`onConflict`) and snake_case (`on_conflict`).
+        // The data-plane clients (mobile-api db.upsert, iOS) send snake_case;
+        // reading only camelCase dropped the conflict target, turning every
+        // upsert-to-existing-row into a plain INSERT → duplicate-key 500
+        // (broke unsave / re-save / notes / reactions on user_events).
+        onConflict: req.body && (req.body.onConflict ?? req.body.on_conflict),
+        merge: !(req.body && req.body.merge === false),
+        userId: a.userId, maxRows,
+      });
+      bumpUsage(db, a.backendId, { written: data.rows.length || 1 });
+      res.json({ ok: true, data: data.rows });
+    } catch (err) { sendErr(res, err, 'proxy_upsert'); }
+  });
+
+  // Call a tenant-defined SQL function (created via a migration) by name:
+  // SELECT * FROM <fn>($1,...). Body: { fn: 'name', args?: [...] }. The function
+  // body — JOINs/CTEs/FTS-ranking — runs server-side as the tenant role (RLS on).
+  app.post('/api/cloud/be/:backendId/rpc', async (req, res) => {
+    const a = proxyAuth(req, res); if (!a) return;
+    const fn = String((req.body && (req.body.fn || req.body.name)) || '');
+    if (!fn) return res.status(400).json({ ok: false, error: 'invalid_request', message: 'fn required' });
+    try {
+      const data = await dataPlane.rpcCall(a.backendId, fn, (req.body && req.body.args) || [], { userId: a.userId });
+      bumpUsage(db, a.backendId, { read: data.rows.length });
+      res.json({ ok: true, data: data.rows });
+    } catch (err) { sendErr(res, err, 'proxy_rpc'); }
   });
 
   // Update rows matching `where` with `patch`. `where` is required (the data
@@ -1066,10 +1177,25 @@ function registerCloudBackendRoutes(app, db) {
   app.post('/api/cloud/be/:backendId/auth/signup', async (req, res) => {
     const a = proxyAuth(req, res); if (!a) return;
     const { email, password } = req.body || {};
+    const redirectUrl = String((req.body && req.body.redirect_url) || '');
     try {
-      const beRow = getBackendById(db, a.backendId);
+      const beRow = getBackendById(db, a.backendId) || getAnyBackendById(db, a.backendId);
       const userCount = (await dataPlane.listTenantUsers(a.backendId)).length;
       assertUnderLimit(beRow?.tier || 'free', 'maxUsers', userCount);
+
+      // When the backend requires email verification, create the user UNVERIFIED,
+      // email a confirmation link, and return pending — no session until confirmed.
+      if (backendRequiresEmailVerification(a.backendId)) {
+        if (!/^https?:\/\//i.test(redirectUrl) || redirectUrl.length > 2000) {
+          return res.status(400).json({ ok: false, error: 'invalid_request', message: 'redirect_url (http/https) is required when email verification is on — it receives the ?lc_verify=<token>.' });
+        }
+        const user = await dataPlane.createTenantUser(a.backendId, email, password, { verified: false });
+        await sendVerificationEmail(a.backendId, user.email, redirectUrl, beRow?.tier);
+        logEvent(db, a.backendId, 'auth', 'info', `Signup (pending verification) ${user.email}`);
+        return res.json({ ok: true, data: { pending_verification: true, email: user.email } });
+      }
+
+      // Default: instant signup (email implicitly trusted), returns a session.
       const user = await dataPlane.createTenantUser(a.backendId, email, password);
       logEvent(db, a.backendId, 'auth', 'info', `Signup ${user.email}`);
       res.json({ ok: true, data: await issueSession(a.backendId, user) });
@@ -1081,8 +1207,68 @@ function registerCloudBackendRoutes(app, db) {
     const { email, password } = req.body || {};
     try {
       const user = await dataPlane.verifyTenantUser(a.backendId, email, password);
+      // Block sign-in for an unconfirmed email when the backend requires it.
+      if (backendRequiresEmailVerification(a.backendId) && user.email_verified === false) {
+        return res.status(403).json({ ok: false, error: 'email_not_verified', message: 'Confirm your email before signing in. Check your inbox or request a new confirmation link.' });
+      }
       res.json({ ok: true, data: await issueSession(a.backendId, user) });
     } catch (err) { sendErr(res, err, 'auth_signin'); }
+  });
+
+  // Mint + email a single-use verification link (24h). Shared by signup + resend.
+  async function sendVerificationEmail(backendId, email, redirectUrl, tier) {
+    assertEmailQuotaAndBump(db, backendId, tier);
+    const token = crypto.randomBytes(32).toString('base64url');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    db.prepare(`INSERT INTO backend_email_verifications (id, backend_id, email, token_hash, expires_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)`).run(crypto.randomUUID(), backendId, email, tokenHash, expiresAt, new Date().toISOString());
+    const link = redirectUrl + (redirectUrl.includes('?') ? '&' : '?') + 'lc_verify=' + encodeURIComponent(token);
+    const { subject, html } = resolveEmailTemplate(db, backendId, 'verify_email', { link: escHtml(link), email: escHtml(email) });
+    const { sendResendEmail } = require('./mail-resend');
+    const sent = await sendResendEmail({ to: email, subject, html });
+    if (!sent.ok) { logEvent(db, backendId, 'auth', 'error', `verify email failed: ${sent.error}`); const e = new Error('Could not send confirmation email.'); e.status = 502; e.code = 'email_failed'; throw e; }
+  }
+
+  // verify: confirm the email, mark the user verified, and return a session (so
+  // confirming also signs them in).
+  app.post('/api/cloud/be/:backendId/auth/verify-email', async (req, res) => {
+    const a = proxyAuth(req, res); if (!a) return;
+    const token = String((req.body && req.body.token) || '');
+    if (!token) return res.status(400).json({ ok: false, error: 'invalid_request', message: 'token required' });
+    try {
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      const row = db.prepare('SELECT id, email, expires_at, used_at FROM backend_email_verifications WHERE backend_id = ? AND token_hash = ?').get(a.backendId, tokenHash);
+      if (!row || row.used_at || new Date(row.expires_at).getTime() < Date.now()) {
+        return res.status(401).json({ ok: false, error: 'invalid_or_expired' });
+      }
+      db.prepare('UPDATE backend_email_verifications SET used_at = ? WHERE id = ?').run(new Date().toISOString(), row.id);
+      const user = await dataPlane.setTenantUserEmailVerified(a.backendId, row.email);
+      if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
+      logEvent(db, a.backendId, 'auth', 'info', `Email verified ${user.email}`);
+      res.json({ ok: true, data: await issueSession(a.backendId, user) });
+    } catch (err) { sendErr(res, err, 'verify_email'); }
+  });
+
+  // resend: re-email the confirmation link. Always returns ok (no enumeration).
+  app.post('/api/cloud/be/:backendId/auth/verify-email/resend', async (req, res) => {
+    const a = proxyAuth(req, res); if (!a) return;
+    const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+    const redirectUrl = String((req.body && req.body.redirect_url) || '');
+    if (!MAGIC_EMAIL_RE.test(email) || !/^https?:\/\//i.test(redirectUrl)) {
+      return res.status(400).json({ ok: false, error: 'invalid_request', message: 'valid email + http(s) redirect_url required' });
+    }
+    try {
+      const beRow = getBackendById(db, a.backendId) || getAnyBackendById(db, a.backendId);
+      // Only (re)send for a user that exists and is still unverified — but answer
+      // ok regardless so the endpoint can't probe which emails are registered.
+      const users = await dataPlane.listTenantUsers(a.backendId);
+      const u = users.find((x) => String(x.email).toLowerCase() === email);
+      if (u) {
+        try { await sendVerificationEmail(a.backendId, email, redirectUrl, beRow?.tier); } catch (_) { /* swallow → no enumeration */ }
+      }
+      res.json({ ok: true, data: { sent: true } });
+    } catch (err) { sendErr(res, err, 'verify_email_resend'); }
   });
 
   // ── Magic-link passwordless auth (managed email, anon-key bearer, CORS) ──
@@ -1194,6 +1380,27 @@ function registerCloudBackendRoutes(app, db) {
       logEvent(db, a.backendId, 'auth', 'info', `Apple native sign-in ${got.email}`);
       res.json({ ok: true, data: await issueSession(a.backendId, user) });
     } catch (err) { sendErr(res, err, 'apple_native'); }
+  });
+
+  // ── Auth: native Google (on-device Sign in with Google) ──────────────
+  // The iOS app does Google sign-in natively (GoogleSignIn SDK) and POSTs the
+  // id_token; we verify it against Google's keys + the backend's configured
+  // Google client id(s). Mirror of the Apple native path above. Requires
+  // `set_auth_provider google` with bundle_id = the iOS OAuth client id (the aud
+  // an iOS id_token carries).
+  app.post('/api/cloud/be/:backendId/auth/google/native', async (req, res) => {
+    const a = proxyAuth(req, res); if (!a) return;
+    const idToken = String((req.body && (req.body.id_token || req.body.identity_token)) || '');
+    if (!idToken) return res.status(400).json({ ok: false, error: 'invalid_request', message: 'id_token required' });
+    try {
+      const { verifyGoogleIdToken, googleNativeAudiences } = require('./cloud-oauth');
+      const auds = googleNativeAudiences(db, a.backendId);
+      if (!auds.length) return res.status(503).json({ ok: false, error: 'google_not_configured', message: 'Configure your Google client id via set_auth_provider first.' });
+      const got = await verifyGoogleIdToken(idToken, auds);
+      const user = await dataPlane.getOrCreateTenantUserByEmail(a.backendId, got.email);
+      logEvent(db, a.backendId, 'auth', 'info', `Google native sign-in ${got.email}`);
+      res.json({ ok: true, data: await issueSession(a.backendId, user) });
+    } catch (err) { sendErr(res, err, 'google_native'); }
   });
 
   // ── Refresh-token rotation ───────────────────────────────────────────

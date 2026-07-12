@@ -124,7 +124,7 @@ def build_main_jsonld(
         "author": {"@type": "Organization", "name": "LingCode", "url": f"{SITE_ORIGIN}/"},
         "publisher": {
             "@type": "Organization",
-            "name": "HainanMandi Tech",
+            "name": "Aurelian Labs Inc.",
             "url": f"{SITE_ORIGIN}/",
             "logo": {"@type": "ImageObject", "url": OG_IMAGE},
         },

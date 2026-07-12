@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build a full app on LingCode Cloud: backend, mobile API, web frontend | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="The end-to-end guide to LingCode Cloud: what the managed backend is, the two layers you work in (browser CRUD vs schema/SQL), how to put a mobile API + web frontend + web API on one backend without naming collisions, the prompts to give the agent, deployment, and best practices.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/build-a-full-app-on-lingcode-cloud.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/build-a-full-app-on-lingcode-cloud.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/build-a-full-app-on-lingcode-cloud.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-21T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-21T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/build-a-full-app-on-lingcode-cloud.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Build a full app on LingCode Cloud",
+  "description": "An end-to-end guide to LingCode Cloud: the managed backend, the two layers you work in (browser table-CRUD vs schema/SQL), running a mobile API + web frontend + web API on one shared backend without naming conflicts, prompting the agent to scaffold it, making a project deployable, and best practices.",
+  "url": "https://lingcode.dev/tutorials/build-a-full-app-on-lingcode-cloud.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-21",
+  "dateModified": "2026-06-21",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Aurelian Labs Inc.",
+    "url": "https://lingcode.dev/",
+    "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/tutorials/build-a-full-app-on-lingcode-cloud.html" },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Build a full app on LingCode Cloud"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Search", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "Backend integrations", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Build a full app on LingCode Cloud", "item": "https://lingcode.dev/tutorials/build-a-full-app-on-lingcode-cloud.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Build a full app on LingCode Cloud</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-06-21</span>
+      </div>
+      <h1>Build a full app on LingCode Cloud, end to end</h1>
+      <p class="tldr"><strong>TL;DR:</strong> A LingCode Cloud backend is a <strong>private Postgres database</strong> (plus auth, storage, realtime, functions, vector search) reached over HTTPS. You work in <strong>two layers</strong>: the <strong>schema</strong> (migrations, RLS, VIEWs, RPC functions — full SQL, written once by the agent) and the <strong>browser SDK</strong> (per-table CRUD — no JOINs, no upserts, 200-row pages). A mobile app, a web frontend, and a web API should all point at <strong>one backend and one schema</strong>; you separate users with <strong>row-level security</strong>, not with extra backends. Host the web build with the IDE's <strong>Cloud button</strong> (static → <code>lingcode.dev/apps/&lt;id&gt;</code>, or full-stack → <code>&lt;slug&gt;.run.lingcode.dev</code>). Get the conventions right up front and the agent builds the whole thing from a prompt.</p>
+      <p class="intro">Most LingCode Cloud docs cover one product at a time — <a href="/docs/cloud/database.html">database</a>, <a href="/docs/cloud/auth.html">auth</a>, <a href="/docs/cloud/hosting.html">hosting</a>. This guide is the opposite: it walks the whole arc of shipping a real app — backend, mobile API, web frontend, and web API — and answers the question those pages don't: <em>how do you keep several clients on one backend without their tables, routes, and data colliding?</em> It's layered — the first half is how to <strong>prompt the agent</strong> to do it; the second half is the <strong>hand-coding reference</strong> for when you want lower-level control.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>What "the LingCode backend" actually is, and the two layers you build in</li>
+        <li>Why a mobile API, a web frontend, and a web API share <em>one</em> backend — and when they shouldn't</li>
+        <li>Naming and row-level-security conventions that stop clients from clobbering each other</li>
+        <li>The exact prompts to hand the agent, and the order it works in</li>
+        <li>How to make your project deployable, and the two hosting tiers</li>
+        <li>A hand-coding reference for the SDK, plus the escape hatch for anything relational</li>
+      </ul>
+
+      <h2>1. What LingCode Cloud is</h2>
+      <p>When you're signed in, every project you open in the Mac IDE (or in <a href="/try.html">/try</a>) can reach a <strong>managed backend</strong>: a private Postgres database that LingCode operates for you, fronted by an HTTPS gateway. There's no connection string to manage and no server to run. The backend ships with:</p>
+      <ul>
+        <li><strong>Database</strong> — your tables, in real Postgres.</li>
+        <li><strong>Auth</strong> — email/password, magic links, email OTP, OAuth (Google/GitHub/Apple), and TOTP MFA. The user tables are created and managed for you.</li>
+        <li><strong>Storage</strong> — public and private file buckets with direct-to-storage uploads.</li>
+        <li><strong>Realtime</strong> — subscribe to row changes over Server-Sent Events, filtered by row-level security.</li>
+        <li><strong>Functions</strong> — server-side logic for the things that can't live in the browser (sending email, charging a card, calling a third-party API with a secret key).</li>
+        <li><strong>Vector search</strong> — pgvector similarity for semantic search / RAG.</li>
+        <li><strong>Hosting</strong> — ship your web build to a live HTTPS URL.</li>
+      </ul>
+      <p>Under the hood each backend is an isolated Postgres <strong>schema</strong> with its own database role. That isolation is a hard wall: one backend literally cannot read another's data. Remember that — it's the reason behind the "one backend, many clients" rule below.</p>
+
+      <h2>2. The two layers you build in</h2>
+      <p>This is the single most important concept on the page. Everything else follows from it. There are two ways to touch your data, and they have <em>different powers on purpose</em>.</p>
+
+      <table class="docs-table">
+        <thead>
+          <tr><th>Layer</th><th>Who writes it</th><th>What it can do</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Schema layer</strong><br>(migrations, RLS, VIEWs, RPC functions, custom functions)</td>
+            <td>The agent (or you), once, via migrations</td>
+            <td><strong>Full Postgres.</strong> JOINs, CTEs, aggregates, upserts, indexes, constraints, generated columns, triggers, server-side SQL functions.</td>
+          </tr>
+          <tr>
+            <td><strong>Browser SDK</strong><br>(<code>lingcode.from('table')…</code>, runs in your shipped app)</td>
+            <td>Your app code, on every request</td>
+            <td><strong>Per-table CRUD only.</strong> No JOINs, no upserts, max 200 rows per read. <code>update</code> and <code>delete</code> refuse to run without a filter.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box">
+        <h3>The mental model</h3>
+        <p>Put <em>relational and heavy</em> work in the <strong>schema</strong> — define a <code>VIEW</code> or an <code>rpc()</code> function once, then read it from the browser like a plain table. Keep the <strong>browser SDK</strong> for simple reads and writes. If you find yourself wanting a JOIN or an upsert in app code, that's the signal to push it down a layer into a migration.</p>
+      </div>
+
+      <p>So the data API you call from a shipped app is deliberately small and safe. The full power of Postgres is still there — it just lives one level down, in your schema, where the agent writes it once. The rest of this guide leans on that split constantly.</p>
+
+      <h2>3. One backend, many clients</h2>
+      <p>Here's the question this guide exists to answer: you want a <strong>mobile app</strong>, a <strong>web frontend</strong>, and maybe some <strong>web API</strong> routes. Do they each get a backend?</p>
+      <p><strong>No. They share one backend and one schema.</strong> A "mobile API" and a "web API" on LingCode aren't separate servers you stand up — they're the <em>same</em> gateway and the <em>same</em> tables, reached by different clients:</p>
+      <ul>
+        <li>The <strong>web frontend</strong> calls the SDK directly from the browser.</li>
+        <li>The <strong>mobile app</strong> calls the same gateway over HTTPS (the SDK, or plain <code>fetch</code> against the same data URL).</li>
+        <li><strong>Web API routes</strong> (if you have a Next.js/SvelteKit server) and <strong>custom functions</strong> talk to the same database.</li>
+      </ul>
+      <p>What keeps a user's data private isn't a separate backend per surface — it's <strong>row-level security</strong>. Each signed-in user gets a session; the gateway pins reads and writes to that user's id; your RLS policies do the rest. The mobile app and the web app see exactly the same rows for the same user because they <em>are</em> the same rows.</p>
+
+      <div class="warn-box">
+        <strong>Backends are hard-isolated — don't split by accident.</strong> If you provision a second backend for your "mobile API," the web app's key can't read it and you <em>cannot</em> JOIN across the two. They're separate databases. You'd be stuck proxying data between them through a function. Only provision a second backend when it's a genuinely separate product with its own users — not just a second client of the same app.
+      </div>
+
+      <p>When a client legitimately needs another backend's data (say, an admin tool reading a separate product), don't reach across — expose it through a <strong>function</strong> or an HTTP endpoint on the owning backend and call that. The wall stays intact and the contract is explicit.</p>
+
+      <h2>4. Naming conventions (the no-conflict rules)</h2>
+      <p>Because every client shares one schema, naming is what keeps them from stepping on each other. None of this is enforced by the platform — it's the convention that makes a multi-client app stay legible.</p>
+      <ul>
+        <li><strong>Tables: <code>snake_case</code>, app-meaningful, no prefixes.</strong> Name a table <code>workouts</code>, not <code>mobile_workouts</code> or <code>app_v2_workouts</code>. The backend already lives in its own private schema, so you never add a backend prefix yourself — that's generated for you. One table serves every client.</li>
+        <li><strong>Every user-owned table carries a <code>user_id</code> and an RLS policy.</strong> This is what lets web and mobile share a table safely:
+          <pre><code>CREATE TABLE workouts (
+  id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id     uuid NOT NULL REFERENCES auth_users(id) ON DELETE CASCADE,
+  title       text NOT NULL,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE workouts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY workouts_owner ON workouts
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());</code></pre>
+        </li>
+        <li><strong>Shared/public tables omit <code>user_id</code>.</strong> A <code>product_catalog</code> or <code>leaderboard</code> everyone can read has a policy that allows reads to all and writes to none (writes happen server-side from a function).</li>
+        <li><strong>Namespace function slugs by surface and verb.</strong> If both web and mobile trigger server logic, name them so they never collide: <code>web-checkout</code>, <code>mobile-push-register</code>, <code>billing-stripe-webhook</code>. The slug is the URL, so a clear slug is a clear endpoint.</li>
+        <li><strong>Name VIEWs and RPC functions for the read they serve,</strong> not the page that uses them: <code>workout_feed</code>, <code>get_leaderboard(limit int)</code>. Several clients reuse the same one instead of each inventing its own.</li>
+      </ul>
+
+      <table class="docs-table">
+        <thead>
+          <tr><th>Do</th><th>Don't</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>One <code>workouts</code> table for web + mobile, separated by RLS</td><td>One table per client (<code>web_workouts</code>, <code>mobile_workouts</code>)</td></tr>
+          <tr><td><code>user_id</code> + an owner RLS policy on every private table</td><td>"We'll filter by user in the app code"</td></tr>
+          <tr><td>Slugs like <code>web-checkout</code> / <code>mobile-push</code></td><td>Two functions both called <code>handler</code></td></tr>
+          <tr><td>A second backend only for a separate product</td><td>A second backend for the "mobile version" of the same app</td></tr>
+        </tbody>
+      </table>
+
+      <h2>5. How to prompt the agent</h2>
+      <p>You rarely write the schema by hand — you describe the app and let the agent build it against the live backend. It has direct tools for provisioning, migrations, and CRUD, and it works in a fixed order. A good prompt does three things: names the tables and who owns them, states the RLS intent, and says which logic must live server-side.</p>
+
+      <div class="info-box">
+        <h3>Tell the agent to inspect first</h3>
+        <p>The backend's exact limits (tier, function timeout, whether long-running compute is available) are read live, not assumed. A reliable habit: start prompts with <em>"check the backend's capabilities before designing"</em> so the agent calls <code>describe_backend</code> and designs to what's actually there — rather than reaching for <code>localStorage</code> or inventing an external service.</p>
+      </div>
+
+      <p>A prompt for the exact scenario in this guide — one backend, web + mobile, no collisions:</p>
+      <pre><code>Build a fitness app on the LingCode Cloud backend. First check the backend
+capabilities, then provision it if needed and apply migrations.
+
+ONE backend, ONE schema, shared by a web app and a mobile client.
+
+Tables (snake_case, no prefixes):
+  - workouts      (user-owned: user_id + owner RLS policy)
+  - goals         (user-owned: user_id + owner RLS policy)
+  - leaderboard   (public read, no user_id; writes only from a function)
+
+Auth: email/password + Google sign-in. Use the built-in auth users table;
+foreign-key user_id to it.
+
+Server-only logic (put these in functions, not the browser):
+  - billing-stripe-webhook   (verify + record payments)
+  - leaderboard-recompute    (scheduled; writes the public leaderboard)
+
+The web frontend uses the SDK directly; the mobile client hits the same
+gateway. Do NOT create separate backends or per-client tables — separate
+users with RLS. Add indexes for the feed query, and expose the workout
+feed as a VIEW so the client reads it without a JOIN.</code></pre>
+
+      <p>Behind that prompt the agent follows a consistent sequence:</p>
+      <ol>
+        <li><strong>Inspect</strong> the backend's capabilities and current tables.</li>
+        <li><strong>Provision</strong> the backend if the project doesn't have one yet (idempotent — safe to repeat).</li>
+        <li><strong>Apply migrations</strong> — <code>CREATE TABLE</code>, RLS policies, indexes, VIEWs, and any RPC functions.</li>
+        <li><strong>Build the app</strong> against it with normal CRUD calls, and create the server-side functions.</li>
+      </ol>
+      <p>You can also drive each step explicitly — "add a <code>notifications</code> table owned by the user, with realtime enabled" — and the agent migrates the schema in place. Schema changes are migrations, so they're versioned and repeatable rather than one-off edits.</p>
+
+      <h2>6. Making your project deployable</h2>
+      <p>The backend is one half; hosting the app is the other. In the Mac IDE the <strong>Cloud button</strong> in the toolbar builds your project and ships it to a live HTTPS URL. There are two tiers, and which one you get is detected from your project:</p>
+      <ul>
+        <li><strong>Static</strong> — a built single-page app or static site (the output directory must contain an <code>index.html</code>). Served at <code>https://lingcode.dev/apps/&lt;id&gt;</code>. This covers Vite/React/Vue/Svelte SPAs and plain static sites.</li>
+        <li><strong>Full-stack (Worker/SSR)</strong> — a server-rendered framework, auto-detected from your <code>package.json</code>: Next.js, SvelteKit, Nuxt, Astro, TanStack Start, or React Router&nbsp;7. Served at <code>&lt;slug&gt;.run.lingcode.dev</code>, running on the edge. This is also where your <strong>web API routes</strong> live.</li>
+      </ul>
+      <p>What makes a project deployable, concretely:</p>
+      <ul>
+        <li>It has a <strong>web entrypoint</strong> — a build command and an output directory (static), or a supported framework (full-stack). A pure native project (Xcode/SwiftPM with no web app) has nothing to host, and the deploy panel will say so.</li>
+        <li>In a <strong>monorepo</strong>, the web app can live in a subfolder — detection looks at the root and then conventional locations like <code>web/</code>, <code>frontend/</code>, <code>apps/</code>, and <code>packages/</code>. Keeping the web app in one of those keeps detection automatic.</li>
+        <li>Re-deploying the same project keeps its URL (and any custom domain) — see <a href="/tutorials/connect-a-custom-domain.html">Connect a custom domain</a>.</li>
+      </ul>
+      <div class="warn-box">
+        <strong>Edge runtime, not Node.</strong> Full-stack apps run as edge workers — a V8 isolate, not a Node server — with a roughly 30-second cap per request. Long-running work (big imports, headless browsers, multi-minute jobs) belongs in a <strong>function</strong>, not an API route. See the best-practices note below.
+      </div>
+
+      <h2>7. Hand-coding reference</h2>
+      <p>If you'd rather wire the SDK yourself — in your own Next.js project, a plain HTML page, or a mobile client — here's the lower-level surface. (Inside <code>/try</code> and the Mac preview this is all pre-wired as <code>window.lingcode</code>; you only do this when you take the app elsewhere. The dedicated walkthrough is <a href="/tutorials/use-lingcode-cloud-in-your-own-app.html">Use LingCode Cloud in your own app</a>.)</p>
+
+      <h3>Create a client</h3>
+      <p>You need two public values from <a href="/backends.html">lingcode.dev/backends</a> → your backend → connection details: the <strong>data URL</strong> and the <strong>anon key</strong>. The anon key is meant to ship in the browser — access is enforced by RLS on the server, not by hiding the key.</p>
+      <pre><code>&lt;script src="https://lingcode.dev/sdk/lingcode-v1.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const lingcode = LingCode.createClient(
+    'https://lingcode.dev/api/cloud/be/&lt;your-backend-id&gt;',
+    '&lt;your-anon-key&gt;'
+  );
+  await lingcode.ready;                 // settles any sign-in redirect first
+  const user = lingcode.auth.getUser(); // { id, email } | null
+&lt;/script&gt;</code></pre>
+
+      <h3>Read and write (the CRUD layer)</h3>
+      <pre><code>// read — filters chain before the verb; returns { data, error }
+const { data, error } = await lingcode
+  .from('workouts')
+  .eq('user_id', user.id)
+  .order('created_at', { ascending: false })
+  .limit(50)
+  .select();
+
+// write
+await lingcode.from('workouts').insert({ title: 'Morning run', user_id: user.id });
+await lingcode.from('workouts').eq('id', 1).update({ title: 'Evening run' }); // filter required
+await lingcode.from('workouts').eq('id', 1).delete();                          // filter required</code></pre>
+      <p>Filter operators: <code>.eq .neq .gt .gte .lt .lte .like .ilike .in(col,[…]) .is(col,null)</code>, and <code>.match({a:1,b:2})</code>. Multiple filters AND together.</p>
+
+      <h3>Auth, storage, realtime, vector</h3>
+      <ul>
+        <li><strong>Auth</strong> — <code>auth.signUp({email,password})</code> / <code>signIn(...)</code>; passwordless <code>sendMagicLink({email})</code>; codes <code>sendOtp</code> + <code>verifyOtp</code>; social <code>getProviders()</code> then <code>signInWithOAuth('google')</code>. The SDK stores the session and attaches it to later calls, so reads run as the signed-in user and RLS keys off their id.</li>
+        <li><strong>Storage</strong> — <code>await lingcode.storage.from('public').upload('avatars/me.png', file)</code> → <code>data.url</code>; <code>getPublicUrl(path)</code>; <code>download(path)</code>.</li>
+        <li><strong>Realtime</strong> — <code>const off = lingcode.from('workouts').subscribe(({type,row}) =&gt; { /* INSERT|UPDATE|DELETE */ })</code>; call <code>off()</code> to stop. Events are RLS-filtered. Use it instead of polling.</li>
+        <li><strong>Vector</strong> — store an <code>embedding</code> column and rank by similarity with <code>lingcode.vector.search({ table, column, embedding, limit, metric:'cosine' })</code>.</li>
+        <li><strong>Functions</strong> — <code>lingcode.functions.invoke('web-checkout', input)</code> runs your server-side function (this is where secret keys are used).</li>
+      </ul>
+
+      <div class="info-box">
+        <h3>The escape hatch for anything relational</h3>
+        <p>The browser SDK is CRUD-only, so when you need a JOIN, an aggregate, or an upsert, push it into the schema: create a <code>VIEW</code> and <code>select()</code> from it like a table, or write an SQL function and call it. Have the agent add it in a migration; then your app code stays simple and reads one "table." Mobile and web both reuse the same view — no duplicated query logic.</p>
+      </div>
+
+      <h2>8. Best practices &amp; quotas</h2>
+      <ul>
+        <li><strong>RLS on every user-owned table.</strong> A table without a policy is the most common way data leaks between users. Add the owner policy in the same migration that creates the table, and run the <a href="/tutorials/scan-your-backend-with-advisors.html">backend advisors</a> to catch any you missed.</li>
+        <li><strong>Secrets live in the vault, used from functions.</strong> A Stripe key, a third-party API key — never in the browser. Store it in the backend's secrets and read it inside a function. Anything the client can see, treat as public.</li>
+        <li><strong>Keep heavy/relational work in the schema.</strong> Indexes, VIEWs, and RPC functions belong in migrations, not in runtime calls. The CRUD layer pages at 200 rows — compute counts and sums in a view or function, not by fetching everything.</li>
+        <li><strong>Match the workload to the runtime.</strong> API routes and built-in functions are for fast request/response (~30s edge cap). For genuinely long jobs — bulk ingestion, scraping, multi-minute pipelines — use the long-running compute tier (available on paid plans) via a scheduled custom function, not an API route.</li>
+        <li><strong>Provision once, share widely.</strong> Resist the urge to spin up a backend per client or per environment-of-convenience. One backend, RLS for isolation, namespaced functions for surfaces.</li>
+      </ul>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/connect-a-managed-backend.html" class="tutorial-next-card">
+            <h3>Connect a managed backend</h3>
+            <p>Give a project its own Postgres + auth + storage in one step</p>
+          </a>
+          <a href="/tutorials/deploy-to-lingcode-cloud.html" class="tutorial-next-card">
+            <h3>Deploy to LingCode Cloud</h3>
+            <p>Ship the web build to a live HTTPS URL from the IDE</p>
+          </a>
+          <a href="/tutorials/use-lingcode-cloud-in-your-own-app.html" class="tutorial-next-card">
+            <h3>Use the SDK in your own app</h3>
+            <p>Wire the backend into any web or mobile client by hand</p>
+          </a>
+          <a href="/tutorials/scan-your-backend-with-advisors.html" class="tutorial-next-card">
+            <h3>Scan your backend with advisors</h3>
+            <p>Catch missing RLS and schema issues before you ship</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

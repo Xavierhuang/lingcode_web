@@ -41,7 +41,7 @@
     "name": "LingCode",
     "applicationCategory": "DeveloperApplication",
     "applicationSubCategory": "IDE",
-    "operatingSystem": "macOS 14+, iOS, iPadOS, Linux, Windows (CLI only)",
+    "operatingSystem": "macOS 14+, iOS, iPadOS, Linux, Windows",
     "description": "LingCode is a native macOS IDE for building iOS, macOS, Android, and web apps with AI assistance. Outputs real Swift, SwiftUI, Kotlin, and Xcode projects (not a web-app wrapper). Bundles Claude Code, Codex, and Gemini CLI with built-in work-protection so AI edits stay reversible. Also ships a /try browser playground and a lingcode CLI for macOS, Linux, and Windows.",
     "url": "https://lingcode.dev",
     "downloadUrl": "https://lingcode.dev/LingCode-Installer.dmg",
@@ -78,7 +78,7 @@
       {
         "@type": "Organization",
         "@id": "https://lingcode.dev/#organization",
-        "name": "HainanMandi Tech",
+        "name": "Aurelian Labs Inc.",
         "alternateName": "LingCode",
         "url": "https://lingcode.dev/",
         "logo": "https://lingcode.dev/og-image.png",
@@ -1076,9 +1076,10 @@
           App Store — iPhone &amp; iPad
         </a>
       </div>
-      <p class="hero-hint">macOS 14+ · Apple Silicon &amp; <a href="/LingCode-Intel-Installer.dmg" class="intel-dl" download>Intel</a> · Windows <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-x86_64.exe" class="win-dl" download>x64</a> / <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-aarch64.exe" class="win-dl" download>ARM64</a> · Zero telemetry · Free</p>
+      <p class="hero-hint">macOS 14+ · Apple Silicon &amp; <a href="/LingCode-Intel-Installer.dmg" class="intel-dl" download>Intel</a> · Windows <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-x86_64.exe" class="win-dl" download>x64</a> / <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-aarch64.exe" class="win-dl" download>ARM64</a> · Linux .deb <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/lingcode-linux-x86_64.deb" class="linux-dl" download>x64</a> / <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/lingcode-linux-aarch64.deb" class="linux-dl" download>ARM64</a> · AppImage <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-x86_64.AppImage" class="linux-dl" download>x64</a> / <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-aarch64.AppImage" class="linux-dl" download>ARM64</a> · Zero telemetry · Free</p>
       <p class="hero-hint" id="intel-detect-note" style="display:none">Intel Mac detected — the buttons above now download the <a href="/LingCode-Intel-Installer.dmg" class="intel-dl" download>Intel build</a>. <a href="#" id="force-as-link">Use Apple Silicon build instead</a>.</p>
       <p class="hero-hint" id="windows-detect-note" style="display:none">Windows detected — the buttons above now download the <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-x86_64.exe" class="win-dl" download>Windows x64 build</a> (or <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-aarch64.exe" class="win-dl" download>ARM64</a>).</p>
+      <p class="hero-hint" id="linux-detect-note" style="display:none">Linux detected — the buttons above now download the <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/lingcode-linux-x86_64.deb" class="linux-dl" download>.deb x64 build</a> (or <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/lingcode-linux-aarch64.deb" class="linux-dl" download>ARM64</a>). Not on Debian/Ubuntu? Grab the <a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-x86_64.AppImage" class="linux-dl" download>AppImage</a> (<a href="https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-aarch64.AppImage" class="linux-dl" download>ARM64</a>).</p>
 
 
       <div class="paths">
@@ -1699,6 +1700,7 @@
     <div class="footer-col">
       <h4>Community</h4>
       <ul>
+        <li><a href="https://forum.lingcode.dev">Forum</a></li>
         <li><a href="/community.html">Friday workshops</a></li>
         <li><a href="/community.html">For universities</a></li>
         <li><a href="/examples.html">Showcase</a></li>
@@ -1719,7 +1721,7 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
     <span>native · fast · honest</span>
   </div>
 </footer>
@@ -1805,9 +1807,18 @@
       var AS_DMG = '/LingCode-Installer.dmg';
       var INTEL_DMG = '/LingCode-Intel-Installer.dmg';
       var WIN_X64 = 'https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/LingCode-x86_64.exe';
+      var LINUX_DEB_X64 = 'https://github.com/Xavierhuang/lingcode_window_IDE/releases/latest/download/lingcode-linux-x86_64.deb';
       function isWindows() {
         var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || '';
         return /Win/i.test(p);
+      }
+      function isLinux() {
+        var ua = navigator.userAgent || '';
+        var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || ua || '';
+        // Android reports platform "Linux armv8l" (no "Android"); the token is only in the UA.
+        // Chrome OS reports "Linux x86_64" too — neither can install a desktop .deb.
+        var excluded = /Android|CrOS/i.test(ua) || /Android|CrOS/i.test(p);
+        return /Linux/i.test(p) && !excluded;
       }
       function isAppleSilicon() {
         try {
@@ -1834,6 +1845,18 @@
           });
           var wn = document.getElementById('windows-detect-note');
           if (wn) wn.style.display = '';
+          return;
+        }
+        if (isLinux()) {
+          // Point the Mac-DMG buttons at the Linux x86_64 .deb and relabel them.
+          setDownloads(LINUX_DEB_X64);
+          Array.prototype.forEach.call(document.querySelectorAll('a.btn'), function (a) {
+            if (a.getAttribute('href') === LINUX_DEB_X64) {
+              a.innerHTML = a.innerHTML.replace(/Download for Mac/g, 'Download for Linux');
+            }
+          });
+          var ln = document.getElementById('linux-detect-note');
+          if (ln) ln.style.display = '';
           return;
         }
         if (isAppleSilicon()) return; // arm64 is the default — nothing to do

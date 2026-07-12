@@ -145,7 +145,8 @@ if (error) {
         <thead><tr><th>Op</th><th>Does</th></tr></thead>
         <tbody>
           <tr><td><code>.select()</code></td><td>read rows matching the chained filters</td></tr>
-          <tr><td><code>.insert(row | row[])</code></td><td>insert one row or an array of rows</td></tr>
+          <tr><td><code>.insert(row | row[])</code></td><td>insert one row or an array of rows (batch, one transaction)</td></tr>
+          <tr><td><code>.upsert(row | row[], { onConflict })</code></td><td>insert-or-update by a unique key (<code>ON CONFLICT</code>)</td></tr>
           <tr><td><code>.update(patch)</code></td><td>apply a partial patch to matching rows</td></tr>
           <tr><td><code>.delete()</code></td><td>delete matching rows</td></tr>
           <tr><td><code>.subscribe(onChange, onError?)</code></td><td>open a realtime subscription to row changes</td></tr>
@@ -167,16 +168,30 @@ await lingcode.from('todos').delete(); // → error.code === 'where_required'</c
 
       <p><code>.subscribe()</code> is the entry point to realtime — subscribe to INSERT/UPDATE/DELETE on a table, RLS-filtered so users only see their own rows. It's documented in full on the <a href="/docs/cloud/realtime.html">Realtime guide</a>; we won't repeat it here.</p>
 
-      <h2>The key constraint: CRUD, not SQL</h2>
-      <p>This is the section to read twice. The runtime data API is table-CRUD. Three things that are reflexes in SQL do not exist at runtime, and each has a clean idiom in their place. Coming from PostgREST or raw SQL, this is where the first-try-vs-400 line gets drawn.</p>
+      <h2>The query builder is single-table — reach for RPC when you need SQL</h2>
+      <p>This is the section to read twice. The chainable builder (<code>.select/.insert/.update/.delete</code>) operates on <strong>one table</strong>. For a multi-table read — a JOIN, a CTE, an aggregate, full-text ranking — you don't drop down to raw SQL from the client; you define a SQL function in a migration and call it with <code>lingcode.rpc()</code>. The SQL lives server-side and runs as your RLS-gated tenant role. Coming from PostgREST or raw SQL, this is where the first-try-vs-400 line gets drawn.</p>
 
-      <h3>No JOINs</h3>
-      <p>You can't join two tables in one query. You have three options, in rough order of preference:</p>
+      <h3>JOINs &amp; complex reads → <code>rpc()</code></h3>
+      <p>You can't express a JOIN in the builder. Options, in rough order of preference:</p>
       <ul>
-        <li><strong>Fetch each table and stitch in code</strong> — pull the parents, collect their ids, fetch the children with <code>.in()</code>, and assemble the shape you want in JavaScript.</li>
+        <li><strong>Define a function and call <code>rpc()</code></strong> — write the JOIN/CTE/aggregate/ranking as a <code>CREATE FUNCTION</code> in a migration, then call it by name. The fastest path for a genuinely relational read.</li>
+        <li><strong>Create a VIEW in a migration</strong> — define the JOIN once as a view, then <code>select()</code> from it exactly like a table (good when you don't need parameters).</li>
+        <li><strong>Fetch each table and stitch in code</strong> — pull the parents, collect their ids, fetch the children with <code>.in()</code>, and assemble the shape in JavaScript.</li>
         <li><strong>Denormalize</strong> — if you always read a field together with another table's row, copy it onto the row at write time.</li>
-        <li><strong>Create a VIEW in a migration</strong> — define the JOIN once as a database view, then <code>select()</code> from it exactly like a table.</li>
       </ul>
+
+      <p>The <code>rpc()</code> path — function in a migration, call from app code:</p>
+      <pre><code>-- migration (runs once):
+create function search_todos(q text, owner uuid)
+returns setof todos language sql stable as $$
+  select * from todos
+  where user_id = owner and fts @@ websearch_to_tsquery(q)
+  order by ts_rank(fts, websearch_to_tsquery(q)) desc
+  limit 50;
+$$;</code></pre>
+      <pre><code>// runtime — named args (object) or positional (array):
+const { data } = await lingcode.rpc('search_todos', { q: 'milk', owner: myId });
+// returns up to 1000 rows; runs as your tenant role with RLS enforced</code></pre>
 
       <p>Before (the instinct — does not work at runtime):</p>
       <pre><code>// ✗ There is no join. This is not a thing the gateway can do.
@@ -205,18 +220,18 @@ create view todos_with_user as
       <pre><code>// runtime — the view is just a table to the SDK:
 const { data } = await lingcode.from('todos_with_user').select();</code></pre>
 
-      <h3>No upserts / ON CONFLICT</h3>
-      <p>There's no upsert and no <code>ON CONFLICT</code>. The idiom is: <strong>insert; on a duplicate-key error, fetch and update.</strong></p>
-      <pre><code>async function upsertProfile(profile) {
-  const ins = await lingcode.from('profiles').insert(profile);
-  if (!ins.error) return ins;
+      <h3>Upserts &amp; batch writes</h3>
+      <p><code>insert()</code> and <code>upsert()</code> both take a single row <em>or an array</em> — an array writes every row in <strong>one transaction</strong> (no row-at-a-time HTTP loop), up to the tier's <code>maxRowsPerWrite</code>. <code>upsert()</code> is <code>INSERT … ON CONFLICT</code>, the idempotent path for sync/ingest: a re-run updates by key instead of erroring.</p>
+      <pre><code>// Batch insert — many rows, one call:
+await lingcode.from('events').insert([row1, row2, row3]);
 
-  // Duplicate key → fall back to update on the conflicting row.
-  return lingcode
-    .from('profiles')
-    .eq('user_id', profile.user_id)
-    .update(profile);
-}</code></pre>
+// Upsert by a unique key — merge (default) updates the conflicting row:
+await lingcode.from('events').upsert(rows, { onConflict: 'source_hash' });
+
+// Composite key, and merge:false to keep the existing row (DO NOTHING):
+await lingcode.from('prefs').upsert(row, { onConflict: ['user_id', 'key'] });
+await lingcode.from('events').upsert(rows, { onConflict: 'source_hash', merge: false });</code></pre>
+      <p>The conflict target must have a unique or primary-key constraint (add it in a migration). <code>merge: true</code> sets every non-conflict column from the incoming values; <code>merge: false</code> leaves a matching row untouched.</p>
 
       <h3>Pages of 200</h3>
       <p><code>select()</code> returns <strong>at most 200 rows</strong>. For anything larger, page explicitly with <code>.limit()</code> and <code>.range()</code>. And because there are no JOINs or aggregates at runtime, counts and sums are computed either in your code (over the page) or in a view created in a migration.</p>
@@ -237,7 +252,7 @@ async function* allTodos() {
 
       <div class="info-box">
         <h3>The rule of thumb</h3>
-        <p>If a query needs a JOIN, an upsert, an aggregate, or more than a page of rows in one shot — that's a signal to push work into a <strong>migration</strong> (a view, a generated column, a unique constraint) or to loop in your application code. The runtime gateway will keep it simple on purpose.</p>
+        <p>Single-table reads and writes (including batch insert and upsert) go through the builder. A read that needs a JOIN, aggregate, or full-text ranking is a signal to write a <strong>function or view in a migration</strong> and call it with <code>rpc()</code> — that's where SQL lives, server-side and RLS-gated, never sent from the client.</p>
       </div>
 
       <h2>Migrations &amp; schema</h2>
@@ -279,9 +294,10 @@ create policy todos_owner on todos
         <thead><tr><th>Limit</th><th>Free</th><th>Pro</th><th>Max Pro</th></tr></thead>
         <tbody>
           <tr><td><code>maxTables</code></td><td>10</td><td>50</td><td>200</td></tr>
+          <tr><td><code>maxRowsPerWrite</code></td><td>100</td><td>1,000</td><td>5,000</td></tr>
         </tbody>
       </table>
-      <p>There are also per-tier limits on <code>maxObjects</code> (stored objects) and <code>maxUsers</code> — the full numbers live on the <a href="/pricing.html">pricing page</a>. Exceeding any cap returns HTTP <strong>402</strong> with code <code>quota_exceeded</code>.</p>
+      <p><code>maxRowsPerWrite</code> caps the rows accepted in one <code>insert()</code>/<code>upsert()</code> array — split larger loads into batches. There are also per-tier limits on <code>maxObjects</code> (stored objects) and <code>maxUsers</code> — the full numbers live on the <a href="/pricing.html">pricing page</a>. Exceeding any cap returns HTTP <strong>402</strong> with code <code>quota_exceeded</code>.</p>
 
       <h2>Error codes</h2>
       <p>When <code>error</code> is non-null, the <code>code</code> tells you what happened and <code>status</code> carries the HTTP status:</p>
@@ -303,8 +319,10 @@ create policy todos_owner on todos
         <tbody>
           <tr><td><code>POST /select</code></td><td><code>.select()</code></td></tr>
           <tr><td><code>POST /insert</code></td><td><code>.insert()</code></td></tr>
+          <tr><td><code>POST /upsert</code></td><td><code>.upsert()</code></td></tr>
           <tr><td><code>POST /update</code></td><td><code>.update()</code></td></tr>
           <tr><td><code>POST /delete</code></td><td><code>.delete()</code></td></tr>
+          <tr><td><code>POST /rpc</code></td><td><code>lingcode.rpc()</code></td></tr>
         </tbody>
       </table>
       <pre><code>curl -X POST 'https://lingcode.dev/api/cloud/be/&lt;backend-id&gt;/select' \
@@ -392,7 +410,7 @@ create policy todos_owner on todos
     </div>
   </div>
   <div class="footer-bottom">
-    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
     <span>native · fast · honest</span>
   </div>
 </footer>

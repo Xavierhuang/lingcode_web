@@ -26,14 +26,24 @@
 // scheduled jobs each may have, and the per-app daily request ceiling that
 // auto-suspends an over-quota app. `free.maxWorkers: 10` preserves the prior
 // hardcoded WORKER_CAP_PER_USER so existing free users see no regression.
+// maxRowsPerWrite = max rows accepted in ONE batch insert/upsert call
+// (/insert or /upsert with an array body). Bounds a single multi-row statement;
+// the data plane also enforces a hard 10k backstop regardless of this value.
+// maxComputeJobs / maxComputeConcurrentRuns / maxComputeTimeoutSec /
+// maxComputeMemoryMb govern the COMPUTE TIER (cloud-compute.js): how many
+// long-running container jobs a user may declare per backend, how many runs may
+// execute at once, and the per-run wall-clock + memory ceilings the runner
+// enforces at `docker run`. This is the heavy tier the 30s function/cron paths
+// can't serve — `free.maxComputeJobs: 0` keeps it off for free (a paid feature),
+// and `pro.maxComputeTimeoutSec: 1800` comfortably covers cliffslist's 800s batch.
 const TIER_LIMITS = {
-  free:    { maxTables: 10,  maxObjects: 50,   maxObjectBytes: 1 * 1024 * 1024, maxUploadBytes: 50 * 1024 * 1024,        maxUsers: 100,    maxFunctions: 2,  maxEmailsPerDay: 30,    maxFunctionMs: 3000,  maxStorageBytes: 500 * 1024 * 1024, maxWorkers: 10,  maxCrons: 2,   maxWorkerRequestsPerDay: 100000 },
-  pro:     { maxTables: 50,  maxObjects: 1000, maxObjectBytes: 5 * 1024 * 1024, maxUploadBytes: 1 * 1024 * 1024 * 1024,  maxUsers: 10000,  maxFunctions: 10, maxEmailsPerDay: 1000,  maxFunctionMs: 10000, maxStorageBytes: 5 * 1024 * 1024 * 1024, maxWorkers: 25,  maxCrons: 20,  maxWorkerRequestsPerDay: 2000000 },
-  max_pro: { maxTables: 200, maxObjects: 10000,maxObjectBytes: 10 * 1024 * 1024,maxUploadBytes: 5 * 1024 * 1024 * 1024,  maxUsers: 100000, maxFunctions: 50, maxEmailsPerDay: 10000, maxFunctionMs: 30000, maxStorageBytes: 20 * 1024 * 1024 * 1024, maxWorkers: 100, maxCrons: 100, maxWorkerRequestsPerDay: 20000000 },
+  free:    { maxTables: 10,  maxObjects: 50,   maxObjectBytes: 1 * 1024 * 1024, maxUploadBytes: 50 * 1024 * 1024,        maxUsers: 100,    maxFunctions: 2,  maxEmailsPerDay: 30,    maxFunctionMs: 3000,  maxStorageBytes: 500 * 1024 * 1024, maxWorkers: 10,  maxCrons: 2,   maxWorkerRequestsPerDay: 100000,   maxRowsPerWrite: 100,  maxComputeJobs: 0,  maxComputeConcurrentRuns: 0, maxComputeTimeoutSec: 0,    maxComputeMemoryMb: 0,    maxComputeSchedules: 0 },
+  pro:     { maxTables: 50,  maxObjects: 1000, maxObjectBytes: 5 * 1024 * 1024, maxUploadBytes: 1 * 1024 * 1024 * 1024,  maxUsers: 10000,  maxFunctions: 10, maxEmailsPerDay: 1000,  maxFunctionMs: 10000, maxStorageBytes: 5 * 1024 * 1024 * 1024, maxWorkers: 25,  maxCrons: 20,  maxWorkerRequestsPerDay: 2000000,  maxRowsPerWrite: 1000, maxComputeJobs: 10, maxComputeConcurrentRuns: 2, maxComputeTimeoutSec: 1800, maxComputeMemoryMb: 1024, maxComputeSchedules: 40 },
+  max_pro: { maxTables: 200, maxObjects: 10000,maxObjectBytes: 10 * 1024 * 1024,maxUploadBytes: 5 * 1024 * 1024 * 1024,  maxUsers: 100000, maxFunctions: 50, maxEmailsPerDay: 10000, maxFunctionMs: 30000, maxStorageBytes: 20 * 1024 * 1024 * 1024, maxWorkers: 100, maxCrons: 100, maxWorkerRequestsPerDay: 20000000, maxRowsPerWrite: 5000, maxComputeJobs: 50, maxComputeConcurrentRuns: 8, maxComputeTimeoutSec: 3600, maxComputeMemoryMb: 4096, maxComputeSchedules: 200 },
 };
 
 const CLOUD_TIERS = ['free', 'pro', 'max_pro'];
-const CLOUD_FIELDS = ['maxTables', 'maxObjects', 'maxObjectBytes', 'maxUploadBytes', 'maxUsers', 'maxFunctions', 'maxEmailsPerDay', 'maxFunctionMs', 'maxStorageBytes', 'maxWorkers', 'maxCrons', 'maxWorkerRequestsPerDay'];
+const CLOUD_FIELDS = ['maxTables', 'maxObjects', 'maxObjectBytes', 'maxUploadBytes', 'maxUsers', 'maxFunctions', 'maxEmailsPerDay', 'maxFunctionMs', 'maxStorageBytes', 'maxWorkers', 'maxCrons', 'maxWorkerRequestsPerDay', 'maxRowsPerWrite', 'maxComputeJobs', 'maxComputeConcurrentRuns', 'maxComputeTimeoutSec', 'maxComputeMemoryMb', 'maxComputeSchedules'];
 
 // Flat allow-list of every editable app_config key. The admin endpoint rejects
 // anything outside this set loudly, instead of silently bloating app_config.
@@ -89,6 +99,13 @@ function limitsForTier(tier) {
 function computeCapabilities(tier) {
   const lim = limitsForTier(tier);
   return {
+    data: {
+      crud: 'window.lingcode.from(table).select()/.insert()/.update()/.delete() — single-table CRUD with PostgREST-style filters (eq/gt/in/ilike/contains/textSearch/or), RLS-enforced.',
+      batchWrite: `insert([row, row, ...]) and upsert([...], { onConflict }) write up to ${lim.maxRowsPerWrite} rows per call in ONE transaction — the efficient path for bulk/ingest writes (no row-at-a-time HTTP loop).`,
+      upsert: 'from(table).upsert(rowOrRows, { onConflict: "col"|["a","b"], merge: true }) → INSERT ... ON CONFLICT DO UPDATE (merge=false → DO NOTHING). Idempotent ingest by a unique key.',
+      rpc: 'window.lingcode.rpc(name, params) calls a tenant-defined SQL function (CREATE FUNCTION via a migration) — JOINs, CTEs, aggregations, ts_rank full-text ranking, window functions — with the SQL kept server-side and RLS enforced. The app-facing way to run a complex read the single-table CRUD API can\'t express.',
+      search: 'Full-text (textSearch / GIN) and pgvector similarity + hybrid search are available; vectors via the managed embed endpoint or client-supplied arrays.',
+    },
     secretsVault: 'AES-256-GCM encrypted, server-side. Store vendor keys (STRIPE_SECRET_KEY, RESEND_API_KEY, ELEVENLABS_API_KEY, ANTHROPIC_API_KEY, …) here and read them from functions (ctx.secrets) OR — in a DEPLOYED Worker app — as c.env.<NAME> environment bindings (set a key in Secrets, redeploy, then read e.g. c.env.STRIPE_SECRET_KEY). Never ship keys in client code; no external server is needed to hold them.',
     functions: {
       builtins: ['echo', 'send-email', 'elevenlabs-tts', 'twilio-sms', 'resend-byo', 'stripe-checkout', 'http-fetch'],
@@ -121,7 +138,24 @@ function computeCapabilities(tier) {
       frameworks: 'Deploy auto-detects and builds: Next.js (via OpenNext), SvelteKit, Nuxt, Astro (SSR), Remix/React Router 7, TanStack Start, plus plain static sites. SSR pages, API routes, server actions and server components all run on the Workers tier.',
       deployVia: 'LingCode Mac app → "Deploy to LingCode Cloud" (auto-detects the framework). No MCP/agent tool yet — set up secrets/functions/data here, then tell the user to click Deploy for the full-stack tier.',
     },
-    notSuitableFor: 'Long-running processes, persistent WebSocket servers, a single request over ~30s, or a non-JS backend (Python/Django, Rails, Go). Those stay on a server you run. NOTE: short scheduled/cron jobs ARE supported — both on deployed Worker apps (see maxCrons) and as scheduled custom functions on the managed backend.',
+    // The CONTAINER COMPUTE TIER — long-running jobs the serverless functions above
+    // (~30s, V8) deliberately can't host. Tier-gated (free has none). This is what
+    // lets a real server-side pipeline (heavy batches, scraping, ingestion) run
+    // entirely on LingCode Cloud — so agents must NOT tell users to keep an external
+    // server for those workloads when this tier is available.
+    containerCompute: lim.maxComputeJobs > 0 ? {
+      available: true,
+      what: 'Long-running CONTAINER jobs (NO ~30s cap) that run arbitrary code — 800s+ batches, headless-Chromium scraping, OpenAI/ingestion loops — the workloads the serverless functions can\'t host.',
+      privilegedDb: 'Each job gets LINGCODE_DB_URL: a real, role-scoped Postgres connection with FULL SQL (multi-statement transactions, advisory locks, COPY, unbounded result sets) and NONE of the gateway caps (no 200-row select / 1000-row rpc / single-statement limits). The path for heavy server-side data work.',
+      secrets: 'The backend\'s vault secrets (OPENAI_API_KEY, RESEND_API_KEY, …) are injected as env vars automatically — no hardcoded keys.',
+      scheduler: 'Jobs run on a 5-field cron with overlap control (skip/queue/allow) and automatic retries with backoff — for a real pipeline of scheduled jobs.',
+      browser: 'A managed Playwright/Chromium base image is available for scraping/render jobs.',
+      authoring: 'Declare jobs + schedules in lingcode.compute.json and POST it to /api/account/cloud-compute/<backendId>/apply; build the image on the Mac and upload it. Jobs execute on LingCode\'s VPC compute, co-located with Postgres. (No MCP/agent tool yet — set it up via the REST API / IDE.)',
+      limits: { maxComputeJobs: lim.maxComputeJobs, maxConcurrentRuns: lim.maxComputeConcurrentRuns, maxTimeoutSec: lim.maxComputeTimeoutSec, maxMemoryMb: lim.maxComputeMemoryMb },
+    } : { available: false, note: `The container compute tier (long-running jobs, browser, privileged DB) requires a paid plan — not on the '${tier}' tier.` },
+    notSuitableFor: lim.maxComputeJobs > 0
+      ? 'Always-on persistent listeners (a 24/7 WebSocket server holding open client connections) — those want a server you run. IMPORTANT: long-running BATCH work, requests over ~30s, headless-browser scraping, and scheduled pipelines ARE supported via the container compute tier above — do NOT tell users to keep an external server for those.'
+      : 'On this tier: long-running processes, a single request over ~30s, or headless-browser work — those need the container compute tier (paid) or a server you run. Short scheduled/cron jobs ARE supported (deployed Worker crons + scheduled custom functions). A non-JS backend (Python/Django, Rails, Go) stays on a server you run.',
   };
 }
 

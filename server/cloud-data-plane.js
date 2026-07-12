@@ -171,6 +171,14 @@ function poolStats() {
     : { total: 0, idle: 0, waiting: 0 };
 }
 
+// Close the connection pool (and the realtime LISTEN client). For graceful
+// shutdown and for tests that must release handles before the process exits.
+async function endPool() {
+  if (_listenClient) { const c = _listenClient; _listenClient = null; _listenStarted = false; try { await c.end(); } catch (_) {} }
+  if (_listenReconnectTimer) { clearTimeout(_listenReconnectTimer); _listenReconnectTimer = null; }
+  if (_pool) { const p = _pool; _pool = null; try { await p.end(); } catch (_) {} }
+}
+
 // Readiness probe: acquire a connection and SELECT 1. Throws if the data plane
 // (PgBouncer/Postgres) is unreachable. Returns pool stats on success.
 async function probe() {
@@ -215,6 +223,90 @@ function qIdent(name) {
 }
 
 function badRequest(message) { const e = new Error(message); e.status = 400; return e; }
+
+// ---- bulk-write helpers (batch insert / upsert) -----------------------
+// Postgres caps bound parameters per statement at 65535. Stay well under it so
+// a wide table (many columns) still batches several rows per round-trip.
+const MAX_BIND_PARAMS = 60000;
+// Hard backstop on rows per single write call, independent of tier. Routes pass
+// a tighter per-tier `maxRows` (cloud-limits maxRowsPerWrite); this only guards
+// against a caller that forgets to.
+const MAX_ROWS_PER_WRITE_HARD = 10000;
+
+// Accept a single row object or an array of them; validate each is a plain
+// object. Returns a non-empty array.
+function normalizeRows(rowOrRows) {
+  const rows = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows];
+  if (!rows.length) throw badRequest('no rows provided');
+  for (const r of rows) {
+    if (!r || typeof r !== 'object' || Array.isArray(r)) throw badRequest('row object required');
+  }
+  return rows;
+}
+
+// Union of column keys across all rows, in first-seen order. Each key is run
+// through qIdent so an unsafe identifier fails before any SQL is built.
+function unionColumnKeys(rows) {
+  const keys = [];
+  const seen = new Set();
+  for (const r of rows) {
+    for (const k of Object.keys(r)) { if (!seen.has(k)) { seen.add(k); keys.push(k); } }
+  }
+  if (!keys.length) throw badRequest('rows have no columns');
+  for (const k of keys) qIdent(k);
+  return keys;
+}
+
+// Split rows into chunks so each multi-row statement stays under the bind-param
+// cap (colCount params per row).
+function chunkRowsForBind(rows, colCount) {
+  const perChunk = Math.max(1, Math.floor(MAX_BIND_PARAMS / Math.max(1, colCount)));
+  const chunks = [];
+  for (let i = 0; i < rows.length; i += perChunk) chunks.push(rows.slice(i, i + perChunk));
+  return chunks;
+}
+
+// Build the `(${ph}),(${ph})...` VALUES list for one chunk, pushing values in
+// column order (NULL for a column absent on a given row). Mutates `values`.
+function buildValuesTuples(chunk, keys, values) {
+  return chunk.map((row) => {
+    const ph = keys.map((k) => { values.push(k in row ? row[k] : null); return `$${values.length}`; });
+    return `(${ph.join(', ')})`;
+  }).join(', ');
+}
+
+// Pure planner: turn a single row or an array into one or more parameterized
+// INSERT statements (chunked under the bind-param cap). When `onConflict` is set
+// it appends ON CONFLICT (...) DO UPDATE (merge) or DO NOTHING. No DB access —
+// exported so the SQL/values/chunking/guard logic is unit-testable without pg.
+// Returns [{ sql, values }, ...]; proxyInsert/proxyUpsert just execute these.
+function planBulkWrite({ table, rows, onConflict = null, merge = true, maxRows = MAX_ROWS_PER_WRITE_HARD } = {}) {
+  const tbl = qIdent(String(table || ''));
+  const list = normalizeRows(rows);
+  const cap = Math.min(Number(maxRows) || MAX_ROWS_PER_WRITE_HARD, MAX_ROWS_PER_WRITE_HARD);
+  if (list.length > cap) throw badRequest(`too many rows in one write: ${list.length} (max ${cap})`);
+  const keys = unionColumnKeys(list);
+  const colSql = keys.map(qIdent).join(', ');
+  let conflictSql = '';
+  if (onConflict != null) {
+    const conflictCols = (Array.isArray(onConflict) ? onConflict : [onConflict]).filter(Boolean).map(String);
+    if (!conflictCols.length) throw badRequest('onConflict column(s) required for upsert');
+    for (const c of conflictCols) qIdent(c); // validate conflict-target identifiers
+    const target = conflictCols.map(qIdent).join(', ');
+    const updateCols = keys.filter((k) => !conflictCols.includes(k));
+    // DO UPDATE with no non-conflict columns is invalid SQL — fall back to DO NOTHING.
+    conflictSql = (merge && updateCols.length)
+      ? ` ON CONFLICT (${target}) DO UPDATE SET ${updateCols.map((k) => `${qIdent(k)} = EXCLUDED.${qIdent(k)}`).join(', ')}`
+      : ` ON CONFLICT (${target}) DO NOTHING`;
+  }
+  const statements = [];
+  for (const chunk of chunkRowsForBind(list, keys.length)) {
+    const values = [];
+    const tuples = buildValuesTuples(chunk, keys, values);
+    statements.push({ sql: `INSERT INTO ${tbl} (${colSql}) VALUES ${tuples}${conflictSql} RETURNING *`, values });
+  }
+  return statements;
+}
 
 // ---- safe filter builder (WHERE / ORDER BY for the data proxy) ---------
 // Compiles a filter object into a parameterized WHERE clause. The three
@@ -353,10 +445,11 @@ async function provisionBackend(backendId) {
     // Owned by admin; the tenant role gets no direct grants (signup/signin
     // run server-side), so app code can't read password hashes.
     await client.query(`CREATE TABLE IF NOT EXISTS ${qIdent(schema)}.auth_users (
-      id            uuid PRIMARY KEY,
-      email         text UNIQUE NOT NULL,
-      password_hash text NOT NULL,
-      created_at    timestamptz NOT NULL DEFAULT now()
+      id             uuid PRIMARY KEY,
+      email          text UNIQUE NOT NULL,
+      password_hash  text NOT NULL,
+      email_verified boolean NOT NULL DEFAULT true,
+      created_at     timestamptz NOT NULL DEFAULT now()
     )`);
     // Refresh tokens (rotation + reuse detection) and MFA factors. Admin-owned
     // like auth_users — the tenant role gets no grants, so app code can never
@@ -407,6 +500,9 @@ async function dropBackend(backendId) {
   const client = await pool.connect();
   try {
     await client.query(`DROP SCHEMA IF EXISTS ${qIdent(schema)} CASCADE`);
+    // Drop the compute login role first — it's a member of trole_<id>, so trole
+    // can't be dropped while clogin depends on it.
+    await dropComputeLoginRole(backendId, client);
     await client.query(`DO $$ BEGIN
       IF EXISTS (SELECT FROM pg_roles WHERE rolname = '${role}') THEN
         EXECUTE 'DROP ROLE ${qIdent(role)}';
@@ -415,6 +511,119 @@ async function dropBackend(backendId) {
   } finally {
     client.release();
   }
+}
+
+// ── Compute tier: the privileged, schema-scoped Postgres login (LINGCODE_DB_URL) ──
+//
+// The data plane's gateway (proxySelect/rpc/etc.) is deliberately capped (200-row
+// select, 1000-row rpc, single-statement txns) and reaches Postgres through
+// PgBouncer. The COMPUTE TIER (cloud-compute.js) needs the opposite: a real,
+// long-lived session connection with full SQL — multi-statement transactions,
+// `pg_advisory_xact_lock` writer serialization, `COPY`, unbounded result sets —
+// for heavy batch/ingestion jobs. So each backend that uses compute gets its own
+// LOGIN role `clogin_<id>`:
+//   • member of trole_<id>  → inherits exactly the be_<id> schema grants, nothing more
+//   • search_path pinned to be_<id>,public, so unqualified names resolve in-schema
+//   • BYPASSRLS              → trusted OWNER server code (the Supabase service-role
+//                              equivalent). The hard tenant boundary is the GRANT set
+//                              (be_<id> only) + a per-tenant DB password, NOT RLS —
+//                              cross-schema access is impossible regardless. Per-user
+//                              RLS is for UNTRUSTED client apps via the gateway, not
+//                              for the backend's own pipeline. (Flagged for the SP1/SP3
+//                              security review.)
+//   • statement_timeout suited to batch (COMPUTE_PG_STATEMENT_TIMEOUT_MS, default 0 =
+//                              none), NOT the gateway's 30s cap.
+// The connection points at CLOUD_PG_DIRECT_URL (straight to Postgres in the VPC),
+// never PgBouncer — session features (advisory locks, long txns, COPY) require it.
+function computeRoleName(backendId) { assertBackendId(backendId); return `clogin_${backendId}`; }
+
+const COMPUTE_PG_STATEMENT_TIMEOUT_MS = Number(process.env.COMPUTE_PG_STATEMENT_TIMEOUT_MS || 0);
+const COMPUTE_PG_CONNECTION_LIMIT = Number(process.env.COMPUTE_PG_CONNECTION_LIMIT || 10);
+
+// Create or update the compute login role with the given password and return the
+// LINGCODE_DB_URL the runner injects into a job container. Idempotent: re-minting
+// rotates the password (ALTER ROLE … PASSWORD) without disturbing the role's
+// membership or settings.
+async function ensureComputeLoginRole(backendId, password) {
+  if (typeof password !== 'string' || password.length < 16) {
+    throw new Error('compute role password too weak');
+  }
+  // ALTER ROLE … PASSWORD is a utility statement — it can't take a bind param, so
+  // the password is interpolated. Restrict the charset to base64url so there is
+  // nothing to escape (no quotes/backslashes); callers generate base64url, this is
+  // the defense-in-depth guard. See COMPUTE_SECURITY_REVIEW.md F-2.
+  if (!/^[A-Za-z0-9_-]+$/.test(password)) {
+    throw new Error('compute role password has unsafe characters');
+  }
+  const role = computeRoleName(backendId);
+  const trole = roleName(backendId);
+  const schema = schemaName(backendId);
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    // CREATE ROLE has no IF NOT EXISTS; guard, then set the password either way.
+    // NOT SUPERUSER/CREATEDB/CREATEROLE/REPLICATION — the only elevation is
+    // BYPASSRLS, scoped by grants to the one be_<id> schema (see security review).
+    await client.query(`DO $$ BEGIN
+      IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${role}') THEN
+        EXECUTE 'CREATE ROLE ${qIdent(role)} LOGIN BYPASSRLS IN ROLE ${qIdent(trole)}';
+      END IF;
+    END $$;`);
+    await client.query(`ALTER ROLE ${qIdent(role)} WITH PASSWORD '${password}'`);
+    // Cap concurrent connections per tenant so one backend's jobs can't exhaust
+    // the cluster's connection slots (F-5). 0/negative env disables the cap.
+    if (COMPUTE_PG_CONNECTION_LIMIT > 0) {
+      await client.query(`ALTER ROLE ${qIdent(role)} WITH CONNECTION LIMIT ${COMPUTE_PG_CONNECTION_LIMIT}`);
+    }
+    // Role-level defaults applied on every new session for this login. `public`
+    // stays in the path for extension types (e.g. pgvector `vector`), matching the
+    // gateway; keep `public` extensions-only (REVOKE CREATE … FROM PUBLIC — F-1).
+    await client.query(`ALTER ROLE ${qIdent(role)} SET search_path = ${qIdent(schema)}, public`);
+    await client.query(`ALTER ROLE ${qIdent(role)} SET statement_timeout = ${COMPUTE_PG_STATEMENT_TIMEOUT_MS}`);
+    // Explicit CONNECT (don't rely on PUBLIC) so a hardened cluster still works.
+    await client.query(`GRANT CONNECT ON DATABASE ${qIdent(currentDbName())} TO ${qIdent(role)}`);
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+  return buildComputeDbUrl(role, password);
+}
+
+async function dropComputeLoginRole(backendId, existingClient = null) {
+  const role = computeRoleName(backendId);
+  const client = existingClient || await getPool().connect();
+  try {
+    await client.query(`DO $$ BEGIN
+      IF EXISTS (SELECT FROM pg_roles WHERE rolname = '${role}') THEN
+        EXECUTE 'DROP ROLE ${qIdent(role)}';
+      END IF;
+    END $$;`);
+  } finally {
+    if (!existingClient) client.release();
+  }
+}
+
+// Database name parsed from the admin/direct URL (defaults to 'lingcloud').
+function currentDbName() {
+  const src = process.env.CLOUD_PG_DIRECT_URL || process.env.CLOUD_PG_ADMIN_URL || '';
+  try { return new URL(src).pathname.replace(/^\//, '') || 'lingcloud'; }
+  catch (_) { return 'lingcloud'; }
+}
+
+// Build a postgres:// URL from CLOUD_PG_DIRECT_URL's host/port/db with the
+// compute role's credentials swapped in. Direct, never PgBouncer — session
+// features the heavy jobs need don't survive transaction pooling.
+function buildComputeDbUrl(role, password) {
+  const src = process.env.CLOUD_PG_DIRECT_URL || process.env.CLOUD_PG_ADMIN_URL;
+  if (!src) throw new Error('CLOUD_PG_DIRECT_URL not set — compute needs a direct Postgres host');
+  const u = new URL(src);
+  u.username = encodeURIComponent(role);
+  u.password = encodeURIComponent(password);
+  return u.toString();
 }
 
 // ---- JWT --------------------------------------------------------------
@@ -466,31 +675,43 @@ function verifyTenantJwt(backendId, token) {
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-async function createTenantUser(backendId, email, password) {
+async function createTenantUser(backendId, email, password, { verified = true } = {}) {
   const schema = schemaName(backendId);
   if (!EMAIL_RE.test(String(email || ''))) { const e = new Error('invalid email'); e.status = 400; throw e; }
   if (typeof password !== 'string' || password.length < 6) { const e = new Error('password too short (min 6)'); e.status = 400; throw e; }
+  await ensureAuthTables(backendId); // guarantees the email_verified column exists
   const id = crypto.randomUUID();
   const hash = await bcryptLib().hash(password, 10);
   const pool = getPool();
   try {
-    await pool.query(`INSERT INTO ${qIdent(schema)}.auth_users (id, email, password_hash) VALUES ($1, $2, $3)`, [id, email, hash]);
+    await pool.query(`INSERT INTO ${qIdent(schema)}.auth_users (id, email, password_hash, email_verified) VALUES ($1, $2, $3, $4)`, [id, email, hash, !!verified]);
   } catch (err) {
     if (/duplicate key/i.test(err.message)) { const e = new Error('email already registered'); e.status = 409; throw e; }
     throw err;
   }
-  return { id, email };
+  return { id, email, email_verified: !!verified };
 }
 
 async function verifyTenantUser(backendId, email, password) {
   const schema = schemaName(backendId);
+  await ensureAuthTables(backendId);
   const pool = getPool();
-  const r = await pool.query(`SELECT id, email, password_hash FROM ${qIdent(schema)}.auth_users WHERE email = $1`, [email]);
+  const r = await pool.query(`SELECT id, email, password_hash, email_verified FROM ${qIdent(schema)}.auth_users WHERE email = $1`, [email]);
   const row = r.rows[0];
   if (!row || !(await bcryptLib().compare(String(password || ''), row.password_hash))) {
     const e = new Error('invalid credentials'); e.status = 401; throw e;
   }
-  return { id: row.id, email: row.email };
+  return { id: row.id, email: row.email, email_verified: row.email_verified !== false };
+}
+
+// Mark a tenant user's email confirmed (the verify-email endpoint). Idempotent;
+// returns the user or null if no such email.
+async function setTenantUserEmailVerified(backendId, email) {
+  const schema = schemaName(backendId);
+  await ensureAuthTables(backendId);
+  const r = await getPool().query(
+    `UPDATE ${qIdent(schema)}.auth_users SET email_verified = true WHERE email = $1 RETURNING id, email`, [email]);
+  return r.rows[0] || null;
 }
 
 async function listTenantUsers(backendId) {
@@ -554,7 +775,11 @@ async function ensureAuthTables(backendId) {
   const s = qIdent(schemaName(backendId));
   // Multiple statements in one parameter-free query — pg simple-query protocol.
   await getPool().query(
-    `CREATE TABLE IF NOT EXISTS ${s}.auth_refresh_tokens (
+    // Backfill email_verified for backends provisioned before signup verification
+    // shipped. DEFAULT true grandfathers existing users as verified (only NEW
+    // unverified signups get false), so no one is locked out by the upgrade.
+    `ALTER TABLE ${s}.auth_users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT true;
+     CREATE TABLE IF NOT EXISTS ${s}.auth_refresh_tokens (
        id uuid PRIMARY KEY, user_id uuid NOT NULL, family_id uuid NOT NULL,
        token_hash text UNIQUE NOT NULL, parent_id uuid,
        revoked boolean NOT NULL DEFAULT false,
@@ -707,6 +932,45 @@ async function tableExists(backendId, table) {
   return r.rowCount > 0;
 }
 
+// jsonb/json column names for a table, cached (jsonb columns only change on a
+// migration). Short TTL so a freshly-added jsonb column starts serializing
+// correctly within a few minutes without a restart.
+const _jsonbColsCache = new Map(); // "schema.table" -> { set, exp }
+const JSONB_COLS_TTL_MS = 5 * 60 * 1000;
+async function jsonbColumns(backendId, table) {
+  const schema = schemaName(backendId);
+  const key = `${schema}.${table}`;
+  const now = _monoNow();
+  const hit = _jsonbColsCache.get(key);
+  if (hit && hit.exp > now) return hit.set;
+  const r = await getPool().query(
+    `SELECT column_name FROM information_schema.columns
+      WHERE table_schema = $1 AND table_name = $2 AND udt_name IN ('jsonb', 'json')`,
+    [schema, table]);
+  const set = new Set(r.rows.map((x) => x.column_name));
+  _jsonbColsCache.set(key, { set, exp: now + JSONB_COLS_TTL_MS });
+  return set;
+}
+function _monoNow() { return typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now(); }
+
+// node-postgres JSON-encodes plain objects but renders a JS ARRAY as a Postgres
+// array literal ({a,b}) — invalid for a jsonb column. Serialize array values
+// destined for jsonb columns so they land as real jsonb arrays. Only arrays are
+// touched: objects already auto-encode, and a caller-supplied string (e.g. a
+// pre-`JSON.stringify`ed value) is left as-is so we never double-encode. Returns
+// the same row object when nothing changed (no allocation on the common path).
+function coerceJsonbArrayValues(row, jsonbSet) {
+  if (!row || !jsonbSet || jsonbSet.size === 0) return row;
+  let copy = null;
+  for (const k of Object.keys(row)) {
+    if (Array.isArray(row[k]) && jsonbSet.has(k)) {
+      if (!copy) copy = { ...row };
+      copy[k] = JSON.stringify(row[k]);
+    }
+  }
+  return copy || row;
+}
+
 // Run a block as the tenant role with search_path pinned to its schema.
 // `readOnly` wraps in a READ ONLY transaction (belt-and-braces for the SQL
 // editor). Returns { rows, fields }.
@@ -848,10 +1112,12 @@ async function proxyUpdate(backendId, table, { where = null, patch = null, userI
   if (!where || typeof where !== 'object' || Array.isArray(where) || !Object.keys(where).length) {
     throw badRequest('where required (refusing to update every row)');
   }
-  const setKeys = Object.keys(patch);
+  const jsonbSet = await jsonbColumns(backendId, table);
+  const coercedPatch = coerceJsonbArrayValues(patch, jsonbSet);
+  const setKeys = Object.keys(coercedPatch);
   for (const k of setKeys) qIdent(k); // validate SET column identifiers
   const setSql = setKeys.map((k, idx) => `${qIdent(k)} = $${idx + 1}`).join(', ');
-  const setVals = setKeys.map((k) => patch[k]);
+  const setVals = setKeys.map((k) => coercedPatch[k]);
   const w = buildWhere(where, setKeys.length); // WHERE placeholders continue after the SET list
   const out = await _asScope(backendId, async (client) => {
     const r = await client.query(
@@ -878,22 +1144,78 @@ async function proxyDelete(backendId, table, { where = null, userId = null, admi
   return out;
 }
 
-async function proxyInsert(backendId, table, row, { userId = null, admin = false } = {}) {
-  if (!(await tableExists(backendId, table))) { const e = new Error('table not found'); e.status = 404; throw e; }
-  if (!row || typeof row !== 'object' || Array.isArray(row)) { const e = new Error('row object required'); e.status = 400; throw e; }
-  const keys = Object.keys(row);
-  if (!keys.length) { const e = new Error('row has no columns'); e.status = 400; throw e; }
-  for (const k of keys) qIdent(k); // validate column identifiers
-  const colSql = keys.map(qIdent).join(', ');
-  const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
-  const values = keys.map((k) => row[k]);
+// Insert one row OR an array of rows. A single object returns `{ rows: [row] }`
+// exactly as before; an array does ONE multi-row INSERT per chunk, all inside a
+// single transaction (so a partial batch never lands). Columns are the union of
+// keys across rows; a row missing a column gets NULL for it.
+// Execute a list of planBulkWrite statements in ONE transaction (so a partial
+// batch never lands), collecting all RETURNING rows.
+async function _execBulkWrite(backendId, table, statements, { userId = null, admin = false } = {}) {
   const out = await _asScope(backendId, async (client) => {
-    const r = await client.query(
-      `INSERT INTO ${qIdent(table)} (${colSql}) VALUES (${placeholders}) RETURNING *`, values);
-    return { rows: r.rows };
+    const all = [];
+    for (const st of statements) { const r = await client.query(st.sql, st.values); all.push(...r.rows); }
+    return { rows: all };
   }, { userId, admin });
   emitChange(backendId, table, 'INSERT', out.rows);
   return out;
+}
+
+// Insert one row OR an array of rows. A single object returns `{ rows: [row] }`
+// exactly as before; an array does ONE multi-row INSERT per chunk, all in a
+// single transaction. Columns are the union of keys across rows; a row missing a
+// column gets NULL. Per-call row count is bounded by `maxRows` (tier limit).
+async function proxyInsert(backendId, table, rowOrRows, { userId = null, admin = false, maxRows = MAX_ROWS_PER_WRITE_HARD } = {}) {
+  if (!(await tableExists(backendId, table))) { const e = new Error('table not found'); e.status = 404; throw e; }
+  const jsonbSet = await jsonbColumns(backendId, table);
+  const rows = normalizeRows(rowOrRows).map((r) => coerceJsonbArrayValues(r, jsonbSet));
+  const statements = planBulkWrite({ table, rows, maxRows });
+  return _execBulkWrite(backendId, table, statements, { userId, admin });
+}
+
+// Upsert one row OR an array via INSERT ... ON CONFLICT. `onConflict` is the
+// conflict-target column(s) (string or string[]). merge=true (default) UPDATEs a
+// conflicting row from the incoming values (col = EXCLUDED.col for each
+// non-conflict column); merge=false leaves it untouched (DO NOTHING). RETURNING
+// omits rows skipped by DO NOTHING.
+async function proxyUpsert(backendId, table, rowOrRows, { onConflict = null, merge = true, userId = null, admin = false, maxRows = MAX_ROWS_PER_WRITE_HARD } = {}) {
+  if (!(await tableExists(backendId, table))) { const e = new Error('table not found'); e.status = 404; throw e; }
+  const jsonbSet = await jsonbColumns(backendId, table);
+  const rows = normalizeRows(rowOrRows).map((r) => coerceJsonbArrayValues(r, jsonbSet));
+  const statements = planBulkWrite({ table, rows, onConflict, merge, maxRows });
+  return _execBulkWrite(backendId, table, statements, { userId, admin });
+}
+
+// Build the `fn(...)` call SQL + bound params from `args`. An array → positional
+// ($1,$2,...); a plain object → named notation ("k" => $n, keys validated as
+// identifiers so they must match the function's declared parameter names);
+// nullish → no args. Values are always placeholders — never interpolated.
+function buildRpcCall(fnIdent, args) {
+  if (Array.isArray(args)) {
+    const params = args;
+    const ph = params.map((_, i) => `$${i + 1}`).join(', ');
+    return { sql: `SELECT * FROM ${fnIdent}(${ph})`, params };
+  }
+  if (args && typeof args === 'object') {
+    const keys = Object.keys(args);
+    const params = keys.map((k) => args[k]);
+    const ph = keys.map((k, i) => `${qIdent(k)} => $${i + 1}`).join(', ');
+    return { sql: `SELECT * FROM ${fnIdent}(${ph})`, params };
+  }
+  return { sql: `SELECT * FROM ${fnIdent}()`, params: [] };
+}
+
+// Call a tenant-defined SQL function by name as the tenant role (RLS enforced,
+// search_path pinned to the tenant schema). This is the app-facing escape hatch
+// for JOINs / CTEs / FTS-ranking / window funcs — arbitrary SQL stays
+// SERVER-SIDE in the function body (created via a migration), never sent from the
+// client. `args` is a positional array OR a named-args object.
+async function rpcCall(backendId, fnName, args = [], { userId = null, readOnly = false } = {}) {
+  const fn = qIdent(String(fnName || '')); // validates [a-zA-Z_][a-zA-Z0-9_]*
+  const { sql, params } = buildRpcCall(fn, args);
+  return _asTenant(backendId, async (client) => {
+    const r = await client.query(sql, params);
+    return { rows: Array.isArray(r.rows) ? r.rows.slice(0, 1000) : [], rowCount: r.rowCount, fields: (r.fields || []).map((f) => f.name) };
+  }, { userId, readOnly });
 }
 
 // ---- realtime visibility filter ---------------------------------------
@@ -1394,6 +1716,7 @@ async function deleteAppBlobsForAppVersion(appId, version) {
 module.exports = {
   isConfigured,
   poolStats,
+  endPool,
   probe,
   realtimeBus,
   ensureRealtimeListener,
@@ -1407,11 +1730,15 @@ module.exports = {
   deleteAppBlobsForAppVersion,
   provisionBackend,
   dropBackend,
+  ensureComputeLoginRole,
+  dropComputeLoginRole,
+  computeRoleName,
   mintAnonJwt,
   mintUserJwt,
   verifyTenantJwt,
   createTenantUser,
   verifyTenantUser,
+  setTenantUserEmailVerified,
   getOrCreateTenantUserByEmail,
   listTenantUsers,
   getTenantUserById,
@@ -1433,8 +1760,10 @@ module.exports = {
   applyMigration,
   proxySelect,
   proxyInsert,
+  proxyUpsert,
   proxyUpdate,
   proxyDelete,
+  rpcCall,
   vectorSearch,
   textSearch,
   hybridSearch,
@@ -1452,4 +1781,6 @@ module.exports = {
   // Exported for DB-free unit testing of the injection-safe SQL builders.
   buildWhere,
   buildOrder,
+  planBulkWrite,
+  buildRpcCall,
 };

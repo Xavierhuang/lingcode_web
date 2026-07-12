@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LingCode FTP — a native macOS FTP/SFTP client with Claude built in</title>
+<meta name="description" content="LingCode FTP is a tiny, fast, native macOS FTP/SFTP client. Saved servers, in-app editing with syntax highlighting, and Claude can browse and upload for you. Apple Silicon, macOS 11+.">
+<meta property="og:title" content="LingCode FTP">
+<meta property="og:description" content="A native macOS FTP/SFTP client with Claude built in.">
+<meta property="og:image" content="/ftp-assets/icon.png">
+<link rel="icon" type="image/png" href="/ftp-assets/icon.png">
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --ink: #15181c;
+    --muted: #5b6068;
+    --rule: #e5e2dc;
+    --accent: #2563a8;
+    --accent-hover: #1f508a;
+    --code-bg: #15181c;
+    --code-ink: #e5e7eb;
+    --code-comment: #7c8189;
+    --code-string: #c9a972;
+    --code-keyword: #6aa1e3;
+    --code-path: #8ccf7e;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+  header {
+    padding: 28px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand img { width: 32px; height: 32px; border-radius: 7px; }
+  nav a { color: var(--muted); margin-left: 22px; font-size: 14px; }
+  nav a:hover { color: var(--ink); text-decoration: none; }
+
+  .hero { padding: 80px 0 56px; text-align: center; }
+  .hero img.icon { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 8px 24px rgba(20,20,20,0.12); }
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 56px);
+    line-height: 1.05;
+    margin: 28px 0 16px;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+  }
+  .hero h1 .accent { color: var(--accent); }
+  .hero p.punch {
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+    max-width: 620px;
+    margin: 0 auto 14px;
+  }
+  .hero p.lede {
+    font-size: 19px;
+    color: var(--muted);
+    max-width: 580px;
+    margin: 0 auto 32px;
+  }
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 15px;
+  }
+  .cta:hover { text-decoration: none; background: #000; }
+  .cta-sub { display: block; margin-top: 12px; font-size: 13px; color: var(--muted); }
+
+  /* Mock app window — sftp listing + claude chat */
+  .mock {
+    margin: 56px auto 0;
+    max-width: 820px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    box-shadow: 0 20px 50px rgba(20,20,20,0.18), 0 2px 6px rgba(20,20,20,0.08);
+    font-family: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13px;
+    text-align: left;
+  }
+  .mock .titlebar {
+    background: #1f2329;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #0c0e11;
+  }
+  .mock .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .mock .dot.r { background: #ff5f57; }
+  .mock .dot.y { background: #febc2e; }
+  .mock .dot.g { background: #28c840; }
+  .mock .title { margin-left: 10px; color: var(--code-comment); font-size: 12px; }
+  .mock .body { display: grid; grid-template-columns: 1fr 280px; min-height: 340px; }
+  .mock .files {
+    padding: 12px 14px; overflow: hidden;
+  }
+  .mock .files .path { color: var(--code-path); font-size: 12px; margin-bottom: 12px; }
+  .mock .files .row {
+    display: grid; grid-template-columns: 16px 1fr 90px 110px;
+    gap: 10px; padding: 3px 4px;
+    border-radius: 4px;
+    color: var(--code-ink);
+  }
+  .mock .files .row.dir { color: var(--code-keyword); }
+  .mock .files .row .sz, .mock .files .row .ts { color: var(--code-comment); font-size: 12px; }
+  .mock .files .row.sel { background: rgba(37, 99, 168, 0.22); }
+  .mock .chat { background: #11141a; border-left: 1px solid #0c0e11; padding: 14px 14px; font-family: -apple-system, "SF Pro Text", sans-serif; font-size: 12.5px; }
+  .mock .chat .who { color: var(--code-comment); font-size: 11px; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .mock .chat .who:first-child { margin-top: 0; }
+  .mock .chat .msg { color: var(--code-ink); margin-top: 4px; line-height: 1.5; }
+  .mock .chat .msg.user { color: #c9d2e0; }
+  .mock .chat code {
+    background: #1f2329; padding: 1px 5px; border-radius: 3px;
+    font-family: "SF Mono", ui-monospace, monospace; font-size: 11.5px;
+  }
+
+  section.features { padding: 96px 0 24px; border-top: 1px solid var(--rule); margin-top: 96px; }
+  section.features h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin: 0 0 36px; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px 56px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; gap: 32px; } }
+  .feat h3 { margin: 0 0 8px; font-size: 17px; letter-spacing: -0.01em; }
+  .feat p { margin: 0; color: var(--muted); font-size: 15px; }
+  .feat .ico {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 7px;
+    background: rgba(37, 99, 168, 0.1); color: var(--accent);
+    font-family: "SF Mono", ui-monospace, monospace; font-size: 14px; font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  section.install { padding: 96px 0 0; border-top: 1px solid var(--rule); margin-top: 96px; }
+  section.install h2 { font-size: 28px; letter-spacing: -0.02em; margin: 0 0 8px; }
+  section.install p.sub { color: var(--muted); margin: 0 0 28px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+  .step { padding: 20px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; }
+  .step .n { font-family: "SF Mono", ui-monospace, monospace; color: var(--accent); font-size: 12px; margin-bottom: 8px; }
+  .step h4 { margin: 0 0 6px; font-size: 15px; }
+  .step p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .step code { font-family: "SF Mono", ui-monospace, monospace; font-size: 12px; background: #f4f1ec; padding: 2px 6px; border-radius: 4px; color: var(--ink); }
+
+  section.specs { padding: 56px 0 96px; }
+  .spec-row { display: flex; gap: 32px; font-size: 14px; color: var(--muted); flex-wrap: wrap; }
+  .spec-row span strong { color: var(--ink); font-weight: 500; }
+
+  footer { border-top: 1px solid var(--rule); padding: 32px 0 56px; color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <img src="/ftp-assets/icon.png" alt="">
+      <span>LingCode FTP</span>
+    </div>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="https://lingcode.dev/">LingCode</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <img class="icon" src="/ftp-assets/icon.png" alt="LingCode FTP app icon">
+    <h1>FTP and SFTP,<br>with <span class="accent">Claude</span> built in.</h1>
+    <p class="punch">Browse remote servers. Ask Claude to move files for you.</p>
+    <p class="lede">A tiny native macOS file-transfer client. Saved servers, in-app editing with syntax highlighting, and a Claude chat panel that can list, upload, and download for you.</p>
+    <a class="cta" href="/LingCodeFTP.dmg" download>Download for macOS →</a>
+    <span class="cta-sub">Apple Silicon · macOS 11+ · FTP + SFTP</span>
+    <p class="cta-sub" style="margin-top:10px">Also on Windows <a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/LingCodeFTP-avalonia-win-x64.zip">x64</a> · <a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/LingCodeFTP-avalonia-win-arm64.zip">ARM64</a> · Linux .deb <a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/lingcodeftp_1.1.0_amd64.deb">x64</a> · <a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/lingcodeftp_1.1.0_arm64.deb">ARM64</a> · tarball <a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/LingCodeFTP-linux-x64.tar.gz">x64</a> · <a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/LingCodeFTP-linux-arm64.tar.gz">ARM64</a></p>
+
+    <div class="mock" aria-hidden="true">
+      <div class="titlebar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="title">deploy@example.com  —  /var/www/site</span>
+      </div>
+      <div class="body">
+        <div class="files">
+          <div class="path">📁 /var/www/site</div>
+          <div class="row dir"><span>📁</span><span>assets</span><span class="sz">—</span><span class="ts">Jun 21 14:02</span></div>
+          <div class="row dir"><span>📁</span><span>posts</span><span class="sz">—</span><span class="ts">Jun 22 09:14</span></div>
+          <div class="row sel"><span>📄</span><span>index.html</span><span class="sz">4.2 KB</span><span class="ts">Jun 24 17:31</span></div>
+          <div class="row"><span>📄</span><span>style.css</span><span class="sz">1.8 KB</span><span class="ts">Jun 24 17:31</span></div>
+          <div class="row"><span>📄</span><span>robots.txt</span><span class="sz">128 B</span><span class="ts">Jun 18 10:55</span></div>
+          <div class="row"><span>📄</span><span>sitemap.xml</span><span class="sz">3.1 KB</span><span class="ts">Jun 24 17:31</span></div>
+        </div>
+        <div class="chat">
+          <div class="who">You</div>
+          <div class="msg user">copy the new build from <code>./dist/</code> to <code>/var/www/site/</code> and back the old one up</div>
+          <div class="who">Claude</div>
+          <div class="msg">Snapshotting current <code>/var/www/site</code> to <code>site.bak.20260624/</code>, then pushing the 14 files from <code>dist/</code>. Will report when each upload finishes.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <h2>What's inside</h2>
+    <div class="grid">
+      <div class="feat">
+        <div class="ico">⇄</div>
+        <h3>FTP and SFTP, native</h3>
+        <p>Save servers once. Reconnect with one click. The classic two-pane workflow without the bloat — listing, upload, download, rename, delete, mkdir.</p>
+      </div>
+      <div class="feat">
+        <div class="ico">✦</div>
+        <h3>Claude can move files for you</h3>
+        <p>A side panel that drives Claude with FTP-aware tools. "Push the dist folder to /var/www, back up the old one first" — and it does it, file by file, with progress.</p>
+      </div>
+      <div class="feat">
+        <div class="ico">✎</div>
+        <h3>Edit in place, with syntax</h3>
+        <p>Open a remote file, edit it with syntax highlighting (C, Python, JS, HTML, CSS, JSON, PHP, Makefile, shell), save — pushed back automatically.</p>
+      </div>
+      <div class="feat">
+        <div class="ico">🔒</div>
+        <h3>Credentials stay on your Mac</h3>
+        <p>Saved server passwords live in your Keychain (where Apple wants them). No cloud sync, no telemetry, nothing leaves the machine.</p>
+      </div>
+      <div class="feat">
+        <div class="ico">⌥</div>
+        <h3>Tiny and native</h3>
+        <p>Pure Cocoa, arm64, signed. Single-window per server. Launches instantly — no Electron, no Chromium, no spinning up a 200 MB runtime.</p>
+      </div>
+      <div class="feat">
+        <div class="ico">↗</div>
+        <h3>One of the LingCode tools</h3>
+        <p>Part of the <a href="https://lingcode.dev/">LingCode</a> lineup — the full native Mac IDE for AI coding. LingCode FTP is the file-transfer cousin: same DNA, narrower job.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="install" id="install">
+    <h2>Get it running</h2>
+    <p class="sub">One DMG. Drag to Applications. Done.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="n">01</div>
+        <h4>Download the DMG</h4>
+        <p><a href="/LingCodeFTP.dmg" download><code>LingCodeFTP.dmg</code></a> — Apple Silicon, ~2 MB.</p>
+      </div>
+      <div class="step">
+        <div class="n">02</div>
+        <h4>Drag to Applications</h4>
+        <p>Open the DMG and drag <code>LingCodeFTP.app</code> into the Applications folder.</p>
+      </div>
+      <div class="step">
+        <div class="n">03</div>
+        <h4>Add your first server</h4>
+        <p>Launch the app, click <strong>⚙ Settings</strong> in the top-right, and fill in host / user / password (or paste an SSH key for SFTP).</p>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:18px"><strong>Windows &amp; Linux:</strong> download the Windows zip (<a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/LingCodeFTP-avalonia-win-x64.zip">x64</a> / <a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/LingCodeFTP-avalonia-win-arm64.zip">ARM64</a>) the Linux <code>.deb</code> (<a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/lingcodeftp_1.1.0_amd64.deb">x64</a> / <a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/lingcodeftp_1.1.0_arm64.deb">ARM64</a>), or the Linux tarball (<a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/LingCodeFTP-linux-x64.tar.gz">x64</a> / <a href="https://github.com/Xavierhuang/lingcodeftp_windows/releases/download/v1.1.0/LingCodeFTP-linux-arm64.tar.gz">ARM64</a>). Install the <code>.deb</code> with <code>sudo dpkg -i</code>, or extract the tarball and run the <code>LingCodeFTP</code> binary. (Cross-platform build — no installer.)</p>
+  </section>
+
+  <section class="specs">
+    <div class="spec-row">
+      <span><strong>Platform</strong> · macOS 11 Big Sur or later</span>
+      <span><strong>Architecture</strong> · Apple Silicon (arm64)</span>
+      <span><strong>Protocols</strong> · FTP, SFTP</span>
+    </div>
+  </section>
+
+  <footer>
+    <span>© LingCode FTP — part of <a href="https://lingcode.dev/">LingCode</a></span>
+    <span><a href="#install">Install</a> · <a href="#features">Features</a></span>
+  </footer>
+</div>
+
+</body>
+</html>

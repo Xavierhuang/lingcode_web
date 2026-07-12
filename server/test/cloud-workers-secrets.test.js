@@ -12,7 +12,7 @@ const crypto = require('crypto');
 process.env.LINGCODE_VAULT_MASTER_KEY = crypto.randomBytes(32).toString('hex');
 
 const Database = require('better-sqlite3');
-const { setBackendSecret } = require('../secrets-vault');
+const { setBackendSecret, setWorkerSecret } = require('../secrets-vault');
 const { syncWorkerSecrets } = require('../cloud-workers');
 
 function makeDb() {
@@ -23,6 +23,10 @@ function makeDb() {
     CREATE TABLE backend_secrets (backend_id TEXT, key TEXT, encrypted_value TEXT,
                                   kind TEXT NOT NULL DEFAULT 'secret',
                                   created_at TEXT, updated_at TEXT, UNIQUE(backend_id, key));
+    CREATE TABLE worker_secrets  (worker_id TEXT NOT NULL, key TEXT NOT NULL,
+                                  encrypted_value TEXT NOT NULL,
+                                  created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+                                  PRIMARY KEY (worker_id, key));
   `);
   return db;
 }
@@ -74,21 +78,31 @@ test('mirrors the linked backend vault: pushes current keys (decrypted), deletes
   } finally { restore(); }
 });
 
-test('skips when the worker has no linked project', async () => {
+test('syncs direct worker secrets even with no linked project', async () => {
+  // The "TWO sources" design: a Worker with no managed backend still gets its
+  // per-Worker secrets bound — it no longer short-circuits to a skip.
   const db = makeDb();
   db.prepare('INSERT INTO cloud_workers (id, project_id) VALUES (?,?)').run('app-bbb', null);
-  const { restore } = stubFetch([]);
+  setWorkerSecret(db, 'app-bbb', 'DIRECT_KEY', 'val-123');
+  const { calls, restore } = stubFetch([]);
   try {
-    assert.deepEqual(await syncWorkerSecrets(db, 'app-bbb'), { skipped: 'no_linked_project' });
+    const res = await syncWorkerSecrets(db, 'app-bbb');
+    assert.deepEqual(res, { synced: 1, removed: 0 });
+    assert.equal(calls.put.length, 1);
+    assert.equal(calls.put[0].name, 'DIRECT_KEY');
+    assert.equal(calls.put[0].text, 'val-123');   // decrypted from the worker vault
   } finally { restore(); }
 });
 
-test('skips when the project has no managed backend', async () => {
+test('with no backend and no direct secrets, syncs nothing and clears stale CF secrets', async () => {
   const db = makeDb();
-  db.prepare('INSERT INTO cloud_workers (id, project_id) VALUES (?,?)').run('app-ccc', 'P2');
-  const { restore } = stubFetch([]);
+  db.prepare('INSERT INTO cloud_workers (id, project_id) VALUES (?,?)').run('app-ccc', 'P2'); // P2 has no account_backends row
+  const { calls, restore } = stubFetch(['STALE_X']);
   try {
-    assert.deepEqual(await syncWorkerSecrets(db, 'app-ccc'), { skipped: 'no_backend' });
+    const res = await syncWorkerSecrets(db, 'app-ccc');
+    assert.deepEqual(res, { synced: 0, removed: 1 });
+    assert.deepEqual(calls.put, []);
+    assert.deepEqual(calls.del, ['STALE_X']);
   } finally { restore(); }
 });
 

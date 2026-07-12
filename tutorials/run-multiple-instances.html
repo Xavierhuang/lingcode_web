@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Run multiple instances at once — LingCode IDE and the apps you build</title>
+  <meta name="description" content="Run more than one copy of an app side-by-side on macOS — multiple LingCode IDE windows, or multiple instances of the app you're developing. The marker-file + open -n recipe, with the single-instance gotcha explained.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/run-multiple-instances.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/run-multiple-instances.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/run-multiple-instances.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605181200">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-06-23T00:00:00Z">
+  <meta name="article:published_time" content="2026-06-23T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/run-multiple-instances.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Run multiple instances at once — LingCode IDE and the apps you build",
+  "description": "Run more than one copy of an app side-by-side on macOS — multiple LingCode IDE windows, or multiple instances of the app you're developing. The marker-file + open -n recipe, with the single-instance gotcha explained.",
+  "url": "https://lingcode.dev/tutorials/run-multiple-instances.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-06-23",
+  "dateModified": "2026-06-23",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Aurelian Labs Inc.",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/run-multiple-instances.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Run multiple instances at once — LingCode IDE and the apps you build"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Native Mac IDE",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Run multiple instances at once",
+      "item": "https://lingcode.dev/tutorials/run-multiple-instances.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/run-multiple-instances.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Native Mac IDE</a>
+      <span>/</span>
+      <span>Run multiple instances at once</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-06-23</span>
+      </div>
+      <h1>Run multiple instances at once</h1>
+      <p class="intro">macOS normally runs one copy of an app. Sometimes you want two — one LingCode to build the IDE itself while another runs your real project, or two copies of the app you're developing to test multi-window behaviour. Here's how, for both cases.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>The one idea behind all of this</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>Click an app's icon a second time and macOS doesn't start a new copy — it just brings the running window forward. That's the default, and it's usually what you want. But two situations make a second copy genuinely useful:</p>
+          <ul>
+            <li><strong>One IDE to build the IDE, another to use it.</strong> Keep a stable LingCode open for real work while a second LingCode edits and rebuilds LingCode's own source.</li>
+            <li><strong>Two heavy projects at once.</strong> Run a long agent task or a big build in one window without it competing with another project for the same window's state.</li>
+            <li><strong>Test your own app's multi-window behaviour.</strong> A chat app, a game lobby, a collaborative editor — you often need two copies talking to each other to test them.</li>
+          </ul>
+          <p>The mechanism is the same in every case, and it has two halves:</p>
+          <ol>
+            <li><strong>Tell macOS to force a new process</strong> — that's the <code>open -n</code> flag.</li>
+            <li><strong>Make sure the app doesn't block itself.</strong> Many apps notice a running copy of themselves and quit the newcomer (a "single-instance guard"). If one exists, you have to opt out of it.</li>
+          </ol>
+          <p>Parts 1 and 2 below are just those two halves applied to the IDE and to your own app.</p>
+        </div>
+      </div>
+
+      <h2>Part 1 — Multiple LingCode IDE instances</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p>LingCode ships with a single-instance guard on purpose (it stops a notification or a "reopen" from spawning a stray second window). You opt out of it with a small marker file. Create it once:</p>
+          <pre><code>touch ~/.lingcode-allow-multiple-instances</code></pre>
+          <p>While that file exists, LingCode skips the guard. Delete it to go back to normal single-instance behaviour:</p>
+          <pre><code>rm ~/.lingcode-allow-multiple-instances</code></pre>
+          <div class="tip-box">
+            <strong>Why a file, not a settings toggle?</strong> It's unambiguous and scriptable — there's no dependence on which preferences store the app happens to read, which is exactly the kind of subtlety that makes "I set the flag but nothing changed" bugs.
+          </div>
+        </div>
+      </div>
+
+      <h2>Launch the extra instances</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>A normal double-click still just focuses the existing window. To force a <em>new</em> instance, use <code>open -n</code> (the <code>-n</code> means "open a new instance"):</p>
+          <pre><code>open -n /Applications/LingCode.app</code></pre>
+          <p>Run it again for a third, a fourth, and so on. Each is a full, independent IDE.</p>
+          <p>Typing a command every time gets old. Two quick shortcuts:</p>
+          <ul>
+            <li><strong>A shell alias</strong> — add to <code>~/.zshrc</code>:
+              <pre><code>alias lingcode-new='open -n /Applications/LingCode.app'</code></pre>
+              Then just run <code>lingcode-new</code>.</li>
+            <li><strong>A double-clickable launcher</strong> — in Automator, make an <em>Application</em> with one "Run Shell Script" step containing <code>open -n /Applications/LingCode.app</code>, and save it as "New LingCode". Now it lives in your Dock like any app.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Know the trade-off</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>Every LingCode instance shares the <strong>same identity</strong> (<code>hainanmandi.LingCode</code>), so they share one settings store and one Keychain (API keys, sign-in).</p>
+          <p>In practice: open <em>different projects</em> in each instance freely, but don't change global Settings in two instances at the same moment — the last writer wins and can quietly overwrite the other. This is a convenience, not isolation.</p>
+          <div class="warn-box">
+            <strong>Need true isolation?</strong> If you want separate settings and separate keys per copy, that takes a separate build with its own bundle identifier — a "LingCode Dev" channel, the way Chrome ships alongside Chrome Canary. Multi-instance and a separate channel are different tools; pick the one that fits.
+          </div>
+        </div>
+      </div>
+
+      <h2>Part 2 — Multiple instances of the app you're building</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>This is about <strong>your</strong> app — the one you Build &amp; Run from inside LingCode — not the IDE. Same rule applies: macOS can run several copies, but your app might block it. Two cases.</p>
+          <p><strong>Case A — your app does not enforce single-instance (most apps).</strong> Then it's purely a launch question. Build in LingCode as usual, then launch extra copies of the build product with <code>open -n</code>:</p>
+          <pre><code>open -n /path/to/YourApp.app</code></pre>
+          <p>Finding the product: after a successful build the <code>.app</code> lands in your build output — for Xcode-style projects that's <code>~/Library/Developer/Xcode/DerivedData/&lt;YourProject&gt;-…/Build/Products/Debug/YourApp.app</code>. Reveal it in Finder, then type <code>open -n </code> in Terminal and drag the app onto the window to fill in the path.</p>
+          <div class="tip-box">
+            <strong>Tip:</strong> LingCode's <strong>Run</strong> action launches the first copy for you. To get <em>more</em> running alongside it, point <code>open -n</code> at the same build product — the first came from Run, each <code>open -n</code> adds another.
+          </div>
+        </div>
+      </div>
+
+      <h2>If your app blocks its own second copy</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p><strong>Case B</strong> — if <code>open -n</code> makes a second copy flash on screen and immediately quit, your app is detecting itself and bowing out, exactly like LingCode's guard. Find that code and gate it behind an opt-out. In Swift/AppKit it usually looks like this early in launch:</p>
+          <pre><code>let others = NSRunningApplication
+    .runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier!)
+    .filter { $0.processIdentifier != NSRunningApplication.current.processIdentifier }
+if !others.isEmpty {
+    // ... activate the existing one and exit(0) ...
+}</code></pre>
+          <p>Wrap it so it can be skipped — the same marker-file trick works cleanly:</p>
+          <pre><code>let allowMultiple = FileManager.default.fileExists(
+    atPath: NSHomeDirectory() + "/.yourapp-allow-multiple-instances")
+if !allowMultiple {
+    // ... existing single-instance guard ...
+}</code></pre>
+          <p>Then <code>touch ~/.yourapp-allow-multiple-instances</code>, rebuild, and <code>open -n</code> works. For frameworks with a built-in lock — Electron's <code>app.requestSingleInstanceLock()</code>, Qt's <code>QtSingleApplication</code>, a Tauri single-instance plugin — make that lock conditional instead of unconditional.</p>
+        </div>
+      </div>
+
+      <h2>Sharing data between copies</h2>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <p>Just like the IDE, two copies of your app share one settings store and Keychain by default (same bundle id). If your app also writes to a single SQLite file or binds a fixed port, two instances will collide on those too.</p>
+          <p>When you genuinely need them isolated, give each its own data directory — pass a <code>--data-dir</code> argument, or key your storage off an instance id you generate at launch. Then two copies can run without stepping on each other's state.</p>
+        </div>
+      </div>
+
+      <h2>Troubleshooting</h2>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <ul>
+            <li><strong><code>open -n</code> just focuses the existing window, no new copy.</strong> The single-instance guard is still active. For LingCode, confirm <code>~/.lingcode-allow-multiple-instances</code> exists. For your app, see Part 2 Case B.</li>
+            <li><strong>Second copy appears for a split second, then quits.</strong> Same cause — the guard ran and called <code>exit()</code>. Gate it behind the marker file.</li>
+            <li><strong>Settings or API keys keep resetting.</strong> Two instances both wrote global preferences. Avoid changing global Settings in more than one instance at once, or move to a separate-identity build for real isolation.</li>
+            <li><strong>"App is damaged / can't be opened" on a hand-built copy.</strong> It isn't signed/notarized for distribution. On your own machine that's fine — right-click → <em>Open</em> once to clear Gatekeeper, or build with your developer signing identity.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Quick reference</h2>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <pre><code># LingCode IDE — enable, launch, disable
+touch ~/.lingcode-allow-multiple-instances
+open -n /Applications/LingCode.app          # repeat for more
+rm ~/.lingcode-allow-multiple-instances
+
+# Any app you built (no self-guard)
+open -n /path/to/YourApp.app                # repeat for more</code></pre>
+          <p style="margin-top:1rem;"><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Get LingCode →</a></p>
+        </div>
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/brainstorm-before-you-build.html" class="tutorial-next-card">
+            <h3>Brainstorm before you build</h3>
+            <p>Clarify scope and requirements with LingCode before any code gets written</p>
+          </a>
+          <a href="/tutorials/add-custom-hooks.html" class="tutorial-next-card">
+            <h3>Add custom hooks</h3>
+            <p>Automate behaviour around the agent loop — run commands on events you choose</p>
+          </a>
+          <a href="/docs.html" class="tutorial-next-card">
+            <h3>Browse the docs</h3>
+            <p>Reference material for the IDE, the CLI, Cloud, and everything in between</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

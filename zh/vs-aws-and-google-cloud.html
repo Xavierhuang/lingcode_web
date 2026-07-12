@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>灵码云 vs AWS 与 Google Cloud — 一个后端 vs 拼装十几个服务 | LingCode</title>
+  <meta name="description" content="在 AWS 或 Google Cloud 上，你要用十几个服务拼出一个后端——数据库、认证、存储、函数、CDN，再加上把它们黏起来的 IAM 和网络配置。灵码云给你一个已配好的后端（Postgres + 认证 + 存储 + 实时 + 函数 + 向量 + 托管），由 agent 从一句 prompt 搭好。这是诚实的取舍对比。">
+  <meta name="keywords" content="灵码云 vs AWS, 灵码云 vs Google Cloud, 托管后端, BaaS 替代, AWS Cognito 替代, Firebase 替代, 无需运维的应用后端, Postgres 后端">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/zh/vs-aws-and-google-cloud.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/vs-aws-and-google-cloud.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/vs-aws-and-google-cloud.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/vs-aws-and-google-cloud.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#FAFAFF">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/zh/vs-aws-and-google-cloud.html">
+  <meta property="og:title" content="灵码云 vs AWS 与 Google Cloud — 一个后端 vs 拼装十几个服务">
+  <meta property="og:description" content="超大规模云厂商给你所有积木和拼装它们的活儿。灵码云给你拼好的后端，由 agent 从一句 prompt 搭好。">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="zh_CN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="灵码云 vs AWS 与 Google Cloud">
+  <meta name="twitter:description" content="一个已配好的后端——Postgres、认证、存储、实时、函数、向量、托管——对比手工拼装十几个云服务。">
+  <meta name="article:modified_time" content="2026-06-21T00:00:00Z">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "灵码云 vs AWS 与 Google Cloud — 一个后端 vs 拼装十几个服务",
+    "description": "在 AWS 或 Google Cloud 上你要用十几个独立服务以及把它们连起来的 IAM/网络拼出一个后端。灵码云给你一个已配好的后端——Postgres、认证、存储、实时、函数、向量搜索和托管——由 agent 从一句 prompt 搭好。诚实的取舍，以及各自适合的场景。",
+    "image": "https://lingcode.dev/og-image.png",
+    "datePublished": "2026-06-21",
+    "dateModified": "2026-06-21",
+    "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+    "publisher": { "@type": "Organization", "name": "Aurelian Labs Inc.", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/zh/vs-aws-and-google-cloud.html" },
+    "url": "https://lingcode.dev/zh/vs-aws-and-google-cloud.html",
+    "inLanguage": "zh-CN",
+    "keywords": "灵码云 vs AWS, 灵码云 vs Google Cloud, 托管后端, BaaS 替代, 无需运维的应用后端"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://lingcode.dev/" },
+      { "@type": "ListItem", "position": 2, "name": "灵码云 vs AWS 与 Google Cloud", "item": "https://lingcode.dev/zh/vs-aws-and-google-cloud.html" }
+    ]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="../style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0 auto; max-width: 640px; }
+    .blog-content { max-width: 760px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.8; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.8; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 0.9rem; }
+    .blog-content th, .blog-content td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-muted); vertical-align: top; }
+    .blog-content th { color: var(--text); font-weight: 600; background: var(--bg-card); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/vs-aws-and-google-cloud.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+<main>
+  <section class="blog-hero">
+    <div class="section-container">
+      <p class="section-eyebrow">诚实对比</p>
+      <h1>灵码云 vs AWS 与 Google Cloud</h1>
+      <p>AWS 和 Google Cloud 是地球上最强大的基础设施。它们也是一套<em>零件盒</em>：要搭起一个后端，你得挑一个数据库、一个认证服务、一个存储服务、一个函数运行时、一个 CDN，然后写让它们彼此通信的 IAM 和网络配置。灵码云跳过了这场拼装——一个后端，每块都已接好，由 agent 从一句 prompt 搭出来。下面讲它在哪些地方帮到你，以及超大规模云厂商在哪些地方仍然取胜。</p>
+    </div>
+  </section>
+
+  <article class="blog-content">
+    <h2 id="at-a-glance">一览</h2>
+    <table>
+      <thead>
+        <tr><th>就发布一个应用后端而言</th><th>灵码云</th><th>AWS</th><th>Google Cloud</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>需要拼接的服务数量</td><td>一个</td><td>好几个 + 黏合</td><td>好几个 + 黏合</td></tr>
+        <tr><td>搭起一个可用后端的耗时</td><td>几分钟，从一句 prompt</td><td>数小时到数天</td><td>数小时到数天</td></tr>
+        <tr><td>数据库</td><td>Postgres，已配好</td><td>RDS / Aurora（你来配）</td><td>Cloud SQL / AlloyDB（你来配）</td></tr>
+        <tr><td>认证</td><td>内置（邮箱、OTP、OAuth、MFA）</td><td>Cognito（独立服务）</td><td>Identity Platform / Firebase Auth</td></tr>
+        <tr><td>文件存储</td><td>内置（桶 + 签名直传）</td><td>S3（+ IAM 策略）</td><td>Cloud Storage（+ IAM）</td></tr>
+        <tr><td>实时</td><td>内置（SSE，经 RLS 过滤）</td><td>AppSync / API Gateway WebSocket</td><td>Firestore / Pub/Sub</td></tr>
+        <tr><td>服务端函数</td><td>内置 + 自定义 Deno</td><td>Lambda + API Gateway</td><td>Cloud Functions / Cloud Run</td></tr>
+        <tr><td>向量搜索</td><td>内置（pgvector + 嵌入）</td><td>OpenSearch / Aurora pgvector</td><td>Vertex AI 向量搜索 / AlloyDB</td></tr>
+        <tr><td>应用托管</td><td>内置（静态 + 边缘 SSR）</td><td>S3 + CloudFront / Amplify</td><td>Firebase Hosting / Cloud CDN</td></tr>
+        <tr><td>要配置的 IAM / VPC / 网络</td><td>无</td><td>必需</td><td>必需</td></tr>
+        <tr><td>用户级数据隔离</td><td>默认就是行级安全</td><td>你来设计</td><td>你来设计</td></tr>
+        <tr><td>由 AI agent 从 prompt 配好</td><td>是</td><td>否</td><td>否</td></tr>
+        <tr><td>计费模型</td><td>固定套餐 + 档位限额</td><td>按服务计量</td><td>按服务计量</td></tr>
+        <tr><td>数据可移植性</td><td>标准 Postgres——随时导出</td><td>因服务而异</td><td>因服务而异</td></tr>
+        <tr><td>规模上限 / 全球基础设施</td><td>对大多数应用够用</td><td>近乎无限</td><td>近乎无限</td></tr>
+        <tr><td>服务广度</td><td>专注于应用后端</td><td>200+ 服务</td><td>非常广</td></tr>
+        <tr><td>合规广度（HIPAA/FedRAMP 等）</td><td>有限</td><td>非常齐全</td><td>非常齐全</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="assembly">核心差异：拼装 vs. 已配好</h2>
+    <p>一个典型的应用后端几乎每次都需要同样的六样东西：一个数据库、用户账户、文件存储、一些服务端逻辑、实时更新，以及一个托管前端的地方。每个平台答得不一样的问题是：<em>谁来把这些东西拼成一个可用的系统。</em></p>
+    <p>在 AWS 上，一个"简单"的后端是：数据库用 RDS 或 Aurora，认证用 Cognito，文件用 S3，逻辑用 Lambda 挂在 API Gateway 后面，实时用 AppSync，分发用 CloudFront——然后再写 IAM 角色、一个 VPC、安全组，以及一个 CloudFormation 或 Terraform 栈，把它们从七个互不相连的控制台变成一个系统。Google Cloud 是同样的形状、不同的名字：Cloud SQL 或 AlloyDB、Identity Platform 或 Firebase Auth、Cloud Storage、Cloud Functions 或 Cloud Run、Firestore 或 Pub/Sub、Cloud CDN。两者一旦拼好都很出色。代价就是这场拼装——而它是用运维时间付的，不只是钱。</p>
+    <p>灵码云把这场拼装做成了默认值。<a href="/zh/docs/cloud/">一个后端</a>已经包含 Postgres、认证、存储、实时、函数、向量搜索和托管，都在同一个 HTTPS 网关后面。没有要写的 IAM、没有要设计的 VPC、没有服务间的接线——因为它们本就不是你必须连接的独立服务。</p>
+
+    <h2 id="agent">从一句 prompt 配好，而不是在控制台里点</h2>
+    <p>这是超大规模云厂商在结构上无法匹敌的部分，也是这项优势的核心。在 <a href="/zh/features.html">灵码 IDE</a>（或 <a href="/try.html">/try</a>）里，后端是 agent 的一等工具。你描述应用；它创建后端、跑迁移、配好表和行级安全策略，并基于它们写应用代码——全在一条流程里完成，你都不用离开编辑器。</p>
+    <p>在 AWS 或 GCP 上，对应的做法是你（或一位基础设施工程师）在网页控制台或一个 Terraform 文件里，点过 Cognito 用户池设置、S3 桶策略和 Lambda IAM 角色。没有"描述应用它就出现"的路径，因为这些积木是为最大控制力、而非最少步骤设计的。灵码优化的是相反的那条轴：<a href="/zh/tutorials/build-a-full-app-on-lingcode-cloud.html">从一句 prompt 到一个上线的、多客户端的后端</a>，只需几分钟。</p>
+
+    <h2 id="security">用户级隔离是默认，而不是一个项目</h2>
+    <p>在超大规模云厂商上，阻止用户 A 读到用户 B 的行是你要设计的东西——应用层校验、范围令牌、IAM 条件，或一个谨慎的查询层。能做到，而且天天有人在做，但把它做对是<em>你的</em>责任，也是泄露的常见来源。</p>
+    <p>灵码云以 Postgres 的<a href="/zh/docs/cloud/security.html">行级安全</a>作为模型：每个登录用户拿到一个会话，网关把每次读写都钉到他们的身份上，一行策略（<code>USING (user_id = auth.uid())</code>）就让一张表变私有。同一个后端可以同时安全地服务一个 Web 应用、一个移动应用和一个管理工具——隔离在数据库里强制执行，而不是在每个客户端里重新实现。</p>
+
+    <h2 id="pricing">可预测的定价 vs. 一切按量计费</h2>
+    <p>AWS 和 GCP 按服务、按维度计费——请求数、GB-秒、出网流量、存储、预置容量——遍布每个组件。那种粒度正是大团队想要的，也正是"我忘了关掉一个东西"和天价账单成为一类故事的原因。预估一个小应用的成本，意味着要为十几个计量表建模。</p>
+    <p>灵码云是<a href="/pricing.html">固定套餐 + 档位限额</a>（有免费档可以起步）。你用细粒度计量换来"知道自己要付多少"。对独立应用或早期产品，这通常是更划算的选择；对超大规模的工作负载，按量的超大规模云定价可能更优——这正好诚实地引出下一节。</p>
+
+    <h2 id="portability">不必担心锁定：它就是 Postgres</h2>
+    <p>对任何托管后端，一个合理的顾虑是"如果我超出它的能力怎么办？"灵码云的回答是：你的数据存在<strong>标准 Postgres</strong> 里，文件存在标准对象存储里——两者都可导出。没有专有的查询语言或文档模型要你改写迁离，所以将来迁到你自己的 Postgres（包括迁到 AWS 或 GCP 上）只是一次数据导出加一次连接串更改，而不是一次重新平台化。构建在 DynamoDB 或 Firestore 这类专有原语上的应用，迁移时要背的改写量更大。</p>
+
+    <h2 id="when-hyperscaler">什么时候 AWS 或 Google Cloud 才是对的选择</h2>
+    <p>超大规模云厂商的名声是它们挣来的。在以下情形选它们：</p>
+    <ul>
+      <li>你处在某种规模或流量画像下，按量定价和全球多区域基础设施比搭建时间更重要。</li>
+      <li>你需要应用后端之外的服务——数据仓库、ML 训练、消息总线、IoT、容器编排，以及那条 200+ 服务的长尾。</li>
+      <li>你有硬性合规要求（HIPAA、FedRAMP、特定数据驻留），需要依赖超大规模云厂商的认证广度。</li>
+      <li>你已经有一支平台/运维团队，他们的工作正是这场拼装，那份控制力值这个时间。</li>
+    </ul>
+    <p>在那些情形下，拼装成本是真实的、但也是值得的——而且你仍然可以让一个用灵码构建的应用指向你自己的基础设施，因为项目是你的，数据库也是可移植的。</p>
+
+    <h2 id="bottom-line">结论</h2>
+    <p>AWS 和 Google Cloud 卖给你的是每一块积木，以及随你怎么拼的自由。那份自由就是产品——也是工作量。灵码云卖给你的是拼好的结果：一个后端，认证、存储、实时、函数、向量搜索和托管都已接好，在你描述应用时由 agent 配好。如果你在发布一个产品，并且想让后端是"一句 prompt"而不是"一个项目"，那就是这项优势所在。如果你在以超大规模云的体量运行基础设施，那就留着那盒零件。大多数应用构建者、大多数时候，只是想发布——而那正是灵码云面向的人。</p>
+
+    <div class="blog-cta">
+      <p>灵码云免费起步。一个后端，从一句 prompt 配好。</p>
+      <p><a href="/zh/cloud.html">了解灵码云 →</a> · <a href="/zh/tutorials/build-a-full-app-on-lingcode-cloud.html">从头到尾构建一个应用</a> · <a href="/zh/docs/cloud/">云端文档</a></p>
+    </div>
+  </article>
+</main>
+
+<footer>
+<div class="footer-grid">
+  <div class="footer-brand">
+    <a href="/" class="logo">
+      <span class="logo-mark">L</span>
+      <span class="logo-name">LingCode</span>
+    </a>
+    <p>原生 AI 应用开发。专为想要发布产品的创业者和需要真正工具的工程师打造。</p>
+  </div>
+  <div class="footer-col">
+    <h4>产品</h4>
+    <ul>
+      <li><a href="/try.html">Web (/try)</a></li>
+      <li><a href="/cli.html">CLI</a></li>
+      <li><a href="/features.html">Mac IDE</a></li>
+      <li><a href="/pricing.html">定价</a></li>
+      <li><a href="/changelog.html">更新日志</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>开发者</h4>
+    <ul>
+      <li><a href="/docs.html">文档</a></li>
+      <li><a href="/tutorials.html">教程</a></li>
+      <li><a href="/getting-started.html">入门指南</a></li>
+      <li><a href="/cli.html">CLI 参考</a></li>
+      <li><a href="/why-not-cursor.html">为什么不用 Cursor</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>社区</h4>
+    <ul>
+      <li><a href="/community.html">周五工作坊</a></li>
+      <li><a href="/community.html">高校合作</a></li>
+      <li><a href="/examples.html">作品展示</a></li>
+      <li><a href="/blog.html">博客</a></li>
+      <li><a href="/support.html">支持</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>公司</h4>
+    <ul>
+      <li><a href="/manifesto.html">宣言</a></li>
+      <li><a href="/pitch.html">Pitch</a></li>
+      <li><a href="/privacy.html">隐私政策</a></li>
+      <li><a href="/account.html">账户</a></li>
+      <li><a href="/signin.html">登录</a></li>
+      <li><a href="/signup.html">注册</a></li>
+    </ul>
+  </div>
+</div>
+<div class="footer-bottom">
+  <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+  <span>native · fast · honest</span>
+</div>
+</footer>
+
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

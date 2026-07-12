@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode Cloud vs AWS &amp; Google Cloud — One backend vs a dozen services | LingCode</title>
+  <meta name="description" content="On AWS or Google Cloud you assemble a backend from a dozen services — database, auth, storage, functions, CDN, plus IAM and networking to glue them. LingCode Cloud gives you one provisioned backend (Postgres + auth + storage + realtime + functions + vector + hosting) the agent sets up from a prompt. Here's the honest trade-off.">
+  <meta name="keywords" content="LingCode Cloud vs AWS, LingCode Cloud vs Google Cloud, managed backend, BaaS alternative, AWS Cognito alternative, Firebase alternative, app backend without DevOps, Postgres backend">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/vs-aws-and-google-cloud.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/vs-aws-and-google-cloud.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/vs-aws-and-google-cloud.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/vs-aws-and-google-cloud.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#FAFAFF">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/vs-aws-and-google-cloud.html">
+  <meta property="og:title" content="LingCode Cloud vs AWS & Google Cloud — One backend vs a dozen services">
+  <meta property="og:description" content="The hyperscalers give you every building block and the job of assembling them. LingCode Cloud gives you the assembled backend, provisioned by the agent from a prompt.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LingCode Cloud vs AWS & Google Cloud">
+  <meta name="twitter:description" content="One provisioned backend — Postgres, auth, storage, realtime, functions, vector, hosting — versus wiring a dozen cloud services together by hand.">
+  <meta name="article:modified_time" content="2026-06-21T00:00:00Z">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "LingCode Cloud vs AWS & Google Cloud — One backend vs a dozen services",
+    "description": "On AWS or Google Cloud you assemble a backend from a dozen separate services and the IAM/networking to connect them. LingCode Cloud gives you one provisioned backend — Postgres, auth, storage, realtime, functions, vector search, and hosting — set up by the agent from a prompt. The honest trade-off, and when each is the right call.",
+    "image": "https://lingcode.dev/og-image.png",
+    "datePublished": "2026-06-21",
+    "dateModified": "2026-06-21",
+    "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+    "publisher": { "@type": "Organization", "name": "Aurelian Labs Inc.", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/vs-aws-and-google-cloud.html" },
+    "url": "https://lingcode.dev/vs-aws-and-google-cloud.html",
+    "keywords": "LingCode Cloud vs AWS, LingCode Cloud vs Google Cloud, managed backend, BaaS alternative, app backend without DevOps"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+      { "@type": "ListItem", "position": 2, "name": "LingCode Cloud vs AWS & Google Cloud", "item": "https://lingcode.dev/vs-aws-and-google-cloud.html" }
+    ]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0 auto; max-width: 640px; }
+    .blog-content { max-width: 760px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 0.9rem; }
+    .blog-content th, .blog-content td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-muted); vertical-align: top; }
+    .blog-content th { color: var(--text); font-weight: 600; background: var(--bg-card); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+<main>
+  <section class="blog-hero">
+    <div class="section-container">
+      <p class="section-eyebrow">The honest comparison</p>
+      <h1>LingCode Cloud vs AWS &amp; Google Cloud</h1>
+      <p>AWS and Google Cloud are the most powerful infrastructure on earth. They are also a <em>kit of parts</em>: to stand up a backend you pick a database, an auth service, a storage service, a functions runtime, a CDN, and then write the IAM and networking that lets them talk. LingCode Cloud skips the assembly — one backend, every piece already wired, provisioned by the agent from a prompt. Here's where that helps, and where the hyperscalers still win.</p>
+    </div>
+  </section>
+
+  <article class="blog-content">
+    <h2 id="at-a-glance">At a glance</h2>
+    <table>
+      <thead>
+        <tr><th>For shipping an app backend</th><th>LingCode Cloud</th><th>AWS</th><th>Google Cloud</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Services to wire together</td><td>One</td><td>A handful + glue</td><td>A handful + glue</td></tr>
+        <tr><td>Time to a working backend</td><td>Minutes, from a prompt</td><td>Hours to days</td><td>Hours to days</td></tr>
+        <tr><td>Database</td><td>Postgres, provisioned</td><td>RDS / Aurora (you configure)</td><td>Cloud SQL / AlloyDB (you configure)</td></tr>
+        <tr><td>Auth</td><td>Built in (email, OTP, OAuth, MFA)</td><td>Cognito (separate service)</td><td>Identity Platform / Firebase Auth</td></tr>
+        <tr><td>File storage</td><td>Built in (buckets + signed uploads)</td><td>S3 (+ IAM policies)</td><td>Cloud Storage (+ IAM)</td></tr>
+        <tr><td>Realtime</td><td>Built in (SSE, RLS-filtered)</td><td>AppSync / API Gateway WebSockets</td><td>Firestore / Pub/Sub</td></tr>
+        <tr><td>Server functions</td><td>Built in + custom Deno</td><td>Lambda + API Gateway</td><td>Cloud Functions / Cloud Run</td></tr>
+        <tr><td>Vector search</td><td>Built in (pgvector + embeddings)</td><td>OpenSearch / Aurora pgvector</td><td>Vertex AI Vector Search / AlloyDB</td></tr>
+        <tr><td>App hosting</td><td>Built in (static + edge SSR)</td><td>S3 + CloudFront / Amplify</td><td>Firebase Hosting / Cloud CDN</td></tr>
+        <tr><td>IAM / VPC / networking to set up</td><td>None</td><td>Required</td><td>Required</td></tr>
+        <tr><td>Per-user data isolation</td><td>Row-level security, by default</td><td>You design it</td><td>You design it</td></tr>
+        <tr><td>Provisioned by an AI agent from a prompt</td><td>Yes</td><td>No</td><td>No</td></tr>
+        <tr><td>Pricing model</td><td>Flat plan + tier limits</td><td>Metered per service</td><td>Metered per service</td></tr>
+        <tr><td>Data portability</td><td>Standard Postgres — export anytime</td><td>Varies by service</td><td>Varies by service</td></tr>
+        <tr><td>Scale ceiling / global infra</td><td>Good for most apps</td><td>Effectively unlimited</td><td>Effectively unlimited</td></tr>
+        <tr><td>Breadth of services</td><td>Focused on app backends</td><td>200+ services</td><td>Very broad</td></tr>
+        <tr><td>Compliance breadth (HIPAA/FedRAMP/etc.)</td><td>Limited</td><td>Extensive</td><td>Extensive</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="assembly">The core difference: assembly vs. provisioned</h2>
+    <p>A typical app backend needs the same six things almost every time: a database, user accounts, file storage, some server-side logic, live updates, and a place to host the frontend. The question each platform answers differently is <em>who assembles those into a working system.</em></p>
+    <p>On AWS, a "simple" backend is RDS or Aurora for the database, Cognito for auth, S3 for files, Lambda behind API Gateway for logic, AppSync for realtime, CloudFront for delivery — and then IAM roles, a VPC, security groups, and a CloudFormation or Terraform stack to make them a system instead of seven disconnected consoles. Google Cloud is the same shape with different names: Cloud SQL or AlloyDB, Identity Platform or Firebase Auth, Cloud Storage, Cloud Functions or Cloud Run, Firestore or Pub/Sub, Cloud CDN. Both are superb once assembled. The cost is the assembly — and it's paid in DevOps time, not just dollars.</p>
+    <p>LingCode Cloud ships that assembly as the default. <a href="/docs/cloud/">One backend</a> already contains Postgres, auth, storage, realtime, functions, vector search, and hosting, behind a single HTTPS gateway. There is no IAM to write, no VPC to design, no service-to-service wiring — because they were never separate services you had to connect.</p>
+
+    <h2 id="agent">Provisioned from a prompt, not a console</h2>
+    <p>This is the part the hyperscalers structurally can't match, and it's the heart of the advantage. In the <a href="/features.html">LingCode IDE</a> (or <a href="/try.html">/try</a>), the agent has the backend as a first-class tool. You describe the app; it provisions the backend, runs the migrations, sets up the tables and row-level-security policies, and writes the app code against them — in one flow, without you leaving the editor.</p>
+    <p>On AWS or GCP, the equivalent is you (or an infra engineer) in a web console or a Terraform file, clicking through Cognito user-pool settings and S3 bucket policies and Lambda IAM roles. There's no "describe the app and it appears" path, because the building blocks were designed for maximum control, not minimum steps. LingCode optimizes the opposite axis: <a href="/tutorials/build-a-full-app-on-lingcode-cloud.html">from a prompt to a live, multi-client backend</a> in minutes.</p>
+
+    <h2 id="security">Per-user isolation is the default, not a project</h2>
+    <p>On a hyperscaler, keeping user A from reading user B's rows is something you design — application-layer checks, scoped tokens, IAM conditions, or a careful query layer. It's doable and it's done all the time, but it's <em>your</em> responsibility to get right, and it's a common source of leaks.</p>
+    <p>LingCode Cloud uses Postgres <a href="/docs/cloud/security.html">row-level security</a> as the model: each signed-in user gets a session, the gateway pins every read and write to their identity, and a one-line policy (<code>USING (user_id = auth.uid())</code>) makes a table private. The same backend can safely serve a web app, a mobile app, and an admin tool at once — separation is enforced in the database, not re-implemented in each client.</p>
+
+    <h2 id="pricing">Predictable pricing vs. metered everything</h2>
+    <p>AWS and GCP bill per service, per dimension — requests, GB-seconds, egress, storage, provisioned capacity — across every component. That granularity is exactly what large teams want, and it's also why "I left one thing running" and surprise bills are a genre of story. Forecasting the cost of a small app means modeling a dozen meters.</p>
+    <p>LingCode Cloud is a <a href="/pricing.html">flat plan with tier limits</a> (there's a free tier to start). You trade fine-grained metering for knowing what you'll pay. For an indie app or an early product that's usually the better deal; for a workload at massive scale, per-unit hyperscaler pricing can win — which is the honest segue to the next section.</p>
+
+    <h2 id="portability">No lock-in panic: it's just Postgres</h2>
+    <p>A fair worry about any managed backend is "what if I outgrow it?" LingCode Cloud's answer is that your data lives in <strong>standard Postgres</strong> and your files in standard object storage — both exportable. There's no proprietary query language or document model to rewrite away from, so a future move to your own Postgres (including on AWS or GCP) is a data export and a connection-string change, not a re-platform. Apps built on proprietary hyperscaler primitives like DynamoDB or Firestore carry more rewrite weight when they move.</p>
+
+    <h2 id="when-hyperscaler">When AWS or Google Cloud is genuinely the right call</h2>
+    <p>The hyperscalers earn their reputation. Reach for them when:</p>
+    <ul>
+      <li>You operate at a scale or traffic profile where per-unit pricing and global multi-region infrastructure matter more than setup time.</li>
+      <li>You need services outside an app backend — data warehouses, ML training, message buses, IoT, container orchestration, the long tail of 200+ services.</li>
+      <li>You have hard compliance requirements (HIPAA, FedRAMP, specific data-residency) that depend on the hyperscalers' certification breadth.</li>
+      <li>You already have a platform/DevOps team whose job is exactly this assembly, and the control is worth the time.</li>
+    </ul>
+    <p>In those cases the assembly cost is real but justified — and you can still point a LingCode-built app at your own infrastructure, since the project is yours and the database is portable.</p>
+
+    <h2 id="bottom-line">The bottom line</h2>
+    <p>AWS and Google Cloud sell you every building block and the freedom to assemble them however you like. That freedom is the product — and the work. LingCode Cloud sells you the assembled result: one backend with auth, storage, realtime, functions, vector search, and hosting already connected, set up by the agent while you describe the app. If you're shipping a product and want the backend to be a prompt rather than a project, that's the advantage. If you're running infrastructure at hyperscaler scale, keep the kit of parts. Most app builders, most of the time, just want to ship — and that's who LingCode Cloud is for.</p>
+
+    <div class="blog-cta">
+      <p>LingCode Cloud is free to start. One backend, provisioned from a prompt.</p>
+      <p><a href="/cloud.html">Explore LingCode Cloud →</a> · <a href="/tutorials/build-a-full-app-on-lingcode-cloud.html">Build an app end to end</a> · <a href="/docs/cloud/">Cloud docs</a></p>
+    </div>
+  </article>
+</main>
+
+<footer>
+<div class="footer-grid">
+  <div class="footer-brand">
+    <a href="/" class="logo">
+      <span class="logo-mark">L</span>
+      <span class="logo-name">LingCode</span>
+    </a>
+    <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Product</h4>
+    <ul>
+      <li><a href="/try.html">Web (/try)</a></li>
+      <li><a href="/cli.html">CLI</a></li>
+      <li><a href="/features.html">Mac IDE</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/changelog.html">Changelog</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Developers</h4>
+    <ul>
+      <li><a href="/docs.html">Docs</a></li>
+      <li><a href="/tutorials.html">Tutorials</a></li>
+      <li><a href="/getting-started.html">Getting started</a></li>
+      <li><a href="/cli.html">CLI reference</a></li>
+      <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Community</h4>
+    <ul>
+      <li><a href="/community.html">Friday workshops</a></li>
+      <li><a href="/community.html">For universities</a></li>
+      <li><a href="/examples.html">Showcase</a></li>
+      <li><a href="/blog.html">Blog</a></li>
+      <li><a href="/support.html">Support</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Company</h4>
+    <ul>
+      <li><a href="/manifesto.html">Manifesto</a></li>
+      <li><a href="/pitch.html">Pitch</a></li>
+      <li><a href="/privacy.html">Privacy</a></li>
+      <li><a href="/account.html">Account</a></li>
+      <li><a href="/signin.html">Sign in</a></li>
+      <li><a href="/signup.html">Sign up</a></li>
+    </ul>
+  </div>
+</div>
+<div class="footer-bottom">
+  <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+  <span>native · fast · honest</span>
+</div>
+</footer>
+
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260603" defer></script>
+</body>
+</html>

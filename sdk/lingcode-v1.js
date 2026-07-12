@@ -171,6 +171,16 @@
 
   LingCodeClient.prototype.from = function (table) { return new Query(this, table); };
 
+  // Call a tenant-defined SQL function (created via a migration) by name. Pass an
+  // OBJECT for named args — client.rpc('search_events', { q: 'jazz', in_city: 'NYC' })
+  // — or an ARRAY for positional args — client.rpc('top_n', [10]). Runs server-side
+  // as the tenant role (RLS on); the way to get JOINs / CTEs / full-text ranking
+  // the single-table CRUD builder can't do.
+  LingCodeClient.prototype.rpc = function (name, params) {
+    var args = (params == null) ? [] : params; // object → named, array → positional
+    return settle(this._req('rpc', { fn: name, args: args }));
+  };
+
   // Read the URL for a session handed back by an auth redirect, finalize it,
   // and strip the params so a refresh doesn't re-trigger.
   LingCodeClient.prototype._consumeUrlSession = function () {
@@ -272,6 +282,18 @@
   Query.prototype.insert = function (rowOrRows) {
     return settle(this.c._req('insert', { table: this.table, row: rowOrRows }));
   };
+  // Upsert one row or an array via INSERT ... ON CONFLICT. opts.onConflict is the
+  // conflict-target column(s) (required); opts.merge (default true) → DO UPDATE
+  // from the incoming values, false → DO NOTHING.
+  // client.from('events').upsert(rows, { onConflict: 'source_hash' })
+  Query.prototype.upsert = function (rowOrRows, opts) {
+    opts = opts || {};
+    return settle(this.c._req('upsert', {
+      table: this.table, row: rowOrRows,
+      onConflict: opts.onConflict,
+      merge: opts.merge !== false,
+    }));
+  };
   Query.prototype.update = function (patch) {
     if (!hasWhere(this._where)) return Promise.resolve({ data: null, error: makeError('update() requires a filter (.eq/.match) — refusing an unscoped update', 'where_required') });
     return settle(this.c._req('update', { table: this.table, where: this._where, patch: patch }));
@@ -296,7 +318,15 @@
 
   // ── auth ─────────────────────────────────────────────────────────────
   function AuthApi(client) { this.c = client; }
-  AuthApi.prototype.signUp = function (creds) { return settle(this._post('auth/signup', creds)); };
+  AuthApi.prototype.signUp = function (creds) {
+    var c = creds || {};
+    var body = { email: c.email, password: c.password };
+    // redirectTo receives ?lc_verify=<token> when the backend requires email
+    // verification; harmless otherwise. Returns { pending_verification: true }
+    // (no session) in that case, else a session.
+    if (c.redirectTo || c.redirect_url) body.redirect_url = c.redirectTo || c.redirect_url;
+    return settle(this._post('auth/signup', body));
+  };
   AuthApi.prototype.signIn = AuthApi.prototype.signInWithPassword = function (creds) { return settle(this._post('auth/signin', creds)); };
   AuthApi.prototype._post = function (op, body) {
     var self = this;
@@ -322,6 +352,17 @@
     }));
   };
   AuthApi.prototype.verifyMagicLink = function (token) { return settle(this._post('auth/magiclink/verify', { token: token })); };
+  // Email-verification on password signup: exchange the ?lc_verify=<token> for a
+  // session (also marks the email confirmed), or resend the confirmation link.
+  AuthApi.prototype.verifyEmail = function (token) {
+    var t = (token && token.token) || token; // accept a raw token or { token }
+    return settle(this._post('auth/verify-email', { token: t }));
+  };
+  AuthApi.prototype.resendVerification = function (opts) {
+    return settle(this.c._req('auth/verify-email/resend', {
+      email: opts.email, redirect_url: (opts && opts.redirectTo) || location.href,
+    }));
+  };
   AuthApi.prototype.sendOtp = function (opts) { return settle(this.c._req('auth/otp/request', { email: opts.email })); };
   AuthApi.prototype.verifyOtp = function (opts) { return settle(this._post('auth/otp/verify', { email: opts.email, code: opts.code })); };
   AuthApi.prototype.getUser = function () { return (this.c._session && this.c._session.user) || null; };
@@ -475,6 +516,17 @@
     }).then(function (sub) {
       return self.c._req('push/subscribe', { subscription: sub.toJSON ? sub.toJSON() : sub });
     }).then(function (d) { return { data: d, error: null }; }, function (e) { return { data: null, error: e }; });
+  };
+  // Register a native device token (iOS/APNs or Android/FCM). For hybrid apps
+  // (React Native, Capacitor, web-wrapped) that obtain a device token from the
+  // OS — pure-native apps may POST /push/subscribe directly instead.
+  PushApi.prototype.registerNativeToken = function (opts) {
+    opts = opts || {};
+    var kind = opts.kind, token = opts.token;
+    if (kind !== 'apns' && kind !== 'fcm') return Promise.resolve({ data: null, error: makeError('kind must be "apns" or "fcm"', 'invalid_argument') });
+    if (!token) return Promise.resolve({ data: null, error: makeError('device token required', 'invalid_argument') });
+    return this.c._req('push/subscribe', { subscription: { kind: kind, token: token } })
+      .then(function (d) { return { data: d, error: null }; }, function (e) { return { data: null, error: e }; });
   };
   function urlBase64ToUint8Array(base64) {
     var pad = '='.repeat((4 - base64.length % 4) % 4);

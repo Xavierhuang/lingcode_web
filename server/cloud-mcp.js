@@ -73,9 +73,21 @@ const TOOLS = [
   },
   {
     name: 'insert',
-    description: 'Insert a row into ONE table. Returns the inserted row. No upsert / ON CONFLICT — on a duplicate-key error, fetch the row then update instead.',
-    inputSchema: { type: 'object', properties: { table: { type: 'string' }, row: { type: 'object' } }, required: ['table', 'row'], additionalProperties: false },
-    run: (be, a) => dataPlane.proxyInsert(be.backendId, String((a && a.table) || ''), a && a.row, { userId: be.userId }),
+    description: 'Insert into ONE table. `row` is a single object OR an array of objects (batch insert — one transaction, up to the tier maxRowsPerWrite). Returns the inserted row(s). For idempotent writes by a unique key, use upsert instead.',
+    inputSchema: { type: 'object', properties: { table: { type: 'string' }, row: {} }, required: ['table', 'row'], additionalProperties: false },
+    run: (be, a) => dataPlane.proxyInsert(be.backendId, String((a && a.table) || ''), a && a.row, { userId: be.userId, maxRows: limitsForTier(be.tier).maxRowsPerWrite }),
+  },
+  {
+    name: 'upsert',
+    description: 'Insert or update into ONE table via INSERT ... ON CONFLICT. `row` is a single object or an array (batch, up to tier maxRowsPerWrite). `on_conflict` is the unique column(s) (string or array) to match. merge (default true) updates the conflicting row from the incoming values; merge:false leaves it untouched (DO NOTHING). The idempotent-ingest primitive.',
+    inputSchema: { type: 'object', properties: { table: { type: 'string' }, row: {}, on_conflict: {}, merge: { type: 'boolean' } }, required: ['table', 'row', 'on_conflict'], additionalProperties: false },
+    run: (be, a) => dataPlane.proxyUpsert(be.backendId, String((a && a.table) || ''), a && a.row, { onConflict: a && a.on_conflict, merge: !(a && a.merge === false), userId: be.userId, maxRows: limitsForTier(be.tier).maxRowsPerWrite }),
+  },
+  {
+    name: 'rpc',
+    description: 'Call a tenant-defined SQL function (created via apply_migration with CREATE FUNCTION) by name: SELECT * FROM <fn>($1,...). The way to run a complex read — JOINs, CTEs, aggregations, full-text ts_rank, window functions — from app code, with the SQL kept server-side. `args` is an ordered array of positional arguments. Returns rows (≤1000).',
+    inputSchema: { type: 'object', properties: { fn: { type: 'string' }, args: { type: 'array' } }, required: ['fn'], additionalProperties: false },
+    run: (be, a) => dataPlane.rpcCall(be.backendId, String((a && a.fn) || ''), (a && a.args) || [], { userId: be.userId }),
   },
   {
     name: 'update',

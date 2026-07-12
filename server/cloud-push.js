@@ -8,11 +8,11 @@
 // worker, subscribes via the browser PushManager, and POSTs the subscription to
 // /push/subscribe (route in cloud-backend.js). Owners send from the console.
 //
-// Secondary path: BYO FCM relay for customers who also ship a native Android
-// app — they paste a Firebase service-account JSON (stored encrypted); we mint
-// an OAuth token and send via FCM HTTP v1. APNs (native iOS) is not yet wired —
-// /try doesn't produce native iOS apps, so it's deferred (subscribe with
-// kind:'apns' is accepted and stored, but send returns a clear 'not enabled').
+// Native path: BYO relays for customers who also ship native apps. Android —
+// paste a Firebase service-account JSON; we mint an OAuth token and send via
+// FCM HTTP v1. iOS — paste an APNs .p8 (+ key id / team id / topic / env); we
+// sign an ES256 provider token and send over HTTP/2. Both creds are stored
+// encrypted; sendPush fans a notification out across web + FCM + APNs subs.
 
 const crypto = require('crypto');
 const { getUserFromRequest } = require('./auth-helpers');
@@ -123,6 +123,69 @@ function stringifyData(data) {
   return out;
 }
 
+// ── APNs HTTP/2 (BYO token-based .p8) ───────────────────────────────────
+// Apple requires HTTP/2 — the global fetch() the FCM path uses won't reach
+// api.push.apple.com — so this uses Node's built-in http2. Auth is an ES256
+// JWT signed with the .p8 (an EC P-256 private key), reusable for up to 1h
+// and cached per backend like the FCM token. Dev-build device tokens only
+// deliver on the sandbox host; TestFlight/App-Store tokens use production.
+const _apnsToken = new Map(); // backendId -> { token, exp(seconds) }
+function apnsProviderToken(backendId, creds) {
+  const jwt = require('jsonwebtoken');
+  const nowSec = Math.floor(Date.now() / 1000);
+  const cached = _apnsToken.get(backendId);
+  if (cached && cached.exp > nowSec + 60) return cached.token;
+  const token = jwt.sign(
+    { iss: creds.teamId, iat: nowSec },
+    creds.p8,
+    { algorithm: 'ES256', header: { alg: 'ES256', kid: creds.keyId } }
+  );
+  _apnsToken.set(backendId, { token, exp: nowSec + 50 * 60 }); // refresh < 1h
+  return token;
+}
+function apnsHost(env) { return env === 'sandbox' ? 'https://api.sandbox.push.apple.com' : 'https://api.push.apple.com'; }
+function sendApns(backendId, creds, deviceToken, msg) {
+  const http2 = require('http2');
+  const host = creds.host || apnsHost(creds.env); // creds.host is a test-only override
+  const jwt = apnsProviderToken(backendId, creds);
+  const body = JSON.stringify(Object.assign(
+    { aps: { alert: { title: msg.title || 'Notification', body: msg.body || '' }, sound: 'default' } },
+    msg.url ? { url: msg.url } : {},
+    msg.data && typeof msg.data === 'object' ? msg.data : {}
+  ));
+  return new Promise((resolve, reject) => {
+    const session = http2.connect(host);
+    let settled = false;
+    const fail = (err) => { if (settled) return; settled = true; try { session.close(); } catch (_) {} reject(err); };
+    session.on('error', fail);
+    const req = session.request({
+      ':method': 'POST',
+      ':path': '/3/device/' + deviceToken,
+      authorization: 'bearer ' + jwt,
+      'apns-topic': creds.topic,
+      'apns-push-type': 'alert',
+      'content-type': 'application/json',
+    });
+    let status = 0, data = '';
+    req.on('response', (headers) => { status = headers[':status'] || 0; });
+    req.setEncoding('utf8');
+    req.on('data', (chunk) => { data += chunk; });
+    req.on('end', () => {
+      if (settled) return; settled = true;
+      try { session.close(); } catch (_) {}
+      if (status === 200) return resolve();
+      let reason = ''; try { reason = (JSON.parse(data) || {}).reason || ''; } catch (_) {}
+      const e = new Error('APNs send failed: ' + status + (reason ? ' ' + reason : ''));
+      // 410 Unregistered / 400 BadDeviceToken = dead token → reuse the same
+      // 404/410 prune path sendPush already runs for web push.
+      e.statusCode = (status === 410 || reason === 'BadDeviceToken' || reason === 'Unregistered') ? 410 : status;
+      reject(e);
+    });
+    req.on('error', fail);
+    req.end(body);
+  });
+}
+
 // Fan a notification out to a backend's subscribers (optionally one user).
 // Prunes dead Web Push subscriptions (404/410). Returns delivery counts.
 async function sendPush(db, backendId, msg) {
@@ -135,6 +198,11 @@ async function sendPush(db, backendId, msg) {
   const cfg = db.prepare('SELECT * FROM backend_push_config WHERE backend_id = ?').get(backendId) || {};
   let sa = null;
   if (cfg.fcm_key_enc) { try { sa = JSON.parse(decryptSecret(cfg.fcm_key_enc)); } catch (_) { sa = null; } }
+  let apnsCreds = null;
+  if (cfg.apns_key_enc && cfg.apns_key_id && cfg.apns_team_id && cfg.apns_topic) {
+    const p8 = decryptSecret(cfg.apns_key_enc);
+    if (p8) apnsCreds = { p8, keyId: cfg.apns_key_id, teamId: cfg.apns_team_id, topic: cfg.apns_topic, env: cfg.apns_env || 'production' };
+  }
 
   let sent = 0, pruned = 0, failed = 0;
   for (const s of subs) {
@@ -151,7 +219,10 @@ async function sendPush(db, backendId, msg) {
       } else if (s.kind === 'fcm') {
         if (!sa) { failed++; continue; }
         await sendFcm(backendId, sa, s.endpoint, msg); sent++;
-      } else { failed++; /* apns deferred */ }
+      } else if (s.kind === 'apns') {
+        if (!apnsCreds) { failed++; continue; }
+        await sendApns(backendId, apnsCreds, s.endpoint, msg); sent++;
+      } else { failed++; }
     } catch (e) {
       const code = e && e.statusCode;
       if (code === 404 || code === 410) { db.prepare('DELETE FROM backend_push_subscriptions WHERE backend_id = ? AND endpoint = ?').run(backendId, s.endpoint); pruned++; }
@@ -172,32 +243,65 @@ function registerCloudPushRoutes(app, db) {
     return { user, row };
   }
 
-  // Owner: push status (is the runtime available, is a keypair minted, is BYO FCM set).
+  // Owner: push status (runtime available, keypair minted, BYO FCM/APNs set).
   app.get('/api/cloud/account/backends/:backendId/push/config', (req, res) => {
     const ctx = ownerBackend(req, res); if (!ctx) return;
-    const cfg = db.prepare('SELECT vapid_public, fcm_key_enc, updated_at FROM backend_push_config WHERE backend_id = ?').get(ctx.row.id) || {};
+    const cfg = db.prepare('SELECT vapid_public, fcm_key_enc, apns_key_enc, apns_key_id, apns_team_id, apns_topic, apns_env, updated_at FROM backend_push_config WHERE backend_id = ?').get(ctx.row.id) || {};
     const subs = db.prepare('SELECT COUNT(*) AS n FROM backend_push_subscriptions WHERE backend_id = ?').get(ctx.row.id).n;
-    res.json({ ok: true, data: { available: isAvailable(), vapid_public: cfg.vapid_public || vapidPublic(db, ctx.row.id), fcm_configured: !!cfg.fcm_key_enc, subscriber_count: subs } });
+    res.json({ ok: true, data: {
+      available: isAvailable(),
+      vapid_public: cfg.vapid_public || vapidPublic(db, ctx.row.id),
+      fcm_configured: !!cfg.fcm_key_enc,
+      apns_configured: !!cfg.apns_key_enc,
+      apns_key_id: cfg.apns_key_id || '', apns_team_id: cfg.apns_team_id || '',
+      apns_topic: cfg.apns_topic || '', apns_env: cfg.apns_env || 'production',
+      subscriber_count: subs,
+    } });
   });
 
-  // Owner: set / clear BYO FCM service account (paste the JSON). {} clears it.
+  // Owner: set / clear BYO native creds. fcm_service_account (JSON) for Android;
+  // apns { p8, key_id, team_id, topic, env } for iOS. null/'' on either clears it.
+  // FCM and APNs are independent — sending one field leaves the other untouched.
   app.put('/api/cloud/account/backends/:backendId/push/config', (req, res) => {
     const ctx = ownerBackend(req, res); if (!ctx) return;
     const now = new Date().toISOString();
+    const body = req.body || {};
+
+    // FCM
     let fcmEnc = undefined;
-    const raw = req.body && req.body.fcm_service_account;
+    const raw = body.fcm_service_account;
     if (raw === null || raw === '') { fcmEnc = null; }
     else if (raw) {
       let sa; try { sa = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (_) { return res.status(400).json({ ok: false, error: 'invalid_request', message: 'fcm_service_account must be valid JSON' }); }
       if (!sa.client_email || !sa.private_key || !sa.project_id) return res.status(400).json({ ok: false, error: 'invalid_request', message: 'service account needs client_email, private_key, project_id' });
       fcmEnc = encryptSecret(JSON.stringify(sa));
     }
-    // Ensure a row exists (also mints VAPID) then patch FCM if provided.
+
+    // APNs
+    let apns = undefined; // { enc, keyId, teamId, topic, env } | null (clear) | undefined (untouched)
+    const a = body.apns;
+    if (a === null || a === '') { apns = null; }
+    else if (a && typeof a === 'object') {
+      const p8 = a.p8, keyId = a.key_id, teamId = a.team_id, topic = a.topic;
+      const env = a.env === 'sandbox' ? 'sandbox' : 'production';
+      if (!p8 || !keyId || !teamId || !topic) return res.status(400).json({ ok: false, error: 'invalid_request', message: 'apns needs p8, key_id, team_id, topic' });
+      if (!/BEGIN PRIVATE KEY/.test(String(p8))) return res.status(400).json({ ok: false, error: 'invalid_request', message: 'p8 must be the contents of the .p8 key file (PEM)' });
+      apns = { enc: encryptSecret(String(p8)), keyId: String(keyId), teamId: String(teamId), topic: String(topic), env };
+    }
+
+    // Ensure a row exists (also mints VAPID) then patch whichever creds were sent.
     ensureVapid(db, ctx.row.id);
     if (fcmEnc !== undefined) db.prepare('UPDATE backend_push_config SET fcm_key_enc = ?, updated_at = ? WHERE backend_id = ?').run(fcmEnc, now, ctx.row.id);
+    if (apns === null) {
+      db.prepare('UPDATE backend_push_config SET apns_key_enc = NULL, apns_key_id = NULL, apns_team_id = NULL, apns_topic = NULL, updated_at = ? WHERE backend_id = ?').run(now, ctx.row.id);
+    } else if (apns) {
+      db.prepare('UPDATE backend_push_config SET apns_key_enc = ?, apns_key_id = ?, apns_team_id = ?, apns_topic = ?, apns_env = ?, updated_at = ? WHERE backend_id = ?')
+        .run(apns.enc, apns.keyId, apns.teamId, apns.topic, apns.env, now, ctx.row.id);
+    }
     _fcmToken.delete(ctx.row.id);
-    const cfg = db.prepare('SELECT vapid_public, fcm_key_enc FROM backend_push_config WHERE backend_id = ?').get(ctx.row.id) || {};
-    res.json({ ok: true, data: { vapid_public: cfg.vapid_public, fcm_configured: !!cfg.fcm_key_enc } });
+    _apnsToken.delete(ctx.row.id);
+    const cfg = db.prepare('SELECT vapid_public, fcm_key_enc, apns_key_enc, apns_env FROM backend_push_config WHERE backend_id = ?').get(ctx.row.id) || {};
+    res.json({ ok: true, data: { vapid_public: cfg.vapid_public, fcm_configured: !!cfg.fcm_key_enc, apns_configured: !!cfg.apns_key_enc, apns_env: cfg.apns_env || 'production' } });
   });
 
   // Owner: send a notification to all subscribers (or one user_id).
@@ -213,4 +317,4 @@ function registerCloudPushRoutes(app, db) {
   });
 }
 
-module.exports = { registerCloudPushRoutes, sendPush, ensureVapid, vapidPublic, saveSubscription, isAvailable };
+module.exports = { registerCloudPushRoutes, sendPush, ensureVapid, vapidPublic, saveSubscription, isAvailable, apnsProviderToken, sendApns, apnsHost };

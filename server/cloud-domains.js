@@ -129,37 +129,112 @@ function installWorkerDomainProxy(app, db) {
 // straight to that host's DNS editor — turning "paste these records somewhere"
 // into "detect → click through → paste". Free, first-party, every registrar.
 //
-// Maps an NS hostname suffix → { label, deep link to the DNS editor }. Templated
-// per-domain where the host supports it; dashboard root otherwise.
+// Per-host fields:
+//   label/url   — deep-link to the host's DNS editor.
+//   apex        — strategy the host supports for APEX (root) domains:
+//                   'cname-flattening' — host follows the CNAME at root (Cloudflare-style ANAME).
+//                   'alias'            — host has ALIAS/ANAME record type pointing-but-not-CNAME.
+//                   'no-apex-cname'    — host's default DNS only supports A/AAAA at apex; user
+//                                        needs a paid upgrade OR to delegate the zone elsewhere.
+//                   'manual-a'         — host supports A records at apex; user must set the
+//                                        explicit IP (works but fragile across edge IP rotations).
+//                   'unknown'          — fallback for unrecognized hosts.
+//   apexNote    — human-readable apex-setup instruction shown in the dialog when the user adds a
+//                 2-label apex domain. Should be 1-3 sentences, end-user-facing tone.
+const APEX_TARGET = 'edge.domainee.dev';
 const DNS_HOST_HINTS = [
-  { rx: /(^|\.)domaincontrol\.com$/i,             label: 'GoDaddy',           url: (d) => `https://dcc.godaddy.com/control/${d}/dns` },
-  { rx: /(^|\.)ns\.cloudflare\.com$/i,            label: 'Cloudflare',        url: ()  => 'https://dash.cloudflare.com' },
-  { rx: /(^|\.)registrar-servers\.com$/i,         label: 'Namecheap',         url: (d) => `https://ap.www.namecheap.com/domains/domaincontrolpanel/${d}/advancedns` },
-  { rx: /(^|\.)googledomains\.com$/i,             label: 'Google Domains',    url: ()  => 'https://domains.google.com/registrar' },
-  { rx: /(^|\.)awsdns-?\d*\.[a-z]+$/i,            label: 'AWS Route 53',      url: ()  => 'https://console.aws.amazon.com/route53/v2/hostedzones' },
-  { rx: /(^|\.)digitalocean\.com$/i,              label: 'DigitalOcean',      url: (d) => `https://cloud.digitalocean.com/networking/domains/${d}` },
-  { rx: /(^|\.)vercel-dns\.com$/i,                label: 'Vercel',            url: ()  => 'https://vercel.com/dashboard/domains' },
-  { rx: /(^|\.)dnsimple\.com$/i,                  label: 'DNSimple',          url: ()  => 'https://dnsimple.com/dashboard' },
-  { rx: /(^|\.)gandi\.net$/i,                     label: 'Gandi',             url: (d) => `https://admin.gandi.net/domain/${d}/records` },
-  { rx: /(^|\.)name\.com$/i,                      label: 'Name.com',          url: (d) => `https://www.name.com/account/domain/details/${d}` },
-  { rx: /(^|\.)porkbun\.com$/i,                   label: 'Porkbun',           url: ()  => 'https://porkbun.com/account/domainsSpeedy' },
-  { rx: /(^|\.)(ui-dns\.(com|de|org|biz)|1and1)/i, label: 'IONOS',           url: ()  => 'https://my.ionos.com' },
-  { rx: /(^|\.)hover\.com$/i,                     label: 'Hover',             url: ()  => 'https://www.hover.com/control_panel/domains' },
-  { rx: /(^|\.)(hostinger|dns-parking\.com)/i,    label: 'Hostinger',         url: ()  => 'https://hpanel.hostinger.com' },
-  { rx: /(^|\.)wixdns\.net$/i,                    label: 'Wix',               url: ()  => 'https://www.wix.com/account/domains' },
-  { rx: /(^|\.)squarespacedns\.com$/i,            label: 'Squarespace',       url: ()  => 'https://account.squarespace.com/domains' },
-  { rx: /(^|\.)worldnic\.com$/i,                  label: 'Network Solutions', url: ()  => 'https://www.networksolutions.com/my-account' },
-  { rx: /(^|\.)dreamhost\.com$/i,                 label: 'DreamHost',         url: ()  => 'https://panel.dreamhost.com/index.cgi?tree=domain.manage' },
-  { rx: /(^|\.)bluehost\.com$/i,                  label: 'Bluehost',          url: ()  => 'https://my.bluehost.com' },
-  { rx: /(^|\.)ovh\.net$/i,                       label: 'OVH',               url: ()  => 'https://www.ovh.com/manager' },
+  { rx: /(^|\.)domaincontrol\.com$/i,             label: 'GoDaddy',           url: (d) => `https://dcc.godaddy.com/control/${d}/dns`,
+    apex: 'cname-flattening', apexNote: `Apex: GoDaddy supports CNAME-at-root via its "Forward" type. Easier: add CNAME @ → ${APEX_TARGET} and GoDaddy resolves it. SSL is auto-issued.` },
+  { rx: /(^|\.)ns\.cloudflare\.com$/i,            label: 'Cloudflare',        url: ()  => 'https://dash.cloudflare.com',
+    apex: 'cname-flattening', apexNote: `Apex: in Cloudflare DNS add CNAME @ → ${APEX_TARGET} with Proxy DISABLED (gray cloud — orange will break SSL). Cloudflare flattens it natively.` },
+  { rx: /(^|\.)registrar-servers\.com$/i,         label: 'Namecheap BasicDNS', url: (d) => `https://ap.www.namecheap.com/domains/domaincontrolpanel/${d}/advancedns`,
+    apex: 'no-apex-cname', apexNote: `Apex: Namecheap BasicDNS can't put a CNAME at root. Three options: (a) Use Namecheap's URL Forward to redirect apex → https://www.${'${d}'} — works for http:// but BREAKS https://apex.  (b) Upgrade to Namecheap PremiumDNS ($5/yr) for ALIAS support.  (c) Move DNS to Cloudflare (free) for CNAME flattening.` },
+  { rx: /(^|\.)googledomains\.com$/i,             label: 'Google Domains',    url: ()  => 'https://domains.google.com/registrar',
+    apex: 'manual-a', apexNote: `Apex: Google Domains doesn't support ALIAS/ANAME. Add A record @ → 138.197.107.228 (our edge IP — may rotate, prefer Cloudflare-flattened CNAME for resilience).` },
+  { rx: /(^|\.)awsdns-?\d*\.[a-z]+$/i,            label: 'AWS Route 53',      url: ()  => 'https://console.aws.amazon.com/route53/v2/hostedzones',
+    apex: 'alias', apexNote: `Apex: in Route 53 add an ALIAS A record at root targeting ${APEX_TARGET} (Route 53's ALIAS resolves CNAMEs server-side).` },
+  { rx: /(^|\.)digitalocean\.com$/i,              label: 'DigitalOcean',      url: (d) => `https://cloud.digitalocean.com/networking/domains/${d}`,
+    apex: 'manual-a', apexNote: `Apex: DO DNS doesn't support ALIAS. Add A record @ → 138.197.107.228 (our edge IP).` },
+  { rx: /(^|\.)vercel-dns\.com$/i,                label: 'Vercel',            url: ()  => 'https://vercel.com/dashboard/domains',
+    apex: 'cname-flattening', apexNote: `Apex: Vercel DNS resolves CNAMEs at root. Add CNAME @ → ${APEX_TARGET}.` },
+  { rx: /(^|\.)dnsimple\.com$/i,                  label: 'DNSimple',          url: ()  => 'https://dnsimple.com/dashboard',
+    apex: 'alias', apexNote: `Apex: in DNSimple add ALIAS record @ → ${APEX_TARGET}. SSL is auto-issued.` },
+  { rx: /(^|\.)gandi\.net$/i,                     label: 'Gandi',             url: (d) => `https://admin.gandi.net/domain/${d}/records`,
+    apex: 'manual-a', apexNote: `Apex: Gandi's LiveDNS doesn't support ALIAS. Add A record @ → 138.197.107.228 (our edge IP).` },
+  { rx: /(^|\.)name\.com$/i,                      label: 'Name.com',          url: (d) => `https://www.name.com/account/domain/details/${d}`,
+    apex: 'manual-a', apexNote: `Apex: Name.com DNS doesn't support ALIAS. Add A record @ → 138.197.107.228 (our edge IP).` },
+  { rx: /(^|\.)porkbun\.com$/i,                   label: 'Porkbun',           url: ()  => 'https://porkbun.com/account/domainsSpeedy',
+    apex: 'alias', apexNote: `Apex: in Porkbun add ALIAS record @ → ${APEX_TARGET}. (Porkbun calls it "ALIAS" in the dropdown.)` },
+  { rx: /(^|\.)(ui-dns\.(com|de|org|biz)|1and1)/i, label: 'IONOS',           url: ()  => 'https://my.ionos.com',
+    apex: 'manual-a', apexNote: `Apex: IONOS doesn't support ALIAS. Add A record @ → 138.197.107.228 (our edge IP).` },
+  { rx: /(^|\.)hover\.com$/i,                     label: 'Hover',             url: ()  => 'https://www.hover.com/control_panel/domains',
+    apex: 'manual-a', apexNote: `Apex: Hover doesn't support ALIAS. Add A record @ → 138.197.107.228 (our edge IP).` },
+  { rx: /(^|\.)(hostinger|dns-parking\.com)/i,    label: 'Hostinger',         url: ()  => 'https://hpanel.hostinger.com',
+    apex: 'manual-a', apexNote: `Apex: Hostinger DNS doesn't support ALIAS. Add A record @ → 138.197.107.228 (our edge IP).` },
+  { rx: /(^|\.)wixdns\.net$/i,                    label: 'Wix',               url: ()  => 'https://www.wix.com/account/domains',
+    apex: 'no-apex-cname', apexNote: `Apex: Wix DNS doesn't expose ALIAS/ANAME and locks down editing. Move DNS to Cloudflare (free) or your registrar for full control.` },
+  { rx: /(^|\.)squarespacedns\.com$/i,            label: 'Squarespace',       url: ()  => 'https://account.squarespace.com/domains',
+    apex: 'no-apex-cname', apexNote: `Apex: Squarespace DNS is restrictive. Move DNS to Cloudflare (free) or your registrar for ALIAS / CNAME-flattening support.` },
+  { rx: /(^|\.)worldnic\.com$/i,                  label: 'Network Solutions', url: ()  => 'https://www.networksolutions.com/my-account',
+    apex: 'manual-a', apexNote: `Apex: Network Solutions DNS doesn't support ALIAS. Add A record @ → 138.197.107.228 (our edge IP).` },
+  { rx: /(^|\.)dreamhost\.com$/i,                 label: 'DreamHost',         url: ()  => 'https://panel.dreamhost.com/index.cgi?tree=domain.manage',
+    apex: 'manual-a', apexNote: `Apex: DreamHost DNS doesn't support ALIAS. Add A record @ → 138.197.107.228 (our edge IP).` },
+  { rx: /(^|\.)bluehost\.com$/i,                  label: 'Bluehost',          url: ()  => 'https://my.bluehost.com',
+    apex: 'manual-a', apexNote: `Apex: Bluehost DNS doesn't support ALIAS. Add A record @ → 138.197.107.228 (our edge IP).` },
+  { rx: /(^|\.)ovh\.net$/i,                       label: 'OVH',               url: ()  => 'https://www.ovh.com/manager',
+    apex: 'manual-a', apexNote: `Apex: OVH DNS doesn't expose ALIAS. Add A record @ → 138.197.107.228 (our edge IP).` },
 ];
 
 function dnsHostFromNameservers(nameservers) {
   for (const ns of nameservers || []) {
     const host = String(ns || '').toLowerCase().replace(/\.$/, '');
-    for (const h of DNS_HOST_HINTS) if (h.rx.test(host)) return { label: h.label, url: h.url };
+    for (const h of DNS_HOST_HINTS) if (h.rx.test(host)) {
+      return { label: h.label, url: h.url, apex: h.apex || 'unknown', apexNote: h.apexNote || null };
+    }
   }
   return null;
+}
+
+// Returns true if `domain` is a 2-label apex (example.com), false otherwise
+// (www.example.com, api.example.com, example.co.uk). The dialog uses this to
+// decide whether the apex-specific note is even relevant — for subdomains, the
+// generic CNAME instruction is always correct and the apex note is noise.
+// Multi-part public suffixes (co.uk, com.au) deliberately don't count as apex
+// here — they'd usually be entered as 3-label registrable names.
+function isBareApex(domain) {
+  return String(domain || '').split('.').length === 2;
+}
+
+// HEAD probe of https://{domain}/ — surfaces TLS / origin / Namecheap-apex-wart
+// failures separately from "DNS doesn't point at us." Used by the per-app and
+// per-worker status endpoints so the dialog's status badge can be 3-state
+// (Active / DNS-OK-but-HTTPS-fails / Verifying) instead of binary.
+//
+// Why HEAD: any status < 500 means the LingCode edge accepted the request and
+// terminated TLS — the EDGE is reachable even if the user's app returned 404
+// for /. We only flag failures that look like infrastructure (TLS, timeout,
+// origin unreachable). Origin 4xx is "working from a DNS+TLS perspective."
+//
+// 5s timeout: long enough for cold-start TLS + handshake, short enough to
+// avoid blocking the dialog poll. Returns { ok, status, error } where `ok`
+// is true on any 2xx/3xx/4xx response, false on timeout/ECONNREFUSED/TLS error.
+async function probeHttps(domain, timeoutMs) {
+  const t = typeof timeoutMs === 'number' ? timeoutMs : 5000;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), t);
+  try {
+    const res = await fetch(`https://${domain}/`, {
+      method: 'HEAD',
+      redirect: 'manual',
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    return { ok: res.status < 500, status: res.status, error: null };
+  } catch (e) {
+    clearTimeout(timer);
+    const msg = (e && (e.message || String(e))) || 'unknown';
+    return { ok: false, status: null, error: msg.slice(0, 200) };
+  }
 }
 
 // NS records live at the zone apex; querying a subdomain usually returns ENODATA.
@@ -197,9 +272,23 @@ function registerCustomDomainRoutes(app, db) {
     try {
       const { zone, nameservers } = await resolveZoneNameservers(domain);
       const hit = dnsHostFromNameservers(nameservers);
-      res.json({ ok: true, zone, nameservers, host: hit ? hit.label : null, dnsUrl: hit ? hit.url(zone || domain) : null });
+      // Per-domain apex strategy + note: when the dialog renders for a 2-label
+      // apex (example.com) the client swaps the generic "use registrar
+      // forwarding" message with the host-specific instruction. Subdomains
+      // (www.example.com, api.example.com) get apex=null and the dialog hides
+      // the apex note entirely — the generic CNAME message is sufficient.
+      const apex = isBareApex(domain) && hit ? hit.apex : null;
+      const apexNote = apex && hit && hit.apexNote
+        ? String(hit.apexNote).replace(/\$\{d\}/g, domain)
+        : null;
+      res.json({
+        ok: true, zone, nameservers,
+        host: hit ? hit.label : null,
+        dnsUrl: hit ? hit.url(zone || domain) : null,
+        apex, apexNote,
+      });
     } catch (_) {
-      res.json({ ok: true, host: null, dnsUrl: null });
+      res.json({ ok: true, host: null, dnsUrl: null, apex: null, apexNote: null });
     }
   });
 
@@ -253,4 +342,4 @@ function registerCustomDomainRoutes(app, db) {
   });
 }
 
-module.exports = { installCustomDomainMiddleware, installWorkerDomainProxy, registerCustomDomainRoutes, HOST_RE, siblingDomain };
+module.exports = { installCustomDomainMiddleware, installWorkerDomainProxy, registerCustomDomainRoutes, HOST_RE, siblingDomain, probeHttps };

@@ -220,6 +220,7 @@
     <div class="footer-col">
       <h4>Community</h4>
       <ul>
+        <li><a href="https://forum.lingcode.dev">Forum</a></li>
         <li><a href="/community.html">Friday workshops</a></li>
         <li><a href="/community.html">For universities</a></li>
         <li><a href="/examples.html">Showcase</a></li>
@@ -240,7 +241,7 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <span>LingCode by HainanMandi Tech · © 2026 · Made for shipping</span>
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
     <span>native · fast · honest</span>
   </div>
 </footer>
@@ -436,6 +437,13 @@
             '<button type="button" class="btn btn-primary btn-lg" id="btn-open-lingcode">Open LingCode</button>' +
           '</div>' +
           '<p id="open-app-msg" class="account-billing" style="display:none;margin-top:12px">Didn\u2019t open? Install from <a href="/LingCode-Installer.dmg" style="color:var(--signal,#00d084)">Download</a>.</p>' +
+        '</div>' +
+        '<div class="account-card">' +
+          '<div class="account-card-head"><h2>Remote control</h2></div>' +
+          '<p class="account-billing" style="margin:0 0 14px">Drive your Mac\u2019s agent from any device.</p>' +
+          '<div class="account-actions account-actions-tight">' +
+            '<a class="btn btn-primary btn-lg" href="/remote">Open remote panel \u2192</a>' +
+          '</div>' +
         '</div>' +
         '<div class="account-card">' +
           '<div class="account-card-head"><h2>Billing</h2><span class="meta">' + escapeHtml(tierLabel(d.tier)) + '</span></div>' +
@@ -1016,6 +1024,13 @@
     // r may be a row object ({domain, provider, cname}) or a bare domain string
     // (older callers). Domainee-managed domains need just ONE CNAME → edge.domainee.dev;
     // own-edge domains show the CNAME (subdomain) + A (root) pair.
+    //
+    // The `.cd-apex-note` span is initially empty. When the registrar-detection
+    // callback below (`/api/cloud/domains/registrar`) returns an `apex` strategy +
+    // `apexNote`, that span gets populated with host-specific guidance instead of
+    // the generic "use registrar forwarding" message. For subdomains
+    // (api.x.com / www.x.com) the server returns apex=null and the span stays
+    // empty — generic CNAME instruction above is sufficient.
     function dnsBlock(r) {
       var d = (r && r.domain) || r;
       var box = '<div style="background:#f4f4f8;border:1px solid #e6e6ee;border-radius:8px;padding:8px 10px;font-size:.74rem;font-family:Geist Mono,monospace;margin-top:6px;color:#1b1b26">';
@@ -1024,12 +1039,14 @@
         return box
           + '<div style="display:flex;align-items:center;gap:6px"><span><b>CNAME</b> ' + escapeHtml(d) + ' → <b>' + escapeHtml(tgt) + '</b></span>'
           + '<button class="btn btn-ghost cd-copy" data-copy="' + escapeHtml(d + ' CNAME ' + tgt) + '" style="margin-left:auto;padding:1px 8px;font-size:.7rem">Copy</button></div>'
-          + '<span style="color:#8a8b94">One record — SSL is issued automatically. (Apex domains: use registrar forwarding to www, since a CNAME can\'t sit at the root.)</span></div>';
+          + '<span style="color:#8a8b94">One record — SSL is issued automatically.</span>'
+          + '<span class="cd-apex-note" style="color:#8a8b94;display:block;margin-top:4px"></span></div>';
       }
       return box
         + '<div style="display:flex;align-items:center;gap:6px"><span>Subdomain: <b>CNAME</b> ' + escapeHtml(d) + ' → <b>apps.lingcode.dev</b></span>'
         + '<button class="btn btn-ghost cd-copy" data-copy="' + escapeHtml(d + ' CNAME apps.lingcode.dev') + '" style="margin-left:auto;padding:1px 8px;font-size:.7rem">Copy</button></div>'
-        + 'Root domain: <b>A</b> ' + escapeHtml(d) + ' → <b>138.197.107.228</b></div>';
+        + 'Root domain: <b>A</b> ' + escapeHtml(d) + ' → <b>138.197.107.228</b>'
+        + '<span class="cd-apex-note" style="color:#8a8b94;display:block;margin-top:4px"></span></div>';
     }
     function renderList(rows) {
       var box = overlay.querySelector('#cd-list');
@@ -1053,27 +1070,73 @@
       });
       // "Smart manual": detect where each domain's DNS lives and deep-link the
       // user straight to that host's DNS editor, beside the copy-able records.
+      // ALSO swap the generic apex-CNAME-impossible blurb for host-specific
+      // guidance when the server reports an apex strategy for this domain (the
+      // 2026-06-29 UX fix — replaces the one-size-fits-all "use registrar
+      // forwarding" message with per-registrar steps + a strategy badge).
       rows.forEach(function (r) {
         var rsel = (window.CSS && CSS.escape) ? CSS.escape(r.domain) : r.domain;
-        var cell = box.querySelector('[data-dom="' + rsel + '"] .cd-reg');
-        if (!cell) return;
+        var domBlock = box.querySelector('[data-dom="' + rsel + '"]');
+        var cell = domBlock && domBlock.querySelector('.cd-reg');
+        var apexCell = domBlock && domBlock.querySelector('.cd-apex-note');
         fetch('/api/cloud/domains/registrar?domain=' + encodeURIComponent(r.domain), { credentials: 'same-origin' })
           .then(function (x) { return x.ok ? x.json() : null; })
           .then(function (s) {
-            if (!s || !s.ok || !s.host) return;
-            var inner = s.dnsUrl
-              ? '<a href="' + escapeHtml(s.dnsUrl) + '" target="_blank" rel="noopener" style="color:#3730a3;font-weight:600;text-decoration:none">Open ' + escapeHtml(s.host) + ' DNS settings ↗</a> <span style="color:#8a8b94">· then add the records above</span>'
-              : '<span style="color:#8a8b94">DNS host: <b>' + escapeHtml(s.host) + '</b> — add the records above in its DNS editor</span>';
-            cell.innerHTML = '<div style="font-size:.74rem;margin-top:7px">' + inner + '</div>';
+            if (!s || !s.ok) return;
+            // Deep-link cell (existing behavior)
+            if (cell && s.host) {
+              var inner = s.dnsUrl
+                ? '<a href="' + escapeHtml(s.dnsUrl) + '" target="_blank" rel="noopener" style="color:#3730a3;font-weight:600;text-decoration:none">Open ' + escapeHtml(s.host) + ' DNS settings ↗</a> <span style="color:#8a8b94">· then add the records above</span>'
+                : '<span style="color:#8a8b94">DNS host: <b>' + escapeHtml(s.host) + '</b> — add the records above in its DNS editor</span>';
+              cell.innerHTML = '<div style="font-size:.74rem;margin-top:7px">' + inner + '</div>';
+            }
+            // Apex-note cell (new): host-specific apex setup instructions for
+            // 2-label apex domains. Server returns apex=null for subdomains —
+            // leave the span empty in that case.
+            if (apexCell && s.apex && s.apexNote) {
+              // Color-coded badge so users see at a glance whether apex setup
+              // will "just work" or need extra steps.
+              var badge = ({
+                'cname-flattening': { bg: '#dcfce7', fg: '#166534', txt: 'auto: CNAME flattening' },
+                'alias':            { bg: '#dcfce7', fg: '#166534', txt: 'auto: ALIAS supported' },
+                'manual-a':         { bg: '#fef3c7', fg: '#92400e', txt: 'manual: A record only' },
+                'no-apex-cname':    { bg: '#fee2e2', fg: '#991b1b', txt: 'limited: needs upgrade or migration' },
+                'unknown':          { bg: '#e5e7eb', fg: '#374151', txt: 'unknown — see docs' }
+              })[s.apex] || { bg: '#e5e7eb', fg: '#374151', txt: s.apex };
+              apexCell.innerHTML =
+                '<span style="display:inline-block;padding:1px 7px;border-radius:6px;background:' + badge.bg + ';color:' + badge.fg + ';font-size:.65rem;font-weight:600;margin-right:6px">' + escapeHtml(badge.txt) + '</span>'
+                + escapeHtml(s.apexNote);
+            }
           }).catch(function () {});
       });
+      // Status badge (3-state, updated 2026-06-29 to surface TLS failures):
+      //   ✓ Active            — DNS resolves to our edge AND https://domain returns
+      //   ⚠ DNS OK, TLS fails — DNS resolves but https probe failed (cert mid-issuance,
+      //                         apex-via-registrar-redirect on Namecheap, origin down, etc.)
+      //   ⏳ Verifying        — DNS not yet pointing at our edge
       if (checkBase) rows.forEach(function (r) {
         fetch(checkBase + encodeURIComponent(r.domain) + '/check', { credentials: 'same-origin' })
           .then(function (x) { return x.ok ? x.json() : null; })
           .then(function (s) {
             var sel = (window.CSS && CSS.escape) ? CSS.escape(r.domain) : r.domain;
             var el = box.querySelector('[data-dom="' + sel + '"] .cd-status');
-            if (el && s) { var ok = s.status === 'active'; el.style.background = ok ? '#dcfce7' : '#e0e7ff'; el.style.color = ok ? '#166534' : '#3730a3'; el.textContent = ok ? '✓ Active' : 'Verifying…'; }
+            if (!el || !s) return;
+            var dnsOk = s.status === 'active';
+            // httpsOk may be undefined on older callers — treat as null and fall
+            // back to the legacy 2-state behavior (DNS-only).
+            var httpsOk = (s.httpsOk === true) ? true : (s.httpsOk === false ? false : null);
+            if (dnsOk && (httpsOk === true || httpsOk === null)) {
+              el.style.background = '#dcfce7'; el.style.color = '#166534'; el.textContent = '✓ Active';
+              el.title = httpsOk === true ? ('HTTPS ' + (s.httpsStatus || 'OK')) : 'DNS pointing at our edge';
+            } else if (dnsOk && httpsOk === false) {
+              el.style.background = '#fef3c7'; el.style.color = '#92400e'; el.textContent = '⚠ DNS OK, TLS fails';
+              el.title = s.httpsError ? ('HTTPS probe failed: ' + s.httpsError) : 'HTTPS probe failed (cert mid-issuance? Namecheap-apex wart? origin down?)';
+            } else {
+              el.style.background = '#e0e7ff'; el.style.color = '#3730a3'; el.textContent = 'Verifying…';
+              el.title = (s.addresses && s.addresses.length)
+                ? ('DNS resolves to ' + s.addresses.join(', ') + ' (expected ' + (s.expected || '<our edge>') + ')')
+                : 'Waiting for DNS to resolve to our edge';
+            }
           }).catch(function () {});
       });
     }

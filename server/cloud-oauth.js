@@ -247,15 +247,77 @@ async function verifyAppleIdentityToken(token, expectedAud) {
   return { email: String(payload.email).toLowerCase(), sub: payload.sub };
 }
 
-function redirectAllowed(urlStr) {
+// ---- native Google id-token verify (for on-device Sign in with Google) -----
+// An iOS app signs in via the GoogleSignIn SDK (its own iOS OAuth client) and
+// POSTs the resulting id_token; we verify it against Google's public keys and
+// the backend's configured Google client id(s), then mint a tenant session.
+// Mirror of the Apple native path. No callback, no domain verification.
+let _googleKeys = null; let _googleKeysAt = 0;
+async function googleJwks() {
+  if (_googleKeys && (Date.now() - _googleKeysAt) < 3600_000) return _googleKeys;
+  const r = await fetch('https://www.googleapis.com/oauth2/v3/certs');
+  const j = await r.json();
+  if (!r.ok || !j || !Array.isArray(j.keys)) throw new Error('google_jwks_unavailable');
+  _googleKeys = j.keys; _googleKeysAt = Date.now();
+  return _googleKeys;
+}
+// Allowed audiences for a native id_token = the backend's configured google
+// client_id (web) PLUS its bundle_id column repurposed as the iOS OAuth client
+// id — which is the `aud` an iOS Google id_token actually carries. Configure via
+// `set_auth_provider google` with bundle_id = <iOS client id>. The managed google
+// client id (if any) is included too, harmlessly.
+function googleNativeAudiences(db, backendId) {
+  const auds = [];
+  try {
+    const row = db.prepare('SELECT client_id, bundle_id FROM backend_oauth_providers WHERE backend_id = ? AND provider = ? AND enabled = 1').get(backendId, 'google');
+    if (row && row.client_id) auds.push(row.client_id);
+    if (row && row.bundle_id) auds.push(row.bundle_id);
+  } catch (_) { /* fall through to managed / env */ }
+  const mgd = managedClient('google'); if (mgd && mgd.clientId) auds.push(mgd.clientId);
+  if (process.env.CLOUD_GOOGLE_IOS_CLIENT_ID) auds.push(process.env.CLOUD_GOOGLE_IOS_CLIENT_ID);
+  return Array.from(new Set(auds.filter(Boolean)));
+}
+async function verifyGoogleIdToken(token, allowedAuds) {
+  if (!token || !allowedAuds || !allowedAuds.length) { const e = new Error('token and audience required'); e.status = 400; throw e; }
+  let header;
+  try { header = JSON.parse(Buffer.from(String(token).split('.')[0], 'base64').toString('utf8')); }
+  catch (_) { const e = new Error('malformed token'); e.status = 400; throw e; }
+  const keys = await googleJwks();
+  const jwk = keys.find((k) => k.kid === header.kid);
+  if (!jwk) { const e = new Error('unknown signing key'); e.status = 401; throw e; }
+  const pem = crypto.createPublicKey({ key: jwk, format: 'jwk' }).export({ format: 'pem', type: 'spki' });
+  let payload;
+  try {
+    payload = jwtLib().verify(token, pem, { algorithms: ['RS256'], issuer: ['https://accounts.google.com', 'accounts.google.com'], audience: allowedAuds });
+  } catch (_) { const e = new Error('token verification failed'); e.status = 401; throw e; }
+  if (!payload.email) { const e = new Error('no email in token'); e.status = 400; throw e; }
+  if (payload.email_verified === false || payload.email_verified === 'false') { const e = new Error('email not verified'); e.status = 401; throw e; }
+  return { email: String(payload.email).toLowerCase(), sub: payload.sub };
+}
+
+function redirectAllowed(urlStr, db, backendId) {
   let u;
   try { u = new URL(urlStr); } catch (_) { return false; }
   if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
   const host = u.hostname.toLowerCase();
   if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.localhost')) return true;
   if (host === 'lingcode.dev' || host.endsWith('.lingcode.dev')) return true;
+  // *.lingcode.app is LingCode's own domain for Cloud-deployed apps — trust it so
+  // every deployed app gets working OAuth out of the box (per-backend allow-list
+  // below is then only needed for genuinely custom domains).
+  if (host === 'lingcode.app' || host.endsWith('.lingcode.app')) return true;
   const extra = (process.env.GOOGLE_OAUTH_ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
-  return extra.some((o) => { try { return new URL(o).hostname.toLowerCase() === host; } catch (_) { return false; } });
+  if (extra.some((o) => { try { return new URL(o).hostname.toLowerCase() === host; } catch (_) { return false; } })) return true;
+  // Per-backend allow-list (backend_auth_settings.allowed_redirect_origins): stored
+  // as normalized hostnames, matched by hostname equality like the env-var branch.
+  if (db && backendId) {
+    try {
+      const row = db.prepare('SELECT allowed_redirect_origins FROM backend_auth_settings WHERE backend_id = ?').get(backendId);
+      const list = (row && row.allowed_redirect_origins) ? String(row.allowed_redirect_origins).split(',').map((s) => s.trim().toLowerCase()).filter(Boolean) : [];
+      if (list.includes(host)) return true;
+    } catch (_) { /* table may predate migration */ }
+  }
+  return false;
 }
 
 function withParam(urlStr, key, value) {
@@ -299,7 +361,7 @@ function registerCloudOAuthRoutes(app, db) {
     const client = resolveClient(db, backendId, provider);
     if (!client) return res.status(503).json({ ok: false, error: provider + '_not_configured', message: `${P.label} sign-in is not configured for this backend.` });
     const redirectUrl = String((req.query && req.query.redirect_url) || '');
-    if (!redirectUrl || !redirectAllowed(redirectUrl)) {
+    if (!redirectUrl || !redirectAllowed(redirectUrl, db, backendId)) {
       return res.status(400).json({ ok: false, error: 'invalid_redirect', message: 'redirect_url is required and must be an allowed origin.' });
     }
     const state = jwtLib().sign({ b: backendId, r: redirectUrl, p: provider, n: crypto.randomBytes(8).toString('hex') }, stateSecret(), { algorithm: 'HS256', expiresIn: '10m' });
@@ -354,7 +416,18 @@ function registerCloudOAuthRoutes(app, db) {
 
       const user = await dataPlane.getOrCreateTenantUserByEmail(backendId, String(got.email).toLowerCase());
       const session = dataPlane.mintUserJwt(backendId, user);
-      return res.redirect(302, withParam(redirectUrl, 'lc_session', session));
+      // Parity with password login (cloud-backend.js /signin): also issue a
+      // refresh token so the web app can auto-refresh the OAuth session instead
+      // of silently signing the user out at the access JWT's ~1h expiry. The
+      // web callback reads `lc_refresh` and stores it as an httpOnly cookie.
+      // Guarded: if refresh issuance fails for any reason, fall back to the
+      // access-only redirect (current behavior) rather than break sign-in.
+      let target = withParam(redirectUrl, 'lc_session', session);
+      try {
+        const refresh = await dataPlane.issueRefreshToken(backendId, user.id);
+        if (refresh && refresh.token) target = withParam(target, 'lc_refresh', refresh.token);
+      } catch (_) { /* keep access-only session on refresh-issue failure */ }
+      return res.redirect(302, target);
     } catch (_) { return fail('signin_failed'); }
   };
   app.get('/api/cloud/auth/google/callback', callback); // back-compat
@@ -405,4 +478,4 @@ function registerCloudOAuthRoutes(app, db) {
   });
 }
 
-module.exports = { registerCloudOAuthRoutes, isConfigured, upsertBackendProvider, callbackUrl, PROVIDERS, verifyAppleIdentityToken, appleBundleId };
+module.exports = { registerCloudOAuthRoutes, isConfigured, upsertBackendProvider, callbackUrl, PROVIDERS, verifyAppleIdentityToken, appleBundleId, verifyGoogleIdToken, googleNativeAudiences };

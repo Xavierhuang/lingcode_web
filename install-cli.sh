@@ -69,8 +69,11 @@ TMPDIR="$(mktemp -d -t lingcode-install.XXXXXX)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 if [ "$OS" = "darwin" ]; then
-  # Mac path: existing Swift tarball flow, unchanged.
-  TARBALL_URL="${LINGCODE_TARBALL_URL:-https://lingcode.dev/lingcode-cli-latest-${OS}-${ARCH}.tar.gz}"
+  # Mac path: Swift tarball published to the public Mac_cli GitHub release,
+  # built + published automatically by .github/workflows/release-cli.yml on
+  # every cli-v* tag. `releases/latest/download/<asset>` always resolves to
+  # the newest published release. Override with LINGCODE_TARBALL_URL for tests.
+  TARBALL_URL="${LINGCODE_TARBALL_URL:-https://github.com/Xavierhuang/Mac_cli/releases/latest/download/lingcode-cli-latest-${OS}-${ARCH}.tar.gz}"
   ARCHIVE_EXT="tar.gz"
 else
   # Linux path: new TS/Bun-compiled .zip from the v0.9.x stream.

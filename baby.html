@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LingCode Baby — a tiny native code editor with Claude built in</title>
+<meta name="description" content="LingCode Baby is a small, fast, native code editor with Claude AI chat and one-click cloud deploy. For macOS, Windows, and Linux.">
+<meta property="og:title" content="LingCode Baby">
+<meta property="og:description" content="A tiny native code editor with Claude built in. macOS, Windows, and Linux.">
+<meta property="og:image" content="/baby-assets/icon.png">
+<link rel="icon" type="image/png" href="/baby-assets/icon.png">
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --ink: #15181c;
+    --muted: #5b6068;
+    --rule: #e5e2dc;
+    --accent: #d24f1f;
+    --code-bg: #15181c;
+    --code-ink: #e5e7eb;
+    --code-comment: #7c8189;
+    --code-string: #c9a972;
+    --code-keyword: #d24f1f;
+    --code-fn: #6aa1e3;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+  header {
+    padding: 28px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand img { width: 32px; height: 32px; border-radius: 7px; }
+  nav a { color: var(--muted); margin-left: 22px; font-size: 14px; }
+  nav a:hover { color: var(--ink); text-decoration: none; }
+
+  .hero { padding: 80px 0 56px; text-align: center; }
+  .hero img.icon { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 8px 24px rgba(20,20,20,0.12); }
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 56px);
+    line-height: 1.05;
+    margin: 28px 0 16px;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+  }
+  .hero h1 .accent { color: var(--accent); }
+  .hero p.punch {
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+    max-width: 620px;
+    margin: 0 auto 14px;
+  }
+  .hero p.lede {
+    font-size: 19px;
+    color: var(--muted);
+    max-width: 560px;
+    margin: 0 auto 32px;
+  }
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 15px;
+  }
+  .cta:hover { text-decoration: none; background: #000; }
+  .cta-sub { display: block; margin-top: 12px; font-size: 13px; color: var(--muted); }
+  .cta-alt {
+    margin: 20px auto 0;
+    max-width: 520px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .cta-alt strong { color: var(--ink); font-weight: 600; }
+  .cta-alt a { color: var(--accent); }
+  .cta-alt .sep { color: var(--rule); margin: 0 6px; }
+
+  /* Mock editor window */
+  .mock {
+    margin: 56px auto 0;
+    max-width: 820px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    box-shadow: 0 20px 50px rgba(20,20,20,0.18), 0 2px 6px rgba(20,20,20,0.08);
+    font-family: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13px;
+    text-align: left;
+  }
+  .mock .titlebar {
+    background: #1f2329;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #0c0e11;
+  }
+  .mock .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .mock .dot.r { background: #ff5f57; }
+  .mock .dot.y { background: #febc2e; }
+  .mock .dot.g { background: #28c840; }
+  .mock .title { margin-left: 10px; color: var(--code-comment); font-size: 12px; }
+  .mock .body { display: grid; grid-template-columns: 180px 1fr 240px; min-height: 320px; }
+  .mock .sidebar { background: #11141a; border-right: 1px solid #0c0e11; padding: 12px 10px; color: var(--code-comment); font-size: 12px; }
+  .mock .sidebar .folder { color: var(--code-ink); margin-bottom: 4px; }
+  .mock .sidebar .file { padding: 2px 0 2px 14px; }
+  .mock .sidebar .file.active { color: var(--accent); }
+  .mock .editor { padding: 14px 16px; overflow: hidden; }
+  .mock .editor pre { margin: 0; white-space: pre; }
+  .mock .editor .ln { color: #3c424b; user-select: none; padding-right: 14px; }
+  .mock .kw { color: var(--code-keyword); }
+  .mock .fn { color: var(--code-fn); }
+  .mock .st { color: var(--code-string); }
+  .mock .cm { color: var(--code-comment); font-style: italic; }
+  .mock .chat { background: #11141a; border-left: 1px solid #0c0e11; padding: 14px 14px; font-family: -apple-system, "SF Pro Text", sans-serif; font-size: 12.5px; }
+  .mock .chat .who { color: var(--code-comment); font-size: 11px; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .mock .chat .who:first-child { margin-top: 0; }
+  .mock .chat .msg { color: var(--code-ink); margin-top: 4px; line-height: 1.5; }
+  .mock .chat .msg.user { color: #c9d2e0; }
+
+  section.launch-videos { padding: 64px 0 0; }
+  .lv-solo { max-width: 820px; margin: 0 auto; }
+  .lv-solo video { width: 100%; border-radius: 10px; box-shadow: 0 8px 24px rgba(20,20,20,0.12); background: #000; display: block; }
+  section.howto { padding: 48px 0 96px; margin-top: 0; }
+  section.howto h2 { font-size: 28px; letter-spacing: -0.02em; margin: 0 0 8px; }
+  section.howto p.sub { color: var(--muted); margin: 0 0 28px; }
+  .howto-video { max-width: 820px; margin: 0 0 36px; }
+  .howto-video video { width: 100%; border-radius: 10px; box-shadow: 0 8px 24px rgba(20,20,20,0.12); background: #000; display: block; }
+
+  section.features { padding: 96px 0 24px; border-top: 1px solid var(--rule); margin-top: 96px; }
+  section.features h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin: 0 0 36px; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px 56px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; gap: 32px; } }
+  .feat h3 { margin: 0 0 8px; font-size: 17px; letter-spacing: -0.01em; }
+  .feat p { margin: 0; color: var(--muted); font-size: 15px; }
+  .feat .ico {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 7px;
+    background: rgba(210, 79, 31, 0.1); color: var(--accent);
+    font-family: "SF Mono", ui-monospace, monospace; font-size: 14px; font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  section.install { padding: 96px 0 0; border-top: 1px solid var(--rule); margin-top: 96px; }
+  section.install h2 { font-size: 28px; letter-spacing: -0.02em; margin: 0 0 8px; }
+  section.install p.sub { color: var(--muted); margin: 0 0 28px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+  .step { padding: 20px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; }
+  .step .n { font-family: "SF Mono", ui-monospace, monospace; color: var(--accent); font-size: 12px; margin-bottom: 8px; }
+  .step h4 { margin: 0 0 6px; font-size: 15px; }
+  .step p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .step code { font-family: "SF Mono", ui-monospace, monospace; font-size: 12px; background: #f4f1ec; padding: 2px 6px; border-radius: 4px; color: var(--ink); }
+
+  section.specs { padding: 56px 0 96px; }
+  .spec-row { display: flex; gap: 32px; font-size: 14px; color: var(--muted); flex-wrap: wrap; }
+  .spec-row span strong { color: var(--ink); font-weight: 500; }
+
+  footer { border-top: 1px solid var(--rule); padding: 32px 0 56px; color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <img src="/baby-assets/icon.png" alt="">
+      <span>LingCode Baby</span>
+    </div>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="#howto">How to use</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <img class="icon" src="/baby-assets/icon.png" alt="LingCode Baby app icon">
+    <h1>A tiny native code editor<br>with <span class="accent">Claude</span> built in.</h1>
+    <p class="punch">Deploy to web with one button.</p>
+    <p class="lede">Edit and chat with Claude in one window. Tiny, fast, native. Built for Apple Silicon.</p>
+    <a class="cta" href="/LingCodeBaby.dmg" download>Download for macOS →</a>
+    <span class="cta-sub">Free trial · Only $20 a month after · Apple Silicon · macOS 11+</span>
+
+    <div class="cta-alt">
+      Also on <strong>Windows</strong> —
+      <a href="https://github.com/Xavierhuang/lingcodebaby_windows/releases/download/v1.0.0/LingCodeBaby_1.0.0_x64-setup.exe">x64</a><span class="sep">·</span><a href="https://github.com/Xavierhuang/lingcodebaby_windows/releases/download/v1.0.0/LingCodeBaby_1.0.0_arm64-setup.exe">ARM64</a>
+      <br>
+      and <strong>Linux</strong> —
+      <a href="https://github.com/Xavierhuang/lingcodebaby_windows/releases/download/v1.0.0/LingCodeBaby_1.0.0_amd64.AppImage">AppImage</a><span class="sep">·</span><a href="https://github.com/Xavierhuang/lingcodebaby_windows/releases/download/v1.0.0/LingCodeBaby_1.0.0_amd64.deb">.deb</a><span class="sep">·</span><a href="https://github.com/Xavierhuang/lingcodebaby_windows/releases/download/v1.0.0/LingCodeBaby-1.0.0-1.x86_64.rpm">.rpm</a>
+    </div>
+
+    <div class="mock" aria-hidden="true">
+      <div class="titlebar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="title">~/projects/site — main.py</span>
+      </div>
+      <div class="body">
+        <div class="sidebar">
+          <div class="folder">📁 site</div>
+          <div class="file">index.html</div>
+          <div class="file active">main.py</div>
+          <div class="file">styles.css</div>
+          <div class="file">README.md</div>
+        </div>
+        <div class="editor">
+<pre><span class="ln"> 1</span><span class="cm"># tiny static site builder</span>
+<span class="ln"> 2</span><span class="kw">from</span> pathlib <span class="kw">import</span> Path
+<span class="ln"> 3</span>
+<span class="ln"> 4</span><span class="kw">def</span> <span class="fn">build</span>(src, out):
+<span class="ln"> 5</span>    <span class="kw">for</span> p <span class="kw">in</span> Path(src).rglob(<span class="st">"*.md"</span>):
+<span class="ln"> 6</span>        html = render(p.read_text())
+<span class="ln"> 7</span>        (out / p.with_suffix(<span class="st">".html"</span>).name).write_text(html)
+<span class="ln"> 8</span>
+<span class="ln"> 9</span><span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+<span class="ln">10</span>    <span class="fn">build</span>(<span class="st">"content"</span>, <span class="st">"dist"</span>)</pre>
+        </div>
+        <div class="chat">
+          <div class="who">You</div>
+          <div class="msg user">add a --watch flag that rebuilds on file change</div>
+          <div class="who">Claude</div>
+          <div class="msg">I'll wire watchdog into <code style="background:#1f2329;padding:1px 5px;border-radius:3px;font-family:inherit;font-size:11.5px;">build()</code> and gate it behind <code style="background:#1f2329;padding:1px 5px;border-radius:3px;font-family:inherit;font-size:11.5px;">--watch</code>. Editing main.py now…</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="launch-videos">
+    <div class="lv-solo">
+      <video controls playsinline preload="metadata" poster="/thumbnails/launchvideo1.jpg">
+        <source src="/launchvideo1.mp4" type="video/mp4">
+      </video>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <h2>What's inside</h2>
+    <div class="grid">
+      <div class="feat">
+        <div class="ico">☁</div>
+        <h3>Deploy to web with one button</h3>
+        <p>Hit Deploy in the top-right of the window. Your project goes live on a public URL — straight from the editor. Zero config, zero CLI.</p>
+      </div>
+      <div class="feat">
+        <div class="ico">✦</div>
+        <h3>Claude chat, in the editor</h3>
+        <p>A side panel that drives the <code>claude</code> CLI in print mode — so it uses your existing Claude subscription, not a metered API key. Claude can read, edit, and create files scoped to the project root.</p>
+      </div>
+      <div class="feat">
+        <div class="ico">⇧</div>
+        <h3>Syntax highlighting, 11 languages</h3>
+        <p>C, Python, JavaScript, HTML, CSS, JSON, PHP, Makefile, shell scripts.</p>
+      </div>
+      <div class="feat">
+        <div class="ico">⌘F</div>
+        <h3>Find that gets out of the way</h3>
+        <p>⌘F slides a search bar above the editor with a live match count. ⌘G / ⇧⌘G to step through. No floating panel, no modal, no friction.</p>
+      </div>
+      <div class="feat">
+        <div class="ico">⌥</div>
+        <h3>Tiny and native</h3>
+        <p>Native Cocoa. Arm64, signed, single-window, instant launch. The whole app weighs under 2 MB.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="install" id="install">
+    <h2>Get it running</h2>
+    <p class="sub">One DMG. Drag to Applications. Done.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="n">01</div>
+        <h4>Download the DMG</h4>
+        <p><a href="/LingCodeBaby.dmg" download><code>LingCodeBaby.dmg</code></a> — Apple Silicon, ~2 MB.</p>
+      </div>
+      <div class="step">
+        <div class="n">02</div>
+        <h4>Drag to Applications</h4>
+        <p>Open the DMG and drag <code>LingCodeBaby.app</code> into the Applications folder.</p>
+      </div>
+      <div class="step">
+        <div class="n">03</div>
+        <h4>Launch</h4>
+        <p>Double-click <code>LingCodeBaby.app</code>. It opens straight away.</p>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:28px;">On Windows &amp; Linux</p>
+    <div class="steps">
+      <div class="step">
+        <div class="n">⊞</div>
+        <h4>Windows</h4>
+        <p>Run the <code>_x64-setup.exe</code> (or <code>_arm64-setup.exe</code>) installer. First launch may show a SmartScreen prompt — click <strong>More info ▸ Run anyway</strong>.</p>
+      </div>
+      <div class="step">
+        <div class="n">🐧</div>
+        <h4>Linux — AppImage</h4>
+        <p><code>chmod +x LingCodeBaby_1.0.0_amd64.AppImage</code> then run <code>./LingCodeBaby_1.0.0_amd64.AppImage</code>.</p>
+      </div>
+      <div class="step">
+        <div class="n">🐧</div>
+        <h4>Linux — deb / rpm</h4>
+        <p><code>sudo dpkg -i LingCodeBaby_1.0.0_amd64.deb</code> on Debian/Ubuntu, or install the <code>.x86_64.rpm</code> on Fedora/RHEL.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="howto" id="howto">
+    <h2>How to use it</h2>
+    <p class="sub">Three steps from blank window to live URL.</p>
+    <div class="howto-video">
+      <video controls playsinline preload="metadata" poster="/thumbnails/launchvideo2.jpg">
+        <source src="/launchvideo2.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="n">01</div>
+        <h4>Open your project folder</h4>
+        <p><strong>File ▸ Open Folder…</strong> (or <code>⌘⇧O</code>). Pick the directory you want to work in — the sidebar lists every file.</p>
+      </div>
+      <div class="step">
+        <div class="n">02</div>
+        <h4>Prompt Claude</h4>
+        <p>Type into the <strong>Claude panel on the right</strong> and hit <strong>Send</strong>. Claude reads, edits, and creates files scoped to your project root.</p>
+      </div>
+      <div class="step">
+        <div class="n">03</div>
+        <h4>Deploy</h4>
+        <p>Click <strong>Deploy</strong> in the top-right of the window (or <code>⌘⇧D</code>). Your project goes live on a public URL — LingCode opens it for you.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="specs">
+    <div class="spec-row">
+      <span><strong>macOS</strong> · 11 Big Sur or later · Apple Silicon (arm64)</span>
+      <span><strong>Windows</strong> · 10 / 11 · x64 &amp; ARM64</span>
+      <span><strong>Linux</strong> · x86-64 · AppImage, .deb, .rpm</span>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2026 Aurelian Labs Inc.</span>
+    <span><a href="#install">Install</a> · <a href="#features">Features</a></span>
+  </footer>
+</div>
+
+</body>
+</html>

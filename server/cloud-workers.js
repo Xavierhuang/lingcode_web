@@ -752,23 +752,34 @@ function registerCloudWorkerRoutes(app, db) {
 
   // Status the UI polls. Domainee-managed domains ask Domainee (cert/edge live?);
   // own-edge domains resolve DNS against our edge IP (cert issues on first HTTPS hit).
+  //
+  // ALSO probes https://{domain}/ (added 2026-06-29) so the dialog status badge
+  // can distinguish "DNS + TLS OK" from "DNS OK but TLS fails." HEAD-only, 5s timeout.
   app.get('/api/account/cloud-workers/:id/domains/:domain/check', async (req, res) => {
     const ctx = workerAccess(db, req, res, 'viewer'); if (!ctx) return;
     const domain = String(req.params.domain || '').trim().toLowerCase();
     const row = db.prepare('SELECT domainee_id FROM custom_domains WHERE domain = ? AND worker_id = ?').get(domain, ctx.row.id);
     if (!row) return res.status(404).json({ ok: false, error: 'not_found' });
+    const { probeHttps } = require('./cloud-domains');
+    const httpsP = probeHttps(domain, 5000);  // parallel with DNS / Domainee check
     if (row.domainee_id) {
       try {
         const sum = domainee.summarize(await domainee.checkDomain(row.domainee_id));
-        return res.json({ ok: true, domain, status: sum.status, provider: 'domainee', cname: sum.cname });
+        const https = await httpsP;
+        return res.json({ ok: true, domain, status: sum.status, provider: 'domainee', cname: sum.cname,
+                          httpsOk: https.ok, httpsStatus: https.status, httpsError: https.error });
       } catch (_) {
-        return res.json({ ok: true, domain, status: 'pending', provider: 'domainee', cname: 'edge.domainee.dev' });
+        const https = await httpsP;
+        return res.json({ ok: true, domain, status: 'pending', provider: 'domainee', cname: 'edge.domainee.dev',
+                          httpsOk: https.ok, httpsStatus: https.status, httpsError: https.error });
       }
     }
     let addresses = [];
     try { addresses = await dns.resolve4(domain); } catch (_) { addresses = []; }
     const pointed = addresses.includes(EDGE_IP);
-    res.json({ ok: true, domain, status: pointed ? 'active' : 'pending', provider: 'edge', pointed, addresses, expected: EDGE_IP });
+    const https = await httpsP;
+    res.json({ ok: true, domain, status: pointed ? 'active' : 'pending', provider: 'edge', pointed, addresses, expected: EDGE_IP,
+               httpsOk: https.ok, httpsStatus: https.status, httpsError: https.error });
   });
 
   app.delete('/api/account/cloud-workers/:id/domains/:domain', (req, res) => {

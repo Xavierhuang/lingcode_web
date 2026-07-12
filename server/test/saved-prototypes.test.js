@@ -281,9 +281,12 @@ test('GET /p/:id — 200 inline-renders prototype in sandboxed iframe (v1 raw ba
     const body = await r.text();
     // URL stays at /p/<id> — no redirect to /try.html anywhere in the body.
     assert.ok(!body.includes('/try.html#'), 'body should not embed the long share URL');
-    // Iframe is sandboxed and the decoded prototype is in srcdoc (escaped).
+    // Iframe is sandboxed; the decoded prototype is embedded (escaped) in srcdoc,
+    // preceded by the storage shim (injected first so sandboxed apps don't crash
+    // on localStorage access — see injectStorageShim/STORAGE_SHIM_JS).
     assert.match(body, /<iframe\b[^>]*sandbox=/);
-    assert.match(body, /srcdoc="&lt;h&gt;h&lt;\/h&gt;"/);
+    assert.match(body, /srcdoc="[^"]*&lt;h&gt;h&lt;\/h&gt;/);
+    assert.match(body, /srcdoc="[^"]*_lc_/);
     // Title shows up in the page <title>.
     assert.match(body, /<title>My deck/);
   } finally { await h.close(); }
@@ -305,8 +308,9 @@ test('GET /p/:id — 200 inline-renders v2 (gzip+base64) prototype', async () =>
     assert.equal(r.status, 200);
     const body = await r.text();
     assert.match(body, /<iframe\b[^>]*sandbox=/);
-    // Decoded content lands in srcdoc (escaped).
-    assert.match(body, /srcdoc="&lt;html&gt;hi&lt;\/html&gt;"/);
+    // Decoded content lands in srcdoc (escaped); storage shim injected after <html>.
+    assert.match(body, /srcdoc="[^"]*&lt;html&gt;[^"]*hi[^"]*&lt;\/html&gt;/);
+    assert.match(body, /srcdoc="[^"]*_lc_/);
   } finally { await h.close(); }
 });
 

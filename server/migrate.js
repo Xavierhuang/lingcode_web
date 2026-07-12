@@ -653,7 +653,11 @@ function migrateCloudBackendTables(db) {
       data_b64      TEXT NOT NULL,
       created_at    TEXT NOT NULL,
       UNIQUE(backend_id, bucket, path),
-      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+      -- account_backends, NOT prototype_backends: real backends live in
+      -- account_backends (prototype_backends is the legacy /try table). The old
+      -- FK made every account-backend storage upload fail "FOREIGN KEY constraint
+      -- failed" (e.g. avatar upload 500). Live data.db was rebuilt to match.
+      FOREIGN KEY(backend_id) REFERENCES account_backends(id)
     )
   `);
   db.exec('CREATE INDEX IF NOT EXISTS idx_backend_objects ON backend_objects(backend_id, bucket)');
@@ -717,10 +721,22 @@ function migrateCloudBackendTables(db) {
       apns_key_id       TEXT,
       apns_team_id      TEXT,
       apns_topic        TEXT,
+      apns_env          TEXT NOT NULL DEFAULT 'production',
       created_at        TEXT NOT NULL,
       updated_at        TEXT NOT NULL
     )
   `);
+  // Additive: apns_env distinguishes Apple's sandbox vs production push hosts.
+  // Dev/debug-build device tokens only deliver on sandbox; TestFlight/App-Store
+  // tokens use production. Backfill existing rows to 'production'.
+  {
+    const pushCfgCols = new Set(
+      db.prepare('PRAGMA table_info(backend_push_config)').all().map((c) => c.name)
+    );
+    if (!pushCfgCols.has('apns_env')) {
+      db.exec("ALTER TABLE backend_push_config ADD COLUMN apns_env TEXT NOT NULL DEFAULT 'production'");
+    }
+  }
   db.exec(`
     CREATE TABLE IF NOT EXISTS backend_push_subscriptions (
       id          TEXT PRIMARY KEY,
@@ -834,7 +850,32 @@ function migrateCloudBackendTables(db) {
   {
     const cols = new Set(db.prepare('PRAGMA table_info(backend_auth_settings)').all().map((c) => c.name));
     if (!cols.has('allowed_fetch_hosts')) db.exec('ALTER TABLE backend_auth_settings ADD COLUMN allowed_fetch_hosts TEXT');
+    // allowed_redirect_origins: comma-separated extra hostnames a backend accepts
+    // as OAuth sign-in redirect targets, beyond the always-allowed localhost and
+    // *.lingcode.dev (see cloud-oauth.js redirectAllowed). Empty/absent = none.
+    if (!cols.has('allowed_redirect_origins')) db.exec('ALTER TABLE backend_auth_settings ADD COLUMN allowed_redirect_origins TEXT');
+    // require_email_verification: when on, password signup creates an UNVERIFIED
+    // user + emails a confirmation link, and sign-in is blocked until verified
+    // (Supabase/Firebase-style). Default off so existing apps are unaffected.
+    if (!cols.has('require_email_verification')) db.exec('ALTER TABLE backend_auth_settings ADD COLUMN require_email_verification INTEGER NOT NULL DEFAULT 0');
   }
+
+  // Single-use email-confirmation tokens for password signup (kind 'verify_email').
+  // Same shape/handling as backend_magic_links: store only sha256(token), short TTL,
+  // single-use (used_at).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS backend_email_verifications (
+      id          TEXT PRIMARY KEY,
+      backend_id  TEXT NOT NULL,
+      email       TEXT NOT NULL,
+      token_hash  TEXT NOT NULL,
+      expires_at  TEXT NOT NULL,
+      used_at     TEXT,
+      created_at  TEXT NOT NULL,
+      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications ON backend_email_verifications(backend_id, token_hash)');
 
   // Per-backend encrypted secrets (3rd-party API keys for function templates).
   // AES-256-GCM at rest via secrets-vault.js; keyed by backend_id (account
@@ -1457,6 +1498,163 @@ function migrateRemoteHostsTable(db) {
     )
   `);
   db.exec('CREATE INDEX IF NOT EXISTS idx_remote_hosts_owner ON remote_hosts(owner_id)');
+
+  // remote_host_shares — read-only "share view-only link" tokens for a host.
+  // The token is an unguessable bearer credential the relay validates on connect
+  // and pins to a read-only viewer role. Owner-revocable; auto-expires.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS remote_host_shares (
+      token       TEXT PRIMARY KEY,
+      host_id     TEXT NOT NULL,
+      owner_id    TEXT NOT NULL,
+      permission  TEXT NOT NULL DEFAULT 'view',
+      created_at  INTEGER NOT NULL,
+      expires_at  INTEGER,
+      revoked     INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY(host_id)  REFERENCES remote_hosts(id),
+      FOREIGN KEY(owner_id) REFERENCES users(id)
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_remote_shares_host ON remote_host_shares(host_id)');
 }
 
-module.exports = { migrateUsersTable, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, bumpCollabSchemaToMultiFile };
+// migrateComputeTables — control-plane metadata for the LingCode Cloud COMPUTE
+// TIER (cloud-compute.js): long-running container jobs that run against a
+// tenant backend's Postgres schema with a privileged, role-scoped connection
+// (LINGCODE_DB_URL). The job DEFINITION + run ledger live here in SQLite; the
+// container itself runs on a worker droplet in the VPC and the tenant DATA it
+// touches lives in the separate Postgres data plane (see cloud-data-plane.js).
+// This is the heavier sibling of cloud-workers.js (edge apps) + cloud-worker-
+// cron.js (30s HTTP cron) — it exists for the 800s-batch / headless-Chromium /
+// arbitrary-code workloads those tiers deliberately can't host.
+function migrateComputeTables(db) {
+  // One row per declared job (1:N with compute_runs). `name` is unique per
+  // backend so a manifest can address a job by stable name. `image` is a docker
+  // image ref the runner pulls; `entrypoint`/`env_json` are optional overrides.
+  // Resource caps (cpu/memory/timeout) are enforced by the runner at `docker
+  // run` time and bounded by the owner tier's compute limits (cloud-limits.js).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS compute_jobs (
+      id            TEXT PRIMARY KEY,
+      backend_id    TEXT NOT NULL,
+      user_id       TEXT NOT NULL,
+      name          TEXT NOT NULL,
+      image         TEXT NOT NULL,
+      entrypoint    TEXT,
+      cpu           REAL NOT NULL DEFAULT 1,
+      memory_mb     INTEGER NOT NULL DEFAULT 512,
+      timeout_sec   INTEGER NOT NULL DEFAULT 900,
+      env_json      TEXT,
+      egress_hosts  TEXT,
+      enabled       INTEGER NOT NULL DEFAULT 1,
+      created_at    TEXT NOT NULL,
+      updated_at    TEXT NOT NULL,
+      UNIQUE(backend_id, name),
+      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id),
+      FOREIGN KEY(user_id)    REFERENCES users(id)
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_compute_jobs_backend ON compute_jobs(backend_id)');
+  // Idempotent backfill (egress_hosts added after the initial compute_jobs shape).
+  {
+    const jobCols = new Set(db.prepare('PRAGMA table_info(compute_jobs)').all().map((c) => c.name));
+    if (!jobCols.has('egress_hosts')) db.exec('ALTER TABLE compute_jobs ADD COLUMN egress_hosts TEXT');
+  }
+
+  // The run ledger. A runner claims a 'queued' row (atomic UPDATE … WHERE
+  // status='queued'), flips it to 'running', executes the container, streams a
+  // capped log tail into `logs`, then records the terminal status + exit code.
+  // status ∈ queued | running | succeeded | failed | timed_out | canceled.
+  // `trigger` records what enqueued it (manual now; schedule/http/event in SP2+).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS compute_runs (
+      id            TEXT PRIMARY KEY,
+      job_id        TEXT NOT NULL,
+      backend_id    TEXT NOT NULL,
+      status        TEXT NOT NULL DEFAULT 'queued',
+      trigger       TEXT NOT NULL DEFAULT 'manual',
+      input_json    TEXT,
+      exit_code     INTEGER,
+      worker_id     TEXT,
+      logs          TEXT,
+      error         TEXT,
+      schedule_id   TEXT,
+      attempt       INTEGER NOT NULL DEFAULT 0,
+      max_attempts  INTEGER NOT NULL DEFAULT 0,
+      retry_scheduled INTEGER NOT NULL DEFAULT 0,
+      not_before    TEXT,
+      run_seconds   REAL,
+      queued_at     TEXT NOT NULL,
+      started_at    TEXT,
+      finished_at   TEXT,
+      FOREIGN KEY(job_id)     REFERENCES compute_jobs(id),
+      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+    )
+  `);
+  // Idempotent backfill for DBs created before the scheduler/metering columns shipped.
+  const runCols = new Set(db.prepare('PRAGMA table_info(compute_runs)').all().map((c) => c.name));
+  for (const [col, ddl] of [
+    ['schedule_id', 'schedule_id TEXT'],
+    ['attempt', 'attempt INTEGER NOT NULL DEFAULT 0'],
+    ['max_attempts', 'max_attempts INTEGER NOT NULL DEFAULT 0'],
+    ['retry_scheduled', 'retry_scheduled INTEGER NOT NULL DEFAULT 0'],
+    ['not_before', 'not_before TEXT'],
+    ['run_seconds', 'run_seconds REAL'],
+  ]) { if (!runCols.has(col)) db.exec(`ALTER TABLE compute_runs ADD COLUMN ${ddl}`); }
+  // The runner's claim query scans this index (status, queued_at) every poll.
+  db.exec('CREATE INDEX IF NOT EXISTS idx_compute_runs_claim ON compute_runs(status, queued_at)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_compute_runs_job ON compute_runs(job_id, queued_at)');
+
+  // Schedules (Sub-project 2): a cron expression + overlap/retry policy attached to
+  // a job. The compute scheduler (cloud-compute-scheduler.js) ticks every 60s,
+  // enqueues a 'schedule'-trigger run when due (subject to the overlap policy), and
+  // re-enqueues failed scheduled runs up to max_retries with exponential backoff.
+  // last_run_at/next_run_at are epoch ms (matching worker_crons).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS compute_schedules (
+      id                TEXT PRIMARY KEY,
+      job_id            TEXT NOT NULL,
+      backend_id        TEXT NOT NULL,
+      schedule          TEXT NOT NULL,
+      overlap_policy    TEXT NOT NULL DEFAULT 'skip',
+      max_retries       INTEGER NOT NULL DEFAULT 0,
+      retry_backoff_sec INTEGER NOT NULL DEFAULT 60,
+      input_json        TEXT,
+      enabled           INTEGER NOT NULL DEFAULT 1,
+      last_run_at       INTEGER,
+      last_status       TEXT,
+      next_run_at       INTEGER,
+      created_at        TEXT NOT NULL,
+      FOREIGN KEY(job_id)     REFERENCES compute_jobs(id),
+      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_compute_schedules_due ON compute_schedules(enabled, next_run_at)');
+
+  // Per-backend privileged-DB credential. The minted login role `clogin_<id>`
+  // (a member of the tenant's trole_<id>, search_path pinned to be_<id>) gets a
+  // generated password we store AES-256-GCM-encrypted (secrets-vault.js) so the
+  // same LINGCODE_DB_URL can be reissued to each run without a rotation. Distinct
+  // from backend_signing_secrets (JWT signing) — this is a real Postgres login.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS compute_db_creds (
+      backend_id    TEXT PRIMARY KEY,
+      role_name     TEXT NOT NULL,
+      password_enc  TEXT NOT NULL,
+      created_at    TEXT NOT NULL,
+      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+    )
+  `);
+
+  // Metering (SP4): roll compute run-seconds into the existing per-day usage table
+  // (backend_usage, created by migrateCloudBackendTables which runs before this).
+  // Additive + idempotent so it backfills cleanly on an existing DB.
+  try {
+    const usageCols = new Set(db.prepare('PRAGMA table_info(backend_usage)').all().map((c) => c.name));
+    if (!usageCols.has('compute_run_seconds')) {
+      db.exec('ALTER TABLE backend_usage ADD COLUMN compute_run_seconds REAL NOT NULL DEFAULT 0');
+    }
+  } catch (_) { /* backend_usage may not exist yet on a partial boot — best effort */ }
+}
+
+module.exports = { migrateUsersTable, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, migrateComputeTables, bumpCollabSchemaToMultiFile };
