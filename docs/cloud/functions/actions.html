@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actions | LingCode Cloud Docs</title>
+  <meta name="description" content="Preview side-effecting named functions for external APIs, vendor SDKs, email, payments, and workflows that are deliberately not automatically retried.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/functions/actions.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/functions/actions.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/functions/actions.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html" aria-current="page">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Actions</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-preview">Preview</span><span>Updated 2026-08-09</span></div>
+      <div class="cloud-docs-preview-warning" role="note"><strong>Preview:</strong> This documentation describes an API that is not generally available yet. Its contract may change before release.</div>
+      <h1 id="actions">Actions</h1>
+<p>An action performs work that cannot be part of a deterministic database transaction: calling an external API, sending email, charging a payment method, invoking an AI model, or coordinating a vendor workflow.</p>
+<p>These operations have external side effects, so their reliability rules differ deliberately from queries and mutations.</p>
+<h2 id="definition">Definition</h2>
+<pre><code class="language-ts">import { action, string } from &#39;@lingcode/backend&#39;;
+
+export const summarize = action({
+  args: { text: string() },
+  handler: async (ctx, args) =&gt; {
+    const response = await fetch(&#39;https://api.example.com/summarize&#39;, {
+      method: &#39;POST&#39;,
+      headers: {
+        authorization: `Bearer ${ctx.secrets.SUMMARY_API_KEY}`,
+        &#39;content-type&#39;: &#39;application/json&#39;,
+      },
+      body: JSON.stringify({ text: args.text }),
+    });
+    if (!response.ok) throw new Error(`summary provider returned ${response.status}`);
+    return response.json();
+  },
+});</code></pre>
+<h2 id="retry-semantics">Retry semantics</h2>
+<p>Actions are <strong>not automatically retried</strong>. An external service may complete a side effect even when LingCode receives a timeout or broken connection. Automatically repeating the action could charge twice or send duplicate messages.</p>
+<p>The application must choose a retry policy appropriate to the vendor. Prefer vendor-supported idempotency keys and persist workflow state before starting the side effect.</p>
+<h2 id="database-access">Database access</h2>
+<p>An action may call named queries and mutations, but several calls do not form one transaction. State may change between calls.</p>
+<p>A reliable workflow usually follows this sequence:</p>
+<ol>
+<li>call a mutation that records the user&#39;s durable intent;</li>
+<li>run the action with a stable workflow and vendor idempotency key;</li>
+<li>call a mutation that records success or failure;</li>
+<li>let subscribed queries update the UI.</li>
+</ol>
+<h2 id="secrets-and-outbound-hosts">Secrets and outbound hosts</h2>
+<p>Secrets are declared by name and injected server-side. They never belong in arguments or return values.</p>
+<p>Outbound network policy must prevent server-side request forgery. Production actions should call literal or owner-allow-listed HTTPS hosts, reject redirects to private networks, bound response sizes, and enforce timeouts.</p>
+<h2 id="authentication">Authentication</h2>
+<p>Actions receive authenticated context, but external services do not automatically understand LingCode users. Map the LingCode identity to the vendor account explicitly and validate application permissions before performing a side effect.</p>
+<h2 id="scheduling">Scheduling</h2>
+<p>Actions are suitable targets for scheduled and durable workflows. A scheduler should persist attempt state, cap retries, apply backoff, and expose the last failure. Schedules do not represent an interactive end-user session unless the workflow intentionally stores an acting identity.</p>
+<h2 id="errors">Errors</h2>
+<p>Distinguish:</p>
+<ul>
+<li>application rejection, such as insufficient credits;</li>
+<li>vendor rejection, such as HTTP 429 or 402;</li>
+<li>ambiguous transport failure;</li>
+<li>developer error in action code;</li>
+<li>platform timeout or resource limit.</li>
+</ul>
+<p>Return safe application errors to clients and retain vendor response details in protected server logs.</p>
+<h2 id="current-alternatives">Current alternatives</h2>
+<p>Until actions become Available, use current built-in functions for supported vendors, the allow-listed <code>http-fetch</code> built-in for generic HTTPS APIs, or a hosted Worker-compatible route for custom outbound logic.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/functions/mutations.html">Previous: Mutations · Preview</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/functions/validation.html">Next: Validation · Preview</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#definition">Definition</a></li><li class="toc-level-2"><a href="#retry-semantics">Retry semantics</a></li><li class="toc-level-2"><a href="#database-access">Database access</a></li><li class="toc-level-2"><a href="#secrets-and-outbound-hosts">Secrets and outbound hosts</a></li><li class="toc-level-2"><a href="#authentication">Authentication</a></li><li class="toc-level-2"><a href="#scheduling">Scheduling</a></li><li class="toc-level-2"><a href="#errors">Errors</a></li><li class="toc-level-2"><a href="#current-alternatives">Current alternatives</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

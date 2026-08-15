@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLI and MCP tools | LingCode Cloud Docs</title>
+  <meta name="description" content="Manage LingCode Cloud backends from the IDE and coding agents with explicit, reviewable provisioning, migration, deployment, and inspection tools.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/reference/cli-mcp.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/reference/cli-mcp.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/reference/cli-mcp.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html" aria-current="page">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>CLI and MCP tools</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="cli-and-mcp-tools">CLI and MCP tools</h1>
+<p>LingCode&#39;s IDE integration exposes backend operations as structured MCP tools. This lets a coding agent create and update a backend from the project conversation while keeping account authorization, migration review, and production approval explicit.</p>
+<h2 id="how-the-workflow-works">How the workflow works</h2>
+<ol>
+<li>The agent inspects the project and the current backend state.</li>
+<li>It prepares source files or a migration in the workspace.</li>
+<li>It shows the user the intended change and any risk.</li>
+<li>It calls the narrow tool for that operation.</li>
+<li>It verifies the returned backend state before claiming completion.</li>
+</ol>
+<p>The agent should not require users to manually recreate ordinary message APIs in a separate backend dashboard. Application intent can be translated into backend source and migrations inside the IDE; security-sensitive and production actions still require explicit authorization.</p>
+<h2 id="core-lifecycle-tools">Core lifecycle tools</h2>
+<div class="cloud-docs-table-wrap"><table><thead><tr><th>Tool</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><code>provision_backend</code></td><td>Create or attach the project&#39;s managed backend.</td></tr>
+<tr><td><code>deploy_backend_manifest</code></td><td>Validate and deploy <code>lingcode/backend.json</code> and referenced backend source.</td></tr>
+<tr><td><code>backend_source_status</code></td><td>Compare local backend source with the deployed immutable digest.</td></tr>
+<tr><td><code>apply_migration</code></td><td>Apply an explicit, ordered database migration.</td></tr>
+<tr><td><code>describe_backend</code></td><td>Read backend identity, capabilities, and connection metadata.</td></tr>
+<tr><td><code>delete_backend</code></td><td>Permanently remove a backend after destructive-action confirmation.</td></tr>
+</tbody></table></div>
+<p>See <a href="/docs/cloud/deployments/backend-as-code.html">Backend as code</a> for manifest hashing and drift detection, and <a href="/docs/cloud/deployments/production-approval.html">Production approval</a> for the deploy-plan contract.</p>
+<h2 id="data-tools">Data tools</h2>
+<p>Inspection and data operations include <code>list_tables</code>, <code>query</code>, <code>select</code>, <code>insert</code>, <code>upsert</code>, <code>update</code>, <code>delete</code>, and <code>rpc</code>. The general <code>query</code> tool is read-only; schema and write changes must use the dedicated tools so their intent can be validated and audited.</p>
+<p>Use pagination and selective columns when inspecting large tables. Data tools operate within the connected account and backend scope and must not be used to bypass application authorization policies.</p>
+<h2 id="function-tools">Function tools</h2>
+<p>Use <code>list_functions</code>, <code>upsert_function</code>, <code>test_function</code>, and <code>delete_function</code> to manage custom function definitions from the IDE. Saving definitions is unlimited; invocation compute remains metered by the selected plan.</p>
+<p>Test a changed function before deployment. A successful save does not prove that runtime secrets, upstream dependencies, or user authorization are correct.</p>
+<h2 id="authentication-and-scope">Authentication and scope</h2>
+<p>The MCP server uses the user&#39;s authenticated LingCode account. Each operation resolves an account and backend scope before execution. The IDE exchanges the account credential for an expiring project-scoped token, so an agent credential cannot mint another token or access a different project. Newly issued credentials use hashed token lookup and are shown only in the issuance response.</p>
+<p>Project tokens default to 30 days and can be requested for 1–90 days. Remote and collaboration WebSocket credentials expire within one hour. Rotate a credential immediately if it may have appeared in a prompt, log, screenshot, or source file.</p>
+<p>The compatibility migration adds digest coverage with no forced reconnect for existing clients. Updating backend source does not normally require application users to reconnect; an explicitly revoked or rotated credential requires a new sign-in.</p>
+<h2 id="production-safety">Production safety</h2>
+<p>Production deployment is plan-bound and single-use. The approval contains the exact planId and digest, expires after 10 minutes, and is consumed after deployment. There is no watch deploy for production.</p>
+<p>For destructive operations, the agent must identify the exact target and obtain confirmation. For migrations, prefer additive changes, make backfills resumable, and provide an explicit rollback or forward-fix strategy.</p>
+<h2 id="errors-and-verification">Errors and verification</h2>
+<p>Tool errors include a stable code, a readable explanation, and when available a request ID. Resolve authorization, validation, or quota errors instead of repeatedly retrying them. Retry temporary transport failures with bounded backoff.</p>
+<p>After every mutation, read back the relevant state. For deployments, use <code>backend_source_status</code>; for migrations, inspect the migration record and affected schema; for functions, run <code>test_function</code> and review runtime logs.</p>
+<h2 id="related-guides">Related guides</h2>
+<ul>
+<li><a href="/docs/cloud/deployments/">Deployments</a></li>
+<li><a href="/docs/cloud/production/reliability.html">Reliability</a></li>
+<li><a href="/docs/cloud/production/observability.html">Observability</a></li>
+<li><a href="/docs/cloud/limits.html">Limits and quotas</a></li>
+</ul>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/reference/rest-api.html">Previous: REST API</a></div>
+        <div></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#how-the-workflow-works">How the workflow works</a></li><li class="toc-level-2"><a href="#core-lifecycle-tools">Core lifecycle tools</a></li><li class="toc-level-2"><a href="#data-tools">Data tools</a></li><li class="toc-level-2"><a href="#function-tools">Function tools</a></li><li class="toc-level-2"><a href="#authentication-and-scope">Authentication and scope</a></li><li class="toc-level-2"><a href="#production-safety">Production safety</a></li><li class="toc-level-2"><a href="#errors-and-verification">Errors and verification</a></li><li class="toc-level-2"><a href="#related-guides">Related guides</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

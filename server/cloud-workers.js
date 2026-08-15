@@ -57,10 +57,22 @@ const APPS_ZONE_ID     = process.env.LINGCODE_APPS_ZONE_ID || ''; // lingcode.ap
 // to refuse suspended scripts. The API writes a key (= worker id) on suspend and
 // deletes it on resume. Unset → suspend is recorded in the DB but not enforced at edge.
 const SUSPENDED_KV_ID  = process.env.LINGCODE_SUSPENDED_KV_ID || '';
-// `npx --yes wrangler@4` by default so prod needs no global install; override
+// `npx --yes wrangler@3` by default so prod needs no global install; override
 // with LINGCODE_WRANGLER_BIN to point at a pinned/local wrangler for speed.
+//
+// Pinned to wrangler@3 (not @4) because wrangler v4.0.0+ requires Node.js
+// v22.0.0+ and the API droplet still runs Node 20.20.1. Symptom before
+// pinning: LingCodeBaby Windows shows a modal dialog on every deploy:
+//   "Deploy failed: Wrangler requires at least Node.js v22.0.0. You are
+//    using v20.20.1. Please update your version of Node.js."
+// The error surfaces from the wrangler CLI itself when `npx --yes wrangler@4`
+// resolves against Node 20 during a hosted deploy. Wrangler 3.x supports
+// Node ≥18 and covers everything we call (deploy + --dispatch-namespace +
+// --name — no v4-only feature in use per cloud-workers.js:170-180). See
+// `LINGCODE_WRANGLER_BIN` override for the future path: upgrade the
+// droplet to Node 22 LTS + bump back to wrangler@4 (or later).
 const WRANGLER = process.env.LINGCODE_WRANGLER_BIN || 'npx';
-const WRANGLER_ARGS_PREFIX = process.env.LINGCODE_WRANGLER_BIN ? [] : ['--yes', 'wrangler@4'];
+const WRANGLER_ARGS_PREFIX = process.env.LINGCODE_WRANGLER_BIN ? [] : ['--yes', 'wrangler@3'];
 // wrangler writes config/cache/logs under $HOME, but the systemd service runs with
 // HOME=/nonexistent → EACCES. Point it at a writable dir (override on prod with
 // LINGCODE_WRANGLER_HOME for a persistent, cache-warm path).
@@ -162,6 +174,82 @@ function run(cmd, args, opts) {
       resolve({ stdout: String(stdout || ''), stderr: String(stderr || '') });
     });
   });
+}
+
+// If the client shipped the trivial "just serve static assets" worker stub
+// (character-identical from both LingCodeBaby Mac ObjC — CloudDeploy.m — and
+// LingCodeBaby Windows Rust — deploy.rs — the shape is:
+//
+//   export default {
+//     async fetch(request, env) {
+//       return env.ASSETS.fetch(request);
+//     }
+//   };
+//
+// …upgrade it in-place to a variant that overrides Cache-Control: no-store on
+// every response. Rationale: Cloudflare's `env.ASSETS.fetch` returns responses
+// with `cache-control: public, max-age=0, must-revalidate` by default, which
+// CF's edge nonetheless caches (observed HIT-serving stale bytes for MINUTES
+// after DELETE — the CF asset layer ignores `must-revalidate` when the origin
+// script is gone). `no-store` prevents any edge caching so a DELETE takes
+// effect immediately.
+//
+// We are strict about detection: this only touches the KNOWN Baby stub. Any
+// real worker (Next.js/OpenNext, SvelteKit, Nuxt, Astro, Vite Worker — all
+// shipped by the Mac IDE via CloudDeployService.swift) has real business logic
+// and gets passed through untouched. The regex allows minor whitespace
+// variance but requires the ASSETS-fetch-only shape.
+//
+// Returns { upgraded: bool, reason: string } for the deploy-job log.
+const BABY_STUB_RE =
+  /^\s*export\s+default\s*\{\s*async\s+fetch\s*\(\s*request\s*,\s*env\s*\)\s*\{\s*return\s+env\.ASSETS\.fetch\s*\(\s*request\s*\)\s*;?\s*\}\s*,?\s*\}\s*;?\s*$/;
+
+const NO_STORE_STUB =
+  'export default {\n' +
+  '  async fetch(request, env) {\n' +
+  '    const res = await env.ASSETS.fetch(request);\n' +
+  '    // Prevent CF edge from serving stale bundles after a redeploy/delete.\n' +
+  '    // Set server-side (cloud-workers.js:maybeUpgradeAssetsStub) so old\n' +
+  '    // clients get the fix without a reship.\n' +
+  '    const headers = new Headers(res.headers);\n' +
+  '    headers.set(\'Cache-Control\', \'no-store\');\n' +
+  '    return new Response(res.body, { status: res.status, statusText: res.statusText, headers });\n' +
+  '  }\n' +
+  '};\n';
+
+async function maybeUpgradeAssetsStub(workdir) {
+  const workerPath = path.join(workdir, 'dist', 'server', '_worker.js');
+  let src;
+  try { src = await fsp.readFile(workerPath, 'utf8'); }
+  catch (_) { return { upgraded: false, reason: 'no _worker.js' }; }
+  const normalized = src.replace(/\r\n/g, '\n').replace(/\/\/[^\n]*\n/g, '\n');
+  if (!BABY_STUB_RE.test(normalized)) {
+    return { upgraded: false, reason: 'not a baby stub (real worker; left alone)' };
+  }
+  await fsp.writeFile(workerPath, NO_STORE_STUB, 'utf8');
+
+  // Also flip `assets.run_worker_first = true` in wrangler.json. Without this,
+  // Cloudflare's Assets binding short-circuits to the file BEFORE the worker's
+  // fetch handler runs — my Cache-Control override never gets applied for asset
+  // requests. Empirically confirmed: without run_worker_first, deployed URLs
+  // still show `cache-control: public, max-age=0, must-revalidate`. Setting it
+  // to true routes every request through the worker, which then wraps the asset
+  // response and rewrites the header.
+  const cfgPath = path.join(workdir, 'dist', 'server', 'wrangler.json');
+  try {
+    const raw = await fsp.readFile(cfgPath, 'utf8');
+    const cfg = JSON.parse(raw);
+    if (cfg && cfg.assets && typeof cfg.assets === 'object') {
+      cfg.assets.run_worker_first = true;
+      await fsp.writeFile(cfgPath, JSON.stringify(cfg, null, 2) + '\n', 'utf8');
+    }
+  } catch (e) {
+    // wrangler.json is required by wranglerDeploy() a few lines down and it
+    // will surface a clear error there; nothing to do here beyond a note.
+    console.warn('[cloud-workers] could not patch wrangler.json for no-store:', e && e.message);
+  }
+
+  return { upgraded: true, reason: 'baby stub → no-store variant + run_worker_first' };
 }
 
 // Deploy the extracted build into the dispatch namespace as <id>.
@@ -456,6 +544,20 @@ async function handleDeploy(db, req, res, mode /* 'create' | 'update' */) {
     await receiveTarball(req, tgz);
     await fsp.mkdir(workdir, { recursive: true });
     await run('/usr/bin/tar', ['-xzf', tgz, '-C', workdir]);
+    // Non-fatal: upgrade the Baby-shaped static-assets stub to a no-store
+    // variant so deletes propagate instantly (see maybeUpgradeAssetsStub).
+    // Real workers (Next/OpenNext/SvelteKit/Nuxt/Astro/ViteWorker) are left
+    // alone by the strict shape regex.
+    try {
+      const stubResult = await maybeUpgradeAssetsStub(workdir);
+      if (stubResult.upgraded) {
+        console.log('[cloud-workers] upgraded assets stub to no-store for', id);
+      }
+    } catch (e) {
+      // A stub rewrite failure must never block a real deploy — the original
+      // _worker.js is still on disk and will be picked up by wrangler.
+      console.warn('[cloud-workers] stub upgrade skipped for', id, ':', e && e.message);
+    }
   } catch (e) {
     fsp.rm(tmpRoot, { recursive: true, force: true }).catch(() => {});
     const detail = (e && (e.stderr || e.message)) || 'upload failed';
@@ -793,4 +895,4 @@ function registerCloudWorkerRoutes(app, db) {
   });
 }
 
-module.exports = { registerCloudWorkerRoutes, teardownWorker, syncWorkerSecrets, validateSubdomain, setWorkerStatus, workerAccess, APPS_DOMAIN, siblingDomain, attachWorkerDomain };
+module.exports = { registerCloudWorkerRoutes, teardownWorker, syncWorkerSecrets, validateSubdomain, setWorkerStatus, workerAccess, APPS_DOMAIN, siblingDomain, attachWorkerDomain, maybeUpgradeAssetsStub, BABY_STUB_RE, NO_STORE_STUB };

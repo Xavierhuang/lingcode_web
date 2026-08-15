@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Remove stale LingCode DMGs from lingcode.dev (and optionally the local website/ folder).
 #
-# Keeps:
-#   - LingCode-Installer.dmg          (generic "Download for Mac" alias)
-#   - The newest versioned DMG from appcast.xml (Sparkle auto-update)
+# Keeps (the glob is LingCode*.dmg, which spans the sibling apps too):
+#   - LingCode-Installer.dmg / LingCode-Intel-Installer.dmg  (main app aliases)
+#   - LingCodeFTP.dmg, LingCodeBaby.dmg                      (sibling generic aliases)
+#   - The newest versioned DMG from each of appcast.xml / appcast-ftp.xml /
+#     appcast-baby.xml (each app's live Sparkle enclosure)
 #
 # Usage:
 #   ./website/cleanup-server-dmgs.sh              # remote server only
@@ -49,23 +51,52 @@ if [[ ! -f "$APPCAST" ]]; then
   exit 1
 fi
 
+KEEP_RAW="$(python3 - "$APPCAST" <<'PY'
+import re, sys, os
+# The glob below is LingCode*.dmg, which also matches the sibling apps
+# LingCodeFTP*.dmg and LingCodeBaby*.dmg. Keep each generic download alias
+# PLUS the latest versioned DMG from each appcast, so a cleanup for one app
+# never deletes another live download / Sparkle enclosure.
+website = os.path.dirname(os.path.abspath(sys.argv[1]))
+
+def latest_enclosure(appcast_name):
+    try:
+        xml = open(os.path.join(website, appcast_name)).read()
+    except FileNotFoundError:
+        return None
+    m = re.search(r'<enclosure[^>]+url="https://lingcode\.dev/([^"]+)"', xml)
+    return m.group(1) if m else None
+
+# Generic, fixed-name downloads — always keep.
+keep = [
+    "LingCode-Installer.dmg",       # main app "Download for Mac"
+    "LingCode-Intel-Installer.dmg", # main app Intel download
+    "LingCodeFTP.dmg",              # LingCodeFTP generic download
+    "LingCodeBaby.dmg",             # LingCodeBaby generic download
+]
+
+# Latest versioned DMG from each appcast (the live Sparkle enclosure).
+main_latest = latest_enclosure(os.path.basename(sys.argv[1]))
+if not main_latest:
+    sys.exit("Could not parse latest DMG URL from appcast.xml")
+keep.append(main_latest)
+for feed in ("appcast-ftp.xml", "appcast-baby.xml"):
+    v = latest_enclosure(feed)
+    if v:
+        keep.append(v)
+
+seen = set()
+for name in keep:
+    if name and name not in seen:
+        seen.add(name)
+        print(name)
+PY
+)"
+
 KEEP_NAMES=()
 while IFS= read -r line; do
   [[ -n "$line" ]] && KEEP_NAMES+=("$line")
-done < <(python3 - "$APPCAST" <<'PY'
-import re, sys
-path = sys.argv[1]
-xml = open(path).read()
-# First enclosure in feed = latest release (ship.sh prepends).
-m = re.search(r'<enclosure[^>]+url="https://lingcode\.dev/([^"]+)"', xml)
-if not m:
-    sys.exit("Could not parse latest DMG URL from appcast.xml")
-latest = m.group(1)
-print("LingCode-Installer.dmg")
-print("LingCode-Intel-Installer.dmg")  # fixed-name Intel download — always keep
-print(latest)
-PY
-)
+done <<< "$KEEP_RAW"
 
 echo "Keeping DMGs:"
 for f in "${KEEP_NAMES[@]}"; do

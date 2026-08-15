@@ -47,7 +47,7 @@ let _DEMO_MODE = false;
 export function showHint(text) {
   if (!_hintEl) {
     _hintEl = document.createElement('div');
-    _hintEl.style.cssText = 'margin-top:10px;font-size:0.8125rem;color:#fbbf24;font-family:Geist,sans-serif;';
+    _hintEl.style.cssText = 'margin-top:10px;font-size:0.8125rem;color:#fbbf24;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;';
     const promptRow = document.querySelector('.try-prompt-row');
     if (promptRow && promptRow.parentNode) promptRow.parentNode.insertBefore(_hintEl, promptRow.nextSibling);
   }
@@ -146,7 +146,7 @@ export function mountSend({ DEMO_MODE }) {
     padding: 6px 12px; border-radius: 6px; margin-right: 8px;
     font-size: 0.8rem; font-weight: 500; cursor: pointer;
     transition: all 0.15s ease; color: var(--text-muted);
-    font-family: 'Geist', sans-serif;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   `;
   swarmToggle.addEventListener('click', () => {
     _swarmBuildMode = !_swarmBuildMode;

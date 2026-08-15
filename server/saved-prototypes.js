@@ -727,7 +727,7 @@ function registerPublicShareRoute(app, db) {
     }
     const titleAttr = escapeHtmlAttr(row.title || 'Prototype');
     // No "Remix" badge when served on the owner's own custom domain — it's their app.
-    const remixBtn = req._customDomain ? '' : `<a href="/try.html?remix=${id}" style="position:fixed;bottom:16px;right:16px;z-index:9999;background:#7C3AED;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-family:'Geist',system-ui,sans-serif;font-size:13px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,0.25);opacity:0.9;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">Remix →</a>`;
+    const remixBtn = req._customDomain ? '' : `<a href="/try.html?remix=${id}" style="position:fixed;bottom:16px;right:16px;z-index:9999;background:#7C3AED;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,0.25);opacity:0.9;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">Remix →</a>`;
     if (typeof decoded === 'string') {
       // v1 / v2 single-file path: inline HTML in a sandboxed iframe srcdoc.
       const srcdoc = escapeHtmlAttr(injectStorageShim(decoded));
@@ -822,7 +822,7 @@ ${remixBtn}
 
 function notFoundPage(msg) {
   const m = escapeHtmlAttr(msg);
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Not found · LingCode</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a0a;color:#f0f0f0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;padding:24px;text-align:center}h1{font-size:1.5rem;margin:0 0 8px;font-weight:500}p{color:#888;margin:0 0 24px}a{color:#00d084;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><h1>404</h1><p>${m}</p><a href="/try.html">Build something on /try →</a></body></html>`;
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Not found · LingCode</title><style>body{font-family:Helvetica Neue,Helvetica,Arial,sans-serif;background:#0a0a0a;color:#f0f0f0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;padding:24px;text-align:center}h1{font-size:1.5rem;margin:0 0 8px;font-weight:500}p{color:#888;margin:0 0 24px}a{color:#00d084;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><h1>404</h1><p>${m}</p><a href="/try.html">Build something on /try →</a></body></html>`;
 }
 
 // Test seam: lets the test suite reset the in-memory rate-limit state

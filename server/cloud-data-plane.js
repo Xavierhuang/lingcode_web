@@ -232,6 +232,10 @@ const MAX_BIND_PARAMS = 60000;
 // a tighter per-tier `maxRows` (cloud-limits maxRowsPerWrite); this only guards
 // against a caller that forgets to.
 const MAX_ROWS_PER_WRITE_HARD = 10000;
+// Hard backstop on rows per single read (/select), independent of tier. Routes
+// pass a tighter per-tier `maxRows` (cloud-limits maxRowsPerRead: 200/500/1000);
+// this caps even an admin override so no read can drain the shared cluster.
+const MAX_ROWS_PER_READ_HARD = 2000;
 
 // Accept a single row object or an array of them; validate each is a plain
 // object. Returns a non-empty array.
@@ -903,6 +907,28 @@ async function userHasVerifiedMfa(backendId, userId) {
 
 // ---- introspection + queries ------------------------------------------
 
+// Base-table count per backend, in ONE query over all requested schemas — for
+// the "Connect a backend" picker, so a real backend (67 tables) is visibly
+// distinct from an empty duplicate (3 auth stubs). Returns a { backendId: count }
+// map; ids that resolve to no schema simply won't appear.
+async function tableCounts(backendIds) {
+  const ids = (Array.isArray(backendIds) ? backendIds : []).filter(Boolean);
+  if (ids.length === 0) return {};
+  const schemas = ids.map(schemaName);   // validates each id; throws on a bad one
+  const pool = getPool();
+  const r = await pool.query(
+    `SELECT table_schema, COUNT(*)::int AS n
+       FROM information_schema.tables
+      WHERE table_schema = ANY($1) AND table_type = 'BASE TABLE'
+      GROUP BY table_schema`, [schemas]);
+  const out = {};
+  for (const row of r.rows) {
+    // strip the "be_" prefix schemaName() adds
+    out[row.table_schema.replace(/^be_/, '')] = row.n;
+  }
+  return out;
+}
+
 async function listTables(backendId) {
   const schema = schemaName(backendId);
   const pool = getPool();
@@ -1085,14 +1111,278 @@ async function applyMigration(backendId, sql) {
   }
 }
 
+// ---- resource embedding (PostgREST-style nested selects) --------------
+// A `columns` select string may embed related resources the way Supabase does,
+// e.g. `id,title,venue:venues(name,city),show_artists(artist:artists(name))`.
+// We compile that into a single SELECT where each embed becomes a correlated
+// sub-select producing jsonb: to-one (belongs-to via the base FK) → a json
+// object, to-many (has-many via the child FK) → a json array. Relationships are
+// resolved from real FK metadata; direction picks object vs array. Everything
+// still runs under the tenant role with search_path pinned to the tenant schema
+// (see _asTenant), so a join can never reach another tenant's data regardless
+// of the generated SQL — the role sandbox, not this compiler, is the boundary.
+//
+// The parser/compiler are pure (no DB) and exported for unit testing; only FK
+// lookup and execution touch Postgres.
+
+// Single-quoted SQL string literal (used for jsonb_build_object keys, which come
+// from parsed identifiers but are escaped defensively anyway).
+function _sqlStr(s) { return `'${String(s).replace(/'/g, "''")}'`; }
+
+// True when a select string uses embedding (a '(' opens a related sub-select).
+// Plain column lists and '*' never contain parens, so they take the fast path.
+function selectHasEmbeds(columns) {
+  return typeof columns === 'string' && columns.includes('(');
+}
+
+// Recursive-descent parse of a PostgREST-style select list into an AST of
+// nodes: { type:'star' } | { type:'col', name, alias } |
+// { type:'embed', rel, alias, inner, hint, children:[...] }.
+// Grammar (subset): list := field (',' field)* ; a field is `[alias:]name`
+// optionally followed by `!inner` / `!left` / `!hint` modifiers and, if it is an
+// embed, `( list )`. Whitespace/newlines between tokens are ignored.
+function parseEmbeddedSelect(input) {
+  const s = String(input);
+  let i = 0;
+  const ws = () => { while (i < s.length && /\s/.test(s[i])) i++; };
+  const ident = () => {
+    ws();
+    const start = i;
+    while (i < s.length && /[A-Za-z0-9_]/.test(s[i])) i++;
+    if (i === start) throw badRequest(`malformed select: expected identifier near "${s.slice(i, i + 16)}"`);
+    return s.slice(start, i);
+  };
+  function field() {
+    ws();
+    if (s[i] === '*') { i++; return { type: 'star' }; }
+    let name = ident();
+    let alias = null;
+    ws();
+    if (s[i] === ':') { i++; alias = name; name = ident(); ws(); }
+    let inner = false;
+    let hint = null;
+    while (s[i] === '!') {
+      i++;
+      const mod = ident();
+      if (mod === 'inner') inner = true;
+      else if (mod === 'left') inner = false;
+      else hint = mod;
+      ws();
+    }
+    if (s[i] === '(') {
+      i++;
+      const children = list();
+      ws();
+      if (s[i] !== ')') throw badRequest('malformed select: expected ")"');
+      i++;
+      return { type: 'embed', rel: name, alias: alias || name, inner, hint, children };
+    }
+    return { type: 'col', name, alias: alias || name };
+  }
+  function list() {
+    const items = [];
+    ws();
+    if (s[i] === ')' || i >= s.length) return items;
+    while (true) {
+      items.push(field());
+      ws();
+      if (s[i] === ',') { i++; continue; }
+      break;
+    }
+    return items;
+  }
+  const ast = list();
+  ws();
+  if (i < s.length) throw badRequest(`malformed select near "${s.slice(i, i + 16)}"`);
+  return ast;
+}
+
+// Given all FKs in the schema, resolve how `node.rel` relates to `parentTable`.
+// belongs-to (parent has the FK) → to-one; has-many (child has the FK) → to-many.
+// A `!hint` (constraint name or a join column) disambiguates when several FKs
+// could match; otherwise ambiguity/absence is a 400.
+function resolveRelationship(fks, parentTable, node) {
+  const rel = node.rel;
+  let cands = [];
+  for (const f of fks) {
+    if (f.source_table === parentTable && f.target_table === rel) cands.push({ kind: 'one', fk: f });
+    if (f.source_table === rel && f.target_table === parentTable) cands.push({ kind: 'many', fk: f });
+  }
+  if (node.hint) {
+    const h = node.hint;
+    cands = cands.filter((c) =>
+      c.fk.constraint_name === h ||
+      (c.fk.source_columns || []).includes(h) ||
+      (c.fk.target_columns || []).includes(h));
+  }
+  if (!cands.length) throw badRequest(`no relationship found between "${parentTable}" and "${rel}"`);
+  if (cands.length > 1) throw badRequest(`ambiguous relationship between "${parentTable}" and "${rel}" — add a !hint`);
+  const { kind, fk } = cands[0];
+  return kind === 'one'
+    ? { kind, remoteTable: rel, localCols: fk.source_columns, remoteCols: fk.target_columns }
+    : { kind, remoteTable: rel, localCols: fk.target_columns, remoteCols: fk.source_columns };
+}
+
+// Compile filter conditions on an already-quoted column into clause strings,
+// mirroring buildClauses' per-column shape ({op:val} object, or shorthand eq).
+function _compileCond(quotedCol, cond, ctx) {
+  if (cond === null) return [`${quotedCol} IS NULL`];
+  if (typeof cond !== 'object' || Array.isArray(cond)) { ctx.values.push(cond); return [`${quotedCol} = $${++ctx.i}`]; }
+  return Object.entries(cond).map(([op, val]) => compileOp(quotedCol, op, val, ctx));
+}
+
+// Compile an embedding select (with base filters/order/limit) into { sql, values }.
+// Pure given the FK list. `where` keys of the form `alias.col` are routed to the
+// matching top-level embed (Supabase's embedded-column filters) and force that
+// embed to inner semantics.
+function compileEmbedSelect(table, ast, fks, { where = null, order = null, limit = 50, offset = 0 } = {}) {
+  const lim = Math.max(1, Math.min(MAX_ROWS_PER_READ_HARD, Number(limit) || 50));
+  const off = Math.max(0, Number(offset) || 0);
+  const ctx = { values: [], i: 0 };
+  let aliasSeq = 0;
+  const nextAlias = () => `_e${aliasSeq++}`;
+
+  // Split base filters (plain columns + `or`) from embedded filters (`alias.col`).
+  const baseFilters = {};
+  const embedFilters = {}; // top-level embed alias -> { col: cond }
+  if (where && typeof where === 'object' && !Array.isArray(where)) {
+    for (const [k, v] of Object.entries(where)) {
+      const dot = k.indexOf('.');
+      if (k !== 'or' && dot > 0) {
+        (embedFilters[k.slice(0, dot)] ||= {})[k.slice(dot + 1)] = v;
+      } else {
+        baseFilters[k] = v;
+      }
+    }
+  }
+
+  // Build the jsonb value expression for an embed's children over `parentAlias`
+  // (whose table is `parentTable`). Nested embeds recurse. Collects EXISTS
+  // clauses contributed by inner children so the owning query can filter on them.
+  function jsonForChildren(parentTable, parentAlias, children, existsSink) {
+    const parts = [];
+    let hasStar = false;
+    for (const child of children) {
+      if (child.type === 'star') { hasStar = true; continue; }
+      if (child.type === 'col') {
+        parts.push(`${_sqlStr(child.alias)}, ${parentAlias}.${qIdent(child.name)}`);
+        continue;
+      }
+      const built = embedSubquery(parentTable, parentAlias, child);
+      parts.push(`${_sqlStr(child.alias)}, ${built.expr}`);
+      if (built.existsClause) existsSink.push(built.existsClause);
+    }
+    const obj = `jsonb_build_object(${parts.join(', ')})`;
+    if (hasStar) return parts.length ? `(to_jsonb(${parentAlias}.*) || ${obj})` : `to_jsonb(${parentAlias}.*)`;
+    return obj;
+  }
+
+  // Build one embed node into { expr, existsClause }. `expr` is a scalar
+  // sub-select yielding jsonb (object for to-one, array for to-many).
+  // `existsClause` is set when the node is `!inner` (or has an embedded filter):
+  // the caller ANDs it into its own WHERE so unmatched parent rows drop out.
+  function embedSubquery(parentTable, parentAlias, node) {
+    const rel = resolveRelationship(fks, parentTable, node);
+    const a = nextAlias();
+    const conds = rel.localCols.map((lc, idx) =>
+      `${a}.${qIdent(rel.remoteCols[idx])} = ${parentAlias}.${qIdent(lc)}`);
+    const efs = embedFilters[node.alias];
+    if (efs) {
+      for (const [col, cond] of Object.entries(efs)) {
+        for (const clause of _compileCond(`${a}.${qIdent(col)}`, cond, ctx)) conds.push(clause);
+      }
+    }
+    const childExists = [];
+    const jsonVal = jsonForChildren(rel.remoteTable, a, node.children, childExists);
+    const whereParts = [...conds, ...childExists];
+    const whereSql = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
+    const from = `FROM ${qIdent(rel.remoteTable)} ${a} ${whereSql}`;
+    const expr = rel.kind === 'one'
+      ? `(SELECT ${jsonVal} ${from} LIMIT 1)`
+      : `(SELECT COALESCE(jsonb_agg(${jsonVal}), '[]'::jsonb) ${from})`;
+    const forceInner = node.inner || !!efs;
+    const existsClause = forceInner ? `EXISTS (SELECT 1 ${from})` : null;
+    return { expr, existsClause };
+  }
+
+  // Top level: project base columns / '*' plus each embed, collecting inner
+  // embeds' EXISTS into the base WHERE.
+  const selectParts = [];
+  const topExists = [];
+  for (const node of ast) {
+    if (node.type === 'star') { selectParts.push('t.*'); continue; }
+    if (node.type === 'col') { selectParts.push(`t.${qIdent(node.name)} AS ${qIdent(node.alias)}`); continue; }
+    const built = embedSubquery(table, 't', node);
+    selectParts.push(`${built.expr} AS ${qIdent(node.alias)}`);
+    if (built.existsClause) topExists.push(built.existsClause);
+  }
+
+  const baseClauses = buildClauses(baseFilters, ctx);
+  const allClauses = [...baseClauses, ...topExists];
+  const whereSql = allClauses.length ? `WHERE ${allClauses.join(' AND ')}` : '';
+  const orderSql = buildOrder(order);
+  const sql = `SELECT ${selectParts.join(', ')} FROM ${qIdent(table)} t ${whereSql} ${orderSql} LIMIT ${lim} OFFSET ${off}`;
+  return { sql, values: ctx.values };
+}
+
+// All FKs in a backend's schema, cached briefly (they only change on migration).
+const _fkCache = new Map(); // backendId -> { at, fks }
+async function allForeignKeys(backendId) {
+  const schema = schemaName(backendId);
+  const hit = _fkCache.get(backendId);
+  if (hit && (Date.now() - hit.at) < 30000) return hit.fks;
+  const r = await getPool().query(
+    // Cast attname (type `name`) to text so the aggregate is text[] (OID 1009),
+    // which node-postgres reliably parses into a JS array — `name[]` (1003) can
+    // come back as a raw `{a,b}` string on some driver versions.
+    `SELECT con.conname AS constraint_name,
+       rel.relname AS source_table,
+       (SELECT array_agg(att.attname::text ORDER BY un.ord)
+          FROM unnest(con.conkey) WITH ORDINALITY un(attnum, ord)
+          JOIN pg_attribute att ON att.attnum = un.attnum AND att.attrelid = rel.oid) AS source_columns,
+       frel.relname AS target_table,
+       (SELECT array_agg(att.attname::text ORDER BY un.ord)
+          FROM unnest(con.confkey) WITH ORDINALITY un(attnum, ord)
+          JOIN pg_attribute att ON att.attnum = un.attnum AND att.attrelid = frel.oid) AS target_columns
+     FROM pg_constraint con
+       JOIN pg_class rel ON rel.oid = con.conrelid
+       JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+       JOIN pg_class frel ON frel.oid = con.confrelid
+     WHERE con.contype = 'f' AND nsp.nspname = $1`, [schema]);
+  // Normalise Postgres array literals (`{a,b}`) to JS arrays, belt-and-braces.
+  const toArr = (v) => Array.isArray(v)
+    ? v
+    : (typeof v === 'string' ? v.replace(/^\{|\}$/g, '').split(',').filter(Boolean) : []);
+  const fks = r.rows.map((f) => ({
+    constraint_name: f.constraint_name,
+    source_table: f.source_table, source_columns: toArr(f.source_columns),
+    target_table: f.target_table, target_columns: toArr(f.target_columns),
+  }));
+  _fkCache.set(backendId, { at: Date.now(), fks });
+  return fks;
+}
+
 // ---- data proxy (Phase-1 data path for generated apps) ----------------
 
-// Minimal stand-in for PostgREST: select rows / insert a row as the tenant
-// role. Phase 2 replaces this with the real gateway → PostgREST.
-async function proxySelect(backendId, table, { where = null, order = null, limit = 50, offset = 0, userId = null, admin = false } = {}) {
+// Read rows as the tenant role. `columns` may be a PostgREST-style select with
+// embedded relations (Supabase nested selects) — when it contains an embed we
+// compile it to jsonb sub-selects; otherwise the fast `SELECT *` path runs and
+// `columns` is ignored (a plain column list still over-fetches, harmlessly).
+async function proxySelect(backendId, table, { where = null, order = null, limit = 50, offset = 0, userId = null, admin = false, columns = null, maxRows = 200 } = {}) {
   if (!(await tableExists(backendId, table))) { const e = new Error('table not found'); e.status = 404; throw e; }
-  const lim = Math.max(1, Math.min(200, Number(limit) || 50));
+  // Per-tier row cap (cloud-limits maxRowsPerRead), clamped to the hard backstop.
+  const cap = Math.max(1, Math.min(MAX_ROWS_PER_READ_HARD, Number(maxRows) || 200));
+  const lim = Math.max(1, Math.min(cap, Number(limit) || 50));
   const off = Math.max(0, Number(offset) || 0);
+  if (selectHasEmbeds(columns)) {
+    const ast = parseEmbeddedSelect(columns);
+    const fks = await allForeignKeys(backendId);
+    const { sql, values } = compileEmbedSelect(table, ast, fks, { where, order, limit: lim, offset: off });
+    return _asScope(backendId, async (client) => {
+      const r = await client.query(sql, values);
+      return { rows: r.rows, fields: r.fields.map((f) => f.name) };
+    }, { userId, admin });
+  }
   const w = buildWhere(where, 0);
   const orderSql = buildOrder(order);
   return _asScope(backendId, async (client) => {
@@ -1715,6 +2005,7 @@ async function deleteAppBlobsForAppVersion(appId, version) {
 
 module.exports = {
   isConfigured,
+  tableCounts,
   poolStats,
   endPool,
   probe,
@@ -1783,4 +2074,9 @@ module.exports = {
   buildOrder,
   planBulkWrite,
   buildRpcCall,
+  // Resource embedding (nested selects) — pure, DB-free, unit-testable.
+  selectHasEmbeds,
+  parseEmbeddedSelect,
+  resolveRelationship,
+  compileEmbedSelect,
 };

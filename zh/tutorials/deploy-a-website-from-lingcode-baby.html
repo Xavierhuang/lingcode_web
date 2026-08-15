@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>如何用 LingCode Baby 把网站发布上线？ | 教程</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="用 LingCode Baby 的 Deploy 按钮直接发布网站。选一个子域名，站点就会上线到 https://yourname.lingcode.app，自带 HTTPS——无需主机账户、无需部署令牌、无需配置 DNS。">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/deploy-a-website-from-lingcode-baby.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/deploy-a-website-from-lingcode-baby.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/deploy-a-website-from-lingcode-baby.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../../style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-07-27T00:00:00Z">
+  <meta name="article:published_time" content="2026-07-27T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/zh/tutorials/deploy-a-website-from-lingcode-baby.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "用 LingCode Baby 把网站发布上线",
+  "description": "用 LingCode Baby 的 Deploy 按钮直接发布网站。选一个子域名，站点就会上线到 https://yourname.lingcode.app，自带 HTTPS——无需主机账户、无需部署令牌、无需配置 DNS。",
+  "url": "https://lingcode.dev/zh/tutorials/deploy-a-website-from-lingcode-baby.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-07-27",
+  "dateModified": "2026-07-27",
+  "inLanguage": "zh",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Aurelian Labs Inc.",
+    "url": "https://lingcode.dev/",
+    "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/zh/tutorials/deploy-a-website-from-lingcode-baby.html" }
+}
+  </script>
+</head>
+<body>
+
+  <nav class="site-nav">
+  <a href="/zh/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/zh/features.html">功能</a>
+        <a href="/zh/cloud.html">云端</a></li>
+    <li><a href="/zh/pricing.html">定价</a></li>
+    <li><a href="/zh/docs.html">文档</a></li>
+    <li><a href="/zh/tutorials.html">教程</a></li>
+    <li><a href="/community.html">社区</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="搜索" aria-label="搜索本站" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/tutorials/deploy-a-website-from-lingcode-baby.html">English</a>
+    <a class="btn btn-ghost" href="/signin.html">登录</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>开始下载 →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/zh/tutorials.html">教程</a>
+        <a href="/search.html">搜索</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=beginner">发布与基础设施</a>
+      <span>/</span>
+      <span>用 LingCode Baby 部署</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 文字</span>
+        <span class="badge badge-beginner">● 初级</span>
+        <span class="badge badge-date">更新于 2026-07-27</span>
+      </div>
+      <h1>如何用 LingCode Baby 把网站发布上线？</h1>
+      <p class="tldr"><strong>TL;DR：</strong>打开项目文件夹，点击工具栏上的 <strong>Deploy</strong>（或使用菜单 <strong>File ▸ Deploy to LingCode Cloud</strong>），在浏览器中完成登录，然后选一个子域名。你的站点会上线到 <code>https://yourname.lingcode.app/</code>，自带 HTTPS。无需主机账户、无需部署令牌、无需配置 DNS。再次部署会更新同一个 URL。</p>
+      <p class="intro">做第一个网站，最难的往往不是把它写出来，而是写完之后撞上的那堵墙：主机账户、构建命令、部署令牌、域名服务器——这些都与你的网站本身无关，却横在你和"一个能发给别人的链接"之间。LingCode Baby 把这堵墙压缩成了一个按钮。本教程讲清楚按下它之后到底发生了什么，以及出问题时该怎么办。</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>先说清楚"部署"的到底是什么，因为不同工具对这个词的含义差别很大。Baby 上传的是<strong>你项目文件夹里的文件</strong>，并把它们作为网站提供出去。如果你有一个 <code>index.html</code>，它就是首页。这属于<em>静态托管</em>：你的 HTML、CSS、JavaScript 和图片，通过 HTTPS 提供服务。没有服务端渲染，也没有需要配置的构建流程——文件夹里是什么，上线的就是什么。</p>
+      <p>这是有意为之的取舍。Baby 是那个小而安静的应用：写好站点，按一下按钮，它就上线了。如果你需要构建步骤、需要 Next.js 或 SvelteKit 这类框架、或者站点背后需要数据库，那应该用 <a href="/zh/tutorials/deploy-to-lingcode-cloud.html">Mac IDE 的 Cloud 部署</a>——同样的托管，但机制更完整。</p>
+
+      <h2>你将学到</h2>
+      <ul>
+        <li><strong>Deploy</strong> 按钮在哪里，以及触发它的两种方式</li>
+        <li>子域名是什么，该怎么选</li>
+        <li>上线后的 URL 长什么样，之后如何更新站点</li>
+        <li>最常见的三类问题，以及各自的解决办法</li>
+      </ul>
+
+      <h2>开始之前</h2>
+      <ul>
+        <li><strong>一个 LingCode 账户。</strong>不需要提前注册——首次部署时会自动打开浏览器，带你走完整个流程。</li>
+        <li><strong>一个装着你网站的文件夹。</strong>至少要有一个 <code>index.html</code>。如果你是让 Baby 的聊天帮你做的网站，这一步已经完成了。</li>
+      </ul>
+
+      <h2>开始部署</h2>
+      <ol>
+        <li>
+          <p><strong>打开项目文件夹。</strong>使用 <strong>File ▸ Open Folder…</strong> 选择存放网站的文件夹。没有打开文件夹时 Deploy 是不可用的——如果先点了它，Baby 会提示你。</p>
+        </li>
+        <li>
+          <p><strong>点击 Deploy。</strong>按钮在窗口顶部的工具栏上。如果你更习惯用菜单，同样的命令在 <strong>File ▸ Deploy to LingCode Cloud</strong>。</p>
+        </li>
+        <li>
+          <p><strong>登录一次即可。</strong>首次部署时浏览器会打开 LingCode 登录页。在浏览器里完成登录后切回 Baby——它会自动接收结果，不需要复制粘贴任何东西。之后的部署不会再出现这一步。</p>
+        </li>
+        <li>
+          <p><strong>选择你的子域名。</strong>Baby 会询问站点要用的名字。填一个简短的小写名称——比如 <code>my-portfolio</code>、<code>tea-club</code>，或者你自己的名字。它会变成 <code>https://my-portfolio.lingcode.app/</code>。如果名字已被占用，Baby 会提示并让你重填；在接受一个可用名字之前，不会发布任何内容。</p>
+        </li>
+        <li>
+          <p><strong>等待上传。</strong>你会看到 <em>Uploading to LingCode Cloud…</em>，然后是 <em>Deploying to LingCode Cloud…</em>。小站点只需要几秒钟。</p>
+        </li>
+        <li>
+          <p><strong>打开你的网站。</strong>完成后 Baby 会显示 <em>Deployed to LingCode Cloud</em>，附带你的实时 URL 和一个 <strong>Copy URL</strong> 按钮。这个链接对任何人、任何设备都立即可用，HTTPS 已经配置好了。</p>
+        </li>
+      </ol>
+
+      <div class="info-box">
+        <p><strong>之后如何更新站点。</strong>修改文件后再次点击 <strong>Deploy</strong>，沿用同一个子域名即可。原有 URL 会就地更新——不会产生新链接，也不需要再通知任何人。如果浏览器仍显示旧版本，强制刷新一下（<strong>⌘⇧R</strong>）。</p>
+      </div>
+
+      <h2>出问题时怎么办</h2>
+      <ul>
+        <li><strong>提示需要先打开文件夹。</strong>说明当前没有打开项目文件夹。先用 <strong>File ▸ Open Folder…</strong>。</li>
+        <li><strong>浏览器打开了，但没有反应。</strong>请在浏览器标签页里完成登录，再切回 Baby。如果标签页被过早关掉，再点一次 <strong>Deploy</strong> 就会重新打开登录页。</li>
+        <li><strong>提示子域名不可用。</strong>说明这个子域名已被占用。名字在所有 LingCode 用户之间先到先得，常用词很快就没了。加个词即可：<code>tea-club-oxford</code>。</li>
+        <li><strong>页面能打开但是空白。</strong>几乎都是 <code>index.html</code> 缺失或名字写错——这个文件必须位于你部署的文件夹的顶层，并且文件名区分大小写。</li>
+      </ul>
+
+      <h2>使用你自己的域名</h2>
+      <p><code>.lingcode.app</code> 地址是一个真实、长期可用的站点地址，很多项目一直用它就够了。当你确实想用 <code>yourname.com</code> 时，需要先从域名注册商购买域名，再把它指向你的站点——这部分见<a href="/zh/tutorials/connect-a-custom-domain.html">连接自定义域名</a>；如果你还没有域名，可以从 <a href="/zh/tutorials/buy-a-domain-from-cloudflare.html">在 Cloudflare 购买域名</a>或 <a href="/zh/tutorials/buy-a-domain-from-namecheap.html">Namecheap</a> 开始。</p>
+
+      <h2>接下来读什么</h2>
+      <ul>
+        <li><a href="/zh/tutorials/deploy-to-lingcode-cloud.html">从 Mac IDE 部署到 LingCode Cloud</a> —— 当你需要构建步骤或全栈框架时</li>
+        <li><a href="/zh/tutorials/connect-a-managed-backend.html">连接托管后端</a> —— 当你的站点需要账户体系或数据库时</li>
+        <li><a href="/zh/tutorials/build-a-multi-page-website.html">构建多页网站</a> —— 发布之前如何组织站点结构</li>
+      </ul>
+    </div>
+  </div>
+
+</body>
+</html>

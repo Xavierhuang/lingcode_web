@@ -218,7 +218,7 @@ export function runDesignGate({ prompt, summary, provider, apiKey }) {
     const panel = document.createElement('div');
     panel.id = 'lc-design-panel';
     // Initial inline style — will be overwritten by renderGallery/renderDetail.
-    panel.style.cssText = 'font-family:system-ui,-apple-system,sans-serif;color:var(--text);';
+    panel.style.cssText = 'font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:var(--text);';
 
     // Panel is created now but NOT mounted yet — we wait until styles are ready
     // so there's no blank black rectangle during the generateStyles() call.
@@ -255,7 +255,7 @@ export function runDesignGate({ prompt, summary, provider, apiKey }) {
       panel.style.cssText = [
         'display:flex', 'flex-direction:column', 'align-items:center',
         'justify-content:center', 'position:relative', 'overflow:hidden',
-        'font-family:system-ui,-apple-system,sans-serif', 'color:var(--text)',
+        'font-family:Helvetica Neue,Helvetica,Arial,sans-serif', 'color:var(--text)',
         'transition:opacity 0.5s ease',
       ].join(';');
 
@@ -444,7 +444,7 @@ export function runDesignGate({ prompt, summary, provider, apiKey }) {
     function buildStylePlaceholder(style) {
       const [c0 = '#1a1a2e', c1 = '#7c3aed', c2 = '#a78bfa', c3 = '#c4b5fd'] = style.palette;
       const el = document.createElement('div');
-      el.style.cssText = 'position:absolute;inset:0;overflow:hidden;font-family:system-ui,sans-serif;';
+      el.style.cssText = 'position:absolute;inset:0;overflow:hidden;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;';
       el.innerHTML = `
         <div style="position:absolute;inset:0;background:${c0};"></div>
         <div style="position:absolute;top:0;left:0;right:0;height:2px;background:rgba(255,255,255,0.08);z-index:8;">
@@ -488,7 +488,7 @@ export function runDesignGate({ prompt, summary, provider, apiKey }) {
       _currentDetailIndex = -1;
       panel.innerHTML = '';
       document.getElementById('lc-design-chat-card')?.remove();
-      panel.style.cssText = 'display:flex;flex-direction:column;font-family:system-ui,-apple-system,sans-serif;color:var(--text);';
+      panel.style.cssText = 'display:flex;flex-direction:column;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:var(--text);';
 
       // ── CHAT SIDE: style picker card ──────────────────────────────────────
       const chatCard = document.createElement('div');
@@ -498,7 +498,7 @@ export function runDesignGate({ prompt, summary, provider, apiKey }) {
       cardInner.style.cssText = [
         'border:1px solid var(--border)', 'border-radius:12px',
         'background:var(--bg-card,var(--surface,#f3f4f6))', 'padding:12px 14px',
-        'color:var(--text)', 'font-family:system-ui,-apple-system,sans-serif',
+        'color:var(--text)', 'font-family:Helvetica Neue,Helvetica,Arial,sans-serif',
       ].join(';');
       const cardHead = document.createElement('div');
       cardHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
@@ -721,7 +721,7 @@ export function runDesignGate({ prompt, summary, provider, apiKey }) {
       const style = styles[index];
       let mode = 'mobile';
       panel.innerHTML = '';
-      panel.style.cssText = 'display:flex;flex-direction:column;font-family:system-ui,-apple-system,sans-serif;color:var(--text);';
+      panel.style.cssText = 'display:flex;flex-direction:column;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:var(--text);';
 
       // --- Top header: back + title + viewport + actions ---
       const headerRow = document.createElement('div');

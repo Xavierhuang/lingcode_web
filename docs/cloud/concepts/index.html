@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Core concepts | LingCode Cloud Docs</title>
+  <meta name="description" content="Understand LingCode Cloud projects, backends, PostgreSQL isolation, the data gateway, authentication context, control and data planes, and backend-as-code deployments.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/concepts/">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/concepts/">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/concepts/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/" aria-current="page">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Core concepts</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="core-concepts">Core concepts</h1>
+<p>LingCode Cloud is PostgreSQL with a managed security, API, storage, compute, and deployment layer. You do not need to operate a database server, but the underlying relational model remains visible: tables, types, constraints, indexes, transactions, SQL functions, and row-level security behave like PostgreSQL.</p>
+<h2 id="project-and-backend">Project and backend</h2>
+<p>A <strong>project</strong> is the collaborative LingCode resource associated with a source repository. A <strong>backend</strong> is the provisioned Cloud environment containing that application&#39;s database schema, users, files, functions, configuration, telemetry, and usage state.</p>
+<p>The committed <code>.lingcode/project.json</code> identity allows a project to reconnect to its existing backend after the local folder is renamed or moved. Access still requires project ownership or membership; knowing a project identifier is not authorization.</p>
+<h2 id="tenant-schema-and-role">Tenant schema and role</h2>
+<p>Each backend receives two PostgreSQL isolation primitives:</p>
+<ul>
+<li>a tenant schema named <code>be_&lt;backend-id&gt;</code>;</li>
+<li>a tenant role named <code>trole_&lt;backend-id&gt;</code>.</li>
+</ul>
+<p>Application queries run with the tenant role and a <code>search_path</code> pinned to that tenant schema plus approved extensions. The role has no grants on another backend&#39;s schema. This is the hard cross-tenant boundary; row-level security is an additional per-user boundary inside the backend.</p>
+<p>The schema can use normal PostgreSQL capabilities such as foreign keys, unique constraints, transactions, JSONB, full-text search, and pgvector. LingCode manages provisioning and grants after migrations.</p>
+<h2 id="data-gateway">Data gateway</h2>
+<p>Client applications call the <strong>data gateway</strong>, not the PostgreSQL wire protocol. A request contains:</p>
+<ol>
+<li>the backend URL;</li>
+<li>the public anon key;</li>
+<li>an optional signed-in user access token;</li>
+<li>a bounded data, auth, storage, or function operation.</li>
+</ol>
+<p>The gateway verifies the token, selects the backend, assumes its tenant role, pins the schema, places the user identifier in the PostgreSQL session, runs the operation, meters it, and returns a JSON envelope.</p>
+<p>This arrangement prevents a browser from receiving a database password and gives the service a place to enforce request-size, row-count, execution-time, and plan limits.</p>
+<h2 id="the-anon-key-and-user-token">The anon key and user token</h2>
+<p>The <strong>anon key</strong> selects a backend and grants only the permissions available to unauthenticated application traffic. It is public by design.</p>
+<p>After sign-in, the SDK adds a short-lived <strong>user access token</strong>. The gateway verifies it and exposes the user ID to PostgreSQL as <code>current_setting(&#39;app.user_id&#39;, true)</code>. RLS policies use that value to decide which rows the user can read or change.</p>
+<pre><code class="language-sql">create policy &quot;read own profile&quot;
+on profiles for select
+using (id::text = current_setting(&#39;app.user_id&#39;, true));</code></pre>
+<p>Hiding the anon key does not replace RLS. Conversely, a correct RLS policy remains effective even when a user inspects the key and calls the API outside your UI.</p>
+<h2 id="row-level-security">Row-level security</h2>
+<p><strong>Row-level security</strong> is PostgreSQL&#39;s per-row authorization system. Enable it on every table reached from a client application, then add policies for the operations the application needs.</p>
+<pre><code class="language-sql">alter table notes enable row level security;
+
+create policy &quot;owners manage notes&quot;
+on notes for all
+using (owner_id::text = current_setting(&#39;app.user_id&#39;, true))
+with check (owner_id::text = current_setting(&#39;app.user_id&#39;, true));</code></pre>
+<p><code>USING</code> controls which existing rows an operation can see. <code>WITH CHECK</code> controls which new row state may be created. Test SELECT, INSERT, UPDATE, and DELETE separately because one successful policy does not imply the others are correct.</p>
+<h2 id="control-plane-and-data-plane">Control plane and data plane</h2>
+<p>LingCode Cloud separates administrative work from application traffic.</p>
+<div class="cloud-docs-table-wrap"><table><thead><tr><th>Plane</th><th>Responsibilities</th><th>Typical callers</th></tr></thead><tbody>
+<tr><td>Control plane</td><td>Provisioning, ownership, migrations, functions, secrets, domains, logs, usage, deployment approvals</td><td>LingCode IDE, backend console, MCP tools</td></tr>
+<tr><td>Data plane</td><td>Authenticated database operations, RLS, function invocation, realtime events, file access</td><td>Web, mobile, and server applications</td></tr>
+</tbody></table></div>
+<p>Control-plane ownership does not mean an application&#39;s end user receives administrative access. Data-plane requests always enter through the backend&#39;s application security context.</p>
+<h2 id="current-database-api">Current database API</h2>
+<p>The current SDK provides bounded table CRUD, filters, ordering, pagination, upsert, SQL RPC, vector search, storage, auth, functions, and row-event subscriptions. Relational joins and complex aggregation should live in a reviewed SQL function deployed by migration, then be called through <code>rpc()</code>.</p>
+<pre><code class="language-js">const { data, error } = await lingcode.rpc(&#39;recent_orders&#39;, {
+  customer_id: user.id,
+  page_size: 25,
+});</code></pre>
+<p>Keeping complex SQL server-side reduces accidental over-fetching, allows indexes to work, and keeps authorization logic close to the data.</p>
+<h2 id="functions-and-sandboxing">Functions and sandboxing</h2>
+<p>Current custom functions run TypeScript in a fresh Deno subprocess. Filesystem, environment, subprocess, FFI, and unrestricted network access are denied. Declared secrets are supplied through <code>ctx.secrets</code>; backend database and storage operations use short-lived per-invocation credentials.</p>
+<p>Functions are appropriate for short server-side logic, vendor API calls, webhooks that fit the supported request model, and scheduled operations. Long-running processes and persistent servers belong in hosted Worker-compatible applications or infrastructure you operate.</p>
+<h2 id="realtime-today">Realtime today</h2>
+<p>The available Realtime API publishes committed INSERT, UPDATE, and DELETE events. PostgreSQL <code>LISTEN/NOTIFY</code> carries changes across API processes, and the service checks RLS visibility before sending row bodies to application subscribers.</p>
+<p>Subscribers must still handle reconnects and refetch when instructed. Realtime is a notification channel, not a substitute for the database as the source of truth.</p>
+<h2 id="backend-as-code">Backend-as-code</h2>
+<p><strong>Backend-as-code</strong> stores a manifest, immutable migrations, and function source under <code>lingcode/</code>. The agent can create and update these files, calculate their hashes, preview the deployment, run tests, and ask for production approval.</p>
+<p>The server verifies paths, declared artifacts, SHA-256 hashes, migration drift, function size, secret names, project access, and environment before applying anything. Production approval is tied to the exact canonical digest and expires; changing a file requires a new preview.</p>
+<h2 id="development-and-production">Development and production</h2>
+<p>Development favors short feedback loops, but validation still runs before changes are applied. Production requires explicit confirmation of the previewed artifact set. File watching never grants permission to change production automatically.</p>
+<p>Database migrations are forward changes. A failed deploy can safely retry unchanged completed artifacts, but arbitrary SQL rollback cannot be invented automatically. Destructive migrations require an application-specific recovery plan and a verified backup.</p>
+<h2 id="consistency-boundaries">Consistency boundaries</h2>
+<ul>
+<li>A single gateway CRUD or SQL RPC operation runs in one PostgreSQL transaction.</li>
+<li>A bulk write is atomic within that call.</li>
+<li>Current custom-function <code>ctx.db.query()</code> calls are separate database operations unless the function invokes one server-side SQL function that performs the transaction.</li>
+<li>Row-event Realtime reports committed changes but does not make several client requests one transaction.</li>
+<li>The reactive query and atomic mutation contract is currently Preview and is documented separately.</li>
+</ul>
+<p>If several writes must succeed or fail together today, place them in one reviewed PostgreSQL function and call it once with <code>rpc()</code>.</p>
+<h2 id="security-responsibility">Security responsibility</h2>
+<p>LingCode manages infrastructure boundaries, encrypted secret storage, sandbox policy, authentication primitives, backups, and bounded APIs. Application developers remain responsible for schema design, RLS policies, safe function logic, allowed redirect origins, vendor permissions, and data-retention decisions.</p>
+<p>Before production:</p>
+<ul>
+<li>enable and test RLS;</li>
+<li>index foreign keys and common filters;</li>
+<li>paginate growing reads;</li>
+<li>move private keys into Secrets;</li>
+<li>run backend advisors;</li>
+<li>preview production backend changes;</li>
+<li>verify backup and restore procedures appropriate to the application.</li>
+</ul>
+<p>Continue with the <a href="/docs/cloud/database.html">Database guide</a>, <a href="/docs/cloud/security.html">Security and RLS</a>, or <a href="/docs/cloud/best-practices.html">Best practices</a>.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/">Previous: LingCode Cloud</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/functions/">Next: Functions overview</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#project-and-backend">Project and backend</a></li><li class="toc-level-2"><a href="#tenant-schema-and-role">Tenant schema and role</a></li><li class="toc-level-2"><a href="#data-gateway">Data gateway</a></li><li class="toc-level-2"><a href="#the-anon-key-and-user-token">The anon key and user token</a></li><li class="toc-level-2"><a href="#row-level-security">Row-level security</a></li><li class="toc-level-2"><a href="#control-plane-and-data-plane">Control plane and data plane</a></li><li class="toc-level-2"><a href="#current-database-api">Current database API</a></li><li class="toc-level-2"><a href="#functions-and-sandboxing">Functions and sandboxing</a></li><li class="toc-level-2"><a href="#realtime-today">Realtime today</a></li><li class="toc-level-2"><a href="#backend-as-code">Backend-as-code</a></li><li class="toc-level-2"><a href="#development-and-production">Development and production</a></li><li class="toc-level-2"><a href="#consistency-boundaries">Consistency boundaries</a></li><li class="toc-level-2"><a href="#security-responsibility">Security responsibility</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin dashboard — LingCode</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap"></noscript>
-  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="style.css?v=20260731a">
   <style>
     .admin-page { padding: 100px 24px 80px; max-width: 1100px; margin: 0 auto; }
     .admin-page h1 { font-size: 1.5rem; margin: 0 0 8px; letter-spacing: -0.02em; }
@@ -135,8 +131,8 @@
       <div class="stat-card"><div class="stat-label">DMG downloads (30d)</div><div class="stat-value" id="s-dmg30">—</div><div class="stat-sub" id="s-dmg30-ver"></div></div>
       <div class="stat-card"><div class="stat-label">CLI install runs (7d)</div><div class="stat-value" id="s-cli-inst7">—</div><div class="stat-sub">curl install-cli.sh</div></div>
       <div class="stat-card"><div class="stat-label">CLI install runs (30d)</div><div class="stat-value" id="s-cli-inst30">—</div><div class="stat-sub">unique IP-day</div></div>
-      <div class="stat-card"><div class="stat-label">CLI tarball downloads (7d)</div><div class="stat-value" id="s-cli-tar7">—</div><div class="stat-sub">incl. updates</div></div>
-      <div class="stat-card"><div class="stat-label">CLI tarball downloads (30d)</div><div class="stat-value" id="s-cli-tar30">—</div><div class="stat-sub" id="s-cli-tar30-pa"></div></div>
+      <div class="stat-card"><div class="stat-label">CLI tarball downloads (total)</div><div class="stat-value" id="s-cli-tar7">—</div><div class="stat-sub">GitHub Releases · all-time</div></div>
+      <div class="stat-card"><div class="stat-label">CLI tarball by platform</div><div class="stat-value" id="s-cli-tar30" style="font-size:1rem">—</div><div class="stat-sub" id="s-cli-tar30-pa"></div></div>
       <div class="stat-card"><div class="stat-label">Signups (7d)</div><div class="stat-value" id="s-su7">—</div><div class="stat-sub">new accounts</div></div>
       <div class="stat-card"><div class="stat-label">Signups (30d)</div><div class="stat-value" id="s-su30">—</div><div class="stat-sub" id="s-su-total"></div></div>
     </div>
@@ -462,6 +458,40 @@
       </table>
     </div>
 
+    <h1 style="margin-top:48px;">Pro voucher campaigns</h1>
+    <p class="lead">Issue card-required 30-day Pro trials. Raw codes exist only in the ZIP returned at creation; the server cannot re-download or recover them.</p>
+
+    <div class="manual-card">
+      <h2>Create a one-time print pack</h2>
+      <p class="manual-sub" style="color:var(--red);"><strong>Download warning:</strong> if this download is lost or interrupted after issuance, the codes remain valid but cannot be recovered. Save the ZIP immediately in encrypted storage.</p>
+      <form id="voucher-form">
+        <div class="manual-grid">
+          <div><label for="voucher-name">Campaign</label><input id="voucher-name" value="LingCode Pro Promotion 2026" required></div>
+          <div><label for="voucher-quantity">Quantity</label><input id="voucher-quantity" type="number" min="1" max="500" value="500" required></div>
+          <div><label for="voucher-days">Pro trial</label><input id="voucher-days" value="30 days" disabled></div>
+          <div><label for="voucher-redeem-by">Redeem by</label><input id="voucher-redeem-by" type="date" required></div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding:8px 16px;">Create and download ZIP once</button>
+        <span id="voucher-create-status" class="manual-updated"></span>
+      </form>
+    </div>
+
+    <div class="admin-table-wrap" style="margin-bottom:40px;">
+      <table class="admin-table" aria-label="Voucher campaigns">
+        <thead><tr><th>Campaign</th><th>Status</th><th>Available</th><th>Reserved</th><th>Redeemed</th><th>Blocked</th><th>Revoked</th><th>Created</th><th></th></tr></thead>
+        <tbody id="voucher-batches"><tr><td colspan="9" class="admin-empty">No voucher campaigns yet.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="manual-card" id="voucher-detail" hidden>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div><h2 id="voucher-detail-title">Voucher status</h2><p class="manual-sub">Safe serial/status view. Raw codes and card fingerprints are never displayed.</p></div>
+        <button type="button" class="btn btn-ghost" id="voucher-detail-close">Close</button>
+      </div>
+      <div class="admin-table-wrap" style="max-height:420px;overflow:auto;">
+        <table class="admin-table"><thead><tr><th>Serial</th><th>Suffix</th><th>Status</th><th>Reservation</th><th>Reason</th><th></th></tr></thead><tbody id="voucher-detail-body"></tbody></table>
+      </div>
+    </div>
+
     <h1 style="margin-top:12px;">Signups &amp; tiers</h1>
     <p class="lead">Users appear here when registered via the API (Mac app / backend) or when you add them manually. Tiers: free, pro, team, enterprise.</p>
 
@@ -622,6 +652,147 @@
       function escapeAttr(s) {
         return String(s).replace(/"/g, '&quot;');
       }
+
+      function loadVoucherBatches() {
+        var body = document.getElementById('voucher-batches');
+        if (!body) return;
+        api('/api/admin/vouchers/batches').then(function (payload) {
+          var batches = payload.batches || [];
+          body.innerHTML = '';
+          if (!batches.length) {
+            body.innerHTML = '<tr><td colspan="9" class="admin-empty">No voucher campaigns yet.</td></tr>';
+            return;
+          }
+          batches.forEach(function (batch) {
+            var tr = document.createElement('tr');
+            var c = batch.counts || {};
+            tr.innerHTML =
+              '<td><strong>' + escapeHtml(batch.name) + '</strong><br><small>' + escapeHtml(batch.id) + '<br>30 days free, then $20/month</small></td>' +
+              '<td>' + escapeHtml(batch.status) + '</td>' +
+              '<td>' + Number(c.available || 0) + '</td>' +
+              '<td>' + Number(c.reserved || 0) + '</td>' +
+              '<td>' + Number(c.redeemed || 0) + '</td>' +
+              '<td>' + Number(c.blocked || 0) + '</td>' +
+              '<td>' + Number(c.revoked || 0) + '</td>' +
+              '<td><small>' + escapeHtml(new Date(batch.createdAt).toLocaleString()) + '<br>by ' + escapeHtml(batch.createdBy || 'admin') + '<br>expires ' + escapeHtml(new Date(batch.redeemBy).toLocaleDateString()) + '</small></td>' +
+              '<td><button type="button" class="btn btn-ghost voucher-inspect" data-id="' + escapeAttr(batch.id) + '" style="padding:4px 8px;font-size:0.75rem;">Inspect</button> <button type="button" class="btn-del voucher-revoke-batch" data-id="' + escapeAttr(batch.id) + '"' + (batch.status === 'revoked' ? ' disabled' : '') + '>Revoke unused</button></td>';
+            body.appendChild(tr);
+          });
+          body.querySelectorAll('.voucher-inspect').forEach(function (button) {
+            button.addEventListener('click', function () { loadVoucherDetail(button.getAttribute('data-id')); });
+          });
+          body.querySelectorAll('.voucher-revoke-batch').forEach(function (button) {
+            button.addEventListener('click', function () {
+              var id = button.getAttribute('data-id');
+              if (!id || !confirm('Revoke every currently available voucher in this batch? Reserved and redeemed vouchers are not changed.')) return;
+              api('/api/admin/vouchers/batches/' + encodeURIComponent(id) + '/revoke', {
+                method: 'POST', body: { confirmation: 'REVOKE BATCH' }
+              }).then(loadVoucherBatches).catch(function (error) {
+                document.getElementById('voucher-create-status').textContent = error.message;
+              });
+            });
+          });
+        }).catch(function (error) {
+          if (error.message !== 'UNAUTH') body.innerHTML = '<tr><td colspan="9" class="admin-empty">' + escapeHtml(error.message) + '</td></tr>';
+        });
+      }
+
+      function loadVoucherDetail(batchId) {
+        if (!batchId) return;
+        var panel = document.getElementById('voucher-detail');
+        var body = document.getElementById('voucher-detail-body');
+        panel.hidden = false;
+        body.innerHTML = '<tr><td colspan="6" class="admin-empty">Loading…</td></tr>';
+        api('/api/admin/vouchers/batches/' + encodeURIComponent(batchId)).then(function (payload) {
+          document.getElementById('voucher-detail-title').textContent = payload.batch.name + ' — ' + payload.batch.quantity + ' vouchers';
+          body.innerHTML = '';
+          (payload.vouchers || []).forEach(function (voucher) {
+            var tr = document.createElement('tr');
+            var action = '';
+            if (voucher.status === 'available') action = '<button type="button" class="btn-del voucher-revoke-one" data-id="' + escapeAttr(voucher.id) + '">Revoke</button>';
+            if (voucher.status === 'reserved') action = '<button type="button" class="btn btn-ghost voucher-release-one" data-id="' + escapeAttr(voucher.id) + '" style="padding:4px 8px;font-size:0.75rem;">Release if expired</button>';
+            tr.innerHTML =
+              '<td>#' + String(voucher.serialNumber).padStart(3, '0') + '</td>' +
+              '<td>…' + escapeHtml(voucher.displaySuffix) + '</td>' +
+              '<td>' + escapeHtml(voucher.status) + '</td>' +
+              '<td>' + (voucher.checkoutSessionBound ? 'Stripe Session bound' : (voucher.reservedUntil ? escapeHtml(new Date(voucher.reservedUntil).toLocaleString()) : '—')) + '</td>' +
+              '<td>' + escapeHtml(voucher.blockedReason || '—') + '</td><td>' + action + '</td>';
+            body.appendChild(tr);
+          });
+          body.querySelectorAll('.voucher-revoke-one').forEach(function (button) {
+            button.addEventListener('click', function () {
+              if (!confirm('Revoke this unused voucher?')) return;
+              api('/api/admin/vouchers/' + encodeURIComponent(button.getAttribute('data-id')) + '/revoke', {
+                method: 'POST', body: { confirmation: 'REVOKE VOUCHER' }
+              }).then(function () { loadVoucherDetail(batchId); loadVoucherBatches(); });
+            });
+          });
+          body.querySelectorAll('.voucher-release-one').forEach(function (button) {
+            button.addEventListener('click', function () {
+              if (!confirm('Check Stripe and release this reservation only if its Checkout Session is expired?')) return;
+              api('/api/admin/vouchers/' + encodeURIComponent(button.getAttribute('data-id')) + '/release', {
+                method: 'POST', body: { confirmation: 'RELEASE RESERVATION' }
+              }).then(function () { loadVoucherDetail(batchId); loadVoucherBatches(); }).catch(function (error) {
+                alert(error.message === 'checkout_not_expired' ? 'Stripe says this Checkout Session is not expired, so it was not released.' : error.message);
+              });
+            });
+          });
+        }).catch(function (error) {
+          body.innerHTML = '<tr><td colspan="6" class="admin-empty">' + escapeHtml(error.message) + '</td></tr>';
+        });
+      }
+
+      on('voucher-detail-close', 'click', function () {
+        document.getElementById('voucher-detail').hidden = true;
+      });
+
+      var voucherDeadline = document.getElementById('voucher-redeem-by');
+      if (voucherDeadline && !voucherDeadline.value) {
+        var deadline = new Date();
+        deadline.setFullYear(deadline.getFullYear() + 1);
+        voucherDeadline.value = deadline.toISOString().slice(0, 10);
+      }
+      on('voucher-form', 'submit', function (event) {
+        event.preventDefault();
+        var status = document.getElementById('voucher-create-status');
+        var quantity = Number(document.getElementById('voucher-quantity').value);
+        var name = document.getElementById('voucher-name').value.trim();
+        var date = document.getElementById('voucher-redeem-by').value;
+        if (!confirm('Create ' + quantity + ' live vouchers? This ZIP is available once and cannot be regenerated.')) return;
+        status.textContent = 'Generating PDFs and codes…';
+        fetch('/api/admin/vouchers/batches', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            quantity: quantity,
+            benefitDays: 30,
+            redeemBy: new Date(date + 'T23:59:59Z').getTime(),
+            confirmation: 'CREATE ' + quantity + ' VOUCHERS'
+          })
+        }).then(function (response) {
+          if (response.status === 401) throw new Error('UNAUTH');
+          if (!response.ok) return response.json().then(function (body) { throw new Error(body.error || 'Could not create vouchers'); });
+          var disposition = response.headers.get('content-disposition') || '';
+          var match = disposition.match(/filename="([^"]+)"/);
+          return response.blob().then(function (blob) {
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = match ? match[1] : 'LingCode-Pro-Vouchers.zip';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+          });
+        }).then(function () {
+          status.textContent = 'Created. Move the downloaded ZIP to encrypted storage now.';
+          loadVoucherBatches();
+        }).catch(function (error) {
+          if (error.message === 'UNAUTH') window.location.href = '/admin-signin.html';
+          else status.textContent = error.message;
+        });
+      });
 
       function loadHistory() {
         api('/api/admin/stats-history')
@@ -1273,19 +1444,21 @@
             document.getElementById('s-ai30').textContent = s.active_installs_30d.toLocaleString();
             document.getElementById('s-dmg7').textContent  = s.dmg_downloads_7d.toLocaleString();
             document.getElementById('s-dmg30').textContent = s.dmg_downloads_30d.toLocaleString();
-            var versions = Object.keys(s.dmg_by_version_30d || {}).sort();
-            document.getElementById('s-dmg30-ver').textContent = versions.length
-              ? versions.map(function (v) { return v.replace(/^.*LingCode-v/, 'v').replace(/-Installer\.dmg$/, '') + ': ' + s.dmg_by_version_30d[v]; }).join(' · ')
-              : 'HTTP 200 only';
+            var prods = Object.keys(s.dmg_by_product_30d || {}).sort();
+            document.getElementById('s-dmg30-ver').textContent = prods.length
+              ? prods.map(function (p) { return p + ': ' + s.dmg_by_product_30d[p]; }).join(' · ')
+              : 'origin logs only (Cloudflare-cached hits not counted)';
             document.getElementById('s-cli-inst7').textContent  = (s.cli_install_runs_7d || 0).toLocaleString();
             document.getElementById('s-cli-inst30').textContent = (s.cli_install_runs_30d || 0).toLocaleString();
-            document.getElementById('s-cli-tar7').textContent   = (s.cli_tarball_downloads_7d || 0).toLocaleString();
-            document.getElementById('s-cli-tar30').textContent  = (s.cli_tarball_downloads_30d || 0).toLocaleString();
-            var pa = s.cli_by_platform_30d || {};
+            // CLI tarballs live on GitHub Releases (cumulative, not windowed).
+            var cliTot = s.cli_tarball_downloads_total;
+            document.getElementById('s-cli-tar7').textContent  = (cliTot != null ? cliTot.toLocaleString() : '—');
+            var pa = s.cli_by_platform_total || {};
             var paKeys = Object.keys(pa).sort();
-            document.getElementById('s-cli-tar30-pa').textContent = paKeys.length
-              ? paKeys.map(function (k) { return k + ': ' + pa[k]; }).join(' · ')
-              : '';
+            document.getElementById('s-cli-tar30').textContent = paKeys.length
+              ? paKeys.map(function (k) { return k.replace('darwin-', '').replace('linux-', 'linux ') + ': ' + pa[k]; }).join(' · ')
+              : (cliTot != null ? '—' : 'GitHub unavailable');
+            document.getElementById('s-cli-tar30-pa').textContent = '';
             document.getElementById('s-su7').textContent  = s.signups_7d.toLocaleString();
             document.getElementById('s-su30').textContent = s.signups_30d.toLocaleString();
             document.getElementById('s-su-total').textContent = s.signups_total.toLocaleString() + ' total';
@@ -1374,7 +1547,7 @@
       on('mt-window', 'change', loadModelTelemetry);
 
       on('refresh', 'click', function () {
-        load(); loadStats(); loadHistory(); loadManual(); loadLingModelConfig(); loadLingModelLimits(); loadCloudLimits(); loadDeepAgentConfig(); loadDeepAgentUsage(); loadModelTelemetry(); loadCLIInstalls(); loadFeedback();
+        load(); loadStats(); loadHistory(); loadManual(); loadLingModelConfig(); loadLingModelLimits(); loadCloudLimits(); loadDeepAgentConfig(); loadDeepAgentUsage(); loadModelTelemetry(); loadCLIInstalls(); loadFeedback(); loadVoucherBatches();
       });
       on('logout', 'click', function () {
         api('/api/admin/logout', { method: 'POST' }).then(function () {
@@ -1431,6 +1604,7 @@
           loadModelTelemetry();
           loadCLIInstalls();
           loadFeedback();
+          loadVoucherBatches();
         })
         .catch(function () {
           window.location.href = '/admin-signin.html';
@@ -1500,6 +1674,6 @@
       load();
     })();
   </script>
-  <script src="/site-chat-widget.js?v=20260603" defer></script>
+  <script src="/site-chat-widget.js?v=20260731a" defer></script>
 </body>
 </html>

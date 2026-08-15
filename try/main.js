@@ -2127,7 +2127,7 @@ function ensurePane(provider) {
         deployBtn.innerHTML = originalInner;
         deployBtn.disabled = false;
         const note = document.createElement('div');
-        note.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:8px;padding:14px 16px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-family:Geist,sans-serif;font-size:0.88rem;max-width:320px;color:var(--text)';
+        note.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:8px;padding:14px 16px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-family:Helvetica Neue,Helvetica,Arial,sans-serif;font-size:0.88rem;max-width:320px;color:var(--text)';
         note.textContent = 'Saved your edits to the project. Redeploying server-rendered apps from the browser is coming soon — for now, redeploy from the Mac app.';
         document.body.append(note);
         setTimeout(() => note.remove(), 7000);
@@ -2174,7 +2174,7 @@ function ensurePane(provider) {
         position: fixed; bottom: 24px; right: 24px; z-index: 9999;
         background: var(--bg-card); border: 1px solid var(--border-strong);
         border-radius: 8px; padding: 14px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        font-family: 'Geist', sans-serif; font-size: 0.9rem;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 0.9rem;
       `;
       const safeUrl = url.replace(/</g, '&lt;');
       notification.innerHTML = `
@@ -2879,7 +2879,7 @@ function promptForVercelToken() {
   return new Promise((resolve, reject) => {
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;';
-    ov.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;padding:24px;width:400px;max-width:90vw;font-family:'Geist',sans-serif;">
+    ov.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;padding:24px;width:400px;max-width:90vw;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
       <div style="font-weight:600;margin-bottom:6px;">Vercel API Token</div>
       <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;">Get yours at <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener" style="color:var(--signal);">vercel.com/account/tokens</a>. Saved locally — never stored on LingCode servers.</div>
       <input type="password" placeholder="Paste token here…" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid var(--border-strong);border-radius:6px;font-size:0.88rem;background:var(--bg);color:var(--text);margin-bottom:12px;font-family:'Geist Mono',monospace;" />
@@ -3299,7 +3299,7 @@ async function runSwarmViaBrowser(prompt, rawPrompt = prompt) {
       'max-height:160px', 'overflow:auto', 'white-space:pre-wrap',
     ].join(';');
     const head = document.createElement('div');
-    head.style.cssText = 'font-weight:600;color:var(--accent,#7c3aed);margin-bottom:6px;font-family:system-ui,sans-serif;font-size:12px;';
+    head.style.cssText = 'font-weight:600;color:var(--accent,#7c3aed);margin-bottom:6px;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;font-size:12px;';
     head.textContent = '◆ Architect is designing the spec…';
     const body = document.createElement('div');
     body.id = 'lc-architect-body';

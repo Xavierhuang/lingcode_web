@@ -31,21 +31,23 @@ Defined as CSS custom properties on `:root` in `style.css`.
 ## Typography
 
 ```
---font:      "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
---font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace
+--font:       "Helvetica Neue", Helvetica, Arial, sans-serif
+--ff-body:    "Helvetica Neue", Helvetica, Arial, sans-serif
+--ff-display: "Helvetica Neue", Helvetica, Arial, sans-serif
+--font-mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace
 ```
 
-| Where                          | Family    | Weight |
-| ------------------------------ | --------- | ------ |
-| Body, `h1`, `h2`, `h3`         | Geist     | 400 / 600 / 700 |
-| `.nav-logo` (wordmark)         | Geist Mono| 600    |
-| `.section-eyebrow`             | Geist Mono| 500    |
-| `.hero-badge`                  | Geist Mono| 500    |
-| Code, inline `<code>`          | Geist Mono| 400    |
+| Where                          | Family         | Weight |
+| ------------------------------ | -------------- | ------ |
+| Body, `h1`, `h2`, `h3`         | Helvetica Neue | 400 / 600 / 700 |
+| `.nav-logo` (wordmark)         | Helvetica Neue italic | 400 |
+| `.section-eyebrow`             | Geist Mono     | 500    |
+| `.hero-badge`                  | Geist Mono     | 500    |
+| Code, inline `<code>`          | Geist Mono     | 400    |
 
-**Rule:** no serif. No gradient text-fill on headings. No animated text shimmer.
+**Rule:** one sans, no serif. No gradient text-fill on headings. No animated text shimmer.
 
-Both Geist and Geist Mono must be loaded on every page that uses mono UI elements. Currently loaded on `index.html` and `try.html`; add to other pages as the mono surface expands.
+**Helvetica Neue is a system face, not a webfont.** It's Monotype-licensed and not on Google Fonts, so there is deliberately nothing to download: macOS/iOS render genuine Helvetica Neue, everywhere else falls back to Arial (metrically near-identical). Never add a Google Fonts request for a sans family — the only webfont requests on the site are for mono (`Geist Mono`, or `JetBrains Mono` on the handful of pages that ask for it).
 
 ## Geometry
 

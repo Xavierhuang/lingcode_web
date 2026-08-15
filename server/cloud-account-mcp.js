@@ -23,10 +23,52 @@ const { limitsForTier, computeCapabilities } = require('./cloud-limits');
 const { computeTierShortfall } = require('./cloud-compute');
 const { recordSchemaMigration } = require('./cloud-audit');
 const { nextRunAfter } = require('./cloud-worker-cron');
+const functionRuntime = require('./cloud-functions-runtime');
+const pythonRuntime = require('./cloud-python-runtime');
+const { runBackendDeployment, backendSourceStatus } = require('./cloud-backend-source');
+const { issueToken } = require('./account-tokens');
 const crypto = require('crypto');
 
 const SERVER_INFO = { name: 'lingcode-cloud', version: '1.0.0' };
 const DEFAULT_PROTOCOL = '2025-06-18';
+const FUNCTION_SLUG_RE = /^[a-z][a-z0-9-]{0,40}$/;
+const FUNCTION_RUNTIMES = new Set(['deno-ts', 'python']);
+
+// Return the runtime module for a given runtime name (default deno-ts for
+// back-compat). Kept parallel to cloud-functions-routes.js so the HTTP and MCP
+// paths always agree on which interpreter runs which row.
+function pickFunctionRuntime(runtimeName) {
+  return runtimeName === 'python' ? pythonRuntime : functionRuntime;
+}
+
+// Enforce the per-backend python_runtime_enabled Preview flag. Mirrors
+// cloud-functions-routes.js:runtimeAllowedForBackend so agents get the same
+// error contract as the HTTP callers.
+function functionRuntimeAllowed(db, backendId, runtimeName) {
+  if (runtimeName === 'deno-ts') return true;
+  if (runtimeName !== 'python') return false;
+  try {
+    const cols = db.prepare('PRAGMA table_info(account_backends)').all().map((c) => c.name);
+    if (!cols.includes('python_runtime_enabled')) return false;
+  } catch (_) { return false; }
+  const row = db.prepare('SELECT python_runtime_enabled FROM account_backends WHERE id = ?').get(backendId);
+  return !!(row && row.python_runtime_enabled);
+}
+
+function functionSlug(raw) {
+  const slug = String(raw || '').toLowerCase();
+  if (!FUNCTION_SLUG_RE.test(slug)) {
+    const e = new Error('slug must be lowercase letters/digits/dashes, starting with a letter');
+    e.status = 400;
+    throw e;
+  }
+  return slug;
+}
+
+function functionSecrets(raw) {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.map((value) => String(value || '').trim()).filter(Boolean))].slice(0, 32);
+}
 
 function cors(res) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -45,6 +87,13 @@ function authAccount(req, res, db) {
   if (!user) { res.set('WWW-Authenticate', 'Bearer'); res.status(401).json({ error: 'unauthorized' }); return null; }
   const projectKey = String(req.headers['x-lingcode-project'] || 'default').slice(0, 200);
   const projectId = String(req.headers['x-lingcode-project-id'] || '').slice(0, 64) || null;
+  // A project-scoped token (getUserFromRequest stamps req.tokenScope) may address
+  // ONLY the project it was minted for — this is the blast-radius containment.
+  if (req.tokenScope && req.tokenScope.projectKey && req.tokenScope.projectKey !== projectKey) {
+    res.status(403).json({ error: 'token_project_mismatch',
+      message: 'This token is scoped to a different project.' });
+    return null;
+  }
   return { user, projectKey, projectId };
 }
 
@@ -75,6 +124,42 @@ const TOOLS = [
         throw err;
       }
     },
+  },
+  {
+    name: 'deploy_backend_manifest',
+    description: "Preview or apply the committed lingcode/backend.json definition for this project. Write/read every local migration/function first and compute lowercase SHA-256 hashes. Start with mode=preview. Development backends automatically apply a clean preview unless autoApply=false. Production returns a 10-minute plan: show its exact summary and warnings, obtain the user's Deploy approval, then call mode=apply with the exact planId, digest, and confirmation envelope. Any file change requires a new preview. Unchanged artifacts are skipped; omission NEVER deletes; production has no watch deploy.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        mode: { type: 'string', enum: ['preview', 'apply'], description: 'Omit or use preview first; apply consumes a confirmed production plan.' },
+        autoApply: { type: 'boolean', description: 'Development only. Defaults true; false returns preview without applying.' },
+        manifest: { type: 'object', description: 'Parsed version-1 lingcode/backend.json.' },
+        files: { type: 'object', additionalProperties: { type: 'string' }, description: 'Declared paths mapped to UTF-8 file contents.' },
+        hashes: { type: 'object', additionalProperties: { type: 'string' }, description: 'Declared paths mapped to lowercase SHA-256 hashes.' },
+        planId: { type: 'string', description: 'Short-lived production plan ID returned by preview.' },
+        digest: { type: 'string', pattern: '^[a-f0-9]{64}$', description: 'Exact manifest digest returned by preview.' },
+        confirmation: {
+          type: 'object',
+          properties: {
+            summary: { type: 'object' },
+            warnings: { type: 'array', items: { type: 'object' } },
+          },
+          required: ['summary', 'warnings'],
+          additionalProperties: false,
+          description: 'Exact summary and warnings returned by production preview.',
+        },
+      },
+      additionalProperties: false,
+    },
+    needsBackend: true, minRole: 'editor',
+    run: (ctx, args) => runBackendDeployment(ctx, args),
+  },
+  {
+    name: 'backend_source_status',
+    description: 'List the last successfully deployed path, SHA-256, metadata, user, and timestamp for this project\'s repository-managed migrations and functions. Compare this with local lingcode/backend.json after deploy to detect drift.',
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    needsBackend: true, minRole: 'viewer',
+    run: (ctx) => backendSourceStatus(ctx),
   },
   {
     name: 'list_tables',
@@ -150,6 +235,120 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     needsBackend: false,   // templates are a global registry; no live backend required
     run: () => require('./cloud-functions').listTemplates(),
+  },
+  {
+    name: 'upsert_function',
+    description: "Create or update a custom serverless function for this project directly from the prompt. Use this when the app needs server-only validation, business logic, a webhook/message endpoint, or scheduled code beyond the built-in templates. Idempotent by slug; saved definitions are unlimited. Source runs in a deny-by-default sandbox. Runtime defaults to 'deno-ts' (TypeScript with `export default handler(input, ctx)`). Preview: pass runtime: 'python' to author stdlib-only Python 3 (`def handler(input, ctx)`, snake_case ctx.db/ctx.storage) — the backend must be enrolled in the Python runtime Preview or the call returns python_runtime_not_enabled. Declare only secret NAMES in secrets — values stay in the backend vault.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        slug: { type: 'string', description: 'Lowercase URL-safe name, e.g. message-api.' },
+        source: { type: 'string', description: 'Function source. For deno-ts: TypeScript exporting a default handler(input, ctx). For python: a module defining a top-level def handler(input, ctx).' },
+        runtime: { type: 'string', enum: ['deno-ts', 'python'], description: "Runtime. Defaults to 'deno-ts'. 'python' requires the backend to be enrolled in the Preview." },
+        secrets: { type: 'array', items: { type: 'string' }, description: 'Vault secret names used through ctx.secrets.' },
+        enabled: { type: 'boolean' },
+      },
+      required: ['slug', 'source'],
+      additionalProperties: false,
+    },
+    needsBackend: true, minRole: 'editor',
+    run: (ctx, a) => {
+      const slug = functionSlug(a && a.slug);
+      const source = String((a && a.source) || '');
+      if (!source.trim()) { const e = new Error('source required'); e.status = 400; throw e; }
+      const runtimeName = String((a && a.runtime) || 'deno-ts');
+      if (!FUNCTION_RUNTIMES.has(runtimeName)) {
+        const e = new Error(`runtime must be one of: ${[...FUNCTION_RUNTIMES].join(', ')}`); e.status = 400; throw e;
+      }
+      if (!functionRuntimeAllowed(ctx.db, ctx.backendId, runtimeName)) {
+        const e = new Error('The Python runtime is a Preview feature and is not enabled for this backend.');
+        e.status = 403; e.code = 'python_runtime_not_enabled'; throw e;
+      }
+      const rt = pickFunctionRuntime(runtimeName);
+      if (Buffer.byteLength(source, 'utf8') > rt.MAX_SOURCE_BYTES) {
+        const e = new Error(`max ${rt.MAX_SOURCE_BYTES} bytes`); e.status = 413; throw e;
+      }
+      const secrets = functionSecrets(a && a.secrets);
+      const enabled = !(a && a.enabled === false);
+      const existing = ctx.db.prepare('SELECT id FROM backend_functions WHERE backend_id = ? AND slug = ?').get(ctx.backendId, slug);
+      const now = new Date().toISOString();
+      ctx.db.prepare(`INSERT INTO backend_functions (id, backend_id, slug, source, runtime, enabled, secrets, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(backend_id, slug) DO UPDATE SET source=excluded.source, runtime=excluded.runtime, enabled=excluded.enabled, secrets=excluded.secrets, updated_at=excluded.updated_at`)
+        .run(existing ? existing.id : crypto.randomUUID(), ctx.backendId, slug, source, runtimeName, enabled ? 1 : 0, JSON.stringify(secrets), now, now);
+      return { slug, runtime: runtimeName, created: !existing, enabled, secrets, updated_at: now };
+    },
+  },
+  {
+    name: 'test_function',
+    description: "Run a saved custom function with sample input before wiring it into the app. Pass source to test an unsaved draft; omit source to run the saved definition. Runtime defaults to the saved row's runtime; pass runtime to override for draft testing. Uses the project's real sandbox, backend access, and tier timeout without changing the saved function.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        slug: { type: 'string' },
+        input: {},
+        source: { type: 'string', description: 'Optional unsaved draft source.' },
+        runtime: { type: 'string', enum: ['deno-ts', 'python'], description: "Override runtime for draft source. Defaults to the saved row's runtime, or 'deno-ts' if neither." },
+      },
+      required: ['slug'],
+      additionalProperties: false,
+    },
+    needsBackend: true, minRole: 'editor',
+    run: async (ctx, a) => {
+      const slug = functionSlug(a && a.slug);
+      const saved = ctx.db.prepare('SELECT source, runtime FROM backend_functions WHERE backend_id = ? AND slug = ?').get(ctx.backendId, slug);
+      const source = a && a.source !== undefined ? String(a.source) : String((saved && saved.source) || '');
+      if (!source.trim()) { const e = new Error(`no saved function '${slug}' and no draft source supplied`); e.status = 404; throw e; }
+      const runtimeName = String((a && a.runtime) || (saved && saved.runtime) || 'deno-ts');
+      if (!FUNCTION_RUNTIMES.has(runtimeName)) {
+        const e = new Error(`runtime must be one of: ${[...FUNCTION_RUNTIMES].join(', ')}`); e.status = 400; throw e;
+      }
+      if (!functionRuntimeAllowed(ctx.db, ctx.backendId, runtimeName)) {
+        const e = new Error('The Python runtime is a Preview feature and is not enabled for this backend.');
+        e.status = 403; e.code = 'python_runtime_not_enabled'; throw e;
+      }
+      const rt = pickFunctionRuntime(runtimeName);
+      if (Buffer.byteLength(source, 'utf8') > rt.MAX_SOURCE_BYTES) {
+        const e = new Error(`max ${rt.MAX_SOURCE_BYTES} bytes`); e.status = 413; throw e;
+      }
+      if (!rt.isAvailable()) {
+        const e = new Error(runtimeName === 'python'
+          ? 'The Python functions runtime is not available on this server.'
+          : 'The functions runtime is not available on this server.');
+        e.status = 503;
+        e.code = runtimeName === 'python' ? 'python_runtime_unavailable' : 'functions_runtime_unavailable';
+        throw e;
+      }
+      const backend = ctx.db.prepare('SELECT gateway_url FROM account_backends WHERE id = ?').get(ctx.backendId);
+      return rt.runUserFunction({
+        backendId: ctx.backendId,
+        gatewayUrl: (backend && backend.gateway_url) || `${ctx.gatewayBase}/${ctx.backendId}`,
+        slug,
+        source,
+        input: a && a.input,
+        timeoutMs: limitsForTier(ctx.user.tier).maxFunctionMs,
+      });
+    },
+  },
+  {
+    name: 'delete_function',
+    description: 'Delete a custom function created for this project and remove all of its schedules. Built-in function templates cannot be deleted.',
+    inputSchema: {
+      type: 'object',
+      properties: { slug: { type: 'string' } },
+      required: ['slug'],
+      additionalProperties: false,
+    },
+    needsBackend: true, minRole: 'editor',
+    run: (ctx, a) => {
+      const slug = functionSlug(a && a.slug);
+      return ctx.db.transaction(() => {
+        const removed = ctx.db.prepare('DELETE FROM backend_functions WHERE backend_id = ? AND slug = ?').run(ctx.backendId, slug);
+        if (!removed.changes) { const e = new Error(`function '${slug}' not found`); e.status = 404; throw e; }
+        const schedules = ctx.db.prepare('DELETE FROM backend_function_schedules WHERE backend_id = ? AND slug = ?').run(ctx.backendId, slug);
+        return { removed: true, slug, schedulesRemoved: schedules.changes };
+      })();
+    },
   },
   {
     name: 'set_auth_provider',
@@ -325,7 +524,19 @@ async function handleRpc(msg, baseCtx, db) {
         // membership); fall back to the legacy (user, projectKey) solo lookup.
         let be = null, role = 'owner';
         if (baseCtx.projectId) {
-          be = db.prepare('SELECT * FROM account_backends WHERE project_id = ?').get(baseCtx.projectId);
+          // ORDER BY matters: a project can legitimately have MORE than one
+          // backend row (a renamed folder used to mint a duplicate keyed on the
+          // new path — see reconcileByProjectId). Without an explicit order,
+          // which row .get() returns is unspecified, so the agent could silently
+          // start reading an EMPTY duplicate instead of the real database. Same
+          // rule as the reconciler: exact key match first, else the oldest,
+          // which is the original holding the data.
+          be = db.prepare(`
+            SELECT * FROM account_backends
+            WHERE project_id = @pid AND status = 'live'
+            ORDER BY (project_key = @key) DESC, created_at ASC
+            LIMIT 1
+          `).get({ pid: baseCtx.projectId, key: baseCtx.projectKey || '' });
           if (be) {
             const m = db.prepare('SELECT role FROM project_members WHERE project_id = ? AND user_id = ?').get(baseCtx.projectId, baseCtx.user.id);
             if (!m) be = null;        // not a member → ignore, fall back to own
@@ -338,6 +549,7 @@ async function handleRpc(msg, baseCtx, db) {
           return ok({ content: [{ type: 'text', text: `Forbidden: this tool needs ${tool.minRole} access on this shared project (you are ${role}).` }], isError: true });
         }
         ctx.backendId = be.id;
+        ctx.environment = be.environment || 'production';
         ctx.role = role;
       }
       const data = await tool.run(ctx, args);
@@ -355,12 +567,45 @@ async function handleRpc(msg, baseCtx, db) {
  * @param {import('better-sqlite3').Database} db
  */
 function registerCloudAccountMcpRoutes(app, db) {
+  // Mint a PROJECT-SCOPED token: authorizes only this project's backend (+ the
+  // same user's inference), so the token handed to an agent turn can't reach the
+  // account's other backends if it leaks. Requires an UNRESTRICTED account bearer
+  // — a scoped token can't mint another (no privilege escalation). The caller
+  // passes the project via the x-lingcode-project header (or body.project).
+  app.options('/api/cloud/account/project-token', (_req, res) => { cors(res); res.sendStatus(204); });
+  app.post('/api/cloud/account/project-token', (req, res) => {
+    cors(res);
+    const user = getUserFromRequest(db, req);
+    if (!user) { res.set('WWW-Authenticate', 'Bearer'); res.status(401).json({ error: 'unauthorized' }); return; }
+    if (req.tokenScope) { res.status(403).json({ error: 'scoped_token_cannot_mint' }); return; }
+    const projectKey = String(
+      req.headers['x-lingcode-project'] || (req.body && req.body.project) || ''
+    ).slice(0, 200);
+    if (!projectKey || projectKey === 'default') {
+      res.status(400).json({ error: 'project_required', message: 'Pass x-lingcode-project.' }); return;
+    }
+    const ttlDays = Math.min(90, Math.max(1, Number((req.body && req.body.ttl_days) || 30)));
+    const now = Date.now();
+    const expiresAt = now + ttlDays * 86400000;
+    let issued;
+    try {
+      issued = issueToken(db, user.id, {
+        scope: 'project', projectKey, caps: 'cloud+inference', expiresAt, now
+      });
+    } catch (e) {
+      res.status(500).json({ error: 'mint_failed', message: String((e && e.message) || e) }); return;
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.json({ token: issued.token, project: projectKey, caps: 'cloud+inference', expires_at: expiresAt });
+  });
+
   app.options('/api/cloud/account/mcp', (_req, res) => { cors(res); res.sendStatus(204); });
   app.get('/api/cloud/account/mcp', (_req, res) => { cors(res); res.status(405).json({ error: 'method_not_allowed', message: 'POST JSON-RPC only.' }); });
 
   app.post('/api/cloud/account/mcp', async (req, res) => {
     const auth = authAccount(req, res, db); if (!auth) return;
-    const baseCtx = { user: auth.user, projectKey: auth.projectKey, gatewayBase: `${req.protocol}://${req.get('host')}/api/cloud/be` };
+    const baseCtx = { user: auth.user, projectKey: auth.projectKey, projectId: auth.projectId, gatewayBase: `${req.protocol}://${req.get('host')}/api/cloud/be` };
     const body = req.body;
     const batch = Array.isArray(body);
     const msgs = batch ? body : [body];

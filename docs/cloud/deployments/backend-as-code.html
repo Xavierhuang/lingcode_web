@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backend-as-code | LingCode Cloud Docs</title>
+  <meta name="description" content="Define LingCode Cloud migrations and custom functions in a repository manifest with immutable hashes, safe previews, drift detection, and retryable deployment state.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/deployments/backend-as-code.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/deployments/backend-as-code.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/deployments/backend-as-code.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html" aria-current="page">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Backend-as-code</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="backend-as-code">Backend-as-code</h1>
+<p>Backend-as-code makes repository files the reviewable source of truth for LingCode Cloud schema and custom functions. It lets a developer or agent author the backend without manually reproducing every change in the console.</p>
+<h2 id="directory-layout">Directory layout</h2>
+<pre><code class="language-text">lingcode/
+  backend.json
+  migrations/
+    20260809_create_messages.sql
+    20260810_add_messages_room_index.sql
+  functions/
+    send-message.ts
+    moderate-message.ts</code></pre>
+<p><code>lingcode/backend.json</code> declares each artifact. Paths are relative to the <code>lingcode/</code> directory and cannot escape it.</p>
+<pre><code class="language-json">{
+  &quot;$schema&quot;: &quot;https://lingcode.dev/schemas/backend-v1.json&quot;,
+  &quot;version&quot;: 1,
+  &quot;migrations&quot;: [
+    { &quot;id&quot;: &quot;20260809_create_messages&quot;, &quot;path&quot;: &quot;migrations/20260809_create_messages.sql&quot; }
+  ],
+  &quot;functions&quot;: [
+    {
+      &quot;slug&quot;: &quot;moderate-message&quot;,
+      &quot;path&quot;: &quot;functions/moderate-message.ts&quot;,
+      &quot;enabled&quot;: true,
+      &quot;secrets&quot;: [&quot;MODERATION_API_KEY&quot;],
+      &quot;testInput&quot;: { &quot;body&quot;: &quot;hello&quot; }
+    }
+  ]
+}</code></pre>
+<h2 id="deployment-payload">Deployment payload</h2>
+<p>The deployment tool reads every declared file, computes its lowercase SHA-256, and sends three parts:</p>
+<ul>
+<li>normalized manifest;</li>
+<li>file contents keyed by declared path;</li>
+<li>SHA-256 hashes keyed by the same path.</li>
+</ul>
+<p>Undeclared files and hashes are rejected. Missing files, invalid paths, duplicate IDs or slugs, unexpected manifest properties, hash mismatches, invalid secret names, and oversized functions fail before apply.</p>
+<h2 id="immutable-migrations">Immutable migrations</h2>
+<p>The server records migration ID, path, SHA-256, deploying user, and deployment time. Reusing an applied ID with different SQL is an <strong>immutable migration drift</strong> error.</p>
+<p>Do not edit an applied migration to make local history look clean. Add a new migration that deliberately moves the deployed schema forward.</p>
+<h2 id="function-state">Function state</h2>
+<p>Function state records slug, path, source hash, enabled state, and declared secret names. An unchanged function is skipped. A changed function is tested when <code>testInput</code> exists, then saved.</p>
+<p>Omission never deletes a deployed function. Use the explicit delete operation when removal is intended and verify no application caller or schedule still references the slug.</p>
+<h2 id="preview">Preview</h2>
+<p>Call <code>deploy_backend_manifest</code> with <code>mode: &quot;preview&quot;</code>. The response includes:</p>
+<ul>
+<li>environment classification;</li>
+<li>canonical digest;</li>
+<li>counts of migrations and function changes;</li>
+<li>per-artifact changed or unchanged state;</li>
+<li>warnings for destructive or risky patterns;</li>
+<li>whether confirmation is required.</li>
+</ul>
+<p>Warnings are advisory and do not claim to prove arbitrary SQL safe. Blocking validation and migration drift remain errors.</p>
+<h2 id="apply">Apply</h2>
+<p>Development may auto-apply a clean preview. Production apply must supply the returned plan ID, digest, confirmation summary, and warnings exactly as approved.</p>
+<p>Apply rechecks ownership, environment, expiry, plan consumption, digest, and payload before changing data-plane state. Completed artifacts are retry-safe: after a partial failure, request a fresh preview. Already applied unchanged artifacts appear as skipped and remaining artifacts can continue.</p>
+<h2 id="verify-deployed-source">Verify deployed source</h2>
+<p>Call <code>backend_source_status</code> after apply. It returns the server&#39;s recorded migration and function artifacts with hashes and metadata.</p>
+<p>Compare that response with the local manifest and hashes in CI or release validation. A green deployment response is not a substitute for application smoke tests.</p>
+<h2 id="agent-workflow">Agent workflow</h2>
+<p>The recommended agent sequence is:</p>
+<ol>
+<li>inspect current manifest and deployed status;</li>
+<li>create new migration and function files;</li>
+<li>update <code>lingcode/backend.json</code>;</li>
+<li>run local validation and function test inputs;</li>
+<li>calculate hashes from the final bytes;</li>
+<li>preview;</li>
+<li>present the exact production summary and warnings;</li>
+<li>obtain approval;</li>
+<li>apply the unchanged plan;</li>
+<li>call <code>backend_source_status</code> and report the result.</li>
+</ol>
+<p>An agent may prepare production changes, but preparation is not authorization to deploy them.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/deployments/">Previous: Deployment overview</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/deployments/production-approval.html">Next: Production approval</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#directory-layout">Directory layout</a></li><li class="toc-level-2"><a href="#deployment-payload">Deployment payload</a></li><li class="toc-level-2"><a href="#immutable-migrations">Immutable migrations</a></li><li class="toc-level-2"><a href="#function-state">Function state</a></li><li class="toc-level-2"><a href="#preview">Preview</a></li><li class="toc-level-2"><a href="#apply">Apply</a></li><li class="toc-level-2"><a href="#verify-deployed-source">Verify deployed source</a></li><li class="toc-level-2"><a href="#agent-workflow">Agent workflow</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

@@ -16,6 +16,9 @@
 
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+const { validateProductionSecurity, securityHeaders } = require('./security-config');
+const { createLoginLimiter } = require('./login-rate-limit');
+validateProductionSecurity(process.env);
 
 const crypto = require('crypto');
 const { spawn } = require('child_process');
@@ -25,13 +28,15 @@ const bcrypt = require('bcrypt');
 const Database = require('better-sqlite3');
 const Stripe = require('stripe');
 const http = require('http');
-const { migrateUsersTable, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, migrateComputeTables } = require('./migrate');
+const { migrateUsersTable, migrateAccountTokensTable, migrateVoucherTables, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, migrateComputeTables, migrateBackendParentFKs, migrateHostedAppsTables } = require('./migrate');
+const { migrateAccountTokens, issueToken, revokeUserTokens } = require('./account-tokens');
 const { initCollabServer } = require('./collab-server');
 const { registerCollabRoutes } = require('./collab-routes');
 const { registerRemoteRoutes } = require('./remote-routes');
 const { registerSavedPrototypeRoutes, registerPublicShareRoute } = require('./saved-prototypes');
 const { handleStripeEvent } = require('./stripe-webhook');
 const { registerBillingRoutes } = require('./stripe-billing');
+const { registerVoucherRoutes, voucherConfigFromEnv } = require('./voucher-routes');
 const { getUserFromRequest } = require('./auth-helpers');
 const {
   createInferenceRouter,
@@ -53,6 +58,7 @@ const { createSlackEventsHandler } = require('./slack-events');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const app = express();
+app.use(securityHeaders());
 
 // Prometheus metrics: time every request (low-cardinality route labels). Added
 // first so it wraps all downstream handlers. No-op if prom-client is absent.
@@ -67,6 +73,17 @@ const db = new Database(dbPath);
 // snapshot writes. Idempotent; safe to run on every boot.
 try { db.pragma('journal_mode = WAL'); } catch (_) {}
 
+// Hosted-app proxy — Host-header dispatcher for the Python app-hosting tier
+// (<slug>.apps.lingcode.dev). MUST run BEFORE (a) any body-parser (would
+// consume the request stream we need to pipe upstream), (b) session
+// middleware (hosted apps don't share our session), and (c)
+// installCustomDomainMiddleware (would rewrite hosted-app hostnames into
+// /p/<prototype_id> paths). Falls through for any hostname it doesn't
+// recognize, so lingcode.dev traffic is unaffected. See
+// cloud-hosted-app-proxy.js for the full ordering rationale.
+const { installHostedAppProxy } = require('./cloud-hosted-app-proxy');
+installHostedAppProxy(app, db);
+
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -76,7 +93,27 @@ CREATE TABLE IF NOT EXISTS users (
   source TEXT DEFAULT ''
 );
 `);
+
+// Project-scoped tokens: mint one per project (POST /api/cloud/account/project-token)
+// and hand it to the agent instead of the raw account bearer, so a leaked token
+// can only reach the project it was minted for (the cloud gateway enforces the
+// pin; see auth-helpers.resolveScopedToken + cloud-account-mcp.authAccount).
+db.exec(`
+CREATE TABLE IF NOT EXISTS scoped_tokens (
+  token TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  project_key TEXT NOT NULL,
+  caps TEXT NOT NULL DEFAULT 'cloud+inference',
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER,
+  revoked_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_scoped_tokens_user ON scoped_tokens(user_id);
+`);
 migrateUsersTable(db);
+migrateAccountTokensTable(db);
+migrateVoucherTables(db);
+migrateAccountTokens(db);
 migrateStatsTables(db);
 migrateTelemetryTables(db);
 migrateCLITables(db);
@@ -89,7 +126,14 @@ migrateAppConfigTable(db);
 migrateAgentSdkTables(db);
 migrateFeedbackTable(db);
 migrateCloudBackendTables(db);
-migrateComputeTables(db); // after CloudBackend: compute_* tables FK prototype_backends
+migrateComputeTables(db); // after CloudBackend: compute_* tables reference backends
+// Rebuilds any backend child table still carrying the old
+// `REFERENCES prototype_backends(id)` constraint. Must run AFTER both creators
+// above, since it rewrites the tables they just ensured exist. No-op once done.
+migrateBackendParentFKs(db);
+// After ParentFKs: hosted-apps ADD COLUMNs backend_usage. Runs post-rebuild so
+// the ALTER lands on the settled table shape, not a rebuilt-away copy.
+migrateHostedAppsTables(db);
 migrateCloudAppsTables(db); // after CloudBackend: ALTERs custom_domains created there
 migrateProjectsTables(db); // after CloudBackend + CloudApps: unified project entity + backfill
 migrateCloudTelemetryTables(db); // analytics/perf/crash aggregates (backbone ①)
@@ -144,7 +188,10 @@ app.post(
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
     try {
-      await handleStripeEvent(stripe, db, event);
+      await handleStripeEvent(stripe, db, event, {
+        hmacSecret: process.env.LINGCODE_VOUCHER_HMAC_SECRET,
+        proMonthlyPriceId: String(process.env.STRIPE_PRICE_PRO_MONTHLY || '').trim(),
+      });
     } catch (e) {
       console.error('Stripe webhook handler:', e);
       return res.status(500).json({ error: 'Webhook handler failed' });
@@ -181,6 +228,10 @@ app.use((req, res, next) => {
   // dist/ tree (Worker + assets) and reads the RAW request stream, same as
   // cloud-apps above.
   if (req.path.startsWith('/api/account/cloud-workers')) return next();
+  // Voice transcribe POSTs raw audio bytes (audio/webm etc.) and attaches its
+  // own express.raw() in voice-routes.js. The JSON parser would skip a non-JSON
+  // content-type anyway, but being explicit keeps it out of the 128KB guard.
+  if (req.path === '/api/voice/transcribe') return next();
   // Saved prototypes / short links carry the full prototype payload (gzipped
   // HTML, up to SHARE_MAX) + a live-screenshot thumbnail + gzipped chat history.
   // The client (preview.js fitSavedPrototypeBody) keeps the body under ~15MB by
@@ -349,7 +400,7 @@ app.get('/api/slack/oauth/callback', async (req, res) => {
     // Anonymous / non-IDE install: show the classic success page.
     res.send(`
       <html>
-        <body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+        <body style="font-family: Helvetica Neue,Helvetica,Arial,sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
           <div style="text-align: center;">
             <h1 style="color: #4A154B;">LingCode Bot Installed!</h1>
             <p>Successfully connected to <strong>${escapeHtml(team.name)}</strong>.</p>
@@ -587,26 +638,36 @@ app.use(sessionMiddleware);
  * with access_token + email (+ state). Web uses the same form with redirect_uri = {PUBLIC_ORIGIN}/oauth/web-callback.
  * LingCodeMini uses lingcodebaby://auth/callback.
  */
-app.get('/oauth/authorize', (req, res) => {
-  const flow = classifyRedirectUri(req.query.redirect_uri || '');
-  if (!flow) {
-    return res.status(400).send(
-      `<!DOCTYPE html><html><body style="font-family:system-ui;padding:2rem;"><p>Invalid <code>redirect_uri</code>. Use the Mac app, or sign in from this site with <code>redirect_uri=${escapeHtml(
-        WEB_OAUTH_REDIRECT
-      )}</code> (URL-encoded), or <code>${escapeHtml(LINGCODE_CALLBACK)}</code> for the app.</p></body></html>`
-    );
+// Build an /oauth/authorize query string from a POST body (or query), dropping
+// secrets and applying overrides. Used to link the inline error actions
+// (Create account / Try another email) back to the same authorize page.
+function authQueryFrom(source, overrides) {
+  const p = new URLSearchParams();
+  for (const [key, value] of Object.entries(source || {})) {
+    if (key === 'password' || key === 'email' || value == null) continue;
+    p.set(key, String(value));
   }
-  const q = new URLSearchParams(req.query);
-  if (!q.has('oauth_mode')) {
-    q.set('oauth_mode', 'signin');
+  for (const [key, value] of Object.entries(overrides || {})) {
+    if (value == null) p.delete(key);
+    else p.set(key, String(value));
   }
-  const oauthMode = String(q.get('oauth_mode') || 'signin').toLowerCase() === 'signup' ? 'signup' : 'signin';
+  return p.toString();
+}
+
+// Single renderer for the /oauth/authorize sign-in / create-account card.
+// `error` (optional) shows an inline red banner on the SAME page instead of
+// bouncing to the dark oauthErrorPage:
+//   { title, sub?, email?, hidePassword?, actionsHtml?, hintHtml? }
+function renderAuthPage(source, flow, error) {
+  const q = source instanceof URLSearchParams ? new URLSearchParams(source) : new URLSearchParams(source || {});
+  if (!q.has('oauth_mode')) q.set('oauth_mode', 'signin');
+  const isSignup = String(q.get('oauth_mode') || 'signin').toLowerCase() === 'signup';
+  const emailValue = (error && error.email) || q.get('login_hint') || q.get('email') || '';
   const hidden = [];
   q.forEach((value, key) => {
+    if (key === 'email' || key === 'password' || key === 'login_hint') return;
     hidden.push(`<input type="hidden" name="${escapeHtml(key)}" value="${escapeHtml(value)}">`);
   });
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  const isSignup = oauthMode === 'signup';
   const title = isSignup ? 'Create account — LingCode' : 'Sign in — LingCode';
   let intro;
   if (isSignup) {
@@ -621,17 +682,47 @@ app.get('/oauth/authorize', (req, res) => {
   } else {
     intro =
       flow === 'web'
-        ? 'Sign in with the email and password for your existing account. You will return to this website to view your account and billing.'
-        : 'Sign in with your existing LingCode email and password. After you continue, the app will open automatically.';
+        ? 'Sign in to view your account and billing.'
+        : 'Sign in to continue. The app will open automatically.';
   }
-  const hint = isSignup
+  const defaultHint = isSignup
     ? `Already registered? <a href="${escapeHtml(PUBLIC_ORIGIN)}/signin.html" style="color:#8ab4ff;">Sign in</a> instead.`
     : `Need an account? <a href="${escapeHtml(PUBLIC_ORIGIN)}/signup.html" style="color:#8ab4ff;">Create one</a> first (sign-in never creates a new account).`;
-  const forgotRow = isSignup
+  const hint = (error && error.hintHtml) || defaultHint;
+  const forgotRow = (isSignup || (error && error.hidePassword))
     ? ''
     : `<p style="margin: -6px 0 16px; font-size: 0.75rem;"><a href="${escapeHtml(PUBLIC_ORIGIN)}/forgot-password.html" style="color:#8ab4ff;">Forgot password?</a></p>`;
   const btn = isSignup ? 'Create account' : 'Sign in';
-  res.send(`<!DOCTYPE html>
+  const errorBanner = error
+    ? `<div class="error-banner"><strong>${escapeHtml(error.title)}</strong>${error.sub ? `<span>${escapeHtml(error.sub)}</span>` : ''}</div>`
+    : '';
+  const passwordBlock = (error && error.hidePassword)
+    ? ''
+    : `<label for="password">Password</label>
+      <input type="password" id="password" name="password" required minlength="8" autocomplete="${isSignup ? 'new-password' : 'current-password'}" placeholder="At least 8 characters">
+      ${forgotRow}`;
+  const actions = (error && error.actionsHtml) || `<button type="submit">${escapeHtml(btn)}</button>`;
+
+  // Build the social sign-in strip. Every button forwards the current
+  // `redirect_uri` + `state` + `next` so the callback routes back into the
+  // app (LCI / LCB) that initiated sign-in — not just the web account page.
+  const socialQ = new URLSearchParams();
+  if (q.get('redirect_uri')) socialQ.set('redirect_uri', q.get('redirect_uri'));
+  if (q.get('state')) socialQ.set('state', q.get('state'));
+  if (q.get('next')) socialQ.set('next', q.get('next'));
+  const socialQS = socialQ.toString() ? `?${socialQ.toString()}` : '';
+  const googleConfigured = !!(GOOGLE_OAUTH_CLIENT_ID && GOOGLE_OAUTH_CLIENT_SECRET);
+  const socialBlock = googleConfigured
+    ? `<div class="social">
+        <a class="btn-social btn-google" href="/auth/google${socialQS}">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </a>
+        <div class="or"><span>or continue with email</span></div>
+      </div>`
+    : '';
+
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -645,7 +736,7 @@ app.get('/oauth/authorize', (req, res) => {
       --signal: #4f46e5;
     }
     body {
-      font-family: 'Geist', -apple-system, system-ui, sans-serif;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
       background: var(--bg);
       background-image: radial-gradient(120% 90% at 50% -10%, rgba(168,85,247,0.08), transparent 60%);
       color: var(--text);
@@ -679,6 +770,7 @@ app.get('/oauth/authorize', (req, res) => {
       box-shadow: 0 0 0 3px rgba(79,70,229,0.18);
     }
     button {
+      box-sizing: border-box;
       width: 100%; padding: 11px;
       border-radius: 8px; border: none;
       background: var(--signal); color: #fff;
@@ -689,6 +781,48 @@ app.get('/oauth/authorize', (req, res) => {
     button:hover { filter: brightness(0.94); }
     .hint { margin-top: 16px; font-size: 0.75rem; color: var(--text-dim); line-height: 1.4; }
     .hint a { color: var(--signal); }
+    input.input-error { border-color: #d92d20; }
+    input.input-error:focus { border-color: #d92d20; box-shadow: 0 0 0 3px rgba(217,45,32,0.16); }
+    .error-banner {
+      background: rgba(217,45,32,0.07);
+      border: 1px solid rgba(217,45,32,0.18);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 0 0 16px;
+      font-size: 0.8125rem; line-height: 1.4;
+    }
+    .error-banner strong { display: block; color: #b42318; font-weight: 600; }
+    .error-banner strong::before { content: "! "; }
+    .error-banner span { color: #d92d20; }
+    .social { margin-bottom: 4px; }
+    .btn-social {
+      box-sizing: border-box;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 11px 16px; margin-bottom: 8px;
+      border-radius: 8px; border: 1px solid var(--border-strong);
+      background: var(--bg-card); color: var(--text);
+      font: inherit; font-weight: 600; font-size: 0.9rem;
+      cursor: pointer; text-decoration: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .btn-social:hover { border-color: var(--signal); }
+    .or {
+      display: flex; align-items: center; gap: 12px;
+      margin: 10px 0 12px; color: var(--text-muted); font-size: 0.75rem;
+    }
+    .or::before, .or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .or span { text-transform: uppercase; letter-spacing: 0.05em; }
+    .actions { display: flex; gap: 10px; }
+    .actions .btn-primary, .actions .btn-secondary {
+      display: inline-flex; align-items: center; justify-content: center;
+      flex: 1; padding: 11px; border-radius: 8px; text-decoration: none;
+      font: inherit; font-weight: 500; font-size: 0.95rem; cursor: pointer;
+      box-sizing: border-box;
+    }
+    .actions .btn-primary { background: var(--signal); color: #fff; border: none; }
+    .actions .btn-primary:hover { filter: brightness(0.94); }
+    .actions .btn-secondary { background: var(--bg-card); color: var(--text); border: 1px solid var(--border-strong); }
+    .actions .btn-secondary:hover { border-color: var(--signal); }
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #0E0B1F; --bg-card: #181428;
@@ -697,6 +831,7 @@ app.get('/oauth/authorize', (req, res) => {
       }
       body { background-image: radial-gradient(120% 90% at 50% -10%, rgba(168,85,247,0.18), transparent 60%); }
       input[type="email"], input[type="password"] { background: rgba(255,255,255,0.04); }
+      .btn-google svg { background: #fff; border-radius: 2px; padding: 2px; box-sizing: content-box; }
     }
   </style>
 </head>
@@ -704,22 +839,36 @@ app.get('/oauth/authorize', (req, res) => {
   <div class="card">
     <h1>${isSignup ? 'Create your LingCode account' : 'Sign in to LingCode'}</h1>
     <p>${escapeHtml(intro)}</p>
+    ${socialBlock}
     <form method="POST" action="/oauth/complete">
       ${hidden.join('\n      ')}
       <label for="email">Email</label>
-      <input type="email" id="email" name="email" required autocomplete="email" placeholder="you@example.com">
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required minlength="8" autocomplete="${isSignup ? 'new-password' : 'current-password'}" placeholder="At least 8 characters">
-      ${forgotRow}
-      <button type="submit">${escapeHtml(btn)}</button>
+      <input type="email" id="email" name="email" required autocomplete="email" placeholder="you@example.com" value="${escapeHtml(emailValue)}"${error ? ' class="input-error" autofocus' : ''}>
+      ${errorBanner}
+      ${passwordBlock}
+      ${actions}
     </form>
     <p class="hint">${hint}</p>
   </div>
 </body>
-</html>`);
+</html>`;
+}
+
+app.get('/oauth/authorize', (req, res) => {
+  const flow = classifyRedirectUri(req.query.redirect_uri || '');
+  if (!flow) {
+    return res.status(400).send(
+      `<!DOCTYPE html><html><body style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;padding:2rem;"><p>Invalid <code>redirect_uri</code>. Use the Mac app, or sign in from this site with <code>redirect_uri=${escapeHtml(
+        WEB_OAUTH_REDIRECT
+      )}</code> (URL-encoded), or <code>${escapeHtml(LINGCODE_CALLBACK)}</code> for the app.</p></body></html>`
+    );
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(renderAuthPage(req.query, flow));
 });
 
 const ACCOUNT_PASSWORD_MIN = 8;
+const loginLimiter = createLoginLimiter();
 const BCRYPT_COST = 12;
 
 function hashAccountPassword(plain) {
@@ -800,7 +949,12 @@ async function signUpAccount(email, password, nextDest) {
 
 function oauthErrorPage(message, extraLinkHtml) {
   const extra = extraLinkHtml || '';
-  return `<!DOCTYPE html><html><body style="font-family:system-ui;padding:2rem;background:#0a0a0a;color:#f0f0f0;"><p>${message}</p>${extra}<p><a href="javascript:history.back()" style="color:#8ab4ff;">Back</a></p></body></html>`;
+  return `<!DOCTYPE html><html><body style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;padding:2rem;background:#0a0a0a;color:#f0f0f0;"><p>${message}</p>${extra}<p><a href="javascript:history.back()" style="color:#8ab4ff;">Back</a></p></body></html>`;
+}
+
+function noStoreCredentials(res) {
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
 }
 
 app.post('/oauth/complete', async (req, res) => {
@@ -816,6 +970,17 @@ app.post('/oauth/complete', async (req, res) => {
   }
   const password = String(req.body.password || '');
   const oauthMode = String(req.body.oauth_mode || 'signin').toLowerCase() === 'signup' ? 'signup' : 'signin';
+  if (oauthMode === 'signin') {
+    const attempt = loginLimiter.check({ account: email, ip: req.ip });
+    if (!attempt.allowed) {
+      res.setHeader('Retry-After', String(Math.max(1, Math.ceil(attempt.retryAfterMs / 1_000))));
+      return res.status(429).send(renderAuthPage(req.body, flow, {
+        title: 'Incorrect email or password.',
+        sub: 'Check your credentials and try again shortly.',
+        email
+      }));
+    }
+  }
   let auth;
   try {
     auth = oauthMode === 'signup'
@@ -826,40 +991,56 @@ app.post('/oauth/complete', async (req, res) => {
     return res.status(500).send('Something went wrong. Try again.');
   }
   if (!auth.ok) {
-    if (auth.error === 'password_policy') {
-      return res.status(400).send(oauthErrorPage(`Password must be at least ${ACCOUNT_PASSWORD_MIN} characters.`));
+    if (oauthMode === 'signin' && ['no_account', 'invalid_credentials', 'password_policy'].includes(auth.error)) {
+      loginLimiter.fail({ account: email, ip: req.ip });
+      return res.status(401).send(renderAuthPage(req.body, flow, {
+        title: 'Incorrect email or password.',
+        sub: 'Check your credentials and try again.',
+        email
+      }));
     }
-    if (auth.error === 'no_account') {
-      return res.status(404).send(
-        oauthErrorPage(
-          'No account for this email. Create one first.',
-          `<p><a href="${escapeHtml(PUBLIC_ORIGIN)}/signup.html" style="color:#8ab4ff;">Create an account</a></p>`
-        )
-      );
+    // Re-render the SAME sign-in / create-account card with an inline error
+    // banner (preserving the entered email) instead of bouncing to the dark
+    // full-page oauthErrorPage.
+    if (auth.error === 'password_policy') {
+      return res.status(400).send(renderAuthPage(req.body, flow, {
+        title: `Password must be at least ${ACCOUNT_PASSWORD_MIN} characters.`,
+        email
+      }));
     }
     if (auth.error === 'account_exists') {
-      return res.status(409).send(
-        oauthErrorPage(
-          'An account with this email already exists. Sign in instead.',
-          `<p><a href="${escapeHtml(PUBLIC_ORIGIN)}/signin.html" style="color:#8ab4ff;">Sign in</a></p>`
-        )
-      );
+      const signinHref = `/oauth/authorize?${authQueryFrom(req.body, { oauth_mode: 'signin', login_hint: email })}`;
+      return res.status(409).send(renderAuthPage(req.body, flow, {
+        title: 'An account with this email already exists.',
+        sub: 'Sign in instead.',
+        email,
+        hidePassword: true,
+        actionsHtml: `<div class="actions"><a class="btn-primary" href="${escapeHtml(signinHref)}">Sign in</a></div>`
+      }));
     }
     if (auth.error === 'email_unverified') {
-      return res.status(403).send(
-        oauthErrorPage(
-          'Verify your email before signing in. Check your inbox or use the link on the sign-up confirmation page to resend.',
-          `<p><a href="${escapeHtml(PUBLIC_ORIGIN)}/verify-email-sent.html?email=${encodeURIComponent(email)}" style="color:#8ab4ff;">Resend verification email</a></p>`
-        )
-      );
+      return res.status(403).send(renderAuthPage(req.body, flow, {
+        title: 'Verify your email before signing in.',
+        sub: 'Check your inbox for the verification link.',
+        email,
+        hidePassword: true,
+        actionsHtml: `<div class="actions"><a class="btn-primary" href="${escapeHtml(PUBLIC_ORIGIN)}/verify-email-sent.html?email=${encodeURIComponent(email)}">Resend verification email</a></div>`
+      }));
     }
     if (auth.error === 'mail_send_failed') {
       return res.status(502).send(
         oauthErrorPage('Could not send the verification email. Check RESEND on the server or try again.')
       );
     }
-    return res.status(401).send(oauthErrorPage('Invalid email or password.'));
+    // invalid_credentials — wrong password. Keep the password field so the user
+    // can retry, with the error shown inline on the same card.
+    return res.status(401).send(renderAuthPage(req.body, flow, {
+      title: 'Incorrect email or password.',
+      sub: 'Check your password and try again.',
+      email
+    }));
   }
+  if (oauthMode === 'signin') loginLimiter.success({ account: email });
   const row = auth.row;
   // Referral attribution — only on a fresh signup, guarded so it never throws.
   if (oauthMode === 'signup' && row) referrals.attributeOnSignup(db, req, row.id);
@@ -903,25 +1084,9 @@ app.post('/oauth/complete', async (req, res) => {
     });
   }
 
-  // Reuse the existing api_access_token if one already exists for this user.
-  // Reason: re-minting on every sign-in invalidates whatever token is in the
-  // Mac app's Keychain (which only refreshes on the lingcode:// callback path,
-  // not on every browser sign-in), so a user who signs in again on the web
-  // would silently break their Mac app's bridge auth. Token rotation only
-  // happens on explicit /signout-all-devices or password reset (which NULLs
-  // the token elsewhere).
-  let accessToken = null;
-  try {
-    accessToken = db.prepare('SELECT api_access_token FROM users WHERE email = ?').get(email)?.api_access_token || null;
-  } catch (e) { /* fall through to mint */ }
-  if (!accessToken) {
-    accessToken = crypto.randomBytes(32).toString('hex');
-    try {
-      db.prepare('UPDATE users SET api_access_token = ? WHERE email = ?').run(accessToken, email);
-    } catch (e) {
-      console.error('Failed to persist api_access_token:', e);
-    }
-  }
+  // Each device gets an independent digest-backed credential. Existing device
+  // tokens remain valid, so signing in here never disconnects another client.
+  const accessToken = issueToken(db, row.id, { scope: 'account' }).token;
   const params = new URLSearchParams();
   params.set('access_token', accessToken);
   params.set('email', email);
@@ -929,6 +1094,7 @@ app.post('/oauth/complete', async (req, res) => {
     params.set('state', state);
   }
   const callbackUrl = `${LINGCODE_CALLBACK}?${params.toString()}`;
+  noStoreCredentials(res);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -938,7 +1104,7 @@ app.post('/oauth/complete', async (req, res) => {
   <title>All set — LingCode</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, system-ui, sans-serif; background: #0a0a0a; color: #f0f0f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    body { font-family: Helvetica Neue, Helvetica, Arial, sans-serif; background: #0a0a0a; color: #f0f0f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
     .card { text-align: center; max-width: 420px; width: 100%; }
     .icon { font-size: 3rem; margin-bottom: 20px; }
     h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 10px; }
@@ -964,6 +1130,49 @@ app.post('/oauth/complete', async (req, res) => {
 </html>`);
 });
 
+// ── Social sign-in: shared finalize step ─────────────────────────────────────
+// Google / Apple callbacks converge here. Given a resolved user row + the
+// original `redirect_uri` (web, LCI Mac callback, or LCB standalone callback),
+// mint the session or api_access_token and route the response so the app the
+// user came from picks the sign-in up. Mirrors the tail of /oauth/complete.
+function finalizeSocialAuth(req, res, user, source) {
+  const rawRedirect = String((source && source.redirect_uri) || '').trim();
+  const flow = classifyRedirectUri(rawRedirect) || 'web';
+  const state = String((source && source.state) || '');
+  const nextRaw = String((source && source.next) || '/account.html');
+  const safeNext = /^\/[^/]/.test(nextRaw) ? nextRaw : '/account.html';
+
+  if (flow === 'web') {
+    req.session.account = { userId: user.id, email: user.email, tier: user.tier };
+    return req.session.save((err) => {
+      if (err) return res.status(500).send('Could not start session.');
+      res.redirect(302, `${PUBLIC_ORIGIN}${safeNext}`);
+    });
+  }
+
+  // Mac (LCI) or LCB standalone: mint a per-device token and redirect the
+  // browser to the custom scheme so the app picks up ?access_token=…&email=…
+  // (see AppDelegate URL-scheme handlers).
+  const accessToken = issueToken(db, user.id, { scope: 'account' }).token;
+  const p = new URLSearchParams();
+  p.set('access_token', accessToken);
+  p.set('email', user.email);
+  if (state) p.set('state', state);
+  // For mac, the redirect goes back to whatever custom scheme the app owns
+  // (lingcode:// or lingcodebaby://). classifyRedirectUri already validated it.
+  const callbackUrl = `${rawRedirect}?${p.toString()}`;
+  noStoreCredentials(res);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>All set — LingCode</title>
+<style>body{font-family:Helvetica Neue,Helvetica,Arial,sans-serif;background:#0a0a0a;color:#f0f0f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{text-align:center;max-width:420px} .icon{font-size:3rem;margin-bottom:20px} h1{font-size:1.5rem;margin-bottom:10px}
+p{color:#888;line-height:1.6;margin-bottom:24px} .btn{display:inline-block;padding:11px 28px;border-radius:8px;background:#f0f0f0;color:#0a0a0a;font-weight:600;text-decoration:none}</style></head>
+<body><div class="card"><div class="icon">✅</div><h1>All set! Return to LingCode.</h1>
+<p>You're signed in. LingCode should open automatically.<br>If nothing happens, click below.</p>
+<a class="btn" href="${escapeHtml(callbackUrl)}">Open LingCode</a></div>
+<script>window.location.href = ${JSON.stringify(callbackUrl)};</script></body></html>`);
+}
+
 // ── Google Sign-In ────────────────────────────────────────────────────────────
 // Standard OAuth 2.0 Authorization Code flow. State lives in the session (no
 // cookie-parser dep). On callback we trade the code for tokens, decode the
@@ -980,10 +1189,16 @@ app.get('/auth/google', (req, res) => {
   }
   const state = crypto.randomBytes(16).toString('hex');
   const nextRaw = String(req.query.next || '/account.html');
-  // Only allow same-origin paths for `next` — reject `//foo.com` open-redirects.
-  const safeNext = /^\/[^\/]/.test(nextRaw) ? nextRaw : '/account.html';
+  const safeNext = /^\/[^/]/.test(nextRaw) ? nextRaw : '/account.html';
+  // Preserve the original `redirect_uri` + `state` so the callback can route
+  // the finished sign-in back into the LCI / LCB Mac app instead of the web
+  // account page. When absent, we treat as web sign-in (existing behavior).
+  const forwardRedirect = String(req.query.redirect_uri || '').trim();
+  const forwardState = String(req.query.state || '').trim();
   req.session.google_state = state;
   req.session.google_next = safeNext;
+  req.session.google_forward_redirect = forwardRedirect;
+  req.session.google_forward_state = forwardState;
   req.session.save((err) => {
     if (err) return res.status(500).send('Could not start sign-in.');
     const u = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -1003,9 +1218,13 @@ app.get('/auth/google/callback', async (req, res) => {
 
   const expectedState = req.session?.google_state;
   const next = req.session?.google_next || '/account.html';
+  const forwardRedirect = req.session?.google_forward_redirect || '';
+  const forwardState = req.session?.google_forward_state || '';
   if (req.session) {
     delete req.session.google_state;
     delete req.session.google_next;
+    delete req.session.google_forward_redirect;
+    delete req.session.google_forward_state;
   }
 
   if (!code || !state || !expectedState || state !== expectedState) {
@@ -1074,6 +1293,18 @@ app.get('/auth/google/callback', async (req, res) => {
     ).run(id, emailRaw, 'free', created, 'google', sub);
     user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
     referrals.attributeOnSignup(db, req, id); // fresh Google signup only (guarded)
+  }
+
+  // If the sign-in originated from the LCI or LCB Mac apps, route back through
+  // finalizeSocialAuth so we mint an api_access_token and redirect into the
+  // app's custom URL scheme. Web sign-ins (no forwarded redirect_uri) still
+  // fall through the original path: session + /account.html.
+  if (forwardRedirect) {
+    return finalizeSocialAuth(req, res, user, {
+      redirect_uri: forwardRedirect,
+      state: forwardState,
+      next,
+    });
   }
 
   req.session.account = {
@@ -1587,6 +1818,10 @@ const { registerCloudFunctionsRoutes } = require('./cloud-functions-routes');
 registerCloudFunctionsRoutes(app, db);
 const { registerCloudPushRoutes } = require('./cloud-push');
 registerCloudPushRoutes(app, db);
+// Hands-free voice mode: LingCode-branded speech proxy (transcribe + speak).
+// Vendor stays server-side via env; egress is safeFetch host-pinned.
+const { registerVoiceRoutes } = require('./voice-routes');
+registerVoiceRoutes(app, db);
 const { registerUpdatePushRoutes } = require('./updates-push');
 registerUpdatePushRoutes(app);
 const { registerTelemetryOwnerRoutes } = require('./cloud-telemetry');
@@ -1775,25 +2010,17 @@ app.post('/api/account/app-handoff', (req, res) => {
   if (row.email_verified != null && Number(row.email_verified) === 0) {
     return res.status(403).json({ ok: false, error: 'Verify your email before opening the app.' });
   }
-  // Reuse existing api_access_token so the Mac app's Keychain stays valid across
-  // re-signs. See same logic in /oauth/complete above for full reasoning.
-  let accessToken = null;
-  try {
-    accessToken = db.prepare('SELECT api_access_token FROM users WHERE id = ?').get(row.id)?.api_access_token || null;
-  } catch (e) { /* fall through to mint */ }
-  if (!accessToken) {
-    accessToken = crypto.randomBytes(32).toString('hex');
-    try {
-      db.prepare('UPDATE users SET api_access_token = ? WHERE id = ?').run(accessToken, row.id);
-    } catch (e) {
-      console.error('app-handoff token:', e);
-      return res.status(500).json({ ok: false, error: 'Could not prepare app link' });
-    }
-  }
+  const accessToken = issueToken(db, row.id, { scope: 'account' }).token;
   const params = new URLSearchParams();
   params.set('access_token', accessToken);
   params.set('email', row.email);
-  const url = `${LINGCODE_CALLBACK}?${params.toString()}`;
+  // Both apps accept the same `access_token` + `email` query params on their
+  // auth-callback URL, so which app to open is just a scheme switch. The web
+  // account page passes `app: 'baby'` from the "Open LingCode Baby" button.
+  const appTarget = String((req.body && req.body.app) || '').toLowerCase();
+  const base = appTarget === 'baby' ? LINGCODE_BABY_CALLBACK : LINGCODE_CALLBACK;
+  const url = `${base}?${params.toString()}`;
+  noStoreCredentials(res);
   res.json({ ok: true, url });
 });
 
@@ -1970,11 +2197,92 @@ app.post('/api/account/reset-password', (req, res) => {
     return res.status(400).json({ ok: false, error: 'This reset link has expired. Request a new one.' });
   }
   const h = hashAccountPassword(password);
-  db.prepare(
-    `UPDATE users SET password_hash = ?, password_reset_token = NULL, password_reset_expires = NULL,
-     api_access_token = NULL WHERE id = ?`
-  ).run(h, row.id);
+  db.transaction(() => {
+    db.prepare(
+      `UPDATE users SET password_hash = ?, password_reset_token = NULL, password_reset_expires = NULL,
+       api_access_token = NULL WHERE id = ?`
+    ).run(h, row.id);
+    revokeUserTokens(db, row.id);
+  })();
   res.json({ ok: true });
+});
+
+// ── Passwordless email-code (OTP) sign-in for native apps (LingCode iOS) ──────
+// Email a 6-digit code, verify it, mint api_access_token. Lets the standalone
+// iOS app sign a user in/up fully in-app (no browser handoff). Mirrors the
+// forgot-password flow: IP rate-limit, short TTL, single-use code.
+try { db.exec("ALTER TABLE users ADD COLUMN login_code TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE users ADD COLUMN login_code_expires TEXT"); } catch (_) {}
+const LOGIN_CODE_TTL_MS = 10 * 60 * 1000;
+const loginCodeReqBuckets = new Map();
+const loginCodeVerifyBuckets = new Map();
+function allowBucket(map, ip, max, windowMs) {
+  const now = Date.now();
+  let b = map.get(ip);
+  if (!b || b.resetAt <= now) { b = { count: 0, resetAt: now + windowMs }; map.set(ip, b); }
+  b.count += 1;
+  return b.count <= max;
+}
+
+app.post('/api/account/request-code', async (req, res) => {
+  if (!process.env.RESEND_API_KEY || !String(process.env.RESEND_API_KEY).trim()) {
+    return res.status(503).json({ ok: false, error: 'Email sign-in is not configured on the server.' });
+  }
+  if (!allowBucket(loginCodeReqBuckets, clientIp(req), 8, 60 * 60 * 1000)) {
+    return res.status(429).json({ ok: false, error: 'Too many requests. Try again later.' });
+  }
+  const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ ok: false, error: 'Invalid email' });
+  }
+  // Find or create — receiving the code proves ownership, so email_verified=1.
+  let row = db.prepare('SELECT id, email FROM users WHERE email = ?').get(email);
+  if (!row) {
+    const id = crypto.randomUUID();
+    db.prepare('INSERT INTO users (id, email, tier, created_at, source, email_verified) VALUES (?, ?, ?, ?, ?, 1)')
+      .run(id, email, 'free', new Date().toISOString(), 'ios-app');
+    referrals.attributeOnSignup(db, req, id); // fresh signup only (guarded)
+    row = { id, email };
+  }
+  const code = String(crypto.randomInt(100000, 1000000));   // 6 digits
+  const expires = new Date(Date.now() + LOGIN_CODE_TTL_MS).toISOString();
+  db.prepare('UPDATE users SET login_code = ?, login_code_expires = ? WHERE id = ?').run(code, expires, row.id);
+  const html = `<p>Your LingCode sign-in code is:</p>
+<p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>
+<p>It expires in 10 minutes. If you didn't request this, you can ignore this email.</p>`;
+  const sent = await sendResendEmail({ to: row.email, subject: `Your LingCode code: ${code}`, html });
+  if (!sent.ok) {
+    console.error('Resend login-code:', sent.error);
+    db.prepare('UPDATE users SET login_code = NULL, login_code_expires = NULL WHERE id = ?').run(row.id);
+    return res.status(502).json({ ok: false, error: 'Could not send the code. Try again later.' });
+  }
+  res.json({ ok: true, message: 'Code sent.' });
+});
+
+app.post('/api/account/verify-code', (req, res) => {
+  if (!allowBucket(loginCodeVerifyBuckets, clientIp(req), 30, 60 * 60 * 1000)) {
+    return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
+  }
+  const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+  const code = String((req.body && req.body.code) || '').trim();
+  if (!email || !/^\d{6}$/.test(code)) {
+    return res.status(400).json({ ok: false, error: 'Invalid email or code' });
+  }
+  const row = db.prepare(
+    'SELECT id, email, login_code, login_code_expires FROM users WHERE email = ?'
+  ).get(email);
+  if (!row || !row.login_code || row.login_code !== code) {
+    return res.status(401).json({ ok: false, error: 'Incorrect code' });
+  }
+  if (!row.login_code_expires || Date.now() > Date.parse(row.login_code_expires)) {
+    return res.status(401).json({ ok: false, error: 'Code expired — request a new one' });
+  }
+  db.prepare(
+    'UPDATE users SET login_code = NULL, login_code_expires = NULL, email_verified = 1 WHERE id = ?'
+  ).run(row.id);
+  const token = issueToken(db, row.id, { scope: 'account' }).token;
+  noStoreCredentials(res);
+  res.json({ ok: true, token, email: row.email });
 });
 
 app.get('/api/account/verify-email', (req, res) => {
@@ -2070,6 +2378,38 @@ const { registerCloudComputeRoutes } = require('./cloud-compute');
 registerCloudComputeRoutes(app, db);
 const { startComputeRunner } = require('./cloud-compute-runner');
 startComputeRunner(db);
+
+// Hosted apps (Python HTTP apps behind Caddy at <slug>.apps.lingcode.dev).
+// Runs its OWN polling loop over hosted_app_deploys — does NOT hitch to the
+// compute-runner dispatch (design intent evolved: keeps the two subsystems
+// independent so a runner outage on one doesn't stall the other). The Caddy
+// admin API is 127.0.0.1:2019 on this droplet after scripts/bootstrap-hosted-apps.sh;
+// if Caddy isn't installed yet, health() returns false and route upserts
+// throw with err.code = 'caddy_admin_unreachable' — deploys will queue but
+// not swap in until the operator runs the bootstrap.
+const { createCaddyClient } = require('./cloud-hosted-app-caddy');
+const { createHostedAppRunner } = require('./cloud-hosted-app-runner');
+const { registerHostedAppRoutes } = require('./cloud-hosted-apps');
+const hostedAppCaddy = createCaddyClient({
+  // Set HOSTED_APP_CADDY_MODE=passthrough on droplets where routing is
+  // handled by an external edge (nginx + cloud-hosted-app-proxy.js), so the
+  // runner's caddy calls become validated no-ops instead of throwing
+  // caddy_admin_unreachable and aborting every deploy. Default 'admin-api'
+  // preserves the co-located-Caddy behavior from scripts/bootstrap-hosted-apps.sh.
+  mode: process.env.HOSTED_APP_CADDY_MODE || 'admin-api',
+  adminUrl: process.env.HOSTED_APP_CADDY_ADMIN_URL || 'http://127.0.0.1:2019',
+  wildcardZone: process.env.HOSTED_APP_WILDCARD_ZONE || 'apps.lingcode.dev',
+});
+const hostedAppRunner = createHostedAppRunner({
+  db,
+  caddyClient: hostedAppCaddy,
+  stateDir: process.env.HOSTED_APP_SOURCE_DIR || '/var/lib/lingcode-hosted-apps',
+  envDir: process.env.HOSTED_APP_ENV_DIR || '/run/lingcode/hosted-app-envs',
+  dockerBin: process.env.DOCKER_BIN || 'docker',
+  wildcardZone: process.env.HOSTED_APP_WILDCARD_ZONE || 'apps.lingcode.dev',
+});
+registerHostedAppRoutes(app, db, hostedAppRunner);
+if (process.env.HOSTED_APP_RUNNER_ENABLED !== '0') hostedAppRunner.start();
 // Compute scheduler (SP2): cron-driven runs with overlap control + retries. The
 // 60s tick runs on every API process (enqueue is idempotent per due-window);
 // claiming/executing only happens where the runner is enabled.
@@ -2112,19 +2452,17 @@ registerCloudAppServingRoute(app, db);
 // GET /p/<id> — public short-link redirect to the share-link form.
 registerPublicShareRoute(app, db);
 
-// CLI token: mint/return the user's api_access_token (creates one if
-// missing). Auth = session cookie — user must already be signed in via
+// CLI token: mint an independent digest-backed credential. Auth = session
+// cookie — user must already be signed in via
 // the browser. The /cli-token.html page calls this endpoint and shows
 // the token in a copy-button. Used by `lingcode auth login --provider
 // lingmodel` so the terminal CLI can hit /api/inference with bearer auth.
 app.post('/api/account/cli-token', (req, res) => {
   const u = getUserFromRequest(db, req);
   if (!u) return res.status(401).json({ ok: false, error: 'unauthorized' });
-  let token = u.api_access_token;
-  if (!token || typeof token !== 'string' || token.length < 32) {
-    token = 'lcat_' + crypto.randomBytes(32).toString('hex');
-    db.prepare('UPDATE users SET api_access_token = ? WHERE id = ?').run(token, u.id);
-  }
+  if (req.tokenScope) return res.status(403).json({ ok: false, error: 'scoped_token_cannot_mint' });
+  const token = issueToken(db, u.id, { scope: 'account' }).token;
+  noStoreCredentials(res);
   res.json({ ok: true, token });
 });
 
@@ -2132,8 +2470,14 @@ app.post('/api/account/cli-token', (req, res) => {
 app.delete('/api/account/cli-token', (req, res) => {
   const u = getUserFromRequest(db, req);
   if (!u) return res.status(401).json({ ok: false, error: 'unauthorized' });
-  const token = 'lcat_' + crypto.randomBytes(32).toString('hex');
-  db.prepare('UPDATE users SET api_access_token = ? WHERE id = ?').run(token, u.id);
+  if (req.tokenScope) return res.status(403).json({ ok: false, error: 'scoped_token_cannot_mint' });
+  let token;
+  db.transaction(() => {
+    db.prepare('UPDATE users SET api_access_token=NULL WHERE id=?').run(u.id);
+    revokeUserTokens(db, u.id, { scope: 'account' });
+    token = issueToken(db, u.id, { scope: 'account' }).token;
+  })();
+  noStoreCredentials(res);
   res.json({ ok: true, token });
 });
 
@@ -2302,7 +2646,55 @@ app.patch('/api/admin/users/:id', requireAdmin, (req, res) => {
 //     Counting both statuses with dedup handles download managers (Free Download
 //     Manager, curl --range, Sparkle resume) that emit many HTTP 206 partials per
 //     one download without over-counting them.
+// CLI tarballs are served from GitHub Releases (github.com/Xavierhuang/Mac_cli),
+// not from our origin, so nginx logs never see them. Read the real download
+// counts from the GitHub API instead. Cached 15 min so opening the dashboard
+// doesn't hit GitHub per load and a GitHub outage can't hang the endpoint;
+// fail-soft to null (the tile renders "—", never a misleading 0). Note: GitHub
+// reports CUMULATIVE downloads, not a 7d/30d window.
+let _cliCountsCache = { at: 0, data: null };
+async function getCliDownloadCounts() {
+  const now = Date.now();
+  if (_cliCountsCache.data && now - _cliCountsCache.at < 15 * 60 * 1000) return _cliCountsCache.data;
+  try {
+    const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'lingcode-stats' };
+    if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+    const r = await fetch('https://api.github.com/repos/Xavierhuang/Mac_cli/releases?per_page=100', { headers });
+    if (!r.ok) throw new Error('github ' + r.status);
+    const releases = await r.json();
+    let total = 0;
+    const byPlatform = {};
+    for (const rel of releases) {
+      for (const a of rel.assets || []) {
+        if (!/\.(tar\.gz|zip)$/.test(a.name)) continue;
+        const n = a.download_count || 0;
+        total += n;
+        const m = a.name.match(/(darwin|linux)-(arm64|x86_64|aarch64)/);
+        const k = m ? `${m[1]}-${m[2]}` : 'other';
+        byPlatform[k] = (byPlatform[k] || 0) + n;
+      }
+    }
+    const data = { total, byPlatform };
+    _cliCountsCache = { at: now, data };
+    return data;
+  } catch (_) {
+    return null; // fail soft
+  }
+}
+
+// Cache the log scan. The awk pass over ~76MB of nginx logs (mktime on every
+// one of ~1M lines) takes ~20s and had a 15s kill timeout, so the endpoint was
+// SIGKILLing the scan and returning 500 — the dashboard showed all "—". A dash
+// board refresh doesn't need second-fresh traction numbers, so scan at most
+// once every 10 minutes and serve the cached result in between; the timeout
+// below is also raised so the one real scan can finish.
+let _installStatsCache = { at: 0, data: null };
+const INSTALL_STATS_TTL_MS = 10 * 60 * 1000;
+
 app.get('/api/admin/install-stats', requireAdmin, (req, res) => {
+  if (_installStatsCache.data && Date.now() - _installStatsCache.at < INSTALL_STATS_TTL_MS) {
+    return res.json(_installStatsCache.data);
+  }
   const nowSec = Math.floor(Date.now() / 1000);
   const T7 = nowSec - 7 * 86400;
   const T30 = nowSec - 30 * 86400;
@@ -2326,11 +2718,14 @@ app.get('/api/admin/install-stats', requireAdmin, (req, res) => {
       }
       # Download managers split one download into many HTTP 206 partials.
       # Dedup on (ip, path, day) so each user-day-version counts once.
-      if (($9 == "200" || $9 == "206") && $7 ~ /^\/LingCode-v[0-9.]+-Installer\.dmg/) {
+      if (($9 == "200" || $9 == "206") && $7 ~ /^\/LingCode[^\/]*\.dmg/) {
         day = strftime("%Y-%m-%d", t);
         key = $1 SUBSEP $7 SUBSEP day;
+        prod = "LingCode";
+        if ($7 ~ /Baby/) prod = "Baby"; else if ($7 ~ /FTP/) prod = "FTP";
+        else if ($7 ~ /Engine/) prod = "Engine"; else if ($7 ~ /iOS/) prod = "iOS";
         if (t >= T7  && !(key in seen7))  { dmg7++;  seen7[key]  = 1; }
-        if (t >= T30 && !(key in seen30)) { dmg30++; ver30[$7]++; seen30[key] = 1; }
+        if (t >= T30 && !(key in seen30)) { dmg30++; prod30[prod]++; seen30[key] = 1; }
       }
       # CLI install script: curl https://lingcode.dev/install-cli.sh | sh
       # Each successful curl is a fresh install attempt; dedup by (ip, day) so
@@ -2363,7 +2758,7 @@ app.get('/api/admin/install-stats', requireAdmin, (req, res) => {
       printf "appcast_30d=%d\n", n30;
       printf "dmg_7d=%d\n",      dmg7+0;
       printf "dmg_30d=%d\n",     dmg30+0;
-      for (k in ver30) printf "ver_30d=%s=%d\n", k, ver30[k];
+      for (k in prod30) printf "prod_30d=%s=%d\n", k, prod30[k];
       printf "cli_inst_7d=%d\n",  cli_inst7+0;
       printf "cli_inst_30d=%d\n", cli_inst30+0;
       printf "cli_tar_7d=%d\n",   cli_tar7+0;
@@ -2383,8 +2778,10 @@ app.get('/api/admin/install-stats', requireAdmin, (req, res) => {
   let stderr = '';
   awk.stdout.on('data', (d) => { stdout += d; });
   awk.stderr.on('data', (d) => { stderr += d; });
-  const timer = setTimeout(() => { zcat.kill('SIGKILL'); awk.kill('SIGKILL'); }, 15000);
-  awk.on('close', (code) => {
+  // 90s: the scan over ~76MB of logs runs ~20s today and grows with traffic.
+  // Cheap because it's cache-gated to once per 10 min (see top of handler).
+  const timer = setTimeout(() => { zcat.kill('SIGKILL'); awk.kill('SIGKILL'); }, 90000);
+  awk.on('close', async (code) => {
     clearTimeout(timer);
     if (code !== 0) {
       return res.status(500).json({ error: `awk exited ${code}: ${stderr.slice(0, 500)}` });
@@ -2394,12 +2791,14 @@ app.get('/api/admin/install-stats', requireAdmin, (req, res) => {
       active_installs_30d: 0,
       dmg_downloads_7d: 0,
       dmg_downloads_30d: 0,
-      dmg_by_version_30d: {},
+      dmg_by_product_30d: {},
       cli_install_runs_7d: 0,
       cli_install_runs_30d: 0,
       cli_tarball_downloads_7d: 0,
       cli_tarball_downloads_30d: 0,
       cli_by_platform_30d: {},
+      cli_tarball_downloads_total: null,
+      cli_by_platform_total: {},
       signups_7d: 0,
       signups_30d: 0,
       signups_total: 0,
@@ -2410,7 +2809,7 @@ app.get('/api/admin/install-stats', requireAdmin, (req, res) => {
       else if ((m = line.match(/^appcast_30d=(\d+)/))) out.active_installs_30d = +m[1];
       else if ((m = line.match(/^dmg_7d=(\d+)/)))      out.dmg_downloads_7d    = +m[1];
       else if ((m = line.match(/^dmg_30d=(\d+)/)))     out.dmg_downloads_30d   = +m[1];
-      else if ((m = line.match(/^ver_30d=(\S+)=(\d+)/))) out.dmg_by_version_30d[m[1]] = +m[2];
+      else if ((m = line.match(/^prod_30d=(\S+)=(\d+)/))) out.dmg_by_product_30d[m[1]] = +m[2];
       else if ((m = line.match(/^cli_inst_7d=(\d+)/)))  out.cli_install_runs_7d   = +m[1];
       else if ((m = line.match(/^cli_inst_30d=(\d+)/))) out.cli_install_runs_30d  = +m[1];
       else if ((m = line.match(/^cli_tar_7d=(\d+)/)))   out.cli_tarball_downloads_7d  = +m[1];
@@ -2426,6 +2825,9 @@ app.get('/api/admin/install-stats', requireAdmin, (req, res) => {
       ).get().n;
       out.signups_total = db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
     } catch (_) {}
+    const cli = await getCliDownloadCounts();
+    if (cli) { out.cli_tarball_downloads_total = cli.total; out.cli_by_platform_total = cli.byPlatform; }
+    _installStatsCache = { at: Date.now(), data: out };
     res.json(out);
   });
 });
@@ -2450,7 +2852,7 @@ function computeDailyLogStats(dateStr) {
         is_sparkle = ($0 ~ /Sparkle\//);
         if ($9 == "200" && $7 ~ /^\/appcast\.xml/ && is_sparkle) ipa[$1] = 1;
         # Dedup resumed downloads: unique (ip, path) within this day.
-        if (($9 == "200" || $9 == "206") && $7 ~ /^\/LingCode-v[0-9.]+-Installer\.dmg/) {
+        if (($9 == "200" || $9 == "206") && $7 ~ /^\/LingCode[^\/]*\.dmg/) {
           dl[$1 SUBSEP $7] = 1;
         }
       }
@@ -3154,6 +3556,17 @@ registerBillingRoutes(app, {
   PRICE_PRO_ANNUAL,
   PRICE_MAX_PRO_MONTHLY,
   PRICE_MAX_PRO_ANNUAL
+});
+
+const voucherConfig = voucherConfigFromEnv(process.env);
+registerVoucherRoutes(app, {
+  db,
+  stripe,
+  publicOrigin: PUBLIC_ORIGIN,
+  proMonthlyPriceId: voucherConfig.proMonthlyPriceId,
+  enabled: voucherConfig.enabled,
+  hmacSecret: voucherConfig.hmacSecret,
+  requireAdmin,
 });
 
 if (process.env.ADMIN_DEV_STATIC === '1') {

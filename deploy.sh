@@ -18,6 +18,16 @@ WEBSITE_DIR="$REPO_ROOT/website"
 
 cd "$REPO_ROOT"
 
+# Generate the public Cloud reference from canonical Markdown and reject stale
+# output or broken documentation links before anything is uploaded.
+if [ "${SKIP_DOCS_BUILD:-0}" != "1" ]; then
+  echo "Building and checking Cloud documentation..."
+  node "$WEBSITE_DIR/scripts/docs/build.mjs"
+  node "$WEBSITE_DIR/scripts/docs/check.mjs"
+elif [ "${SKIP_DOCS_BUILD:-0}" = "1" ]; then
+  echo "Skipping Cloud documentation build (SKIP_DOCS_BUILD=1)."
+fi
+
 # Build the Pagefind static-search index over website/.
 # Output lives at website/pagefind/ and is served alongside the rest of the site.
 # Skipped if SKIP_PAGEFIND=1 (e.g. for a quick non-content change).

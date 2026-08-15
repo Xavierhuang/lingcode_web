@@ -8,6 +8,7 @@
 
 const crypto = require('crypto');
 const { getUserFromRequest } = require('./auth-helpers');
+const { issueToken } = require('./account-tokens');
 const { isServeHostOnline } = require('./collab-server');
 
 const NAME_MAX = 120;
@@ -21,9 +22,13 @@ function wsBaseOrigin() {
   return publicOrigin().replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
 }
 
-function apiTokenFor(db, userId) {
-  const row = db.prepare('SELECT api_access_token FROM users WHERE id = ?').get(userId);
-  return row && row.api_access_token ? row.api_access_token : null;
+function remoteTokenFor(db, userId, hostId) {
+  return issueToken(db, userId, {
+    scope: 'project',
+    projectKey: `remote:${hostId}`,
+    caps: 'remote',
+    expiresAt: Date.now() + 60 * 60 * 1000,
+  }).token;
 }
 
 /**
@@ -62,11 +67,13 @@ function registerRemoteRoutes(app, db) {
         .run(id, u.id, name, now, now);
     }
 
-    const apiToken = apiTokenFor(db, u.id);
+    const apiToken = remoteTokenFor(db, u.id, id);
     const wsBase = wsBaseOrigin();
     const wsUrl = apiToken
       ? `${wsBase}/ws/collab/${id}?token=${encodeURIComponent(apiToken)}`
       : `${wsBase}/ws/collab/${id}`;
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
     res.json({ ok: true, host: { id, name, created_at: now }, wsUrl });
   });
 
@@ -93,11 +100,13 @@ function registerRemoteRoutes(app, db) {
     const host = db.prepare('SELECT id, name, owner_id FROM remote_hosts WHERE id = ?').get(req.params.id);
     if (!host || host.owner_id !== u.id) return res.status(404).json({ ok: false, error: 'not_found' });
 
-    const apiToken = apiTokenFor(db, u.id);
+    const apiToken = remoteTokenFor(db, u.id, host.id);
     const wsBase = wsBaseOrigin();
     const wsUrl = apiToken
       ? `${wsBase}/ws/collab/${host.id}/__serve?token=${encodeURIComponent(apiToken)}`
       : `${wsBase}/ws/collab/${host.id}/__serve`;
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
     res.json({ ok: true, host: { id: host.id, name: host.name }, wsUrl, online: isServeHostOnline(host.id) });
   });
 

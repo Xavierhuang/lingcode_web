@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backend functions | LingCode Cloud Docs</title>
+  <meta name="description" content="Choose between available built-in and custom functions and the upcoming query, mutation, and action programming model.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/functions/">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/functions/">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/functions/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/" aria-current="page">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Backend functions</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="backend-functions">Backend functions</h1>
+<p>Functions run trusted application logic near your LingCode Cloud backend. They keep secrets off the client, enforce server-side decisions, call managed capabilities, and provide an API boundary for work that should not be expressed as direct table CRUD.</p>
+<p>LingCode currently provides built-in functions and sandboxed custom TypeScript functions. A more strongly typed <strong>query, mutation, and action</strong> model is in Preview and is documented separately so its planned semantics cannot be mistaken for the current production API.</p>
+<h2 id="choose-the-right-surface">Choose the right surface</h2>
+<div class="cloud-docs-table-wrap"><table><thead><tr><th>Surface</th><th>Availability</th><th>Use it for</th></tr></thead><tbody>
+<tr><td>Built-in function</td><td>Available</td><td>Email, SMS, text-to-speech, Stripe Checkout, allow-listed HTTP calls, and echo testing</td></tr>
+<tr><td>Custom function</td><td>Available</td><td>Short TypeScript handlers using secrets, database access, storage, request metadata, and schedules</td></tr>
+<tr><td>Query</td><td>Preview</td><td>Deterministic named reads with automatic reactive subscriptions</td></tr>
+<tr><td>Mutation</td><td>Preview</td><td>Atomic named writes with revision invalidation and safe conflict retries</td></tr>
+<tr><td>Action</td><td>Preview</td><td>Named side-effecting work and external API calls without automatic retry</td></tr>
+<tr><td>Hosted application</td><td>Available</td><td>Worker-compatible routing, SSR, larger application surfaces, and custom HTTP behavior</td></tr>
+</tbody></table></div>
+<h2 id="available-custom-functions">Available custom functions</h2>
+<p>A current function exports one default <code>handler(input, ctx)</code> and is invoked by slug:</p>
+<pre><code class="language-ts">export default async function handler(input, ctx) {
+  const result = await ctx.db.queryRead(
+    &#39;select id, title from todos where completed = $1 order by created_at desc limit 50&#39;,
+    [false]
+  );
+  return { todos: result.rows };
+}</code></pre>
+<pre><code class="language-js">const { data, error } = await lingcode.functions.invoke(&#39;list-open-todos&#39;, {});
+if (error) throw error;</code></pre>
+<p>Read <a href="/docs/cloud/functions/custom-functions.html">Custom functions</a> for the complete runtime, context, deployment, security, and transaction model. The original <a href="/docs/cloud/functions.html">Functions guide</a> remains available during this documentation migration and includes the built-in catalog.</p>
+<h2 id="preview-programming-model">Preview programming model</h2>
+<p>The preview model makes function intent explicit:</p>
+<ul>
+<li><a href="/docs/cloud/functions/queries.html">Queries</a> read a consistent snapshot and become subscribable.</li>
+<li><a href="/docs/cloud/functions/mutations.html">Mutations</a> group database calls into one serializable transaction.</li>
+<li><a href="/docs/cloud/functions/actions.html">Actions</a> perform external side effects and are not automatically retried.</li>
+<li><a href="/docs/cloud/functions/validation.html">Validation</a> checks public arguments and return values at runtime.</li>
+<li><a href="/docs/cloud/functions/errors.html">Error handling</a> distinguishes expected application errors from developer and platform failures.</li>
+</ul>
+<p>The preview model extends PostgreSQL; it does not remove SQL migrations, RLS, direct CRUD, or REST access.</p>
+<h2 id="functions-and-security">Functions and security</h2>
+<p>Treat every public function as an internet-facing API:</p>
+<ul>
+<li>validate all caller-controlled input;</li>
+<li>read the authenticated identity from context rather than trusting a submitted user ID;</li>
+<li>rely on RLS for database authorization and add application checks for business permissions;</li>
+<li>keep vendor credentials in the Secrets vault;</li>
+<li>bound reads and writes;</li>
+<li>avoid returning secret values, internal stack traces, or rows the caller does not need;</li>
+<li>design side effects to be idempotent when the caller may retry.</li>
+</ul>
+<h2 id="functions-and-transactions">Functions and transactions</h2>
+<p>Current <code>ctx.db.query()</code> calls each use a separate database transaction. If several writes must be atomic today, put them in one reviewed PostgreSQL function and invoke it in one call.</p>
+<p>Preview mutations change this boundary: all of a mutation handler&#39;s database operations execute on one pinned connection in one serializable transaction. This behavior is not available until the Mutations page carries an Available badge.</p>
+<h2 id="functions-and-long-running-work">Functions and long-running work</h2>
+<p>Functions are short-lived request handlers. They are not persistent servers, queues, or unrestricted compute jobs. Choose a hosted Worker-compatible application or compute job for workloads that need a larger execution envelope.</p>
+<p>Continue with <a href="/docs/cloud/functions/custom-functions.html">Custom functions</a> or the <a href="/docs/cloud/hosting.html">Hosting guide</a>.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/concepts/">Previous: Core concepts</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/functions/custom-functions.html">Next: Custom functions</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#choose-the-right-surface">Choose the right surface</a></li><li class="toc-level-2"><a href="#available-custom-functions">Available custom functions</a></li><li class="toc-level-2"><a href="#preview-programming-model">Preview programming model</a></li><li class="toc-level-2"><a href="#functions-and-security">Functions and security</a></li><li class="toc-level-2"><a href="#functions-and-transactions">Functions and transactions</a></li><li class="toc-level-2"><a href="#functions-and-long-running-work">Functions and long-running work</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

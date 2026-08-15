@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hold AI code to a contract — verify any model's output with Quinny</title>
+  <meta name="description" content="Any model can write code fast; whether it meets your spec is a separate question. Quinny compiles your acceptance criteria into a real test suite that gates any implementation — deterministically, in any language, with no LLM judging itself.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/hold-ai-code-to-a-contract-with-quinny.html">
+  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/tutorials/hold-ai-code-to-a-contract-with-quinny.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/hold-ai-code-to-a-contract-with-quinny.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-07-17T00:00:00Z">
+  <meta name="article:published_time" content="2026-07-17T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/hold-ai-code-to-a-contract-with-quinny.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Hold AI code to a contract — verify any model's output with Quinny",
+  "description": "Any model can write code fast; whether it meets your spec is a separate question. Quinny compiles your acceptance criteria into a real test suite that gates any implementation — deterministically, in any language, with no LLM judging itself.",
+  "url": "https://lingcode.dev/tutorials/hold-ai-code-to-a-contract-with-quinny.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-07-17",
+  "dateModified": "2026-07-17",
+  "author": {
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Aurelian Labs Inc.",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/tutorials/hold-ai-code-to-a-contract-with-quinny.html"
+  },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Hold AI code to a contract — verify any model's output with Quinny"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tutorials",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Tips & tricks",
+      "item": "https://lingcode.dev/tutorials.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "Brainstorm before you build",
+      "item": "https://lingcode.dev/tutorials/hold-ai-code-to-a-contract-with-quinny.html"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/zh/tutorials/hold-ai-code-to-a-contract-with-quinny.html">中文</a>
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html">Tips &amp; tricks</a>
+      <span>/</span>
+      <span>Verify AI code with Quinny</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-beginner">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-07-17</span>
+      </div>
+      <h1>Hold AI code to a contract — verify any model&rsquo;s output with Quinny</h1>
+      <p class="intro">Any model can write code fast. Whether it actually meets your spec is a different question &mdash; and re-reading the diff every time doesn&rsquo;t scale. Quinny turns your acceptance criteria into an executable gate that any implementation must pass. The verdict is real tests running real code, not an LLM&rsquo;s opinion of its own work.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>The problem: fast code isn&rsquo;t verified code</h2>
+      <div class="step">
+        <div class="step-num">0</div>
+        <div class="step-body">
+          <p>An AI coding tool will hand you a working-looking implementation in seconds. The gap is that <em>looking</em> right and <em>being</em> right are not the same, and the only person checking is you &mdash; re-reading the diff, hoping you remember every requirement. That doesn&rsquo;t hold up across a real project, and it gets worse when you swap in a cheaper, faster model to save cost.</p>
+          <p>The instinct is to ask the model to check its own work. Don&rsquo;t: a model that confidently wrote a bug will just as confidently tell you it&rsquo;s correct. Verification has to come from somewhere the model can&rsquo;t talk its way past.</p>
+        </div>
+      </div>
+
+      <h2>The idea: write the contract once, gate everything against it</h2>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <p><strong>Quinny is an executable specification language.</strong> You write what &ldquo;correct&rdquo; means &mdash; concrete acceptance criteria &mdash; in a small, reviewable <code>.qn</code> file. That file isn&rsquo;t code that runs; it&rsquo;s a durable contract. Quinny compiles its <code>test</code> criteria into a real test suite and runs that suite against <em>any</em> implementation: written by a human, by Claude, by Cursor, in Python, JavaScript, or Swift.</p>
+          <pre><code>project TodoService
+
+component Store
+    goal
+        In-memory store of todo items.
+    test
+        add("milk") returns an int; adding again
+        returns a different id.
+    test
+        a removed id is no longer listed.</code></pre>
+          <p>Those <code>test</code> lines are the contract. Each one is a precise, checkable promise. The verb Quinny cares about is <strong>verify</strong>, not generate &mdash; it doesn&rsquo;t compete with the model that writes your code, it holds that code to a standard you own.</p>
+        </div>
+      </div>
+
+      <h2>How it works, end to end</h2>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <p>The whole flow is one loop. The contract compiles to a gate; code runs through the gate; anything that fails comes back with the exact expected-vs-got and gets fixed &mdash; keeping only the best version, so it never regresses.</p>
+          <figure class="qn-fig">
+<style>
+.qn-fig{margin:24px 0 10px;}
+.qn-fig .scr{overflow-x:auto;padding-bottom:4px;}
+.qn-fig svg{display:block;width:100%;min-width:660px;height:auto;}
+.qn-fig .lg{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;}
+.qn-fig .k{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:600;}
+.qn-fig .kr{color:#5a45c8;background:#ece8fb;} .qn-fig .kd{color:#0f7d6b;background:#dff2ee;}
+.qn-nb{fill:#fff;stroke:#c9d1dd;stroke-width:1.5;} .qn-nb.acc{stroke:#3f4bd6;stroke-width:2;}
+.qn-nb.rob{stroke:#6a53d1;stroke-width:2;} .qn-nb.gate{fill:#20304a;stroke:none;} .qn-nb.pass{stroke:#12864f;}
+.qn-tt{fill:#141a24;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:660;font-size:16px;}
+.qn-tt.gate{fill:#fff;font-size:17px;}
+.qn-ts{fill:#5a6474;font-family:'Geist Mono',ui-monospace,monospace;font-size:11.5px;} .qn-ts.gate{fill:#fff;opacity:.82;}
+.qn-kick{font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;}
+.qn-e{stroke:#b7c0cf;stroke-width:2;fill:none;} .qn-e.strong{stroke:#8791a4;}
+.qn-e.rob{stroke:#6a53d1;} .qn-e.pass{stroke:#12864f;stroke-width:2.5;} .qn-e.fail{stroke:#c33636;stroke-width:2;stroke-dasharray:6 5;}
+.qn-l{font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;fill:#5a6474;}
+.qn-l.pass{fill:#12864f;font-weight:600;} .qn-l.fail{fill:#c33636;font-weight:600;} .qn-l.faint{fill:#9aa5b4;}
+.qn-cr{fill:#ece8fb;} .qn-cd{fill:#dff2ee;}
+.qn-ct{font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;font-weight:600;} .qn-ct.r{fill:#5a45c8;} .qn-ct.d{fill:#0f7d6b;}
+@media (prefers-color-scheme:dark){
+  .qn-nb{fill:#161c28;stroke:#39445a;} .qn-nb.gate{fill:#dfe6f2;}
+  .qn-tt{fill:#e7ecf5;} .qn-tt.gate{fill:#0c0f16;} .qn-ts{fill:#9aa5b6;} .qn-ts.gate{fill:#0c0f16;}
+  .qn-e{stroke:#39445a;} .qn-e.strong{stroke:#6a7486;}
+  .qn-l{fill:#9aa5b6;} .qn-l.faint{fill:#6a7486;} .qn-cr{fill:#241f3a;} .qn-cd{fill:#0f2620;}
+  .qn-ct.r{fill:#b6a9f8;} .qn-ct.d{fill:#3fcbb0;} .qn-fig .kr{color:#b6a9f8;background:#241f3a;} .qn-fig .kd{color:#3fcbb0;background:#0f2620;}
+}
+</style>
+<div class="scr"><svg viewBox="0 0 980 610" role="img" aria-label="Flowchart: a .qn contract is compiled by an LLM into a test suite; an LLM writes an implementation; a deterministic gate runs the suite against the code; passing code ships, failing code loops back to the LLM with expected-vs-got to fix.">
+  <defs>
+    <marker id="qah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5 1 L9 5 L0.5 9 Z" fill="#8791a4"/></marker>
+    <marker id="qap" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5 1 L9 5 L0.5 9 Z" fill="#12864f"/></marker>
+    <marker id="qaf" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M0.5 1 L9 5 L0.5 9 Z" fill="#c33636"/></marker>
+    <marker id="qar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5 1 L9 5 L0.5 9 Z" fill="#6a53d1"/></marker>
+  </defs>
+  <rect class="qn-nb acc" x="360" y="22" width="260" height="82" rx="14"/>
+  <text class="qn-kick" x="380" y="47" fill="#3f4bd6">you author &middot; once</text>
+  <text class="qn-tt" x="380" y="70">.qn contract</text>
+  <text class="qn-ts" x="380" y="90">components &middot; test / success criteria</text>
+  <line class="qn-e rob" x1="490" y1="104" x2="490" y2="176" marker-end="url(#qar)"/>
+  <rect class="qn-cr" x="506" y="128" width="196" height="24" rx="7"/>
+  <text class="qn-ct r" x="518" y="144">&#129302; LLM writes the suite</text>
+  <rect class="qn-nb" x="360" y="178" width="260" height="72" rx="12"/>
+  <text class="qn-tt" x="380" y="212">test suite</text>
+  <text class="qn-ts" x="380" y="233">pytest / node:test / swiftc &mdash; plain code</text>
+  <line class="qn-e strong" x1="490" y1="250" x2="490" y2="330" marker-end="url(#qah)"/>
+  <rect class="qn-nb rob" x="34" y="332" width="256" height="92" rx="12"/>
+  <text class="qn-kick" x="54" y="358" fill="#6a53d1">&#129302; the model being gated</text>
+  <text class="qn-tt" x="54" y="383">implementation</text>
+  <text class="qn-ts" x="54" y="404">any model &middot; any language &middot; human</text>
+  <line class="qn-e strong" x1="290" y1="366" x2="366" y2="366" marker-end="url(#qah)"/>
+  <text class="qn-l" x="304" y="355">run</text>
+  <rect class="qn-nb gate" x="370" y="330" width="242" height="98" rx="14"/>
+  <text class="qn-tt gate" x="491" y="366" text-anchor="middle">THE GATE</text>
+  <text class="qn-ts gate" x="491" y="389" text-anchor="middle" font-size="13">&#10003; / &#10007;  per criterion</text>
+  <rect class="qn-cd" x="404" y="400" width="176" height="20" rx="6"/>
+  <text class="qn-ct d" x="415" y="414">&#9881;&#65039; runs code &middot; no LLM</text>
+  <line class="qn-e pass" x1="612" y1="366" x2="712" y2="366" marker-end="url(#qap)"/>
+  <text class="qn-l pass" x="632" y="355">PASS &#10003;</text>
+  <rect class="qn-nb pass" x="716" y="332" width="220" height="90" rx="12"/>
+  <text class="qn-kick" x="736" y="358" fill="#12864f">durable outcome</text>
+  <text class="qn-tt" x="736" y="383">reliable &middot; shipped</text>
+  <text class="qn-ts" x="736" y="404">every criterion satisfied</text>
+  <path class="qn-e fail" d="M480 428 L480 512 L160 512 L160 424" marker-end="url(#qaf)"/>
+  <rect class="qn-cr" x="196" y="498" width="332" height="26" rx="8"/>
+  <text class="qn-ct r" x="210" y="515" font-size="11.5">&#129302; FAIL &rarr; expected-vs-got &rarr; LLM fixes (keep-best)</text>
+  <text class="qn-l faint" x="704" y="514">&#8635; repeat until green</text>
+  <text class="qn-l faint" x="490" y="568" text-anchor="middle">the contract is the asset &middot; the model &amp; code are swappable around it</text>
+</svg></div>
+<div class="lg"><span class="k kr">&#129302; LLM call</span><span class="k kd">&#9881;&#65039; deterministic &middot; no model</span></div>
+</figure>
+          <p>The two violet edges are the only places a model is involved: compiling the contract into tests, and writing (or fixing) the code being judged. Everything in between &mdash; the gate itself &mdash; is a plain test run.</p>
+        </div>
+      </div>
+
+      <h2>Where the LLM is, and where it isn&rsquo;t</h2>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <p>This is the part that makes the reliability real. An LLM touches exactly two edges of the flow and never the middle:</p>
+          <ul>
+            <li><strong>Compile</strong> &mdash; a model reads your criteria and writes the test module. Once.</li>
+            <li><strong>Implement / fix</strong> &mdash; the model being gated writes the code, and on a failure rewrites it from the specific reason it failed.</li>
+          </ul>
+          <p>The <strong>gate itself uses no model</strong>. It runs the generated tests as an ordinary subprocess &mdash; <code>pytest</code>, <code>node:test</code>, <code>swiftc</code> &mdash; and pass/fail is deterministic code execution. You can&rsquo;t argue a test suite into a green check; you can only satisfy it.</p>
+          <div class="tip-box">
+            <strong>Freeze it for CI.</strong> Run <code>quinny verify spec.qn ./impl --emit suite.py</code> once, review the generated suite, commit it, then re-run with <code>--suite suite.py</code>. After that the contract is enforced on every commit with <strong>zero model calls</strong> &mdash; a plain, deterministic test file.
+          </div>
+        </div>
+      </div>
+
+      <h2>The verify-loop: how a cheap model gets reliable</h2>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <p>A single pass isn&rsquo;t the point &mdash; the loop is. Implement &rarr; verify &rarr; feed the failures (with expected-vs-got) back &rarr; fix &rarr; repeat, keeping the best-scoring version at every step so the code can never come out worse than it went in. In our benchmarks this takes a weak, cheap model from silently shipping broken builds to reliably passing every criterion &mdash; matching a frontier model&rsquo;s output on the same task, at a fraction of the cost.</p>
+          <div class="warn-box">
+            <strong>The loop is only as good as the contract is complete.</strong> Quinny enforces exactly what your <code>test</code> criteria cover. A thin contract lets bugs through in the behaviors you never gated &mdash; so spend your effort writing criteria that pin down what actually matters. That&rsquo;s the one piece the tool can&rsquo;t do for you, and it&rsquo;s where your leverage is.
+          </div>
+        </div>
+      </div>
+
+      <h2>Where you already have it</h2>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <p>Quinny is open-source (<code>pip install quinny</code>) and ships bundled inside LingCode, so the agent can scaffold a contract and verify against it out of the box &mdash; no separate install. Point it at a folder and it verifies whatever&rsquo;s there; hand it plain English with <code>quinny scaffold</code> and it drafts the contract for you to review. Either way, the model does the fallible creative work and a non-negotiable gate holds it to your spec.</p>
+        </div>
+      </div>
+
+      <h2>What&rsquo;s next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/brainstorm-before-you-build.html" class="tutorial-next-card">
+            <h3>Brainstorm before you build</h3>
+            <p>Clarify scope first &mdash; the requirements you surface become the criteria you gate on</p>
+          </a>
+          <a href="/tutorials/write-an-implementation-plan-with-lingcode.html" class="tutorial-next-card">
+            <h3>Write an implementation plan</h3>
+            <p>Order the work and expose the riskiest step before any code exists</p>
+          </a>
+          <a href="/docs.html" class="tutorial-next-card">
+            <h3>LingCode docs</h3>
+            <p>The full reference for the IDE, CLI, and everything bundled with it</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+
+  <script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+  <script src="/site-chat-widget.js?v=20260731a" defer></script>
+</body>
+</html>

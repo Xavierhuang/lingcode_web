@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Production checklist | LingCode Cloud Docs</title>
+  <meta name="description" content="Prepare a LingCode Cloud application for production security, reliability, performance, observability, backups, deployment, and incident response.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/production/">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/production/">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/production/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/" aria-current="page">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Production checklist</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="production-checklist">Production checklist</h1>
+<p>A backend is production-ready when it protects data, behaves predictably under expected load and failure, can be observed, and has a tested recovery path. A successful demo is not evidence for those properties.</p>
+<h2 id="security">Security</h2>
+<p>Review <a href="/docs/cloud/security/">Security at LingCode Cloud</a> for the platform controls and shared-responsibility boundary. The control plane enforces fail-closed production secrets, password throttling, hashed token lookup for new credentials, and project-scoped token issuance. The staged token migration preserves existing clients with no forced reconnect.</p>
+<ul>
+<li>Enable row-level security on every client-accessible table.</li>
+<li>Test anonymous, signed-in owner, signed-in non-owner, and administrative paths.</li>
+<li>Use <code>WITH CHECK</code> policies for inserted and updated row state.</li>
+<li>Keep vendor credentials in Secrets; never ship them through client code or function results.</li>
+<li>Restrict OAuth redirect origins and external fetch hosts.</li>
+<li>Require MFA for sensitive operator accounts.</li>
+<li>Review function inputs, outputs, logs, and raw HTTP handling for secret leakage.</li>
+<li>Run backend security advisors and resolve high-severity findings.</li>
+</ul>
+<h2 id="data-model-and-performance">Data model and performance</h2>
+<ul>
+<li>Add primary keys and required constraints.</li>
+<li>Index foreign keys and columns used in filters, ordering, RLS, and cursor pagination.</li>
+<li>Use <code>EXPLAIN</code> on critical SQL functions with representative data volume.</li>
+<li>Paginate every collection that can grow.</li>
+<li>Bound batch writes and avoid client-side row-at-a-time loops.</li>
+<li>Move relational joins and aggregation into reviewed SQL functions.</li>
+<li>Add vector and full-text indexes before search tables grow large.</li>
+</ul>
+<h2 id="reliability">Reliability</h2>
+<ul>
+<li>Set application timeouts shorter than user-facing deadlines.</li>
+<li>Make retried writes idempotent with uniqueness or stable request keys.</li>
+<li>Handle expired sessions and network reconnects.</li>
+<li>Treat row Realtime as a notification and refetch after uncertain gaps.</li>
+<li>Keep long-running work out of short serverless functions.</li>
+<li>Verify database, object storage, and deployment backup behavior.</li>
+<li>Perform a restore test rather than assuming a backup file is usable.</li>
+</ul>
+<h2 id="observability">Observability</h2>
+<ul>
+<li>Emit useful function logs without tokens or secret values.</li>
+<li>Preserve request IDs in unexpected-error UI and support reports.</li>
+<li>Monitor request rate, errors, latency, PostgreSQL pool pressure, slow queries, storage, and quota pressure.</li>
+<li>Create alerts for sustained failures and capacity risk, not every isolated error.</li>
+<li>Correlate a release or backend deployment with changes in errors and latency.</li>
+</ul>
+<h2 id="deployment">Deployment</h2>
+<ul>
+<li>Keep schema and function source under backend-as-code.</li>
+<li>Preview production changes and review every warning.</li>
+<li>Use expand-and-contract for incompatible schema transitions.</li>
+<li>Back up before destructive or high-risk data work.</li>
+<li>Deploy backend compatibility before application code depends on it.</li>
+<li>Smoke-test authentication, critical reads and writes, functions, storage, and domains.</li>
+<li>Verify <code>backend_source_status</code> against expected hashes.</li>
+</ul>
+<h2 id="privacy-and-retention">Privacy and retention</h2>
+<ul>
+<li>Collect only data the product needs.</li>
+<li>Document retention for application rows, auth records, files, logs, and telemetry.</li>
+<li>Provide deletion behavior that covers related database and storage records.</li>
+<li>Avoid putting sensitive request bodies into analytics or unbounded logs.</li>
+<li>Understand any regulatory or residency obligations for your application.</li>
+</ul>
+<h2 id="capacity-and-limits">Capacity and limits</h2>
+<p>Review <a href="/docs/cloud/limits.html">Limits and quotas</a> for the effective plan. Design pagination, uploads, functions, email, workers, schedules, and compute jobs for those ceilings. A quota response should become a clear operator or user action, not a generic crash.</p>
+<h2 id="release-gate">Release gate</h2>
+<p>Before broad release, write down:</p>
+<ol>
+<li>the rollback decision and owner;</li>
+<li>the health signals watched after deploy;</li>
+<li>the recovery time and data-loss expectations;</li>
+<li>the latest verified backup and restore result;</li>
+<li>the support path for a user-facing incident.</li>
+</ol>
+<p>Continue with <a href="/docs/cloud/production/reliability.html">Reliability</a> and <a href="/docs/cloud/production/observability.html">Observability</a>.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/security/">Previous: Security</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/production/reliability.html">Next: Reliability</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#security">Security</a></li><li class="toc-level-2"><a href="#data-model-and-performance">Data model and performance</a></li><li class="toc-level-2"><a href="#reliability">Reliability</a></li><li class="toc-level-2"><a href="#observability">Observability</a></li><li class="toc-level-2"><a href="#deployment">Deployment</a></li><li class="toc-level-2"><a href="#privacy-and-retention">Privacy and retention</a></li><li class="toc-level-2"><a href="#capacity-and-limits">Capacity and limits</a></li><li class="toc-level-2"><a href="#release-gate">Release gate</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

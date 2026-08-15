@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LingCode — The AI IDE for iPhone Development</title>
+<meta name="description" content="LingCode writes real Swift, real SwiftUI, real Xcode projects. Claude edits your files, runs builds, fixes errors, and pushes to TestFlight. The IDE that ships your iPhone app.">
+<meta property="og:title" content="LingCode — The AI IDE for iPhone Development">
+<meta property="og:description" content="The IDE that ships your iPhone app. Claude codes, you ship.">
+<meta property="og:image" content="https://lingcode.dev/og-image.png">
+<meta property="og:url" content="https://lingcode.dev/intro">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background:#0D0B14; color:#fff; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; line-height:1.5; overflow-x:hidden; }
+  a { color:inherit; text-decoration:none; }
+
+  /* NAV */
+  nav { position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:60px;background:rgba(13,11,20,.85);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(168,85,247,.12); }
+  .nav-logo { font-weight:800;font-size:17px;letter-spacing:-.02em; }
+  .nav-logo em { font-style:italic;color:#A855F7; }
+  .nav-links { display:flex;gap:28px;font-size:14px;color:#8B829F; }
+  .nav-links a:hover { color:#fff; }
+  .nav-cta { background:linear-gradient(90deg,#A855F7,#C026D3);color:#fff;font-size:13px;font-weight:600;padding:7px 18px;border-radius:8px;box-shadow:0 4px 16px rgba(168,85,247,.3); }
+
+  /* SHARED */
+  .container { max-width:1100px;margin:0 auto;padding:0 40px; }
+  .eyebrow { font-family:'Courier New',monospace;font-size:11px;letter-spacing:.12em;color:#A855F7;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px; }
+  .eyebrow::before { content:'';width:6px;height:6px;border-radius:50%;background:#A855F7;box-shadow:0 0 8px #A855F7;flex-shrink:0; }
+  .ec { justify-content:center; }
+  .grad { background:linear-gradient(90deg,#A855F7,#C026D3,#F472B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+
+  /* HERO */
+  .hero { min-height:100vh;display:flex;align-items:center;padding:120px 0 80px;background:radial-gradient(ellipse 90% 60% at 50% -5%,rgba(168,85,247,.2) 0%,transparent 65%),radial-gradient(ellipse 40% 50% at 85% 70%,rgba(192,38,211,.1) 0%,transparent 55%),linear-gradient(160deg,#0D0B14 0%,#130F35 55%,#1A0F2E 100%); }
+  .hero-inner { display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:center; }
+  .hero h1 { font-size:clamp(38px,5.5vw,64px);font-weight:800;line-height:1.04;letter-spacing:-.03em;margin-bottom:22px; }
+  .hero-sub { font-size:17px;color:#8B829F;line-height:1.65;margin-bottom:36px; }
+  .hero-sub strong { color:#C8C0D8;font-weight:500; }
+  .hero-btns { display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px; }
+  .btn-primary { background:linear-gradient(90deg,#A855F7,#C026D3);color:#fff;font-size:15px;font-weight:700;padding:13px 28px;border-radius:10px;box-shadow:0 6px 24px rgba(168,85,247,.38);letter-spacing:-.01em;display:inline-flex;align-items:center;gap:8px; }
+  .btn-outline { border:1px solid rgba(168,85,247,.35);color:#A855F7;font-size:15px;font-weight:500;padding:13px 24px;border-radius:10px; }
+  .hero-hint { font-size:12px;color:#4B4668;font-family:'Courier New',monospace;letter-spacing:.04em; }
+
+  /* IDE PREVIEW */
+  .ide-preview { border-radius:16px;background:#0B0A12;border:1px solid rgba(168,85,247,.2);box-shadow:0 0 60px rgba(168,85,247,.12),0 40px 80px rgba(0,0,0,.6);overflow:hidden; }
+  .ide-titlebar { background:#14121E;padding:10px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(168,85,247,.1); }
+  .dot { width:10px;height:10px;border-radius:50%; }
+  .dr{background:#FF5F57;}.dy{background:#FEBC2E;}.dg{background:#28C840;}
+  .ide-title { font-size:11px;color:#4B4668;margin-left:8px;font-family:'Courier New',monospace; }
+  .ide-body { display:grid;grid-template-columns:130px 1fr;min-height:280px; }
+  .ide-sidebar { background:#0D0B18;padding:12px 0;border-right:1px solid rgba(168,85,247,.08); }
+  .si { padding:4px 12px;font-size:10px;color:#4B4668;font-family:'Courier New',monospace;display:flex;align-items:center;gap:6px; }
+  .si.on { color:#C8C0D8;background:rgba(168,85,247,.08); }
+  .si.on::before { content:'▸';color:#A855F7; }
+  .ide-main { display:grid;grid-template-rows:1fr auto; }
+  .code-area { padding:14px;border-bottom:1px solid rgba(168,85,247,.08); }
+  .cl { font-family:'Courier New',monospace;font-size:10.5px;line-height:1.75; }
+  .cp{color:#C792EA;}.cb{color:#82AAFF;}.cg{color:#C3E88D;}.co{color:#F78C6C;}.cd{color:#4B4668;}
+  .claude-panel { padding:12px 14px;background:rgba(168,85,247,.04); }
+  .clabel { font-size:9px;font-family:'Courier New',monospace;color:#A855F7;letter-spacing:.1em;font-weight:700;margin-bottom:6px; }
+  .cmsg { font-size:11px;color:#C8C0D8;line-height:1.55; }
+  .cact { margin-top:6px;font-size:10px;color:#5D5475;font-family:'Courier New',monospace; }
+  .cact span{color:#22C55E;}
+
+  /* STATS */
+  .stats { border-top:1px solid rgba(168,85,247,.1);border-bottom:1px solid rgba(168,85,247,.1);background:rgba(168,85,247,.03);padding:32px 0; }
+  .stats-inner { display:grid;grid-template-columns:repeat(5,1fr); }
+  .stat { text-align:center;padding:0 16px;border-right:1px solid rgba(168,85,247,.08); }
+  .stat:last-child { border-right:none; }
+  .stat-num { font-size:28px;font-weight:800;letter-spacing:-.03em;line-height:1;font-style:italic; }
+  .stat-label { font-size:10px;color:#5D5475;font-family:'Courier New',monospace;letter-spacing:.06em;margin-top:5px;text-transform:uppercase; }
+
+  /* SECTIONS */
+  section { padding:100px 0; }
+  .sh { text-align:center;margin-bottom:56px; }
+  .sh h2 { font-size:clamp(28px,3.8vw,46px);font-weight:800;letter-spacing:-.03em;margin-bottom:14px;line-height:1.08; }
+  .sh p { font-size:16px;color:#5D5475;max-width:500px;margin:0 auto;line-height:1.65; }
+
+  /* COMPARE */
+  .compare { background:linear-gradient(180deg,#0D0B14 0%,#0F0D20 100%); }
+  .compare-grid { display:grid;grid-template-columns:1fr 1fr;gap:20px; }
+  .cc { border-radius:14px;padding:28px; }
+  .bad { background:rgba(220,38,38,.04);border:1px solid rgba(220,38,38,.15); }
+  .good { background:rgba(168,85,247,.05);border:1px solid rgba(168,85,247,.25); }
+  .ct { font-size:12px;font-family:'Courier New',monospace;letter-spacing:.1em;margin-bottom:16px; }
+  .bad .ct{color:#DC2626;}.good .ct{color:#A855F7;}
+  .ci { display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#8B829F;margin-bottom:10px;line-height:1.4; }
+  .bad .ci::before{content:'✕';color:#DC2626;font-size:13px;flex-shrink:0;margin-top:1px;}
+  .good .ci::before{content:'✓';color:#22C55E;font-size:13px;flex-shrink:0;margin-top:1px;}
+  .good .ci{color:#C8C0D8;}
+  .cq { margin-top:20px;padding:14px;border-radius:10px;background:rgba(0,0,0,.2);font-size:13px;color:#5D5475;font-style:italic;line-height:1.5;border-left:3px solid rgba(168,85,247,.3); }
+  .good .cq{color:#8B829F;}
+
+  /* PRODUCTS */
+  .products { background:linear-gradient(180deg,#0F0D20 0%,#0D0B14 100%); }
+  .product-cards { display:grid;grid-template-columns:repeat(3,1fr);gap:20px; }
+  .pc { background:rgba(255,255,255,.025);border:1px solid rgba(168,85,247,.1);border-radius:16px;padding:28px;transition:border-color .2s,transform .2s; }
+  .pc:hover{border-color:rgba(168,85,247,.3);transform:translateY(-3px);}
+  .pc.feat{border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.06);}
+  .fbadge { font-size:9px;font-family:'Courier New',monospace;letter-spacing:.1em;color:#A855F7;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:6px; }
+  .fbadge::before{content:'★';}
+  .pc h3{font-size:18px;font-weight:700;margin-bottom:8px;margin-top:10px;}
+  .pc p{font-size:14px;color:#5D5475;line-height:1.6;margin-bottom:16px;}
+  .pb{list-style:none;}
+  .pb li{font-size:13px;color:#8B829F;padding:3px 0;display:flex;gap:8px;align-items:flex-start;}
+  .pb li::before{content:'→';color:#A855F7;flex-shrink:0;}
+
+  /* PRICING */
+  .pricing { background:linear-gradient(180deg,#0D0B14 0%,#100E22 100%); }
+  .pricing-cards { display:grid;grid-template-columns:repeat(3,1fr);gap:20px; }
+  .price-card { background:rgba(255,255,255,.025);border:1px solid rgba(168,85,247,.1);border-radius:16px;padding:28px;transition:border-color .2s; }
+  .price-card.pop { border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.06);position:relative; }
+  .pop-badge { position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,#A855F7,#C026D3);color:#fff;font-size:10px;font-weight:700;padding:3px 14px;border-radius:20px;letter-spacing:.06em;white-space:nowrap; }
+  .price-tier { font-size:12px;font-family:'Courier New',monospace;letter-spacing:.1em;color:#5D5475;text-transform:uppercase;margin-bottom:8px; }
+  .price-amount { font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1;margin-bottom:4px; }
+  .price-amount span { font-size:16px;font-weight:400;color:#5D5475; }
+  .price-desc { font-size:13px;color:#5D5475;margin-bottom:24px;line-height:1.5; }
+  .price-btn { display:block;text-align:center;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:24px;transition:opacity .15s; }
+  .price-btn:hover{opacity:.85;}
+  .price-card.pop .price-btn { background:linear-gradient(90deg,#A855F7,#C026D3);color:#fff;box-shadow:0 4px 16px rgba(168,85,247,.35); }
+  .price-card:not(.pop) .price-btn { border:1px solid rgba(168,85,247,.3);color:#A855F7; }
+  .price-features { list-style:none; }
+  .price-features li { font-size:13px;color:#8B829F;padding:5px 0;border-bottom:1px solid rgba(168,85,247,.06);display:flex;gap:8px;align-items:flex-start; }
+  .price-features li::before { content:'✓';color:#22C55E;flex-shrink:0;font-size:12px; }
+  .price-features li:last-child{border-bottom:none;}
+  .pricing-link { text-align:center;margin-top:28px;font-size:14px;color:#5D5475; }
+  .pricing-link a { color:#A855F7;border-bottom:1px solid rgba(168,85,247,.3); }
+
+  /* POWERS */
+  .powers { background:linear-gradient(180deg,#100E22 0%,#0D0B14 100%); }
+  .power-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:20px; }
+  .power-item { padding:28px;border-radius:14px;background:rgba(255,255,255,.02);border:1px solid rgba(168,85,247,.08); }
+  .pnum { font-size:10px;font-family:'Courier New',monospace;color:#A855F7;letter-spacing:.1em;margin-bottom:14px; }
+  .power-item h3{font-size:17px;font-weight:700;margin-bottom:10px;line-height:1.3;}
+  .power-item p{font-size:14px;color:#5D5475;line-height:1.65;}
+
+  /* CTA */
+  .cta-section { text-align:center;padding:120px 0;background:radial-gradient(ellipse 60% 70% at 50% 100%,rgba(168,85,247,.15) 0%,transparent 70%),linear-gradient(180deg,#0D0B14 0%,#0A0817 100%); }
+  .cta-section h2{font-size:clamp(32px,4.5vw,58px);font-weight:800;letter-spacing:-.03em;margin-bottom:16px;line-height:1.06;}
+  .cta-section p{font-size:16px;color:#5D5475;margin-bottom:40px;}
+  .cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+  .free-note{font-size:11px;color:#4B4668;font-family:'Courier New',monospace;margin-top:22px;letter-spacing:.05em;}
+
+  /* FOOTER */
+  footer { border-top:1px solid rgba(168,85,247,.08);padding:40px;text-align:center;font-size:13px;color:#4B4668;background:#08070A; }
+  footer .links{display:flex;justify-content:center;gap:24px;margin-bottom:16px;flex-wrap:wrap;}
+  footer a{color:#5D5475;}
+  footer a:hover{color:#A855F7;}
+
+  /* MOBILE RESPONSIVE */
+  @media (max-width: 900px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .container { padding: 0 20px; }
+    .hero { padding: 90px 0 60px; min-height: auto; }
+    .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+    .ide-preview { order: -1; }
+    .ide-body { grid-template-columns: 1fr; }
+    .ide-sidebar { display: none; }
+    .hero h1 { font-size: clamp(32px, 8vw, 48px); }
+    .hero-sub { font-size: 15px; }
+    .btn-primary, .btn-outline { font-size: 14px; padding: 11px 20px; }
+    .stats-inner { grid-template-columns: repeat(3,1fr); gap: 0; }
+    .stat:nth-child(4), .stat:nth-child(5) { display: none; }
+    section { padding: 70px 0; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .product-cards { grid-template-columns: 1fr; }
+    .pricing-cards { grid-template-columns: 1fr; }
+    .power-grid { grid-template-columns: 1fr; }
+    .sh h2 { font-size: clamp(24px, 6vw, 36px); }
+    .cta-section { padding: 80px 0; }
+    .cta-section h2 { font-size: clamp(28px, 7vw, 42px); }
+    .cta-btns { flex-direction: column; align-items: center; }
+    .cta-btns a { width: 100%; max-width: 320px; justify-content: center; }
+  }
+  @media (max-width: 520px) {
+    nav { padding: 0 16px; }
+    .container { padding: 0 16px; }
+    .hero-btns { flex-direction: column; }
+    .hero-btns a { justify-content: center; text-align: center; }
+    .stats-inner { grid-template-columns: repeat(2,1fr); }
+    .stat:nth-child(3) { display: none; }
+    .price-card.pop { margin-top: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Ling<em>Code</em></div>
+  <div class="nav-links">
+    <a href="/features.html">Features</a>
+    <a href="/ios.html">iOS</a>
+    <a href="/pricing.html">Pricing</a>
+    <a href="/docs.html">Docs</a>
+  </div>
+  <a href="/LingCode-Installer.dmg" class="nav-cta">Download free</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow">Made for iOS developers</div>
+        <h1>The IDE that ships<br>your <span class="grad">iPhone app.</span></h1>
+        <p class="hero-sub">
+          LingCode writes real <strong>Swift</strong>, real <strong>SwiftUI</strong>, real Xcode projects —
+          the way Apple intended. Claude edits your files, runs builds, fixes errors,
+          and pushes to <strong>TestFlight</strong>. No copy-paste. No context switching.
+        </p>
+        <div class="hero-btns">
+          <a href="/LingCode-Installer.dmg" class="btn-primary">⬇ Download for Mac — Free</a>
+          <a href="/try" class="btn-outline">Try in browser →</a>
+        </div>
+        <p class="hero-hint">macOS 14+ · Apple Silicon &amp; Intel · Zero telemetry · Free</p>
+      </div>
+      <div class="ide-preview">
+        <div class="ide-titlebar">
+          <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+          <div class="ide-title">RunTracker — ContentView.swift</div>
+        </div>
+        <div class="ide-body">
+          <div class="ide-sidebar">
+            <div class="si" style="color:#5D5475;font-size:9px;letter-spacing:.06em;padding-bottom:8px;">RUNTRACKER</div>
+            <div class="si on">ContentView.swift</div>
+            <div class="si">PaceTracker.swift</div>
+            <div class="si">MapView.swift</div>
+            <div class="si">HapticManager.swift</div>
+            <div class="si" style="margin-top:8px;color:#5D5475;font-size:9px;letter-spacing:.06em;">RESOURCES</div>
+            <div class="si">Assets.xcassets</div>
+            <div class="si">Info.plist</div>
+          </div>
+          <div class="ide-main">
+            <div class="code-area">
+              <div class="cl"><span class="cp">import</span> <span class="cb">SwiftUI</span></div>
+              <div class="cl"><span class="cp">import</span> <span class="cb">MapKit</span></div>
+              <div class="cl">&nbsp;</div>
+              <div class="cl"><span class="cp">struct</span> <span class="cb">ContentView</span>: <span class="cb">View</span> {</div>
+              <div class="cl">&nbsp;&nbsp;<span class="cp">@StateObject</span> <span class="cp">var</span> tracker = <span class="cb">PaceTracker</span>()</div>
+              <div class="cl">&nbsp;&nbsp;<span class="cp">@State</span> <span class="cp">var</span> isRunning = <span class="co">false</span></div>
+              <div class="cl">&nbsp;&nbsp;<span class="cp">var</span> body: some <span class="cb">View</span> {</div>
+              <div class="cl">&nbsp;&nbsp;&nbsp;&nbsp;<span class="cb">NavigationStack</span> { <span class="cb">PaceView</span>(tracker: tracker) }</div>
+              <div class="cl">&nbsp;&nbsp;}</div>
+              <div class="cl">}</div>
+            </div>
+            <div class="claude-panel">
+              <div class="clabel">CLAUDE</div>
+              <div class="cmsg">Added haptic feedback when you beat your pace record. Push a build to TestFlight?</div>
+              <div class="cact"><span>✓</span> HapticManager.swift created &nbsp; <span>✓</span> CoreHaptics entitlement added</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="container">
+    <div class="stats-inner">
+      <div class="stat"><div class="stat-num grad">4×</div><div class="stat-label">AI engines built in</div></div>
+      <div class="stat"><div class="stat-num grad">60+</div><div class="stat-label">Native Swift tools</div></div>
+      <div class="stat"><div class="stat-num grad">3</div><div class="stat-label">Web · CLI · IDE</div></div>
+      <div class="stat"><div class="stat-num grad">120fps</div><div class="stat-label">Native Metal</div></div>
+      <div class="stat"><div class="stat-num grad">0%</div><div class="stat-label">Telemetry</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARE -->
+<section class="compare">
+  <div class="container">
+    <div class="sh">
+      <div class="eyebrow ec">The difference</div>
+      <h2>Real native apps.<br><span class="grad">Not vibe-coded React.</span></h2>
+      <p>Most AI builders ship dressed-up web apps and call them apps. That works until you try to put it on a phone.</p>
+    </div>
+    <div class="compare-grid">
+      <div class="cc bad">
+        <div class="ct">✕ What others build</div>
+        <div class="ci">A website wrapped in a WebView</div>
+        <div class="ci">No Swift, no SwiftUI, no Xcode project</div>
+        <div class="ci">Can't submit to the App Store as-is</div>
+        <div class="ci">No TestFlight, no real device testing</div>
+        <div class="ci">Breaks on iOS APIs and native gestures</div>
+        <div class="cq">"Works until you try to put it on a phone."</div>
+      </div>
+      <div class="cc good">
+        <div class="ct">✓ What LingCode builds</div>
+        <div class="ci">Real Swift &amp; SwiftUI — hand-written quality</div>
+        <div class="ci">Real Xcode project, ready to open</div>
+        <div class="ci">One-click TestFlight push from the menu bar</div>
+        <div class="ci">App Store submission, no rework needed</div>
+        <div class="ci">An actual icon on your home screen</div>
+        <div class="cq">Built for founders who want to ship. For developers who want a real tool.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCT FAMILY -->
+<section class="products">
+  <div class="container">
+    <div class="sh">
+      <div class="eyebrow ec">Choose your setup</div>
+      <h2>One family. <span class="grad">Every workflow.</span></h2>
+      <p>LingCode ships as a full Mac IDE, a lightweight Baby app, and a terminal CLI — all powered by Claude.</p>
+    </div>
+    <div class="product-cards">
+      <div class="pc feat">
+        <div class="fbadge">Best for iOS dev</div>
+        <div style="font-size:26px;">🖥️</div>
+        <h3>LingCode for Mac</h3>
+        <p>Full AI IDE. Claude reads your whole project, edits code, runs the Simulator, and pushes to TestFlight — without leaving one window.</p>
+        <ul class="pb">
+          <li>Built-in iPhone Simulator</li>
+          <li>One-click TestFlight &amp; App Store push</li>
+          <li>Reads your whole Xcode project</li>
+          <li>Magic Deploy, Push, Install</li>
+        </ul>
+      </div>
+      <div class="pc">
+        <div style="font-size:26px;margin-top:24px;">✦</div>
+        <h3>LingCode Baby</h3>
+        <p>Lightweight Mac chat app for quick questions and iteration. Voice mode included — say "Hey Ling" to start.</p>
+        <ul class="pb">
+          <li>Hands-free voice mode</li>
+          <li>Claude, DeepSeek, 13+ providers</li>
+          <li>Works on Windows &amp; Linux too</li>
+        </ul>
+      </div>
+      <div class="pc">
+        <div style="font-size:26px;margin-top:24px;">⌨️</div>
+        <h3>lingcode CLI</h3>
+        <p>Terminal-native agent. Pair-program from zsh against your real Xcode project — runs tests, fixes build errors, opens PRs.</p>
+        <ul class="pb">
+          <li>No migration, no lock-in</li>
+          <li>Reads your existing Xcode project</li>
+          <li>Fully scriptable</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing">
+  <div class="container">
+    <div class="sh">
+      <div class="eyebrow ec">Pricing</div>
+      <h2>Free to start. <span class="grad">Pay when you ship.</span></h2>
+      <p>Use any of 16 AI providers — or bring your own key. LingModel managed inference scales with your plan.</p>
+    </div>
+    <div class="pricing-cards">
+      <div class="price-card">
+        <div class="price-tier">Free</div>
+        <div class="price-amount">$0 <span>/ forever</span></div>
+        <div class="price-desc">No card required. Try the whole product.</div>
+        <a href="/pricing.html#free" class="price-btn">Start free →</a>
+        <ul class="price-features">
+          <li>Mac IDE, CLI, iPad app, web playground</li>
+          <li>16 AI providers — bring your own key</li>
+          <li>LingModel — 100 free prompts (one-time)</li>
+          <li>MCP servers, plugins, sub-agents</li>
+          <li>Cloud backend storage — 500 MB</li>
+        </ul>
+      </div>
+      <div class="price-card pop">
+        <div class="pop-badge">MOST POPULAR</div>
+        <div class="price-tier">Pro</div>
+        <div class="price-amount">$20 <span>/ month</span></div>
+        <div class="price-desc">Ship every day. Unlimited LingModel prompts.</div>
+        <a href="/pricing.html#pro" class="price-btn">Get Pro →</a>
+        <ul class="price-features">
+          <li>Everything in Free</li>
+          <li>LingModel — unlimited prompts</li>
+          <li>Deep Agent (server-side Agent SDK)</li>
+          <li>Cloud backend storage — 5 GB</li>
+          <li>Email support, 48h response</li>
+        </ul>
+      </div>
+      <div class="price-card">
+        <div class="price-tier">Max Pro</div>
+        <div class="price-amount">$200 <span>/ month</span></div>
+        <div class="price-desc">For heavy daily use. 5× higher token throughput.</div>
+        <a href="/pricing.html#max-pro" class="price-btn">Get Max Pro →</a>
+        <ul class="price-features">
+          <li>Everything in Pro</li>
+          <li>LingModel — 5× token throughput</li>
+          <li>Priority inference queue</li>
+          <li>Cloud backend storage — 20 GB</li>
+          <li>Priority email support, 24h response</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pricing-link">
+      Full feature comparison on the <a href="/pricing.html">pricing page →</a>
+    </div>
+  </div>
+</section>
+
+<!-- POWERS -->
+<section class="powers">
+  <div class="container">
+    <div class="sh">
+      <div class="eyebrow ec">Under the hood</div>
+      <h2>Not a copilot. <span class="grad">A co-developer.</span></h2>
+      <p>Other tools suggest. LingCode acts — reads your project, makes the change, waits for your review.</p>
+    </div>
+    <div class="power-grid">
+      <div class="power-item">
+        <div class="pnum">01 — FULL TOOL USE</div>
+        <h3>Claude reads and writes your files</h3>
+        <p>60+ native Swift tools. Claude opens files, edits code, runs shell commands, checks build output, and loops until the error is gone.</p>
+      </div>
+      <div class="power-item">
+        <div class="pnum">02 — AI SAFETY</div>
+        <h3>Edits that can't wreck your project</h3>
+        <p>Every edit is captured, diffed, and rewindable. Before touching Info.plist or entitlements, LingCode snapshots them — so the agent can be aggressive without you losing sleep.</p>
+      </div>
+      <div class="power-item">
+        <div class="pnum">03 — INFERENCE LAYER</div>
+        <h3>Up to 10× lower cost per build</h3>
+        <p>LingCode routes across Claude, Codex, Gemini CLI, DeepSeek, and Kimi — picking the cheapest model that meets quality, benchmarked on every release.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <div class="eyebrow ec">Ready to ship?</div>
+    <h2>Your iPhone app.<br><span class="grad">Prompt to App Store.</span></h2>
+    <p>Free forever for personal use. No account required to start.</p>
+    <div class="cta-btns">
+      <a href="/LingCode-Installer.dmg" class="btn-primary" style="font-size:16px;padding:15px 32px;">⬇ Download for Mac — Free</a>
+      <a href="/try" class="btn-outline" style="font-size:16px;padding:15px 28px;">Try in browser →</a>
+    </div>
+    <p class="free-note">macOS 14+ · Apple Silicon &amp; Intel · 120fps Native Metal · Zero telemetry</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="links">
+    <a href="/">Home</a>
+    <a href="/features.html">Features</a>
+    <a href="/ios.html">iOS</a>
+    <a href="/pricing.html">Pricing</a>
+    <a href="/baby.html">Baby</a>
+    <a href="/docs.html">Docs</a>
+    <a href="/try">Try</a>
+    <a href="/manifesto.html">Manifesto</a>
+  </div>
+  © 2026 LingCode · <a href="https://lingcode.dev">lingcode.dev</a>
+</footer>
+
+</body>
+</html>

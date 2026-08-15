@@ -90,7 +90,7 @@ function assemble({ htmlBlocks, cssBlocks, jsBlocks }) {
   return `<!doctype html>
 <html><head><meta charset="utf-8"><title>Preview</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; margin: 16px; }
+  body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 16px; }
 ${css}
 </style>
 </head>
@@ -864,7 +864,7 @@ function ensureCompareCSS() {
       border-color: rgba(0,208,132,0.35);
     }
     .try-preview-file-tab.try-preview-file-zip {
-      font-family: 'Geist', sans-serif;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
       color: var(--signal);
       border-color: rgba(0,208,132,0.35);
     }
@@ -872,7 +872,7 @@ function ensureCompareCSS() {
       background: rgba(0,208,132,0.22); border-color: rgba(0,208,132,0.55);
     }
     .try-preview-file-tab.try-preview-file-nav {
-      font-family: 'Geist', sans-serif; font-size: 0.875rem;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 0.875rem;
       padding: 4px 8px; min-width: 28px;
     }
     .try-preview-file-tab.try-preview-file-nav:disabled {

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Function error handling | LingCode Cloud Docs</title>
+  <meta name="description" content="Preview the function error taxonomy, safe production redaction, retry boundaries, request identifiers, logging, and client handling patterns.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/functions/errors.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/functions/errors.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/functions/errors.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html" aria-current="page">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Function error handling</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-preview">Preview</span><span>Updated 2026-08-09</span></div>
+      <div class="cloud-docs-preview-warning" role="note"><strong>Preview:</strong> This documentation describes an API that is not generally available yet. Its contract may change before release.</div>
+      <h1 id="function-error-handling">Function error handling</h1>
+<p>Useful function errors tell an application what it can do next without leaking implementation details. LingCode distinguishes expected application errors, validation errors, developer errors, resource-limit errors, and platform errors.</p>
+<h2 id="error-categories">Error categories</h2>
+<div class="cloud-docs-table-wrap"><table><thead><tr><th>Category</th><th>Example</th><th>Client behavior</th><th>Retry</th></tr></thead><tbody>
+<tr><td>Application error</td><td>Room is archived</td><td>Show the safe message or branch on code</td><td>Only after user state changes</td></tr>
+<tr><td>Validation error</td><td><code>body</code> exceeds 10,000 characters</td><td>Fix the request</td><td>No</td></tr>
+<tr><td>Authorization error</td><td>User cannot edit this project</td><td>Sign in or remove the action</td><td>No</td></tr>
+<tr><td>Developer error</td><td>Accessing a missing property</td><td>Show a generic failure; inspect logs</td><td>No automatic retry</td></tr>
+<tr><td>Resource limit</td><td>Query scanned too much data</td><td>Change query/index/pagination</td><td>No</td></tr>
+<tr><td>Transaction conflict</td><td>PostgreSQL <code>40001</code></td><td>Platform retries a mutation within budget</td><td>Automatic for mutations only</td></tr>
+<tr><td>Platform error</td><td>Temporary internal connection failure</td><td>Retry according to response policy</td><td>Platform or bounded client retry</td></tr>
+</tbody></table></div>
+<h2 id="application-errors">Application errors</h2>
+<p>Throw a structured application error for a condition the UI is expected to handle:</p>
+<pre><code class="language-ts">throw new LingCodeError(&#39;room_archived&#39;, {
+  message: &#39;This room no longer accepts messages.&#39;,
+  roomId: args.roomId,
+});</code></pre>
+<p>Codes are stable API. Messages are user-facing copy and may change or be localized. Data must contain only values safe for the caller.</p>
+<h2 id="developer-errors">Developer errors</h2>
+<p>A bug, invalid return value, unexpected database result, or uncaught exception is a developer error. Development environments may return a useful stack trace to an authorized developer.</p>
+<p>In production, developer errors are redacted to a generic server error with a request identifier. Full function name, stack, duration, attempt count, and database error metadata remain in protected logs.</p>
+<h2 id="actions-and-ambiguous-failure">Actions and ambiguous failure</h2>
+<p>An action may complete an external side effect and lose the response. Because the outcome is ambiguous, actions are not automatically retried. Use a durable workflow record and vendor idempotency key so reconciliation can determine the actual result.</p>
+<h2 id="mutations-and-retry">Mutations and retry</h2>
+<p>Mutations retry only serialization and deadlock errors because their transaction has not committed. Every attempt starts from a new snapshot. The platform stops after three total attempts and returns the final safe error.</p>
+<p>Customer exceptions, validation failures, RLS denials, timeouts, and explicit application errors are not retryable transaction conflicts.</p>
+<h2 id="client-handling">Client handling</h2>
+<pre><code class="language-tsx">try {
+  await sendMessage({ roomId, body });
+} catch (error) {
+  if (isLingCodeError(error, &#39;room_archived&#39;)) {
+    showArchivedState();
+  } else {
+    showUnexpectedError(error.requestId);
+  }
+}</code></pre>
+<p>Do not branch on English error text. Use a documented code and retain the request identifier in bug reports.</p>
+<h2 id="logging">Logging</h2>
+<p>Logs should include request ID, backend, function, kind, outcome, duration, attempt count, conflict count, and safe structured fields. They must not include access tokens, anon keys, secret values, full private request bodies, or unrestricted vendor responses.</p>
+<p>Metrics use low-cardinality labels such as function kind and outcome. Backend IDs, user IDs, and function slugs belong in logs and traces, not Prometheus label values.</p>
+<h2 id="current-behavior">Current behavior</h2>
+<p>Current custom functions return <code>function_error</code> for handler failures, <code>functions_runtime_unavailable</code> when Deno cannot run, and a timeout message when the wall-clock limit terminates the subprocess. The Preview Python runtime adds <code>python_runtime_unavailable</code> (HTTP 503, when firejail or <code>python3</code> is missing from the API host) and <code>python_runtime_not_enabled</code> (HTTP 403, when the backend has not been enrolled in the Preview). Consult <a href="/docs/cloud/functions/custom-functions.html">Custom functions</a> for available behavior while this error contract remains Preview.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/functions/validation.html">Previous: Validation · Preview</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/deployments/">Next: Deployment overview</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#error-categories">Error categories</a></li><li class="toc-level-2"><a href="#application-errors">Application errors</a></li><li class="toc-level-2"><a href="#developer-errors">Developer errors</a></li><li class="toc-level-2"><a href="#actions-and-ambiguous-failure">Actions and ambiguous failure</a></li><li class="toc-level-2"><a href="#mutations-and-retry">Mutations and retry</a></li><li class="toc-level-2"><a href="#client-handling">Client handling</a></li><li class="toc-level-2"><a href="#logging">Logging</a></li><li class="toc-level-2"><a href="#current-behavior">Current behavior</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

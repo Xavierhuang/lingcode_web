@@ -90,7 +90,7 @@ function openCommentThread(selector, anchorRect, iframeEl) {
     'max-height:420px',
     'overflow-y:auto',
     'padding:12px',
-    'font-family:system-ui,sans-serif',
+    'font-family:Helvetica Neue,Helvetica,Arial,sans-serif',
     'font-size:13px',
     'color:#111',
   ].join(';');

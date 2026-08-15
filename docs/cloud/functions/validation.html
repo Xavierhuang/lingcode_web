@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Function validation | LingCode Cloud Docs</title>
+  <meta name="description" content="Preview runtime validation for public function arguments and return values, generated TypeScript types, optional fields, unions, identifiers, and safe error messages.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/functions/validation.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/functions/validation.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/functions/validation.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html" aria-current="page">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Function validation</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-preview">Preview</span><span>Updated 2026-08-09</span></div>
+      <div class="cloud-docs-preview-warning" role="note"><strong>Preview:</strong> This documentation describes an API that is not generally available yet. Its contract may change before release.</div>
+      <h1 id="function-validation">Function validation</h1>
+<p>TypeScript protects code during development, but clients can call a public API without TypeScript. Public queries, mutations, and actions therefore need <strong>runtime validation</strong> for arguments and return values.</p>
+<h2 id="arguments">Arguments</h2>
+<pre><code class="language-ts">export const rename = mutation({
+  args: {
+    roomId: id(&#39;rooms&#39;),
+    name: string({ minLength: 1, maxLength: 120 }),
+    color: optional(union(literal(&#39;blue&#39;), literal(&#39;green&#39;), literal(&#39;purple&#39;))),
+  },
+  handler: async (ctx, args) =&gt; {
+    // args is typed and already validated here.
+  },
+});</code></pre>
+<p>Validation rejects missing required properties, unexpected properties, incorrect primitive types, invalid identifiers, oversized strings and arrays, and values outside declared unions before customer code runs.</p>
+<p>Even a function with no arguments declares <code>args: {}</code>. That rejects unexpected input and generates a zero-argument client signature.</p>
+<h2 id="return-values">Return values</h2>
+<pre><code class="language-ts">returns: object({
+  id: id(&#39;rooms&#39;),
+  name: string(),
+  memberCount: number(),
+})</code></pre>
+<p>Return validation prevents accidental exposure of private columns and catches server/client drift immediately. If <code>returns</code> is omitted during Preview, the generated client uses the inferred TypeScript return type but the runtime cannot enforce it.</p>
+<h2 id="supported-value-shapes">Supported value shapes</h2>
+<p>The initial validator set covers null, boolean, finite number, string, bytes, timestamp, backend-scoped identifier, array, object, record, optional value, literal, and union.</p>
+<p>Values must serialize to the documented wire format. Functions cannot return class instances, open streams, database clients, DOM objects, cyclic structures, <code>undefined</code> object properties, or arbitrary process handles.</p>
+<h2 id="generated-typescript">Generated TypeScript</h2>
+<p>Code generation combines function metadata and validators into an <code>api</code> object. The client receives exact argument and result types without importing server implementation code.</p>
+<p>Generated types improve editor feedback but do not replace runtime validation. Treat the validator as the public security boundary and the generated type as developer ergonomics.</p>
+<h2 id="validation-errors">Validation errors</h2>
+<p>Argument failures are application-facing errors with a stable code and a field path, such as <code>args.profile.displayName</code>. They must not include SQL, secrets, internal paths, or stack traces.</p>
+<p>Return validation failures are developer errors. Production clients receive a generic server error and request identifier; protected logs retain the function name, validation path, and stack.</p>
+<h2 id="current-custom-functions">Current custom functions</h2>
+<p>Current <code>handler(input, ctx)</code> functions receive untyped JSON and must validate it manually. Use explicit property allow-lists, string and array bounds, and predictable error codes. Do not assume a TypeScript annotation validated a network request.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/functions/actions.html">Previous: Actions · Preview</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/functions/errors.html">Next: Error handling · Preview</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#arguments">Arguments</a></li><li class="toc-level-2"><a href="#return-values">Return values</a></li><li class="toc-level-2"><a href="#supported-value-shapes">Supported value shapes</a></li><li class="toc-level-2"><a href="#generated-typescript">Generated TypeScript</a></li><li class="toc-level-2"><a href="#validation-errors">Validation errors</a></li><li class="toc-level-2"><a href="#current-custom-functions">Current custom functions</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

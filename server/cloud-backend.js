@@ -171,6 +171,43 @@ function sendErr(res, err, route) {
 //   - account:   standalone (no prototypeId), keyed (userId, projectKey) → account_backends
 // `table` is one of two hardcoded literals, never user input. Returns the public
 // projection; throws on failure (caller maps to an HTTP error).
+// Resolve a project's EXISTING backend so a changed project_key can't mint a
+// duplicate. Returns the row to reuse, or null to fall through to normal
+// path-keyed provisioning.
+//
+// WHY: `project_key` is a hash of the client's absolute folder path
+// (LingCodeCloudMCPSetup.projectKey). Rename or move the folder and the key
+// changes, so provisioning created a fresh EMPTY backend while the user's data
+// sat in the old one — and the client then linked the new backend to the SAME
+// canonical project, so the server could see they were the same project and
+// still said nothing. One real account ended up with three backends (67 tables,
+// 3, 3) all pointing at one project. This closes that.
+//
+// The `project_id` comes from the caller (`.lingcode/project.json`, which is
+// committed and travels with the repo), so it MUST be treated as untrusted:
+// entitlement is checked before any row is handed back.
+function reconcileByProjectId(db, userId, projectId, projectKey) {
+  if (!projectId) { return null; }
+  // Owner, or a member via project_members. Without this, guessing a project id
+  // would hand you someone else's database.
+  const entitled = db.prepare(`
+    SELECT 1 FROM projects p
+    LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = @uid
+    WHERE p.id = @pid AND (p.owner_id = @uid OR pm.user_id IS NOT NULL)
+    LIMIT 1
+  `).get({ pid: projectId, uid: userId });
+  if (!entitled) { return null; }
+
+  // Prefer an exact key match (a plain reconnect of the same folder); otherwise
+  // the OLDEST backend, which is the original — the one holding the data.
+  return db.prepare(`
+    SELECT * FROM account_backends
+    WHERE project_id = @pid AND status = 'live'
+    ORDER BY (project_key = @key) DESC, created_at ASC
+    LIMIT 1
+  `).get({ pid: projectId, key: projectKey }) || null;
+}
+
 async function provisionBackend(db, { userId, tier, gatewayBase, prototypeId = null, projectKey = null, label = null }) {
   const account = !prototypeId;
   const table = account ? 'account_backends' : 'prototype_backends';
@@ -391,7 +428,7 @@ function registerCloudBackendRoutes(app, db) {
   }
 
   // List every standalone backend owned by the signed-in user.
-  app.get('/api/cloud/account/backends', (req, res) => {
+  app.get('/api/cloud/account/backends', async (req, res) => {
     if (!dataPlane.isConfigured()) return res.status(503).json({ ok: false, error: 'cloud_not_configured' });
     const user = getUserFromRequest(db, req);
     if (!user) return res.status(401).json({ ok: false, error: 'unauthorized' });
@@ -407,7 +444,15 @@ function registerCloudBackendRoutes(app, db) {
       WHERE ab.user_id = @uid OR pm.user_id IS NOT NULL
       ORDER BY ab.created_at DESC
     `).all({ uid: user.id });
-    res.json({ ok: true, data: rows.map((r) => ({ ...publicBackend(r), project_key: r.project_key, label: r.label, project_id: r.project_id, role: r.member_role || 'owner' })) });
+    // Table count per live backend so the picker can distinguish a real backend
+    // from an empty duplicate (the folder-rename dupes leave 3-table stubs next
+    // to the real 67-table one). Best-effort — a data-plane hiccup just omits it.
+    let counts = {};
+    try {
+      const liveIds = rows.filter((r) => r.status === 'live').map((r) => r.id);
+      counts = await dataPlane.tableCounts(liveIds);
+    } catch (_) { counts = {}; }
+    res.json({ ok: true, data: rows.map((r) => ({ ...publicBackend(r), project_key: r.project_key, label: r.label, project_id: r.project_id, role: r.member_role || 'owner', table_count: counts[r.id] ?? null })) });
   });
 
   // Rename a backend (owner) — sets the human-readable project label.
@@ -421,7 +466,8 @@ function registerCloudBackendRoutes(app, db) {
   // Eagerly provision (or reuse) the standalone backend for a project — called
   // by the IDE's "Connect Backend to This Project" so the backend exists (and
   // shows in the console) the moment you connect, not only on first agent use.
-  // Idempotent per (user, project_key).
+  // Idempotent per (user, project_key), and — when the caller knows the
+  // canonical project — per project_id as well. See reconcileByProjectId.
   app.post('/api/cloud/account/backends/provision', async (req, res) => {
     if (!dataPlane.isConfigured()) return res.status(503).json({ ok: false, error: 'cloud_not_configured' });
     const user = getUserFromRequest(db, req);
@@ -430,6 +476,27 @@ function registerCloudBackendRoutes(app, db) {
     if (!projectKey) return res.status(400).json({ ok: false, error: 'invalid_request', message: 'project_key required' });
     if (!_enter(user.id)) return res.status(429).json({ ok: false, error: 'too_many_inflight' });
     try {
+      // A project_key is a hash of the client's ABSOLUTE FOLDER PATH, so renaming
+      // or moving a project produces a new key and, historically, a brand-new
+      // EMPTY backend while the real data stayed behind — silently, with a
+      // "connected" success message. When the caller also knows the canonical
+      // project id, that is the durable identity: reuse the project's existing
+      // backend instead of minting a duplicate.
+      const claimedProjectId = String((req.body && req.body.project_id) || '').slice(0, 64);
+      const reconciled = reconcileByProjectId(db, user.id, claimedProjectId, projectKey);
+      if (reconciled) {
+        // Keep the label fresh (the folder may genuinely have been renamed),
+        // matching what provisionBackend does on a plain reconnect.
+        const label = String((req.body && req.body.label) || '').trim().slice(0, 120);
+        if (label) {
+          try { db.prepare('UPDATE account_backends SET label = ? WHERE id = ?').run(label, reconciled.id); } catch (_) {}
+        }
+        logEvent(db, reconciled.id, 'system', 'info',
+                 `reused for project ${claimedProjectId} (incoming key ${projectKey})`);
+        const row = db.prepare('SELECT * FROM account_backends WHERE id = ?').get(reconciled.id);
+        return res.json({ ok: true, data: { ...publicBackend(row), project_id: row.project_id, reused: true } });
+      }
+
       const data = await provisionBackend(db, {
         userId: user.id, tier: user.tier, projectKey,
         label: String((req.body && req.body.label) || '').trim().slice(0, 120) || null,
@@ -1044,8 +1111,9 @@ function registerCloudBackendRoutes(app, db) {
     if (!table) return res.status(400).json({ ok: false, error: 'invalid_request', message: 'table required' });
     try {
       const data = await dataPlane.proxySelect(a.backendId, table, {
-        where: req.body.where, order: req.body.order,
+        where: req.body.where, order: req.body.order, columns: req.body.columns,
         limit: req.body.limit, offset: req.body.offset, userId: a.userId,
+        maxRows: limitsForTier(a.row.tier || 'free').maxRowsPerRead,
       });
       bumpUsage(db, a.backendId, { read: data.rows.length });
       res.json({ ok: true, data: data.rows });
@@ -1968,4 +2036,4 @@ function objectUrl(req, backendId, bucket, path) {
   return `${req.protocol}://${req.get('host')}/api/cloud/be/${backendId}/storage/object?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}`;
 }
 
-module.exports = { registerCloudBackendRoutes, teardownBackend, provisionForPrototype, provisionBackend, getAccountBackend, getAnyBackendById, ownedPath, purchasedStorageBytesForBackend };
+module.exports = { registerCloudBackendRoutes, teardownBackend, provisionForPrototype, provisionBackend, reconcileByProjectId, getAccountBackend, getAnyBackendById, ownedPath, purchasedStorageBytesForBackend };

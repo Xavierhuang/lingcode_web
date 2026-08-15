@@ -16,9 +16,9 @@
   <meta property="og:image" content="https://lingcode.dev/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/style.css?v=20260531a">
-  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
   <style>
     .fn-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; }
     .fn-table th, .fn-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
@@ -175,7 +175,26 @@ window.location.href = data.url; // hosted Stripe Checkout</code></pre>
       </div>
 
       <h2>Custom functions</h2>
-      <p>When no builtin fits, write your own. You author custom functions in the Cloud console / IDE — you give the function a <strong>slug</strong> and its <strong>TypeScript source</strong> (this is a console authoring step, not something an agent tool does for you). They run in a sandboxed Deno runtime, invoked by the same <code>functions.invoke(slug, body?)</code> call as the builtins.</p>
+      <p>When no builtin fits, write your own. LingCode keeps custom functions and database migrations in a committed <code>lingcode/</code> directory, then the agent deploys and tests that definition through the Cloud MCP tools. You do not need to copy source into the backend console.</p>
+      <pre><code>lingcode/
+  backend.json
+  migrations/
+    0001_initial.sql
+  functions/
+    message-api.ts</code></pre>
+      <p><code>backend.json</code> lists migrations in order and maps each function slug to its TypeScript file. Its schema is <a href="/schemas/backend-v1.schema.json"><code>backend-v1.schema.json</code></a>. After editing the committed files, the agent calls <code>deploy_backend_manifest</code> in preview mode. Development backends may apply a clean preview automatically; production shows the exact migration/function summary and risk warnings and waits for your <strong>Deploy</strong> approval. Plans expire after 10 minutes, and changing any file requires a new preview. Production never deploys from file watch mode. After apply, the agent confirms hashes with <code>backend_source_status</code>. Functions declaring <code>testInput</code> are draft-tested during apply. Applied migration IDs are immutable: add a new migration file instead of editing one already deployed. Omitting a function never deletes it; deletion remains an explicit operation. Commit only secret <em>names</em>—secret values stay in the vault.</p>
+      <pre><code>{
+  "$schema": "https://lingcode.dev/schemas/backend-v1.schema.json",
+  "version": 1,
+  "migrations": [{ "id": "0001_initial", "path": "migrations/0001_initial.sql" }],
+  "functions": [{
+    "slug": "message-api",
+    "path": "functions/message-api.ts",
+    "enabled": true,
+    "secrets": ["MESSAGE_SIGNING_KEY"],
+    "testInput": { "text": "hello" }
+  }]
+}</code></pre>
 
       <h3>The contract</h3>
       <p>Your source must <code>export default</code> a handler. Whatever you <code>return</code> becomes the invoke result's <code>data</code>. TypeScript is supported natively — Deno runs it directly, no build step:</p>
@@ -225,7 +244,7 @@ console.log(data.tempC);</code></pre>
         </thead>
         <tbody>
           <tr><td>Timeout (wall-clock, SIGKILL past it)</td><td>3s</td><td>10s</td><td>30s</td></tr>
-          <tr><td>Custom functions (<code>maxFunctions</code>)</td><td>2</td><td>10</td><td>50</td></tr>
+          <tr><td>Custom functions</td><td colspan="3">Unlimited saved definitions</td></tr>
           <tr><td>Source size</td><td colspan="3">up to 256 KB</td></tr>
           <tr><td>Memory</td><td colspan="3">128 MB</td></tr>
         </tbody>
@@ -246,6 +265,11 @@ console.log(data.tempC);</code></pre>
             <span class="card-eyebrow">Security</span>
             <h3>Secrets vault →</h3>
             <p>Set the vendor keys your functions read — Stripe, Twilio, ElevenLabs, Resend — encrypted and server-side only.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/python.html">
+            <span class="card-eyebrow">Runtime</span>
+            <h3>Python on Cloud →</h3>
+            <p>Custom functions have a Python runtime alongside Deno-TS — stdlib-only, firejail-sandboxed. When to reach for it.</p>
           </a>
           <a class="tutorial-next-card" href="/docs/cloud/hosting.html">
             <span class="card-eyebrow">Deploy</span>
@@ -317,6 +341,6 @@ console.log(data.tempC);</code></pre>
     <span>native · fast · honest</span>
   </div>
 </footer>
-  <script src="/site-chat-widget.js?v=20260603" defer></script>
+  <script src="/site-chat-widget.js?v=20260731a" defer></script>
 </body>
 </html>

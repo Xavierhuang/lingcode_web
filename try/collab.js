@@ -36,7 +36,7 @@ function ensureStatusBadge() {
     'position:fixed', 'top:14px', 'right:14px',
     'background:#fff', 'border:1px solid #e5e7eb', 'border-radius:20px',
     'padding:5px 12px', 'font-size:11px', 'font-weight:600',
-    'font-family:system-ui,sans-serif', 'color:#374151',
+    'font-family:Helvetica Neue,Helvetica,Arial,sans-serif', 'color:#374151',
     'box-shadow:0 2px 8px rgba(0,0,0,.08)', 'z-index:10000',
     'display:none', 'align-items:center', 'gap:6px',
   ].join(';');

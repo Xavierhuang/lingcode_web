@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reactive queries | LingCode Cloud Docs</title>
+  <meta name="description" content="Preview the planned read-only, deterministic, typed, cacheable, and automatically subscribable named-query contract.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/functions/queries.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/functions/queries.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/functions/queries.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html" aria-current="page">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Reactive queries</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-preview">Preview</span><span>Updated 2026-08-09</span></div>
+      <div class="cloud-docs-preview-warning" role="note"><strong>Preview:</strong> This documentation describes an API that is not generally available yet. Its contract may change before release.</div>
+      <h1 id="reactive-queries">Reactive queries</h1>
+<p>A query is a named backend function that reads a consistent PostgreSQL snapshot and returns a JSON value. Queries are designed to be called once or subscribed to from React without manually wiring row events and refetch logic.</p>
+<h2 id="contract">Contract</h2>
+<p>A query will:</p>
+<ul>
+<li>execute in a read-only transaction;</li>
+<li>receive validated arguments and authenticated context;</li>
+<li>be deterministic with respect to its database snapshot;</li>
+<li>record the database dependencies it reads;</li>
+<li>return a backend revision with its result;</li>
+<li>become cacheable and subscribable;</li>
+<li>reject database writes and external network side effects.</li>
+</ul>
+<h2 id="definition">Definition</h2>
+<pre><code class="language-ts">import { query, string } from &#39;@lingcode/backend&#39;;
+
+export const list = query({
+  args: { roomId: string() },
+  handler: async (ctx, args) =&gt; {
+    const result = await ctx.db.query(
+      `select id, author_id, body, created_at
+       from messages
+       where room_id = $1
+       order by created_at asc
+       limit 200`,
+      [args.roomId]
+    );
+    return result.rows;
+  },
+});</code></pre>
+<p>The generated API name follows the source module and export, such as <code>api.messages.list</code>.</p>
+<h2 id="react-subscription">React subscription</h2>
+<pre><code class="language-tsx">const messages = useQuery(api.messages.list, { roomId });</code></pre>
+<p>The client sends the function name and arguments. The server executes the query, records dependencies, and associates the result with the connection. After a committed mutation invalidates one of those dependencies, the query reruns and the client receives the newer revision.</p>
+<h2 id="dependency-tracking">Dependency tracking</h2>
+<p>The first release uses table-level dependency tracking. Reading <code>messages</code> subscribes the query to changes affecting that table, even if a particular changed row would not match <code>room_id</code>.</p>
+<p>This is correct but may rerun more often than necessary. Later row, key, and index-range dependency tracking can reduce work without changing the query API.</p>
+<p>When dependency extraction is uncertain, LingCode uses a backend-wide wildcard dependency. Missing an update would be a correctness bug; an extra rerun is an optimization cost.</p>
+<h2 id="determinism">Determinism</h2>
+<p>Queries should not call external APIs, send email, charge a card, read mutable process state, or depend on uncontrolled randomness. Those operations cannot be safely cached or rerun.</p>
+<p>Use a preview <a href="/docs/cloud/functions/actions.html">Action</a> for external work and a <a href="/docs/cloud/functions/mutations.html">Mutation</a> to store its durable result. A query can then reactively read that result.</p>
+<h2 id="consistent-reads">Consistent reads</h2>
+<p>The query runs in a repeatable-read, read-only transaction. Every SQL statement inside one execution observes a consistent database snapshot. Concurrent commits do not create a mixture of old and new rows inside the same result.</p>
+<h2 id="authentication-and-caching">Authentication and caching</h2>
+<p>Authentication is part of query identity. Results for different backend, function, arguments, or authenticated identity are never shared accidentally.</p>
+<p>RLS runs for every database read. A cached result may only be reused within an equivalent authorization scope. Sign-in, sign-out, or token identity changes invalidate affected client subscriptions.</p>
+<h2 id="pagination">Pagination</h2>
+<p>Reactive queries still need bounded results. Subscribe to one page or window rather than an entire growing table:</p>
+<pre><code class="language-ts">args: { roomId: string(), before: optional(timestamp()), limit: number() }</code></pre>
+<p>Use stable ordering and an indexed cursor. Offset pagination can shift when concurrent inserts arrive.</p>
+<h2 id="failure-and-reconnect">Failure and reconnect</h2>
+<p>If a connection drops, the client reconnects and reruns active queries against the latest revision. It does not need every missed row event. If a result cannot be delivered because the client is too slow, the server discards the queued delta and requests a resynchronization.</p>
+<p>Application errors remain visible to the calling component. Production developer errors are redacted from end users and retained in server logs.</p>
+<h2 id="current-alternative">Current alternative</h2>
+<p>Until this page becomes Available, combine the current table query builder with <a href="/docs/cloud/realtime.html">Realtime row subscriptions</a>, and refetch after reconnect or an oversized change notification.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/functions/custom-functions.html">Previous: Custom functions</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/functions/mutations.html">Next: Mutations · Preview</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#contract">Contract</a></li><li class="toc-level-2"><a href="#definition">Definition</a></li><li class="toc-level-2"><a href="#react-subscription">React subscription</a></li><li class="toc-level-2"><a href="#dependency-tracking">Dependency tracking</a></li><li class="toc-level-2"><a href="#determinism">Determinism</a></li><li class="toc-level-2"><a href="#consistent-reads">Consistent reads</a></li><li class="toc-level-2"><a href="#authentication-and-caching">Authentication and caching</a></li><li class="toc-level-2"><a href="#pagination">Pagination</a></li><li class="toc-level-2"><a href="#failure-and-reconnect">Failure and reconnect</a></li><li class="toc-level-2"><a href="#current-alternative">Current alternative</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

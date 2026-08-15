@@ -138,6 +138,126 @@ function migrateUsersTable(db) {
   }
 }
 
+function migrateAccountTokensTable(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS account_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      digest_version TEXT NOT NULL CHECK(digest_version IN ('h1')),
+      token_digest TEXT NOT NULL UNIQUE,
+      display_prefix TEXT NOT NULL,
+      scope TEXT NOT NULL CHECK(scope IN ('account','project')),
+      project_key TEXT,
+      caps TEXT NOT NULL DEFAULT '',
+      created_at INTEGER NOT NULL,
+      expires_at INTEGER,
+      last_used_at INTEGER,
+      revoked_at INTEGER,
+      replaced_by TEXT,
+      legacy_source TEXT,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(replaced_by) REFERENCES account_tokens(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_account_tokens_user_active
+      ON account_tokens(user_id, revoked_at, expires_at);
+  `);
+}
+
+/** @param {import('better-sqlite3').Database} db */
+function migrateVoucherTables(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS voucher_batches (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      quantity INTEGER NOT NULL CHECK(quantity BETWEEN 1 AND 500),
+      benefit_days INTEGER NOT NULL DEFAULT 30 CHECK(benefit_days > 0),
+      redeem_by INTEGER NOT NULL,
+      status TEXT NOT NULL CHECK(status IN ('active','closed','revoked')),
+      created_by TEXT,
+      created_at INTEGER NOT NULL,
+      CHECK(redeem_by > created_at)
+    );
+
+    CREATE TABLE IF NOT EXISTS promotion_vouchers (
+      id TEXT PRIMARY KEY,
+      batch_id TEXT NOT NULL,
+      serial_number INTEGER NOT NULL CHECK(serial_number > 0),
+      digest_version TEXT NOT NULL CHECK(digest_version IN ('h1')),
+      code_digest TEXT NOT NULL UNIQUE,
+      display_suffix TEXT NOT NULL,
+      status TEXT NOT NULL CHECK(status IN ('available','reserved','redeemed','blocked','revoked')),
+      reserved_by TEXT,
+      reserved_until INTEGER,
+      checkout_session_id TEXT UNIQUE,
+      redeemed_by TEXT,
+      redeemed_at INTEGER,
+      stripe_subscription_id TEXT UNIQUE,
+      card_fingerprint_digest TEXT,
+      blocked_reason TEXT,
+      revoked_at INTEGER,
+      revoked_by TEXT,
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY(batch_id) REFERENCES voucher_batches(id) ON DELETE CASCADE,
+      CHECK(
+        (status = 'available'
+          AND reserved_by IS NULL AND reserved_until IS NULL
+          AND checkout_session_id IS NULL AND redeemed_by IS NULL AND redeemed_at IS NULL
+          AND stripe_subscription_id IS NULL AND card_fingerprint_digest IS NULL
+          AND blocked_reason IS NULL AND revoked_at IS NULL AND revoked_by IS NULL)
+        OR
+        (status = 'reserved'
+          AND reserved_by IS NOT NULL AND reserved_until IS NOT NULL
+          AND redeemed_by IS NULL AND redeemed_at IS NULL
+          AND stripe_subscription_id IS NULL AND card_fingerprint_digest IS NULL
+          AND blocked_reason IS NULL AND revoked_at IS NULL AND revoked_by IS NULL)
+        OR
+        (status = 'redeemed'
+          AND reserved_by IS NOT NULL AND reserved_until IS NOT NULL
+          AND checkout_session_id IS NOT NULL AND redeemed_by IS NOT NULL AND redeemed_at IS NOT NULL
+          AND stripe_subscription_id IS NOT NULL AND card_fingerprint_digest IS NOT NULL
+          AND blocked_reason IS NULL AND revoked_at IS NULL AND revoked_by IS NULL)
+        OR
+        (status = 'blocked'
+          AND reserved_by IS NOT NULL AND checkout_session_id IS NOT NULL
+          AND redeemed_by IS NULL AND redeemed_at IS NULL
+          AND stripe_subscription_id IS NULL AND card_fingerprint_digest IS NULL
+          AND blocked_reason IS NOT NULL AND revoked_at IS NULL AND revoked_by IS NULL)
+        OR
+        (status = 'revoked'
+          AND reserved_by IS NULL AND reserved_until IS NULL AND checkout_session_id IS NULL
+          AND redeemed_by IS NULL AND redeemed_at IS NULL
+          AND stripe_subscription_id IS NULL AND card_fingerprint_digest IS NULL
+          AND blocked_reason IS NULL AND revoked_at IS NOT NULL AND revoked_by IS NOT NULL)
+      )
+    );
+
+    CREATE TABLE IF NOT EXISTS voucher_audit_events (
+      id TEXT PRIMARY KEY,
+      voucher_id TEXT,
+      batch_id TEXT,
+      actor_user_id TEXT,
+      event_type TEXT NOT NULL,
+      reason_code TEXT,
+      metadata_json TEXT NOT NULL DEFAULT '{}',
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY(voucher_id) REFERENCES promotion_vouchers(id) ON DELETE SET NULL,
+      FOREIGN KEY(batch_id) REFERENCES voucher_batches(id) ON DELETE SET NULL
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_voucher_batch_serial
+      ON promotion_vouchers(batch_id, serial_number);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_voucher_redeemed_user
+      ON promotion_vouchers(redeemed_by) WHERE status = 'redeemed';
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_voucher_redeemed_card
+      ON promotion_vouchers(card_fingerprint_digest)
+      WHERE status = 'redeemed' AND card_fingerprint_digest IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_voucher_batch_status
+      ON promotion_vouchers(batch_id, status);
+    CREATE INDEX IF NOT EXISTS idx_voucher_reservation_expiry
+      ON promotion_vouchers(status, reserved_until);
+  `);
+}
+
 /** @param {import('better-sqlite3').Database} db */
 function migrateStatsTables(db) {
   // One row per UTC day, populated by the nightly scheduler. Lets admin dashboard
@@ -614,8 +734,7 @@ function migrateCloudBackendTables(db) {
       backend_id            TEXT PRIMARY KEY,
       encrypted_secret      TEXT NOT NULL,
       service_role_jwt_enc  TEXT,
-      created_at            TEXT NOT NULL,
-      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+      created_at            TEXT NOT NULL
     )
   `);
 
@@ -630,8 +749,7 @@ function migrateCloudBackendTables(db) {
       func_invocations  INTEGER NOT NULL DEFAULT 0,
       auth_users        INTEGER NOT NULL DEFAULT 0,
       emails_sent       INTEGER NOT NULL DEFAULT 0,
-      PRIMARY KEY (backend_id, day),
-      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+      PRIMARY KEY (backend_id, day)
     )
   `);
   // Additive column for DBs created before managed email — idempotent.
@@ -707,6 +825,25 @@ function migrateCloudBackendTables(db) {
   `);
   db.exec('CREATE INDEX IF NOT EXISTS idx_backend_functions ON backend_functions(backend_id)');
 
+  // Repository-backed backend definitions. The local `lingcode/` directory is
+  // the source of truth; these rows record the last successfully deployed hash
+  // for drift detection and retry-safe manifest deployment.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS backend_source_artifacts (
+      backend_id   TEXT NOT NULL,
+      kind         TEXT NOT NULL CHECK(kind IN ('migration','function')),
+      name         TEXT NOT NULL,
+      path         TEXT NOT NULL,
+      sha256       TEXT NOT NULL,
+      metadata_json TEXT NOT NULL DEFAULT '{}',
+      user_id      TEXT,
+      deployed_at  TEXT NOT NULL,
+      PRIMARY KEY (backend_id, kind, name),
+      FOREIGN KEY (backend_id) REFERENCES account_backends(id) ON DELETE CASCADE
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_backend_source_artifacts_backend ON backend_source_artifacts(backend_id, kind, name)');
+
   // Push notifications. backend_push_config holds the per-backend VAPID keypair
   // (private key AES-256-GCM encrypted) + optional BYO FCM service account.
   // backend_push_subscriptions holds each device subscription, keyed by
@@ -760,8 +897,7 @@ function migrateCloudBackendTables(db) {
       ts          TEXT NOT NULL,
       source      TEXT NOT NULL,
       level       TEXT NOT NULL DEFAULT 'info',
-      message     TEXT,
-      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+      message     TEXT
     )
   `);
   db.exec('CREATE INDEX IF NOT EXISTS idx_backend_logs ON backend_logs(backend_id, id DESC)');
@@ -777,8 +913,7 @@ function migrateCloudBackendTables(db) {
       token_hash  TEXT NOT NULL,
       expires_at  TEXT NOT NULL,
       used_at     TEXT,
-      created_at  TEXT NOT NULL,
-      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+      created_at  TEXT NOT NULL
     )
   `);
   db.exec('CREATE INDEX IF NOT EXISTS idx_magic_links ON backend_magic_links(backend_id, token_hash)');
@@ -808,9 +943,48 @@ function migrateCloudBackendTables(db) {
   db.exec('CREATE INDEX IF NOT EXISTS idx_account_backends_user ON account_backends(user_id)');
   // Human-readable project name (the workspace folder name) so the console
   // shows "MyCal" instead of an opaque project_key hash.
-  if (!new Set(db.prepare('PRAGMA table_info(account_backends)').all().map((c) => c.name)).has('label')) {
+  const accountBackendColumns = new Set(db.prepare('PRAGMA table_info(account_backends)').all().map((c) => c.name));
+  if (!accountBackendColumns.has('label')) {
     db.exec('ALTER TABLE account_backends ADD COLUMN label TEXT');
   }
+  // Deployment safety must never infer production from a human label. Existing
+  // backends are production by default; future isolated backends opt into the
+  // development environment explicitly.
+  if (!accountBackendColumns.has('environment')) {
+    db.exec(`ALTER TABLE account_backends
+      ADD COLUMN environment TEXT NOT NULL DEFAULT 'production'
+      CHECK(environment IN ('development','production'))`);
+  }
+  // Preview: opt-in per-backend flag gating the Python custom-functions runtime
+  // (cloud-python-runtime.js). Default 0 so existing backends see no behavior
+  // change; ops flips to 1 via SQL / admin console to enroll a backend in
+  // Preview. See cloud-functions-routes.js:runtimeAllowedForBackend.
+  if (!accountBackendColumns.has('python_runtime_enabled')) {
+    db.exec('ALTER TABLE account_backends ADD COLUMN python_runtime_enabled INTEGER NOT NULL DEFAULT 0');
+  }
+
+  // Short-lived, hash-bound production deployment previews. The payload is the
+  // already-normalized manifest content, never arbitrary request fields or
+  // secret values. Plans are single-use and scoped to one user/backend.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS backend_deployment_plans (
+      id              TEXT PRIMARY KEY,
+      backend_id      TEXT NOT NULL,
+      user_id         TEXT NOT NULL,
+      environment     TEXT NOT NULL CHECK(environment IN ('development','production')),
+      manifest_digest TEXT NOT NULL,
+      payload_json    TEXT NOT NULL,
+      summary_json    TEXT NOT NULL,
+      warnings_json   TEXT NOT NULL DEFAULT '[]',
+      status          TEXT NOT NULL CHECK(status IN ('pending','consumed')),
+      expires_at      INTEGER NOT NULL,
+      created_at      INTEGER NOT NULL,
+      consumed_at     INTEGER,
+      FOREIGN KEY(backend_id) REFERENCES account_backends(id) ON DELETE CASCADE
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_backend_deployment_plans_backend_status ON backend_deployment_plans(backend_id, status)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_backend_deployment_plans_expires ON backend_deployment_plans(expires_at)');
 
   // BYO OAuth: a backend's own provider client (overrides the managed shared
   // one). client_secret is AES-256-GCM encrypted (see cloud-oauth.js).
@@ -871,8 +1045,7 @@ function migrateCloudBackendTables(db) {
       token_hash  TEXT NOT NULL,
       expires_at  TEXT NOT NULL,
       used_at     TEXT,
-      created_at  TEXT NOT NULL,
-      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+      created_at  TEXT NOT NULL
     )
   `);
   db.exec('CREATE INDEX IF NOT EXISTS idx_email_verifications ON backend_email_verifications(backend_id, token_hash)');
@@ -1550,7 +1723,6 @@ function migrateComputeTables(db) {
       created_at    TEXT NOT NULL,
       updated_at    TEXT NOT NULL,
       UNIQUE(backend_id, name),
-      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id),
       FOREIGN KEY(user_id)    REFERENCES users(id)
     )
   `);
@@ -1587,8 +1759,7 @@ function migrateComputeTables(db) {
       queued_at     TEXT NOT NULL,
       started_at    TEXT,
       finished_at   TEXT,
-      FOREIGN KEY(job_id)     REFERENCES compute_jobs(id),
-      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+      FOREIGN KEY(job_id)     REFERENCES compute_jobs(id)
     )
   `);
   // Idempotent backfill for DBs created before the scheduler/metering columns shipped.
@@ -1625,8 +1796,7 @@ function migrateComputeTables(db) {
       last_status       TEXT,
       next_run_at       INTEGER,
       created_at        TEXT NOT NULL,
-      FOREIGN KEY(job_id)     REFERENCES compute_jobs(id),
-      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+      FOREIGN KEY(job_id)     REFERENCES compute_jobs(id)
     )
   `);
   db.exec('CREATE INDEX IF NOT EXISTS idx_compute_schedules_due ON compute_schedules(enabled, next_run_at)');
@@ -1641,8 +1811,7 @@ function migrateComputeTables(db) {
       backend_id    TEXT PRIMARY KEY,
       role_name     TEXT NOT NULL,
       password_enc  TEXT NOT NULL,
-      created_at    TEXT NOT NULL,
-      FOREIGN KEY(backend_id) REFERENCES prototype_backends(id)
+      created_at    TEXT NOT NULL
     )
   `);
 
@@ -1657,4 +1826,306 @@ function migrateComputeTables(db) {
   } catch (_) { /* backend_usage may not exist yet on a partial boot — best effort */ }
 }
 
-module.exports = { migrateUsersTable, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, migrateComputeTables, bumpCollabSchemaToMultiFile };
+// ── Backend child tables: drop the prototype-only parent FK ────────────────
+//
+// A backend can live in EITHER `prototype_backends` (created from a /try
+// prototype) or `account_backends` (created from the IDE for a project) —
+// `getAnyBackendById` in cloud-backend.js resolves across both. But these child
+// tables were all declared `REFERENCES prototype_backends(id)`, so for an
+// ACCOUNT backend the parent row does not exist and every insert dies on
+// "FOREIGN KEY constraint failed" (better-sqlite3 enforces FKs by default).
+//
+// Real-world symptom that led here: on an account backend, password signup
+// worked but OTP, magic-link and managed email ALL 500'd — those three bump
+// `backend_usage.emails_sent` first, and `logEvent` writes `backend_logs`, so
+// not even an error log survived.
+//
+// SQLite cannot express "FK to either of two tables" and cannot reference a
+// view, and there is no ALTER TABLE DROP CONSTRAINT — so the fix is to rebuild
+// each table without the constraint and keep relying on application-level
+// resolution, which already handles both parents.
+const BACKEND_CHILD_TABLES = [
+  'backend_signing_secrets', 'backend_usage', 'backend_logs',
+  'backend_magic_links', 'backend_email_verifications',
+  'compute_jobs', 'compute_runs', 'compute_schedules', 'compute_db_creds',
+];
+
+// Strip `FOREIGN KEY(backend_id) REFERENCES prototype_backends(...)` from a
+// CREATE TABLE statement, handling the clause appearing last (leading comma) or
+// mid-list (trailing comma).
+function stripBackendParentFK(sql) {
+  const clause = String.raw`FOREIGN\s*KEY\s*\(\s*backend_id\s*\)\s*REFERENCES\s+prototype_backends\s*\([^)]*\)(?:\s+ON\s+(?:DELETE|UPDATE)\s+(?:NO\s+ACTION|SET\s+NULL|SET\s+DEFAULT|CASCADE|RESTRICT))*`;
+  const withLeadingComma = new RegExp(`,\\s*${clause}`, 'i');
+  if (withLeadingComma.test(sql)) return sql.replace(withLeadingComma, '');
+  return sql.replace(new RegExp(`${clause}\\s*,`, 'i'), '');
+}
+
+function migrateBackendParentFKs(db) {
+  const pending = BACKEND_CHILD_TABLES.filter((t) => {
+    try {
+      return db.prepare(`PRAGMA foreign_key_list(${t})`).all()
+        .some((fk) => fk.table === 'prototype_backends' && fk.from === 'backend_id');
+    } catch (_) { return false; }   // table not created yet on a partial boot
+  });
+  if (pending.length === 0) return;   // idempotent: nothing left pointing at the wrong parent
+
+  // Pragma changes can't happen inside a transaction, so bracket it. FKs must be
+  // off during a rebuild or the DROP would cascade-check children of our own
+  // tables mid-swap.
+  const hadFK = db.pragma('foreign_keys', { simple: true });
+  db.pragma('foreign_keys = OFF');
+  try {
+    db.transaction(() => {
+      for (const table of pending) {
+        const createSql = db.prepare(
+          "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?"
+        ).get(table)?.sql;
+        if (!createSql) continue;
+
+        const rebuilt = stripBackendParentFK(createSql);
+        if (rebuilt === createSql) continue;   // nothing matched — leave it alone
+
+        // Indexes live in sqlite_master and die with the table; capture their
+        // DDL so we can recreate them verbatim after the swap.
+        const indexes = db.prepare(
+          "SELECT sql FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND sql IS NOT NULL"
+        ).all(table).map((r) => r.sql);
+
+        const tmp = `${table}__fkfix`;
+        db.exec(rebuilt.replace(
+          new RegExp(`CREATE TABLE(\\s+IF\\s+NOT\\s+EXISTS)?\\s+["'\`]?${table}["'\`]?`, 'i'),
+          `CREATE TABLE ${tmp}`
+        ));
+        // Name the columns explicitly so the copy can't silently mis-map if the
+        // rebuilt column order ever drifts from the original.
+        const cols = db.prepare(`PRAGMA table_info(${tmp})`).all().map((c) => `"${c.name}"`).join(', ');
+        db.exec(`INSERT INTO ${tmp} (${cols}) SELECT ${cols} FROM ${table}`);
+        db.exec(`DROP TABLE ${table}`);
+        db.exec(`ALTER TABLE ${tmp} RENAME TO ${table}`);
+        for (const idx of indexes) db.exec(idx);
+      }
+    })();
+  } finally {
+    db.pragma(`foreign_keys = ${hadFK ? 'ON' : 'OFF'}`);
+  }
+}
+
+// migrateHostedAppsTables — control-plane metadata for the LingCode Cloud
+// HOSTED-APPS tier. Long-lived Python HTTP apps deployed from source, built
+// into per-app Docker images by the buildpack, supervised by the compute
+// runner (extends cloud-compute-runner.js; new job kind='web'), routed via
+// Caddy at <slug>.apps.lingcode.dev. Full design in
+// docs/superpowers/specs/2026-08-13-python-app-hosting-design.md.
+//
+// Convention (copied from compute_jobs): NO FK on backend_id. A backend can
+// live in either prototype_backends or account_backends, and adding an FK to
+// one silently breaks inserts for the other. Application code enforces
+// referential integrity via getAnyBackendById / owner-lookup in the routes.
+// These tables are ALSO not in BACKEND_CHILD_TABLES above — there is no
+// legacy prototype_backends FK to strip.
+function migrateHostedAppsTables(db) {
+  // The app definition. One row per deployed Python app. `subdomain` is
+  // UNIQUE across the droplet — the Caddy admin API route key hangs off it.
+  // `port` is a per-droplet allocation in 10000–19999. A partial UNIQUE
+  // index below enforces uniqueness only among rows that hold a port, so
+  // paused/deleted apps that released their port coexist as NULLs.
+  // `healthcheck_path` defaults to '/' but is per-app-configurable so apps
+  // whose '/' returns 404 or serves static assets don't get restart-looped.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS hosted_apps (
+      id                    TEXT PRIMARY KEY,
+      backend_id            TEXT NOT NULL,
+      user_id               TEXT NOT NULL,
+      name                  TEXT NOT NULL,
+      subdomain             TEXT NOT NULL UNIQUE,
+      kind                  TEXT NOT NULL DEFAULT 'python-web'
+                              CHECK(kind IN ('python-web')),
+      status                TEXT NOT NULL DEFAULT 'building'
+                              CHECK(status IN ('building','running','paused','crashed','deleted')),
+      current_deploy_id     TEXT,
+      procfile_web          TEXT,
+      runtime_version       TEXT NOT NULL DEFAULT '3.12',
+      healthcheck_path      TEXT NOT NULL DEFAULT '/',
+      port                  INTEGER,
+      container_id          TEXT,
+      memory_mb             INTEGER NOT NULL DEFAULT 256,
+      cpu_shares            INTEGER NOT NULL DEFAULT 512,
+      restart_count         INTEGER NOT NULL DEFAULT 0,
+      restart_window_start  INTEGER,
+      created_at            INTEGER NOT NULL,
+      updated_at            INTEGER NOT NULL,
+      paused_at             INTEGER,
+      UNIQUE(backend_id, name),
+      FOREIGN KEY(user_id)  REFERENCES users(id)
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_hosted_apps_backend ON hosted_apps(backend_id)');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_hosted_apps_port ON hosted_apps(port) WHERE port IS NOT NULL');
+
+  // Deploy history. One row per build attempt (success or fail). Also the
+  // build queue: rows with status='queued' are picked up by the runner on
+  // the same tick as compute_runs (extended dispatch loop; the state
+  // machine lives in cloud-hosted-app-runner.js, not the compute runner).
+  // `requirements_sha` is the docker-build cache key — when it matches an
+  // earlier successful deploy, --cache-from turns a 90 s pip install into
+  // a <5 s layer reuse. `build_log` is truncated to 64 KB by the runner
+  // (a full pip -v log easily hits 500 KB otherwise).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS hosted_app_deploys (
+      id                 TEXT PRIMARY KEY,
+      app_id             TEXT NOT NULL,
+      source_sha256      TEXT NOT NULL,
+      requirements_sha   TEXT,
+      image_tag          TEXT,
+      status             TEXT NOT NULL DEFAULT 'queued'
+                           CHECK(status IN ('queued','building','running','failed','superseded')),
+      build_log          TEXT,
+      error              TEXT,
+      started_at         INTEGER NOT NULL,
+      finished_at        INTEGER,
+      user_id            TEXT NOT NULL,
+      FOREIGN KEY(user_id)  REFERENCES users(id)
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_hosted_app_deploys_app ON hosted_app_deploys(app_id, started_at DESC)');
+  // Runner claim query index (mirrors compute_runs pattern).
+  db.exec('CREATE INDEX IF NOT EXISTS idx_hosted_app_deploys_claim ON hosted_app_deploys(status, started_at)');
+
+  // Ring-buffered lifecycle events (start/stop/crash/restart/pause/resume/
+  // deploy/deploy_fail/quota_pause/quota_warn). A separate cron sweep caps
+  // this at 1000 rows per app_id. Container stdout/stderr are NOT mirrored
+  // here — volume would blow up disk. Runtime logs are served on demand
+  // via `docker logs` (see hosted-app routes).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS hosted_app_events (
+      id      INTEGER PRIMARY KEY AUTOINCREMENT,
+      app_id  TEXT NOT NULL,
+      ts      INTEGER NOT NULL,
+      kind    TEXT NOT NULL,
+      message TEXT
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_hosted_app_events ON hosted_app_events(app_id, id DESC)');
+
+  // Uptime + egress metering, hourly buckets. Written by the runner sweeper
+  // every 5 min (uptime += 300 s for each status='running' app;
+  // egress_bytes += docker stats delta). Rolled into
+  // backend_usage.app_uptime_seconds / .app_egress_bytes once buckets age
+  // past 24 h so historical aggregates live on the same per-backend row as
+  // the other meters (emails_sent, compute_run_seconds, etc.).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS hosted_app_uptime (
+      app_id         TEXT NOT NULL,
+      window_start   INTEGER NOT NULL,
+      uptime_seconds INTEGER NOT NULL DEFAULT 0,
+      egress_bytes   INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (app_id, window_start)
+    )
+  `);
+
+  // Additive columns on backend_usage — mirror how compute_run_seconds was
+  // added by migrateComputeTables (idempotent, best-effort against missing
+  // parent table during partial boot).
+  try {
+    const usageCols = new Set(db.prepare('PRAGMA table_info(backend_usage)').all().map((c) => c.name));
+    if (!usageCols.has('app_uptime_seconds')) {
+      db.exec('ALTER TABLE backend_usage ADD COLUMN app_uptime_seconds INTEGER NOT NULL DEFAULT 0');
+    }
+    if (!usageCols.has('app_egress_bytes')) {
+      db.exec('ALTER TABLE backend_usage ADD COLUMN app_egress_bytes INTEGER NOT NULL DEFAULT 0');
+    }
+  } catch (_) { /* backend_usage may not exist yet on a partial boot — best effort */ }
+
+  // Additive runner-internal columns on hosted_apps. Kept underscore-prefixed
+  // so nobody mistakes them for user-facing fields: they hold cumulative
+  // counters the runner reads to compute *deltas* on each poll tick
+  // (Docker's per-container RestartCount + accumulated NetIO). Missing on
+  // this table before the runner shipped; runner reads via a safe getter
+  // that returns 0 when the column doesn't exist, so this is purely a
+  // schema-completeness ALTER — no code change needed alongside it.
+  try {
+    const appsCols = new Set(db.prepare('PRAGMA table_info(hosted_apps)').all().map((c) => c.name));
+    if (!appsCols.has('_last_docker_restart_cumulative')) {
+      db.exec('ALTER TABLE hosted_apps ADD COLUMN _last_docker_restart_cumulative INTEGER NOT NULL DEFAULT 0');
+    }
+    if (!appsCols.has('_last_egress_cumulative')) {
+      db.exec('ALTER TABLE hosted_apps ADD COLUMN _last_egress_cumulative INTEGER NOT NULL DEFAULT 0');
+    }
+    // cloud-hosted-app-runner.js:474-478 writes `last_deployed_at` on the
+    // hosted_apps row when a deploy transitions to running. The original
+    // CREATE TABLE never declared this column, so the UPDATE silently
+    // no-op'd via _safeRun's error swallow — `hosted_apps.status` stayed
+    // 'building' forever even though the container was live + healthy on
+    // its port. Symptom: cloud-hosted-app-proxy.js's Host-dispatch would
+    // return the "Building" 503 placeholder indefinitely while the real
+    // FastAPI process happily served /127.0.0.1:<port>/. Discovered
+    // 2026-08-13 as the final unblocker of the smoke test.
+    if (!appsCols.has('last_deployed_at')) {
+      db.exec('ALTER TABLE hosted_apps ADD COLUMN last_deployed_at TEXT');
+    }
+  } catch (_) { /* hosted_apps just created above — this should not fail */ }
+
+  // Additive runner-lifecycle columns on hosted_app_deploys. cloud-hosted-app-
+  // runner.js writes to four columns the original CREATE TABLE never declared:
+  //
+  //   worker_id         TEXT — set by _claimQueued when a runner picks up a
+  //                            queued deploy (WORKER_ID = "<hostname>:<pid>").
+  //                            Lets the ops team + tests answer "which worker
+  //                            is building this?" from the DB alone.
+  //   build_started_at  TEXT — ISO timestamp of the same claim event.
+  //   build_finished_at TEXT — ISO timestamp of terminal state (running / failed).
+  //                            Distinct from the existing `finished_at` INTEGER
+  //                            column that the HTTP route in cloud-hosted-apps.js
+  //                            writes; the two lifecycles evolved separately
+  //                            and normalizing them is a follow-on.
+  //   error_code        TEXT — machine-readable failure category from
+  //                            _failDeploy() (e.g. 'build_failed',
+  //                            'healthcheck_failed', 'caddy_upsert_failed').
+  //                            The existing `error` column keeps the
+  //                            human-readable message.
+  //
+  // Discovered 2026-08-13 during the hosted-apps smoke test — the runner had
+  // been silently no-op'ing since the tier first deployed because _safeRun
+  // swallows the "no such column" SQL error, and _failDeploy hit the same
+  // trap so failures never even surfaced as `status='failed'`. Adding these
+  // columns is what actually unblocks Python app hosting on prod.
+  try {
+    const deployCols = new Set(db.prepare('PRAGMA table_info(hosted_app_deploys)').all().map((c) => c.name));
+    if (!deployCols.has('worker_id')) {
+      db.exec('ALTER TABLE hosted_app_deploys ADD COLUMN worker_id TEXT');
+    }
+    if (!deployCols.has('build_started_at')) {
+      db.exec('ALTER TABLE hosted_app_deploys ADD COLUMN build_started_at TEXT');
+    }
+    if (!deployCols.has('build_finished_at')) {
+      db.exec('ALTER TABLE hosted_app_deploys ADD COLUMN build_finished_at TEXT');
+    }
+    if (!deployCols.has('error_code')) {
+      db.exec('ALTER TABLE hosted_app_deploys ADD COLUMN error_code TEXT');
+    }
+  } catch (_) { /* hosted_app_deploys just created above — this should not fail */ }
+
+  // Additive runner-lifecycle columns on hosted_app_events. cloud-hosted-app-
+  // runner.js's _emitEvent (~:270) writes to `created_at` (ISO text) and
+  // `extra_json` (JSON payload) — richer than the original schema's
+  // (app_id, ts INTEGER, kind, message) shape. Every deploy/pause/resume/
+  // crash silently dropped its event row because _safeRun swallowed the
+  // "no such column: created_at" SQL error (fixed at the log level by
+  // PR #40, which is how we found this bug ~5s after landing PR #40).
+  //
+  // Note: the legacy `ts INTEGER NOT NULL` column stays. The runner's
+  // INSERT is being updated in the same PR to include ts=Date.now() so
+  // the NOT NULL is satisfied without a table rebuild. A future migration
+  // could drop `ts` entirely if we decide `created_at` supersedes it.
+  try {
+    const eventsCols = new Set(db.prepare('PRAGMA table_info(hosted_app_events)').all().map((c) => c.name));
+    if (!eventsCols.has('created_at')) {
+      db.exec('ALTER TABLE hosted_app_events ADD COLUMN created_at TEXT');
+    }
+    if (!eventsCols.has('extra_json')) {
+      db.exec('ALTER TABLE hosted_app_events ADD COLUMN extra_json TEXT');
+    }
+  } catch (_) { /* hosted_app_events just created above — this should not fail */ }
+}
+
+module.exports = { migrateUsersTable, migrateAccountTokensTable, migrateVoucherTables, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, migrateComputeTables, migrateBackendParentFKs, stripBackendParentFK, migrateHostedAppsTables, bumpCollabSchemaToMultiFile };

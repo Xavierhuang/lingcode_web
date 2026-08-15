@@ -104,7 +104,7 @@ function renderStrip() {
       'color:#fff',
       'font-size:11px',
       'font-weight:600',
-      'font-family:system-ui,sans-serif',
+      'font-family:Helvetica Neue,Helvetica,Arial,sans-serif',
       'border:2px solid #fff',
       'box-shadow:0 1px 3px rgba(0,0,0,.25)',
       'flex-shrink:0',
@@ -127,7 +127,7 @@ function renderStrip() {
       'color:#fff',
       'font-size:10px',
       'font-weight:600',
-      'font-family:system-ui,sans-serif',
+      'font-family:Helvetica Neue,Helvetica,Arial,sans-serif',
       'border:2px solid #fff',
       'box-shadow:0 1px 3px rgba(0,0,0,.25)',
     ].join(';');
@@ -227,7 +227,7 @@ function renderCursors() {
       'font-weight:600',
       'padding:1px 6px',
       'border-radius:3px',
-      'font-family:system-ui,sans-serif',
+      'font-family:Helvetica Neue,Helvetica,Arial,sans-serif',
       'white-space:nowrap',
       'line-height:1.4',
     ].join(';');

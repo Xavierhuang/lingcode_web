@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Observability | LingCode Cloud Docs</title>
+  <meta name="description" content="Use LingCode Cloud logs, metrics, request identifiers, traces, dashboards, alerts, and deployment correlation without leaking sensitive data or creating high-cardinality metrics.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/production/observability.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/production/observability.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/production/observability.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html" aria-current="page">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Observability</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="observability">Observability</h1>
+<p>Observability should answer: what failed, for whom, at which release, in which component, how often, and whether the system is recovering—without exposing private application data.</p>
+<h2 id="logs">Logs</h2>
+<p>Backend logs capture timestamp, source, severity, and bounded message text. Function execution logs should include a request ID, function slug, outcome, duration, and safe diagnostic context.</p>
+<p>Good log fields:</p>
+<ul>
+<li>request ID and trace ID;</li>
+<li>backend and deployment environment;</li>
+<li>source component and operation;</li>
+<li>function kind and slug;</li>
+<li>duration, attempt count, and row count;</li>
+<li>HTTP status and stable error code;</li>
+<li>release or backend digest.</li>
+</ul>
+<p>Never log access tokens, refresh tokens, anon keys, secret values, password material, complete payment payloads, or unrestricted private request bodies.</p>
+<h2 id="request-id">Request ID</h2>
+<p>Every unexpected public error should carry a <strong>request ID</strong>. Show it in support-friendly UI and keep it through gateway, function, database, and vendor logs.</p>
+<p>A request ID is diagnostic correlation, not authentication. It should not grant access to logs or data.</p>
+<h2 id="metrics">Metrics</h2>
+<p>Useful service metrics include:</p>
+<ul>
+<li>request and function invocation rate;</li>
+<li>error rate by safe category;</li>
+<li>latency percentiles;</li>
+<li>PostgreSQL query duration;</li>
+<li>pool total, idle, and waiting clients;</li>
+<li>active Realtime subscribers and reconnects;</li>
+<li>storage bytes and object count;</li>
+<li>quota rejections;</li>
+<li>worker and compute concurrency;</li>
+<li>backup age and restore-test result.</li>
+</ul>
+<h2 id="cardinality">Cardinality</h2>
+<p>Prometheus labels must have bounded cardinality. Function kind, outcome, route pattern, and HTTP status are safe examples. Backend IDs, user IDs, request IDs, raw URLs, function slugs, object paths, and error messages are not.</p>
+<p>Put high-cardinality identifiers in structured logs or traces, where retention and access controls are appropriate.</p>
+<h2 id="slow-queries">Slow queries</h2>
+<p>The data plane records query duration and warns above the configured slow-query threshold. Investigate query plans, missing indexes, broad scans, RLS expressions, lock waits, and excessive result size.</p>
+<p>Do not fix every slow query by raising <code>statement_timeout</code>. A timeout is a blast-radius guard, not a performance strategy.</p>
+<h2 id="dashboards">Dashboards</h2>
+<p>At minimum, maintain views for:</p>
+<ul>
+<li>traffic, errors, and latency;</li>
+<li>database connection and query health;</li>
+<li>functions and external dependencies;</li>
+<li>Realtime connections;</li>
+<li>storage and quotas;</li>
+<li>deployment markers;</li>
+<li>backup and restore health.</li>
+</ul>
+<p>Compare current signals with a normal baseline and annotate deploys. Absolute thresholds alone miss gradual regressions.</p>
+<h2 id="alerts">Alerts</h2>
+<p>Alert on sustained user impact or capacity risk:</p>
+<ul>
+<li>elevated error ratio;</li>
+<li>high latency over several windows;</li>
+<li>database or PgBouncer unavailable;</li>
+<li>persistent pool waiters;</li>
+<li>backup overdue or restore test failed;</li>
+<li>storage or disk nearing capacity;</li>
+<li>repeated function-runtime failure;</li>
+<li>abnormal authentication rejection.</li>
+</ul>
+<p>Each alert needs an owner, severity, user impact, first diagnostic query, and escalation path. Avoid alerts that fire on one harmless event and train operators to ignore them.</p>
+<h2 id="application-telemetry">Application telemetry</h2>
+<p>The LingCode SDK can record product events, screens, traces, errors, user IDs, and user properties. Application telemetry is separate from infrastructure logs. Define consent, retention, naming, and sensitive-data rules before broad collection.</p>
+<p>Use telemetry to understand user outcomes; use protected backend logs and metrics to diagnose service behavior.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/production/reliability.html">Previous: Reliability</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/limits.html">Next: Limits and quotas</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#logs">Logs</a></li><li class="toc-level-2"><a href="#request-id">Request ID</a></li><li class="toc-level-2"><a href="#metrics">Metrics</a></li><li class="toc-level-2"><a href="#cardinality">Cardinality</a></li><li class="toc-level-2"><a href="#slow-queries">Slow queries</a></li><li class="toc-level-2"><a href="#dashboards">Dashboards</a></li><li class="toc-level-2"><a href="#alerts">Alerts</a></li><li class="toc-level-2"><a href="#application-telemetry">Application telemetry</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

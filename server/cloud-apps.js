@@ -152,7 +152,7 @@ function contentTypeFor(rel) {
 
 function notFoundPage(msg) {
   const m = String(msg).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Not found · LingCode</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a0a;color:#f0f0f0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;padding:24px;text-align:center}h1{font-size:1.5rem;margin:0 0 8px;font-weight:500}p{color:#888;margin:0 0 24px}a{color:#00d084;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><h1>404</h1><p>${m}</p><a href="/try.html">Build something on /try →</a></body></html>`;
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Not found · LingCode</title><style>body{font-family:Helvetica Neue,Helvetica,Arial,sans-serif;background:#0a0a0a;color:#f0f0f0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;padding:24px;text-align:center}h1{font-size:1.5rem;margin:0 0 8px;font-weight:500}p{color:#888;margin:0 0 24px}a{color:#00d084;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><h1>404</h1><p>${m}</p><a href="/try.html">Build something on /try →</a></body></html>`;
 }
 
 // Stream the raw (gunzip'd tar) request body. Writes each file's bytes to the

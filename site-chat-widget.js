@@ -14,7 +14,7 @@
     + '.lcw-btn:hover{transform:translateY(-2px)}'
     + '.lcw-panel{position:fixed;right:20px;bottom:86px;z-index:9300;width:380px;max-width:calc(100vw - 32px);height:540px;max-height:calc(100vh - 120px);'
     + 'background:#fff;border:1px solid #ecedf1;border-radius:16px;box-shadow:0 16px 48px rgba(16,24,40,.18);display:none;flex-direction:column;overflow:hidden;'
-    + 'font-family:Geist,system-ui,-apple-system,sans-serif;color:#15171c}'
+    + 'font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#15171c}'
     + '.lcw-panel.open{display:flex}'
     + '.lcw-hd{padding:14px 16px;border-bottom:1px solid #ecedf1;display:flex;align-items:center;gap:8px}'
     + '.lcw-hd b{font-size:.95rem;letter-spacing:-.01em}.lcw-hd .s{font-size:.72rem;color:#9aa0ab}'

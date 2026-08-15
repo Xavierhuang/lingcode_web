@@ -16,9 +16,9 @@
   <meta property="og:image" content="https://lingcode.dev/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/style.css?v=20260531a">
-  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
 </head>
 <body>
   <nav class="site-nav">
@@ -136,11 +136,14 @@ export default async (req, ctx) =&gt; {
       <p>The backend flags storage at <strong>80%</strong> and <strong>95%</strong> — watch for those warnings rather than waiting for a hard stop. And because functions are short-lived (<strong>≤30s</strong>), anything longer must be offloaded — split the work, queue it, or move it to a hosted Worker. Tier caps are listed on the <a href="/pricing.html">pricing page</a>.</p>
 
       <h2>7. Migrations discipline</h2>
-      <p>Schema drift between environments is the quiet killer of "works on my backend." Make migrations the <strong>only</strong> way schema changes — never click-edit structure ad hoc.</p>
+      <p>Schema drift between environments is the quiet killer of "works on my backend." Keep the backend definition in Git under <code>lingcode/</code> and make migrations the <strong>only</strong> way schema changes—never click-edit structure ad hoc.</p>
       <ul>
-        <li>Run all DDL through the console's <strong>SQL</strong> tab or <code>apply_migration</code>.</li>
-        <li>Write <strong>idempotent</strong> DDL — <code>create table if not exists</code>, <code>create index if not exists</code> — so re-applying is safe.</li>
+        <li>Declare ordered migration files in <code>lingcode/backend.json</code>, then run <code>deploy_backend_manifest</code> in preview mode before apply.</li>
+        <li>Development may auto-apply a clean preview. Production shows the exact changes and warnings and requires an explicit <strong>Deploy</strong> approval; it never deploys from file watch mode.</li>
+        <li>A production plan expires after 10 minutes. If any declared file changes, preview again so approval stays bound to the exact SHA-256 hashes.</li>
+        <li>Never rewrite an applied migration ID. Add the next migration so Git history and production history remain reproducible.</li>
         <li>Keep <strong>indexes, constraints, views, and RLS policies</strong> in migrations alongside the tables they belong to, not as one-off console edits.</li>
+        <li>After deployment, compare local files with <code>backend_source_status</code>; matching SHA-256 values mean the repository and backend agree.</li>
       </ul>
       <pre><code>create table if not exists invites (
   id         uuid primary key default gen_random_uuid(),
@@ -148,7 +151,7 @@ export default async (req, ctx) =&gt; {
   created_at timestamptz not null default now()
 );
 create index if not exists idx_invites_email on invites (email);</code></pre>
-      <p>Migration mechanics live in the <a href="/docs/cloud/database.html">Database guide</a>.</p>
+      <p>The manifest format and function workflow live in the <a href="/docs/cloud/functions.html">Functions guide</a>; migration mechanics live in the <a href="/docs/cloud/database.html">Database guide</a>.</p>
 
       <h2>8. Performance</h2>
       <p>Three habits keep an app responsive without extra infrastructure:</p>
@@ -248,6 +251,6 @@ create index if not exists idx_invites_email on invites (email);</code></pre>
     <span>native · fast · honest</span>
   </div>
 </footer>
-  <script src="/site-chat-widget.js?v=20260603" defer></script>
+  <script src="/site-chat-widget.js?v=20260731a" defer></script>
 </body>
 </html>

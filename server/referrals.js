@@ -20,6 +20,15 @@ const CODE_RE = /^[a-z0-9][a-z0-9_-]{1,40}$/;
 const DMG = '/LingCode-Installer.dmg';
 const PAID_SQL = "subscription_status IN ('active','trialing')";
 
+// Link-preview / crawler UAs that fetch /r/<code> to build a chat unfurl card
+// (see the interstitial comment below) — NOT a human visit. Confirmed live in
+// prod nginx logs: WhatsApp + facebookexternalhit/Twitterbot repeatedly hit the
+// same code within seconds of a real share, inflating "clicks" well past real
+// traffic. Still serves them the branded card + sets the cookie (harmless, and
+// protects a real visitor whose UA happens to match) — only the click COUNTER
+// skips them, so the affiliate dashboard reflects actual visits.
+const BOT_UA_RE = /facebookexternalhit|Facebot|Twitterbot|WhatsApp|Slackbot|Discordbot|TelegramBot|LinkedInBot|SkypeUriPreview|Pinterest|redditbot|vkShare|Applebot|Googlebot|bingbot|AhrefsBot|meta-webindexer/i;
+
 // Branded interstitial served on /r/<code>. Social scrapers (iMessage, Slack,
 // Twitter, Discord) read the Open Graph tags to build a preview card; real
 // browsers run the inline redirect and land on the DMG download. We serve HTML
@@ -67,7 +76,7 @@ ${headRedirect}
 <style>
   html,body{height:100%;margin:0}
   body{display:flex;align-items:center;justify-content:center;
-       font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+       font:16px/1.5 Helvetica Neue,Helvetica,Arial,sans-serif;
        background:#0b0b0f;color:#e8e8ea}
   .card{text-align:center;padding:2rem}
   a{color:#7c8cff}
@@ -140,7 +149,10 @@ function register(app, db, requireAdmin) {
     const valid = CODE_RE.test(code);
     const exists = valid && db.prepare('SELECT 1 FROM referrals WHERE code = ?').get(code);
     if (exists) {
-      try { db.prepare('UPDATE referrals SET clicks = clicks + 1 WHERE code = ?').run(code); } catch (_) {}
+      const ua = String(req.headers['user-agent'] || '');
+      if (!BOT_UA_RE.test(ua)) {
+        try { db.prepare('UPDATE referrals SET clicks = clicks + 1 WHERE code = ?').run(code); } catch (_) {}
+      }
       // Lax so it survives the redirect + a later top-level signup navigation.
       res.setHeader('Set-Cookie', `lc_ref=${encodeURIComponent(code)}; Path=/; Max-Age=${90 * 24 * 3600}; SameSite=Lax`);
     }

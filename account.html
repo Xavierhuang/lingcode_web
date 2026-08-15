@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Account — LingCode</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css?v=20260531a">
+  <link rel="stylesheet" href="style.css?v=20260731a">
   <style>
     .account-hero { padding: 110px 32px 12px; text-align: center; }
     .account-hero h1 { font-size: clamp(1.75rem, 3vw, 2.25rem); margin: 0 0 4px; letter-spacing: -0.03em; }
@@ -144,7 +141,7 @@
       background: transparent; color: var(--text-muted);
       border: 1px solid var(--border); border-radius: 6px;
       padding: 4px 9px; font-size: 0.72rem; cursor: pointer;
-      transition: all 0.12s; font-family: 'Geist', sans-serif;
+      transition: all 0.12s; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
     .saved-card-actions button:hover { color: var(--text); border-color: var(--border-strong); }
     .saved-card-actions .saved-delete:hover { color: #f87171; border-color: rgba(248,113,113,0.5); }
@@ -443,11 +440,13 @@
         banner +
         '<div class="account-card account-mac">' +
           '<div class="account-card-head"><h2>Mac app</h2></div>' +
-          '<p class="account-billing" style="margin:0 0 14px"><a href="/LingCode-Installer.dmg" style="color:var(--signal,#00d084)">Download</a> first if needed.</p>' +
+          '<p class="account-billing" style="margin:0 0 14px"><a href="/LingCode-Installer.dmg" style="color:var(--signal,#00d084)">Download LingCode</a> or <a href="/LingCodeBaby.dmg" style="color:var(--signal,#00d084)">LingCode Baby</a> first if needed.</p>' +
           '<div class="account-actions account-actions-tight">' +
             '<button type="button" class="btn btn-primary btn-lg" id="btn-open-lingcode">Open LingCode</button>' +
+            '<button type="button" class="btn btn-ghost btn-lg" id="btn-open-baby" style="border-color:var(--border-strong);color:var(--ink)">Open LingCode Baby</button>' +
           '</div>' +
           '<p id="open-app-msg" class="account-billing" style="display:none;margin-top:12px">Didn\u2019t open? Install from <a href="/LingCode-Installer.dmg" style="color:var(--signal,#00d084)">Download</a>.</p>' +
+          '<p id="open-baby-msg" class="account-billing" style="display:none;margin-top:12px">Didn\u2019t open? Install from <a href="/LingCodeBaby.dmg" style="color:var(--signal,#00d084)">Download LingCode Baby</a>.</p>' +
         '</div>' +
         '<div class="account-card">' +
           '<div class="account-card-head"><h2>Remote control</h2></div>' +
@@ -562,14 +561,17 @@
         });
       })();
 
-      var openApp = document.getElementById('btn-open-lingcode');
-      var openAppMsg = document.getElementById('open-app-msg');
-      if (openApp) {
-        openApp.addEventListener('click', function () {
-          openApp.disabled = true;
-          openApp.textContent = 'Opening…';
-          if (openAppMsg) openAppMsg.style.display = 'none';
-          fetch('/api/account/app-handoff', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      // Same open-app flow for both LingCode and LingCode Baby — the button
+      // just picks which URL scheme the handoff endpoint returns.
+      function wireOpenApp(btnId, label, msgId, handoffBody, dmgHref) {
+        var btn = document.getElementById(btnId);
+        var msg = document.getElementById(msgId);
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+          btn.disabled = true;
+          btn.textContent = 'Opening…';
+          if (msg) msg.style.display = 'none';
+          fetch('/api/account/app-handoff', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(handoffBody) })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (r) {
               if (r.ok && r.j.ok && r.j.url) {
@@ -582,26 +584,26 @@
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                // After a short delay, re-enable the button and show a fallback message
-                // in case the app isn't installed.
                 setTimeout(function () {
-                  openApp.disabled = false;
-                  openApp.textContent = 'Open LingCode';
-                  if (openAppMsg) openAppMsg.style.display = '';
+                  btn.disabled = false;
+                  btn.textContent = label;
+                  if (msg) msg.style.display = '';
                 }, 2500);
               } else {
-                openApp.disabled = false;
-                openApp.textContent = 'Open LingCode';
-                alert(r.j.error || 'Could not open LingCode. Install the app from Download, then try again.');
+                btn.disabled = false;
+                btn.textContent = label;
+                alert(r.j.error || ('Could not open ' + label.replace(/^Open /, '') + '. Install the app from ' + dmgHref + ', then try again.'));
               }
             })
             .catch(function () {
-              openApp.disabled = false;
-              openApp.textContent = 'Open LingCode';
+              btn.disabled = false;
+              btn.textContent = label;
               alert('Could not connect. Try again.');
             });
         });
       }
+      wireOpenApp('btn-open-lingcode', 'Open LingCode', 'open-app-msg', {}, '/LingCode-Installer.dmg');
+      wireOpenApp('btn-open-baby', 'Open LingCode Baby', 'open-baby-msg', { app: 'baby' }, '/LingCodeBaby.dmg');
       var bm = document.getElementById('btn-pro-month');
       if (bm) {
         bm.addEventListener('click', function () {
@@ -1094,7 +1096,7 @@
     var pollTimer = null;
     var overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
-    overlay.innerHTML = '<div style="background:#ffffff;border:1px solid #e6e6ee;border-radius:14px;max-width:520px;width:100%;padding:22px 24px;font-family:Geist,system-ui,sans-serif;color:#1b1b26">'
+    overlay.innerHTML = '<div style="background:#ffffff;border:1px solid #e6e6ee;border-radius:14px;max-width:520px;width:100%;padding:22px 24px;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#1b1b26">'
       + '<h3 style="margin:0 0 4px;font-size:1.05rem">Custom domains</h3>'
       + '<p style="margin:0 0 14px;color:var(--text-muted,#8a8b94);font-size:.85rem">Serve “' + escapeHtml(title) + '” on your own domain.</p>'
       + '<div id="cd-list" style="margin-bottom:14px"><p style="color:var(--text-muted)">Loading…</p></div>'
@@ -1278,7 +1280,7 @@
   function openModal(title, subtitle, bodyHtml) {
     var overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
-    overlay.innerHTML = '<div style="background:#fff;border:1px solid #e6e6ee;border-radius:14px;max-width:560px;width:100%;padding:22px 24px;font-family:Geist,system-ui,sans-serif;color:#1b1b26;max-height:80vh;display:flex;flex-direction:column">'
+    overlay.innerHTML = '<div style="background:#fff;border:1px solid #e6e6ee;border-radius:14px;max-width:560px;width:100%;padding:22px 24px;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#1b1b26;max-height:80vh;display:flex;flex-direction:column">'
       + '<h3 style="margin:0 0 4px;font-size:1.05rem">' + escapeHtml(title) + '</h3>'
       + '<p style="margin:0 0 14px;color:#8a8b94;font-size:.85rem">' + subtitle + '</p>'
       + '<div class="lc-modal-body" style="overflow:auto;flex:1">' + bodyHtml + '</div>'
@@ -1392,13 +1394,13 @@
     var letter = (String(email || '').match(/[a-z]/i) || [''])[0].toUpperCase();
     var st = document.createElement('style');
     st.textContent =
-      '#lc-fab{position:fixed;left:20px;bottom:20px;width:46px;height:46px;border-radius:50%;background:var(--signal,#00d084);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font:600 18px/1 Geist,system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.28);z-index:9998}'
+      '#lc-fab{position:fixed;left:20px;bottom:20px;width:46px;height:46px;border-radius:50%;background:var(--signal,#00d084);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font:600 18px/1 Helvetica Neue,Helvetica,Arial,sans-serif;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.28);z-index:9998}'
       + '#lc-fab:hover{filter:brightness(1.05)}'
-      + '#lc-fab-menu{position:fixed;left:20px;bottom:78px;min-width:250px;background:#fff;color:#1b1b26;border:1px solid #e6e6ee;border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.2);padding:8px;z-index:9999;display:none;font-family:Geist,system-ui,sans-serif}'
+      + '#lc-fab-menu{position:fixed;left:20px;bottom:78px;min-width:250px;background:#fff;color:#1b1b26;border:1px solid #e6e6ee;border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.2);padding:8px;z-index:9999;display:none;font-family:Helvetica Neue,Helvetica,Arial,sans-serif}'
       + '#lc-fab-menu.open{display:block}'
       + '#lc-fab-menu .lc-em{padding:8px 12px 6px;font-size:.8rem;color:#8a8b94;word-break:break-all}'
       + '#lc-fab-menu .lc-hr{height:1px;background:#ececf2;margin:6px 4px}'
-      + '#lc-fab-menu a,#lc-fab-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;padding:10px 12px;border-radius:9px;font:500 .92rem/1.2 Geist,system-ui,sans-serif;color:#1b1b26;cursor:pointer;text-decoration:none;box-sizing:border-box}'
+      + '#lc-fab-menu a,#lc-fab-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;padding:10px 12px;border-radius:9px;font:500 .92rem/1.2 Helvetica Neue,Helvetica,Arial,sans-serif;color:#1b1b26;cursor:pointer;text-decoration:none;box-sizing:border-box}'
       + '#lc-fab-menu a:hover,#lc-fab-menu button:hover{background:#f4f4f8}';
     document.head.appendChild(st);
 
@@ -1432,6 +1434,6 @@
 })();
   </script>
 <script src="/nav-auth.js" defer></script>
-  <script src="/site-chat-widget.js?v=20260603" defer></script>
+  <script src="/site-chat-widget.js?v=20260731a" defer></script>
 </body>
 </html>

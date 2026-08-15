@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Can I run FastAPI on LingCode Cloud? | Tutorials</title>
+  <!-- geo-rewrite:v1 -->
+  <meta name="description" content="LingCode Cloud does not host long-running FastAPI apps. The Preview Python runtime is stdlib-only, per-invocation, and firejail-sandboxed. Host FastAPI on Fly, Render, or a droplet, then call it from a Cloud custom function via http-fetch with a Secrets-vault token — the FastAPI service stays private and your app never sees the token.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/use-fastapi-with-lingcode-cloud.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/use-fastapi-with-lingcode-cloud.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <!-- geo-meta:v1 -->
+  <meta name="article:modified_time" content="2026-08-13T00:00:00Z">
+  <meta name="article:published_time" content="2026-08-13T00:00:00Z">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/use-fastapi-with-lingcode-cloud.html">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "name": "Use FastAPI with LingCode Cloud",
+  "description": "LingCode Cloud does not host long-running FastAPI apps. Host FastAPI on Fly/Render/a droplet and call it from a Cloud custom function via http-fetch — the API key stays in the Secrets vault, the FastAPI service stays private, and your frontend never sees the token.",
+  "url": "https://lingcode.dev/tutorials/use-fastapi-with-lingcode-cloud.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-08-13",
+  "dateModified": "2026-08-13",
+  "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+  "publisher": { "@type": "Organization", "name": "Aurelian Labs Inc.", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/tutorials/use-fastapi-with-lingcode-cloud.html" },
+  "inLanguage": "en-US",
+  "@type": "TechArticle",
+  "headline": "Use FastAPI with LingCode Cloud"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Search", "item": "https://lingcode.dev/search.html" },
+    { "@type": "ListItem", "position": 4, "name": "Backend integrations", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 5, "name": "Use FastAPI with LingCode Cloud", "item": "https://lingcode.dev/tutorials/use-fastapi-with-lingcode-cloud.html" }
+  ]
+}
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+        <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/tutorials.html">Backend integrations</a>
+      <span>/</span>
+      <span>Use FastAPI with LingCode Cloud</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-08-13</span>
+      </div>
+      <h1>Can I run FastAPI on LingCode Cloud?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> No — LingCode Cloud custom functions are short-lived per-invocation subprocesses (Deno-TS or, in Preview, stdlib-only Python), not long-running HTTP servers. Host your FastAPI app somewhere that <em>does</em> run long-lived processes (Fly, Render, Railway, a droplet), keep its URL and any auth token in your backend's <a href="/docs/cloud/secrets.html">Secrets vault</a>, and call it from a Cloud custom function via the <code>http-fetch</code> template. Your frontend never sees the token; your FastAPI service stays private.</p>
+      <p class="intro">FastAPI is a long-running ASGI framework — you <code>uvicorn app:app</code>, it binds a port, and it lives for hours serving requests. LingCode Cloud custom functions run in the opposite model: a fresh sandbox spawns per call, executes one handler, prints a result, exits. Neither the Deno-TS runtime nor the Preview Python runtime can host an ASGI server, and neither installs PyPI packages (the Preview is deliberately stdlib-only). That's not a shortcoming to work around — it's a different job. This tutorial covers the pattern that <em>does</em> fit: FastAPI hosted elsewhere, safely proxied through your Cloud backend.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <p>This builds on a <a href="/tutorials/connect-a-managed-backend.html">connected managed backend</a> and assumes you already have (or can deploy) a FastAPI app somewhere reachable over HTTPS.</p>
+
+      <h2>What you'll learn</h2>
+      <ul>
+        <li>Why FastAPI can't run inside a LingCode Cloud custom function</li>
+        <li>How to keep your FastAPI service private and only reachable through the Cloud backend</li>
+        <li>The <code>http-fetch</code> one-liner your frontend calls, and how the Secrets vault swaps in the auth token</li>
+        <li>When to skip the proxy entirely (public FastAPI + no server-side secret)</li>
+      </ul>
+
+      <h2>Step 1 — deploy FastAPI wherever long-running processes live</h2>
+      <p>Any host that supervises a Python process will do. Fly, Render, Railway, a DigitalOcean droplet, an AWS Lightsail instance — the common shape is: a Docker image or a Nix/buildpack that runs <code>uvicorn app:app --host 0.0.0.0 --port $PORT</code>. Keep this bit boring; the point of the pattern below is that <em>where</em> FastAPI runs stops mattering to your app once the Cloud backend fronts it.</p>
+      <p>Give your service one hardening rule at deploy time: <strong>require a shared secret in every request</strong>. A single header like <code>X-Backend-Token</code> checked at the top of every route is enough. This means only callers who know the token can invoke your API — and in the Cloud pattern, only the backend knows it. Sample:</p>
+      <pre><code class="mono">from fastapi import FastAPI, Header, HTTPException
+import os
+
+app = FastAPI()
+BACKEND_TOKEN = os.environ["BACKEND_TOKEN"]  # set in Fly/Render env
+
+@app.post("/score")
+def score(payload: dict, x_backend_token: str = Header(...)):
+    if x_backend_token != BACKEND_TOKEN:
+        raise HTTPException(status_code=401, detail="unauthorized")
+    # ... do the actual work
+    return {"score": 0.87}</code></pre>
+
+      <h2>Step 2 — store the token as a Cloud secret</h2>
+      <p>Open <a href="/backends.html">lingcode.dev/backends</a>, pick your backend, go to <strong>Settings → Secrets &amp; integrations</strong>, and add:</p>
+      <ul>
+        <li><code>FASTAPI_URL</code> = <code>https://your-fastapi.fly.dev</code> (the base URL of your deployed app)</li>
+        <li><code>FASTAPI_TOKEN</code> = the same value you set as <code>BACKEND_TOKEN</code> above</li>
+      </ul>
+      <p>Both are encrypted at rest (AES-256-GCM) and only readable by backend functions — never by your frontend. The console shows the names afterward, never the values.</p>
+
+      <h2>Step 3 — allow-list the host, then call it via <code>http-fetch</code></h2>
+      <p>Under <strong>Settings → Allowed fetch hosts</strong>, add your FastAPI host (e.g. <code>your-fastapi.fly.dev</code>). The <code>http-fetch</code> function template is deliberately blocked from every host that isn't on this list — see the note below on why.</p>
+      <p>From your app, one call:</p>
+      <pre><code class="mono">const { data, error } = await client.functions.invoke('http-fetch', {
+  url: '{{FASTAPI_URL}}/score',
+  method: 'POST',
+  headers: {
+    'X-Backend-Token': '{{FASTAPI_TOKEN}}',
+    'content-type': 'application/json',
+  },
+  body: { text: 'the thing to score' },
+});
+if (error) { console.error(error.message); return; }
+console.log(data.body.score);   // -&gt; 0.87</code></pre>
+      <p>The <code>{{FASTAPI_URL}}</code> and <code>{{FASTAPI_TOKEN}}</code> tokens are replaced server-side with the secret values before the outbound request is made — the request your app makes to LingCode contains no secrets at all. <code>data</code> carries <code>status</code>, <code>headers</code>, and <code>body</code> (parsed as JSON when the upstream Content-Type says so).</p>
+
+      <div class="info-box">
+        <h3>Why the allow-list?</h3>
+        <p><code>http-fetch</code> runs inside LingCode's network, so an unrestricted "fetch any URL" would be a server-side request forgery (SSRF) hole — a way to probe internal services. The allow-list is the guard: only domains you explicitly add are reachable, and requests are additionally blocked from resolving to any private/internal address. An empty allow-list means no outbound calls at all. Add exactly the FastAPI host, nothing broader.</p>
+      </div>
+
+      <div class="info-box">
+        <h3>Why not just have my frontend call FastAPI directly?</h3>
+        <p>You can — if the FastAPI endpoint is genuinely public and needs no secret. But the moment you have anything the caller shouldn't hold (an API key, a paid-service token, a rate-limit-scoped credential, database access), you need a server-side hop. The Cloud backend <em>is</em> that hop, without you having to stand one up. And keeping FastAPI behind a required <code>X-Backend-Token</code> means even someone who guesses the URL can't invoke it.</p>
+      </div>
+
+      <h2>When the answer really is "run FastAPI on LingCode Cloud"</h2>
+      <p>Today it isn't. The custom-functions runtime deliberately does not host long-lived processes — that's the domain of <a href="/docs/cloud/hosting.html">app hosting</a>, which currently supports Node/Worker apps. First-class Python <em>app</em> hosting (a supervised uvicorn process per project, with venv + healthchecks + logs) is a separate project on the roadmap, not something the Preview Python runtime is going to grow into. If you need it before we ship it, the pattern above is what production LingCode Cloud users use.</p>
+
+      <div class="warn-box">
+        <strong>Do not paste live tokens into your frontend, a prompt, or an environment that ships to the browser.</strong> The whole shape of this pattern is that <code>FASTAPI_TOKEN</code> lives only in the Cloud vault and only <code>http-fetch</code> ever sees it. If a token leaks, rotate it in your FastAPI env AND update the Cloud secret — the two must match.
+      </div>
+
+      <h2>What's next</h2>
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/call-external-apis-from-your-backend.html" class="tutorial-next-card">
+            <h3>Call external APIs from your backend</h3>
+            <p>The same pattern for ElevenLabs, OpenAI, Stripe, anything with an HTTPS API</p>
+          </a>
+          <a href="/docs/cloud/functions/custom-functions.html" class="tutorial-next-card">
+            <h3>Custom functions</h3>
+            <p>Deno-TS and Preview Python — the runtime that <em>can</em> live inside Cloud</p>
+          </a>
+          <a href="/docs/cloud/hosting.html" class="tutorial-next-card">
+            <h3>App hosting</h3>
+            <p>Long-running apps on Cloud — Node/Worker today, more runtimes on the roadmap</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col"><h4>Product</h4><ul><li><a href="/try.html">Web (/try)</a></li><li><a href="/cli.html">CLI</a></li><li><a href="/features.html">Mac IDE</a></li><li><a href="/pricing.html">Pricing</a></li><li><a href="/changelog.html">Changelog</a></li></ul></div>
+    <div class="footer-col"><h4>Developers</h4><ul><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li><li><a href="/getting-started.html">Getting started</a></li><li><a href="/cli.html">CLI reference</a></li><li><a href="/why-not-cursor.html">Why not Cursor</a></li></ul></div>
+    <div class="footer-col"><h4>Community</h4><ul><li><a href="/community.html">Friday workshops</a></li><li><a href="/community.html">For universities</a></li><li><a href="/examples.html">Showcase</a></li><li><a href="/blog.html">Blog</a></li><li><a href="/support.html">Support</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="/manifesto.html">Manifesto</a></li><li><a href="/pitch.html">Pitch</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/signin.html">Sign in</a></li><li><a href="/signup.html">Sign up</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260731a" defer></script>
+</body>
+</html>

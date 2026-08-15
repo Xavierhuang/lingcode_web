@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REST API | LingCode Cloud Docs</title>
+  <meta name="description" content="Call LingCode Cloud directly over HTTPS and handle authentication, envelopes, errors, pagination, and CORS safely.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/reference/rest-api.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/reference/rest-api.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/reference/rest-api.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html" aria-current="page">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>REST API</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="rest-api">REST API</h1>
+<p>LingCode Cloud exposes HTTPS endpoints for clients that cannot use the JavaScript SDK. The REST API uses the same authentication, row-level security, quotas, and audit boundaries as SDK requests.</p>
+<h2 id="base-url-and-headers">Base URL and headers</h2>
+<p>Send requests to the backend URL shown in the LingCode backend panel. Include the public backend key and, for signed-in operations, the user&#39;s bearer token.</p>
+<pre><code class="language-http">Authorization: Bearer USER_ACCESS_TOKEN
+X-LingCode-Key: PUBLIC_ANON_KEY
+Content-Type: application/json</code></pre>
+<p>Never expose a service-role key to an untrusted client. Service credentials bypass user-level policy boundaries and belong only in controlled server environments.</p>
+<h2 id="success-envelope">Success envelope</h2>
+<p>Successful JSON responses use the envelope { ok: true, data }. Collection responses may also include pagination metadata.</p>
+<pre><code class="language-json">{
+  &quot;ok&quot;: true,
+  &quot;data&quot;: [{ &quot;id&quot;: &quot;msg_123&quot;, &quot;body&quot;: &quot;Hello&quot; }],
+  &quot;page&quot;: { &quot;nextCursor&quot;: &quot;opaque-cursor&quot; }
+}</code></pre>
+<p>Do not infer success from a JSON body alone. Always check the HTTP status first, then validate the envelope.</p>
+<h2 id="errors">Errors</h2>
+<p>Failures use an appropriate HTTP status and a structured error with a stable code and readable message.</p>
+<pre><code class="language-json">{
+  &quot;ok&quot;: false,
+  &quot;error&quot;: {
+    &quot;code&quot;: &quot;quota_exceeded&quot;,
+    &quot;message&quot;: &quot;Compute quota exceeded&quot;,
+    &quot;requestId&quot;: &quot;req_...&quot;
+  }
+}</code></pre>
+<p>Use the error code for application behavior. Record the request ID when contacting support. Do not show internal details or stack traces directly to end users.</p>
+<p>Common status categories include:</p>
+<ul>
+<li><code>200</code>–<code>299</code> for successful reads, writes, and accepted operations.</li>
+<li><code>400</code> for invalid input or an invalid query.</li>
+<li><code>401</code> for missing or expired credentials.</li>
+<li><code>403</code> when the authenticated identity lacks permission.</li>
+<li><code>404</code> when the routed resource does not exist or is intentionally hidden.</li>
+<li><code>409</code> for conflicts such as a uniqueness violation.</li>
+<li><code>402</code> when a metered quota is exhausted.</li>
+<li><code>429</code> for temporary rate limiting.</li>
+<li><code>500</code>–<code>599</code> for server or dependency failures.</li>
+</ul>
+<h2 id="data-requests">Data requests</h2>
+<p>Table endpoints accept filters, selected columns, ordering, limits, and cursor pagination. Prefer cursor pagination for feeds that can change while the user is reading. Treat cursors as opaque values and do not construct or modify them.</p>
+<h2 id="function-requests">Function requests</h2>
+<p>Invoke a deployed function through its function route with a JSON request body. The response&#39;s HTTP status, headers, and body come from the function gateway after authentication and quota checks.</p>
+<pre><code class="language-http">POST /functions/v1/send-welcome-email
+Authorization: Bearer USER_ACCESS_TOKEN
+Content-Type: application/json
+
+{&quot;userId&quot;:&quot;user_123&quot;}</code></pre>
+<p>Use an idempotency key for retryable operations with side effects when the endpoint supports one. Set client timeouts and retry only safe failures with exponential backoff and jitter.</p>
+<h2 id="cors">CORS</h2>
+<p>Browser calls must originate from an allowed origin. Configure the exact production origins needed by the application. Avoid wildcard origins for endpoints that accept credentials.</p>
+<h2 id="versioning">Versioning</h2>
+<p>Versioned routes keep breaking API changes isolated. New optional response fields may appear without a version change, so clients should ignore fields they do not recognize.</p>
+<h2 id="related-guides">Related guides</h2>
+<ul>
+<li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li>
+<li><a href="/docs/cloud/functions/errors.html">Errors</a></li>
+<li><a href="/docs/cloud/limits.html">Limits and quotas</a></li>
+<li><a href="/docs/cloud/production/observability.html">Observability</a></li>
+</ul>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/reference/javascript-sdk.html">Previous: JavaScript SDK</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/reference/cli-mcp.html">Next: CLI and MCP</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#base-url-and-headers">Base URL and headers</a></li><li class="toc-level-2"><a href="#success-envelope">Success envelope</a></li><li class="toc-level-2"><a href="#errors">Errors</a></li><li class="toc-level-2"><a href="#data-requests">Data requests</a></li><li class="toc-level-2"><a href="#function-requests">Function requests</a></li><li class="toc-level-2"><a href="#cors">CORS</a></li><li class="toc-level-2"><a href="#versioning">Versioning</a></li><li class="toc-level-2"><a href="#related-guides">Related guides</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

@@ -11,6 +11,7 @@ const express = require('express');
 const Database = require('better-sqlite3');
 const { migrateRemoteHostsTable } = require('./migrate');
 const { registerRemoteRoutes } = require('./remote-routes');
+const { resolveToken } = require('./account-tokens');
 
 function makeServer() {
   const db = new Database(':memory:');
@@ -43,7 +44,7 @@ async function call(server, method, path, { token, body } = {}) {
 }
 
 test('remote-host REST lifecycle: create → list → room → delete, with auth gating', async () => {
-  const { app } = makeServer();
+  const { app, db } = makeServer();
   const server = await listen(app);
   try {
     // Unauthenticated create is rejected.
@@ -55,8 +56,14 @@ test('remote-host REST lifecycle: create → list → room → delete, with auth
     assert.equal(created.status, 200);
     assert.equal(created.json.ok, true);
     assert.ok(created.json.host.id, 'host id returned');
-    assert.match(created.json.wsUrl, /\/ws\/collab\/[0-9a-f-]+\?token=tok123$/);
+    assert.match(created.json.wsUrl, /\/ws\/collab\/[0-9a-f-]+\?token=lct_[0-9a-f]{64}$/);
     const hostId = created.json.host.id;
+    const createdToken = new URL(created.json.wsUrl).searchParams.get('token');
+    const createdCredential = resolveToken(db, createdToken);
+    assert.deepEqual(createdCredential.tokenScope, { projectKey: `remote:${hostId}`, caps: 'remote' });
+    const createdStored = db.prepare('SELECT * FROM account_tokens WHERE id=?').get(createdCredential.tokenId);
+    assert.equal(JSON.stringify(createdStored).includes(createdToken), false);
+    assert.ok(createdStored.expires_at <= Date.now() + 60 * 60 * 1000);
 
     // List shows it, offline (no live tunnel in this test).
     const listed = await call(server, 'GET', '/api/remote/hosts', { token: 'tok123' });
@@ -68,7 +75,7 @@ test('remote-host REST lifecycle: create → list → room → delete, with auth
     // Room info for the web client → wsUrl points at /__serve with the token.
     const room = await call(server, 'GET', `/api/remote/hosts/${hostId}/room`, { token: 'tok123' });
     assert.equal(room.status, 200);
-    assert.match(room.json.wsUrl, new RegExp(`/ws/collab/${hostId}/__serve\\?token=tok123$`));
+    assert.match(room.json.wsUrl, new RegExp(`/ws/collab/${hostId}/__serve\\?token=lct_[0-9a-f]{64}$`));
     assert.equal(room.json.online, false);
 
     // A different account cannot see this host's room.

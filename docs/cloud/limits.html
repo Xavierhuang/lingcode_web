@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Limits and quotas | LingCode Cloud Docs</title>
+  <meta name="description" content="Understand LingCode Cloud request, row, function, storage, auth, email, hosting, schedule, and compute limits and how quota errors should be handled.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/limits.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/limits.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/limits.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html" aria-current="page">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Limits and quotas</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="limits-and-quotas">Limits and quotas</h1>
+<p>Limits protect shared infrastructure, bound accidental work, and define plan capacity. Effective values can change by plan and operator configuration, so the backend&#39;s capability response and console are authoritative for a particular backend.</p>
+<h2 id="design-principles">Design principles</h2>
+<ul>
+<li>Saved custom function definitions are unlimited; execution is bounded by time, memory, source, output, and usage.</li>
+<li>Large data sets are accessed with pagination, indexes, SQL RPC, or compute—not one unbounded gateway response.</li>
+<li>Large files use presigned direct-to-storage uploads rather than passing bytes through API memory.</li>
+<li>Long-running work uses container compute where available rather than extending request functions indefinitely.</li>
+<li>Quotas apply per relevant backend, application, user, or day as documented by the endpoint.</li>
+</ul>
+<h2 id="database-requests">Database requests</h2>
+<div class="cloud-docs-table-wrap"><table><thead><tr><th>Limit</th><th>Purpose</th><th>Application response</th></tr></thead><tbody>
+<tr><td>Rows returned per read</td><td>Prevent one request from draining a shared database</td><td>Use cursor or range pagination</td></tr>
+<tr><td>Rows per batch write</td><td>Bound bind parameters and transaction work</td><td>Split into deterministic chunks</td></tr>
+<tr><td>Statement timeout</td><td>Release locks and connections from wedged SQL</td><td>Optimize or move heavy work to compute</td></tr>
+<tr><td>SQL RPC result cap</td><td>Bound JSON response memory</td><td>Return pages or aggregates</td></tr>
+<tr><td>Table count</td><td>Bound per-backend schema footprint</td><td>Archive, consolidate, or upgrade</td></tr>
+</tbody></table></div>
+<p>The data plane has hard safety ceilings in addition to plan values. A higher client-supplied limit cannot bypass them.</p>
+<h2 id="functions">Functions</h2>
+<ul>
+<li>Unlimited saved function definitions.</li>
+<li>Maximum source: <strong>256 KB</strong> per custom function.</li>
+<li>Memory: <strong>128 MB</strong> V8 heap for the current Deno runtime.</li>
+<li>Tier-specific wall-clock timeout; current defaults range from seconds to tens of seconds.</li>
+<li>Bounded stdout and stderr capture.</li>
+<li>Declared secret-name count and format limits.</li>
+</ul>
+<p>Do not split one cohesive function only to work around a saved-definition count; there is no enforced count cap. Split by responsibility, security boundary, and testability.</p>
+<h2 id="storage">Storage</h2>
+<p>Storage distinguishes:</p>
+<ul>
+<li>total bytes per backend;</li>
+<li>object count;</li>
+<li>small inline upload size;</li>
+<li>direct presigned upload size;</li>
+<li>single-object and provider ceilings.</li>
+</ul>
+<p>The SDK automatically chooses the small inline or direct path. A backend warns near storage capacity before hard rejection where notification configuration permits.</p>
+<h2 id="authentication-and-email">Authentication and email</h2>
+<p>Plans bound total managed users and daily managed-email sends. Authentication endpoints also apply security rate limits independently of paid capacity.</p>
+<p>Do not expose whether a particular account exists through password-reset, verification, or magic-link responses.</p>
+<h2 id="hosting-and-schedules">Hosting and schedules</h2>
+<p>Plans can bound deployed Worker applications, schedules per application, scheduled custom functions, and daily Worker requests. An over-quota hosted application may be suspended until capacity resets or the plan changes.</p>
+<h2 id="container-compute">Container compute</h2>
+<p>Paid compute limits include job definitions, concurrent runs, timeout, memory, and schedules. Free backends may have no container-compute allocation.</p>
+<p>Queue, skip, or allow overlap deliberately for schedules. Concurrent-run limits are not a substitute for application locking when two jobs mutate the same logical resource.</p>
+<h2 id="error-responses">Error responses</h2>
+<p>A plan quota returns <strong>HTTP 402</strong> with stable code <code>quota_exceeded</code>. A single request that is too large commonly returns HTTP 413. Rate limiting commonly returns HTTP 429. Timeouts and unavailable services use their documented 5xx or function error.</p>
+<pre><code class="language-json">{
+  &quot;ok&quot;: false,
+  &quot;error&quot;: &quot;quota_exceeded&quot;,
+  &quot;message&quot;: &quot;Storage quota reached. Upgrade or free up space.&quot;
+}</code></pre>
+<p>Handle stable codes, not English messages. Show the user or operator the constrained resource and a concrete next action.</p>
+<h2 id="designing-for-limits">Designing for limits</h2>
+<ul>
+<li>paginate before production data grows;</li>
+<li>index every pagination cursor and frequent filter;</li>
+<li>batch writes within the effective row ceiling;</li>
+<li>compress and resize media before upload where appropriate;</li>
+<li>use direct uploads for large files;</li>
+<li>cache safe reads at the application layer;</li>
+<li>make schedules idempotent and concurrency-aware;</li>
+<li>monitor 80% and 95% capacity thresholds;</li>
+<li>load-test with the effective production tier rather than local unlimited assumptions.</li>
+</ul>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/production/observability.html">Previous: Observability</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/reference/javascript-sdk.html">Next: JavaScript SDK</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#design-principles">Design principles</a></li><li class="toc-level-2"><a href="#database-requests">Database requests</a></li><li class="toc-level-2"><a href="#functions">Functions</a></li><li class="toc-level-2"><a href="#storage">Storage</a></li><li class="toc-level-2"><a href="#authentication-and-email">Authentication and email</a></li><li class="toc-level-2"><a href="#hosting-and-schedules">Hosting and schedules</a></li><li class="toc-level-2"><a href="#container-compute">Container compute</a></li><li class="toc-level-2"><a href="#error-responses">Error responses</a></li><li class="toc-level-2"><a href="#designing-for-limits">Designing for limits</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

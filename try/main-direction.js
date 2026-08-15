@@ -194,7 +194,7 @@ function buildPanel({ onConfirm, onRevise, onCancel }) {
     'box-sizing:border-box', 'padding:24px 26px',
     'border:1px solid var(--border)', 'border-radius:16px',
     'background:var(--bg-card, var(--bg, #ffffff))',
-    'font-family:system-ui,-apple-system,sans-serif', 'color:var(--text)',
+    'font-family:Helvetica Neue,Helvetica,Arial,sans-serif', 'color:var(--text)',
     'animation:lc-panel-in 0.35s ease',
     'margin-bottom:8px',
   ].join(';');
@@ -449,7 +449,7 @@ function runQuestionWizard({ questions }) {
       'border:1px solid var(--border)', 'border-radius:16px',
       'background:var(--bg-card, var(--bg, #ffffff))',
       'box-shadow:0 16px 56px rgba(0,0,0,0.28)',
-      'font-family:system-ui,-apple-system,sans-serif', 'color:var(--text)',
+      'font-family:Helvetica Neue,Helvetica,Arial,sans-serif', 'color:var(--text)',
     ].join(';');
     const overlay = mountGateOverlay(panel);
 

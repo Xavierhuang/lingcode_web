@@ -321,7 +321,7 @@ function callbackHtml(success, errorMsg = '', username = '') {
   return `<!doctype html>
 <html><head><meta charset="utf-8"><title>${success ? 'Connected' : 'Error'}</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0b0b0e; color: #fff; margin: 0; height: 100vh; display: grid; place-items: center; }
+  body { font-family: Helvetica Neue, Helvetica, Arial, sans-serif; background: #0b0b0e; color: #fff; margin: 0; height: 100vh; display: grid; place-items: center; }
   .box { text-align: center; padding: 32px; }
   .ok { color: #4ade80; font-size: 32px; margin: 0 0 8px; }
   .err { color: #f87171; font-size: 22px; margin: 0 0 8px; }

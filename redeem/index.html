@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redeem LingCode Pro</title>
+  <meta name="description" content="Redeem a LingCode Pro promotional voucher.">
+  <style>
+    :root { color-scheme: light; --signal:#5b3df5; --ink:#19152b; --muted:#686177; --line:#ded9ec; --paper:#fff; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:32px 18px; background:radial-gradient(circle at 20% 10%,#eee9ff,transparent 35%),#f8f7fb; color:var(--ink); font:16px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif; }
+    main { width:min(100%,560px); background:var(--paper); border:1px solid var(--line); border-radius:24px; padding:clamp(24px,6vw,46px); box-shadow:0 24px 70px rgba(47,31,104,.12); }
+    .mark { display:inline-flex; align-items:center; gap:9px; font-weight:750; letter-spacing:-.02em; }
+    .dot { width:15px; height:15px; border-radius:50%; background:var(--signal); box-shadow:0 0 0 6px #ebe7ff; }
+    h1 { margin:28px 0 8px; font-size:clamp(34px,7vw,54px); line-height:1; letter-spacing:-.055em; }
+    .lead { color:var(--muted); margin:0 0 30px; }
+    label { display:block; font-weight:700; margin-bottom:8px; }
+    input[type=text] { width:100%; border:1px solid var(--line); border-radius:13px; padding:15px 16px; font:600 17px ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.04em; text-transform:uppercase; }
+    input:focus { outline:3px solid #dcd4ff; border-color:var(--signal); }
+    .consent { display:flex; gap:11px; align-items:flex-start; margin:20px 0; color:#40394f; font-size:14px; font-weight:500; }
+    .consent input { width:18px; height:18px; margin-top:2px; accent-color:var(--signal); flex:none; }
+    button { width:100%; border:0; border-radius:13px; padding:15px 18px; color:#fff; background:var(--signal); font:750 16px inherit; cursor:pointer; }
+    button:disabled { opacity:.55; cursor:wait; }
+    .fine { margin:18px 0 0; color:var(--muted); font-size:13px; }
+    a { color:var(--signal); }
+    #status { min-height:24px; margin:16px 0 0; font-weight:650; }
+    .error { color:#ad2441; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark"><span class="dot" aria-hidden="true"></span> LingCode</div>
+    <h1>30 days of Pro.</h1>
+    <p class="lead">Scan the QR to prefill your voucher, or enter the code beneath the scratch-off panel.</p>
+    <form id="redeem-form">
+      <label for="voucher-code">Voucher code</label>
+      <input id="voucher-code" name="voucher-code" type="text" autocomplete="off" spellcheck="false" placeholder="LC-PRO-XXXX-XXXX-XXXX-XXXX" required>
+      <label class="consent"><input id="renewal" type="checkbox" required><span>I understand this is 30 days free, then $20/month automatically unless canceled. A payment card is required. Cancel anytime before the trial ends to avoid a charge.</span></label>
+      <button id="submit" type="submit">Continue securely</button>
+    </form>
+    <p id="status" role="status" aria-live="polite"></p>
+    <p class="fine">For new and eligible Free accounts. One voucher per account and payment card. <a href="/voucher-terms/">Voucher terms</a></p>
+  </main>
+  <script src="/redeem/voucher-prefill.js"></script>
+  <script>
+    (() => {
+      const key = 'lingcode.promotionVoucher';
+      const form = document.getElementById('redeem-form');
+      const code = document.getElementById('voucher-code');
+      const button = document.getElementById('submit');
+      const status = document.getElementById('status');
+      const params = new URLSearchParams(location.search);
+      const saved = sessionStorage.getItem(key);
+      LingCodeVoucherPrefill.applyVoucherPrefill({
+        hash: location.hash,
+        pathname: location.pathname,
+        search: location.search,
+        savedCode: saved,
+        setCode: (value) => { code.value = value; },
+        saveCode: (value) => { sessionStorage.setItem(key, value); },
+        replaceUrl: (value) => { history.replaceState(null, '', value); },
+      });
+
+      function show(message, error = false) {
+        status.textContent = message;
+        status.className = error ? 'error' : '';
+      }
+
+      async function poll(sessionId) {
+        form.hidden = true;
+        show('Confirming your Pro trial…');
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          const response = await fetch(`/api/vouchers/status/${encodeURIComponent(sessionId)}`, { cache: 'no-store' });
+          if (response.status === 401) {
+            location.href = `/signin.html?next=${encodeURIComponent(`/redeem/?session_id=${sessionId}`)}`;
+            return;
+          }
+          if (response.ok) {
+            const result = await response.json();
+            if (result.status === 'active') {
+              sessionStorage.removeItem(key);
+              show('Your 30-day LingCode Pro trial is active.');
+              return;
+            }
+            if (result.status === 'blocked') {
+              show('This promotion could not be applied. No promotional access was granted.', true);
+              return;
+            }
+          }
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
+        show('Confirmation is taking longer than expected. Refresh this page in a moment.', true);
+      }
+
+      if (params.get('session_id')) poll(params.get('session_id'));
+      else if (params.get('canceled')) show('Checkout was canceled. Your voucher has not been activated.');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const value = code.value.trim();
+        sessionStorage.setItem(key, value);
+        button.disabled = true;
+        show('Preparing secure checkout…');
+        try {
+          const response = await fetch('/api/vouchers/checkout', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ code: value, renewalAcknowledged: document.getElementById('renewal').checked }),
+          });
+          const result = await response.json();
+          if (response.status === 401) {
+            location.href = `/signin.html?next=${encodeURIComponent('/redeem/')}`;
+            return;
+          }
+          if (!response.ok || !result.url) throw new Error(result.error || 'voucher_unavailable');
+          location.href = result.url;
+        } catch (_) {
+          show('This voucher cannot be used. Check the code or try again later.', true);
+          button.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

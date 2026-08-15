@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lingcode.dev/schemas/backend-v1.schema.json",
+  "title": "LingCode Cloud backend manifest",
+  "description": "Repository source of truth for ordered migrations and custom functions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://lingcode.dev/schemas/backend-v1.schema.json"
+    },
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "migrations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "path"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$"
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^migrations/[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*\\.sql$"
+          }
+        }
+      }
+    },
+    "functions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slug", "path"],
+        "properties": {
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,40}$"
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^functions/[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*\\.ts$"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "secrets": {
+            "type": "array",
+            "maxItems": 32,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+            }
+          },
+          "testInput": true
+        }
+      }
+    }
+  }
+}

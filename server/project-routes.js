@@ -228,6 +228,37 @@ function registerProjectRoutes(app, db) {
     // repo can later be matched back to this project by remote (see /resolve).
     const gitRemote = req.body && req.body.git_remote
       ? String(req.body.git_remote).trim().slice(0, 500) || null : null;
+
+    // DEDUP by git remote. This endpoint mints a fresh UUID per call and relies
+    // on the client persisting it in .lingcode/project.json to avoid re-creating.
+    // When that file is lost — a moved/renamed folder, a fresh clone, or (until
+    // recently) an un-gitignored .lingcode that never travelled — the client
+    // calls here again and a DUPLICATE project row is born. That splits a logical
+    // project across rows: the backend links to one, a collaborator gets shared
+    // another, and the editor sees an empty project with no backend. Same disease
+    // as the duplicate-backend bug, one layer up.
+    //
+    // A non-empty git remote is a stable identity (it's the same repo others
+    // clone), so if this owner already has a project on that remote, return it
+    // instead of minting a twin. Matches the /resolve endpoint's normalization.
+    // No dedup for remote-less projects — nothing reliable to key on, and many
+    // distinct local folders share a name.
+    if (gitRemote) {
+      const target = normalizeGitRemote(gitRemote);
+      const existing = db.prepare(`
+        SELECT p.id, p.name, pm.role FROM projects p
+        JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = @uid
+        WHERE p.owner_id = @uid AND p.git_remote IS NOT NULL AND p.git_remote != ''
+        ORDER BY p.created_at ASC
+      `).all({ uid: u.id }).find((r) => {
+        const row = db.prepare('SELECT git_remote FROM projects WHERE id = ?').get(r.id);
+        return normalizeGitRemote(row.git_remote) === target;
+      });
+      if (existing) {
+        return res.status(200).json({ ok: true, project: { id: existing.id, name: existing.name, role: existing.role || 'owner' }, reused: true });
+      }
+    }
+
     const id = crypto.randomUUID();
     const now = Date.now();
     db.transaction(() => {
@@ -343,7 +374,7 @@ function registerProjectRoutes(app, db) {
     const deepLink = `lingcode://project/${encodeURIComponent(project.id)}`;
     const webUrl = `/account.html?project=${encodeURIComponent(project.id)}`;
     res.type('html').send(`<!doctype html><meta charset="utf-8"><title>Invite accepted</title>
-<body style="font-family:-apple-system,system-ui,sans-serif;max-width:560px;margin:64px auto;padding:0 20px;color:#1a1a1a;">
+<body style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;max-width:560px;margin:64px auto;padding:0 20px;color:#1a1a1a;">
 <h2>You're in.</h2>
 <p>You now have <strong>${escapeHtml(effectiveRole)}</strong> access to <strong>${escapeHtml(project.name)}</strong>.</p>
 <p style="margin:24px 0;">

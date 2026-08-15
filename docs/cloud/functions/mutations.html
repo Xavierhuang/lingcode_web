@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactional mutations | LingCode Cloud Docs</title>
+  <meta name="description" content="Preview atomic serializable writes, idempotency keys, revisions, invalidation, and bounded conflict retries for named backend mutations.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/functions/mutations.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/functions/mutations.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/functions/mutations.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html" aria-current="page">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Transactional mutations</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-preview">Preview</span><span>Updated 2026-08-09</span></div>
+      <div class="cloud-docs-preview-warning" role="note"><strong>Preview:</strong> This documentation describes an API that is not generally available yet. Its contract may change before release.</div>
+      <h1 id="transactional-mutations">Transactional mutations</h1>
+<p>A mutation is a named backend function whose database work commits atomically. All reads and writes in one handler use one pinned PostgreSQL connection and one <code>SERIALIZABLE</code> transaction.</p>
+<h2 id="definition">Definition</h2>
+<pre><code class="language-ts">import { mutation, id, string } from &#39;@lingcode/backend&#39;;
+
+export const send = mutation({
+  args: { roomId: id(&#39;rooms&#39;), body: string() },
+  handler: async (ctx, args) =&gt; {
+    const result = await ctx.db.query(
+      `insert into messages (room_id, author_id, body)
+       values ($1, $2, $3)
+       returning id, room_id, author_id, body, created_at`,
+      [args.roomId, ctx.auth.userId, args.body]
+    );
+    return result.rows[0];
+  },
+});</code></pre>
+<h2 id="atomicity">Atomicity</h2>
+<p>If the handler returns successfully, its database changes, backend revision, and reactive invalidation record commit together. If validation fails, customer code throws, the process times out, or PostgreSQL rejects a statement, all changes roll back.</p>
+<p>No subscriber can observe mutation data without the matching revision and invalidation event.</p>
+<h2 id="serializable-isolation">Serializable isolation</h2>
+<p>Serializable isolation makes concurrent transactions behave as if they ran one at a time. PostgreSQL may abort a transaction when it detects an unsafe serialization or deadlock.</p>
+<p>LingCode will retry only database-safe failures with PostgreSQL codes <code>40001</code> and <code>40P01</code>, using a fresh transaction and bounded jitter, for at most three total attempts. Validation failures, customer exceptions, timeouts, permission failures, and actions are not retried automatically.</p>
+<p>Because a mutation may execute again after a conflict, keep external side effects out of its handler.</p>
+<h2 id="idempotency">Idempotency</h2>
+<p>Callers can attach an idempotency key to a mutation request. The key is scoped to the backend and records the committed result in the same PostgreSQL transaction.</p>
+<pre><code class="language-ts">await send(
+  { roomId, body },
+  { idempotencyKey: crypto.randomUUID() }
+);</code></pre>
+<p>Repeating a committed key returns the stored result without applying the write or emitting another invalidation. Use one stable key for one user intent; do not reuse a key for different arguments.</p>
+<p>Idempotency protects against ambiguous network retries. It does not replace database uniqueness constraints or application authorization.</p>
+<h2 id="revisions-and-invalidation">Revisions and invalidation</h2>
+<p>Every committed mutation increments a monotonically increasing revision for its backend and inserts a transactional outbox row describing affected dependencies.</p>
+<p>Stage 0 emits a wildcard dependency when exact touched tables are unknown. Later dependency capture narrows invalidation to tables, keys, and index ranges without changing mutation source code.</p>
+<h2 id="authentication-and-rls">Authentication and RLS</h2>
+<p>The mutation receives the server-derived signed-in identity in <code>ctx.auth</code>. Database operations run as the backend tenant role with RLS enabled.</p>
+<p>Do not accept an arbitrary <code>userId</code> argument when the operation should apply to the caller. Use <code>ctx.auth.userId</code>, validate business permissions, and keep <code>WITH CHECK</code> policies on inserted or updated rows.</p>
+<h2 id="return-after-commit">Return after commit</h2>
+<p>The client receives the mutation result after commit. A successful response therefore means both the data and its invalidation metadata are durable.</p>
+<p>If the connection disappears before the response arrives, the caller may not know whether commit occurred. Use an idempotency key to retry safely.</p>
+<h2 id="what-does-not-belong-in-a-mutation">What does not belong in a mutation</h2>
+<ul>
+<li>sending email or SMS;</li>
+<li>charging a payment method;</li>
+<li>calling an LLM or third-party API;</li>
+<li>writing to an external object store without a transactional protocol;</li>
+<li>depending on process-local state.</li>
+</ul>
+<p>Capture durable intent in a mutation, then schedule or invoke an <a href="/docs/cloud/functions/actions.html">Action</a>. Store the action outcome in another mutation so reactive queries can display it.</p>
+<h2 id="current-alternative">Current alternative</h2>
+<p>Until mutations become Available, implement multi-statement atomic work as one PostgreSQL function deployed by migration and call it once through <code>rpc()</code>. Current custom-function <code>ctx.db.query()</code> calls are separate transactions.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/functions/queries.html">Previous: Queries · Preview</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/functions/actions.html">Next: Actions · Preview</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#definition">Definition</a></li><li class="toc-level-2"><a href="#atomicity">Atomicity</a></li><li class="toc-level-2"><a href="#serializable-isolation">Serializable isolation</a></li><li class="toc-level-2"><a href="#idempotency">Idempotency</a></li><li class="toc-level-2"><a href="#revisions-and-invalidation">Revisions and invalidation</a></li><li class="toc-level-2"><a href="#authentication-and-rls">Authentication and RLS</a></li><li class="toc-level-2"><a href="#return-after-commit">Return after commit</a></li><li class="toc-level-2"><a href="#what-does-not-belong-in-a-mutation">What does not belong in a mutation</a></li><li class="toc-level-2"><a href="#current-alternative">Current alternative</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

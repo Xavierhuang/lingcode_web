@@ -524,14 +524,31 @@ function applyLingModelCostControls(body, opts) {
   // and the SDK's 'adaptive') but accepts an ABSENT field, so drop non-enabled
   // thinking. DeepSeek-V4 needs an explicit 'disabled'; Claude passes through.
   const isMoonshotUpstream = /moonshot|kimi/i.test(upstreamUrl) || /kimi|moonshot/.test(resolvedModel);
-  if (isMoonshotUpstream) {
-    // kimi-k2.7-code REQUIRES thinking.type=enabled — both an ABSENT thinking field
-    // and type=disabled 400 with "only type=enabled is allowed for this model"
-    // (verified empirically). It's a reasoning model with no thinking-off mode, so
-    // force it on, preserving any caller-set budget.
-    const budget = (out.thinking && typeof out.thinking.budget_tokens === 'number')
+  // Moonshot ships two families through this Anthropic-compat endpoint:
+  //   - kimi-k*  (reasoning models — REJECT thinking.type=disabled with "only
+  //              type=enabled is allowed for this model")
+  //   - moonshot-v1-*  (non-reasoning — accept any thinking value, always
+  //              return pure text, sub-second latency for short replies)
+  // Force-enable thinking only for the reasoning family; leave vanilla
+  // Moonshot alone so callers who explicitly opt into a fast model actually
+  // get a fast, thinking-free response.
+  const isKimiReasoning = /^kimi-k/i.test(resolvedModel);
+  if (isMoonshotUpstream && isKimiReasoning) {
+    // kimi-k* REQUIRES thinking.type=enabled. Cap budget_tokens so it never
+    // starves the visible text output: reserve ≥512 tokens of the max_tokens
+    // budget for the actual reply. Otherwise short max_tokens (~1500) burn
+    // entirely on thinking and the caller sees an empty content array
+    // (verified empirically at 1500 max_tokens → 1497 thinking, 0 text).
+    const rawBudget = (out.thinking && typeof out.thinking.budget_tokens === 'number')
       ? out.thinking.budget_tokens : 8000;
-    out.thinking = { type: 'enabled', budget_tokens: budget };
+    const maxTokens = Number.isFinite(out.max_tokens) ? out.max_tokens : 8000;
+    const safeBudget = Math.max(256, Math.min(rawBudget, maxTokens - 512));
+    out.thinking = { type: 'enabled', budget_tokens: safeBudget };
+  } else if (isMoonshotUpstream) {
+    // moonshot-v1-* doesn't require thinking and Moonshot silently ignores it,
+    // but strip it anyway to keep the outbound payload minimal and to avoid
+    // future regressions if Moonshot ever starts validating the field.
+    if (out.thinking) delete out.thinking;
   } else if (!isClaudeUpstream && out.thinking?.type !== 'enabled') {
     out.thinking = { type: 'disabled' };
   }

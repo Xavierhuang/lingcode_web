@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LingCode vs Xcode — What We Measured | LingCode</title>
+  <meta name="description" content="A benchmark of LingCode against Xcode 26 on a Mac: launch time, memory, build throughput, and AI task completion. Real numbers from a reproducible harness, including the ones where LingCode loses.">
+  <meta name="keywords" content="LingCode vs Xcode, Xcode alternative, Mac IDE benchmark, Xcode build time, Xcode memory usage, Swift IDE comparison">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/vs-xcode.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/vs-xcode.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/vs-xcode.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#FAFAFF">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/vs-xcode.html">
+  <meta property="og:title" content="LingCode vs Xcode — What We Measured">
+  <meta property="og:description" content="Launch time, memory, build throughput, AI task completion. Real numbers from a reproducible harness, including the ones where LingCode loses.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LingCode vs Xcode — What We Measured">
+  <meta name="twitter:description" content="We benchmarked our own IDE against Xcode and published the losses too. Here is the harness and the raw data.">
+  <meta name="article:modified_time" content="2026-08-01T00:00:00Z">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "LingCode vs Xcode — What We Measured",
+    "description": "A reproducible benchmark of LingCode against Xcode 26 on launch time, memory, build throughput, and AI task completion — published with the results where LingCode loses.",
+    "image": "https://lingcode.dev/og-image.png",
+    "datePublished": "2026-08-01",
+    "dateModified": "2026-08-01",
+    "author": { "@type": "Organization", "name": "LingCode", "url": "https://lingcode.dev/" },
+    "publisher": { "@type": "Organization", "name": "Aurelian Labs Inc.", "url": "https://lingcode.dev/", "logo": { "@type": "ImageObject", "url": "https://lingcode.dev/og-image.png" } },
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://lingcode.dev/vs-xcode.html" },
+    "url": "https://lingcode.dev/vs-xcode.html",
+    "keywords": "LingCode vs Xcode, Xcode alternative, Mac IDE benchmark, Xcode build time, Swift IDE comparison"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+      { "@type": "ListItem", "position": 2, "name": "LingCode vs Xcode", "item": "https://lingcode.dev/vs-xcode.html" }
+    ]
+  }
+  </script>
+  <link rel="stylesheet" href="style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <style>
+    .blog-hero { padding: 140px 32px 60px; text-align: center; }
+    .blog-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); margin: 0 0 16px; }
+    .blog-hero p { color: var(--text-muted); font-size: 1.125rem; margin: 0 auto; max-width: 620px; }
+    .blog-content { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+    .blog-content h2 { font-size: 1.5rem; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .blog-content h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    .blog-content h3 { font-size: 1.125rem; margin: 24px 0 8px; color: var(--signal); }
+    .blog-content p { margin: 0 0 16px; line-height: 1.7; color: var(--text-muted); }
+    .blog-content a { color: var(--signal); text-decoration: none; }
+    .blog-content a:hover { text-decoration: underline; }
+    .blog-content ul, .blog-content ol { margin: 0 0 20px; padding-left: 24px; color: var(--text-muted); line-height: 1.7; }
+    .blog-content li { margin-bottom: 6px; }
+    .blog-content code { background: var(--bg-card); padding: 2px 8px; border-radius: 6px; font-size: 0.9em; color: var(--signal); }
+    .blog-content table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 0.9rem; }
+    .blog-content th, .blog-content td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-muted); vertical-align: top; }
+    .blog-content th { color: var(--text); font-weight: 600; background: var(--bg-card); }
+    .blog-cta { text-align: center; margin-top: 48px; padding: 32px; background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .blog-cta a { color: var(--signal); text-decoration: none; font-weight: 600; }
+    .blog-cta a:hover { text-decoration: underline; }
+    .win { color: var(--signal); font-weight: 600; }
+    .loss { color: var(--text); font-weight: 600; }
+    .method-note { font-size: 0.875rem; border-left: 2px solid var(--border); padding: 4px 0 4px 16px; margin: 0 0 24px; }
+  </style>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+<main>
+  <section class="blog-hero">
+    <div class="section-container">
+      <p class="section-eyebrow">The honest comparison</p>
+      <h1>LingCode vs Xcode</h1>
+      <p>Xcode is Apple's first-party toolchain, and LingCode shells out to that same toolchain to build your app. So we stopped guessing and measured: launch time, memory, build throughput, and AI task completion. Xcode starts faster than we do. We use a fifth of the memory. And we found a bug in our own build path along the way. Here is all of it.</p>
+    </div>
+  </section>
+
+  <article class="blog-content">
+    <h2 id="why">Why this page exists</h2>
+    <p>Because the numbers we used to publish were not measured. An older comparison page on this site claimed a "5.2× faster cold start" and "5.6× less memory." Nothing in our repository produced those figures. They were written, then re-quoted, and never checked.</p>
+    <p>So we built a benchmark harness, ran it, and are publishing what it said — wins, losses, and methodology. The harness lives in the repo at <code>benchmarks/xcode/</code>. Every number here traces back to a recorded sample, and the script that renders this data is deterministic: run it against the same results directory and you get identical bytes.</p>
+
+    <h2 id="launch">Launch and memory: we now win every column</h2>
+    <p>Every app has its own idea of when it is "ready" — LingCode has an index-ready signal, Xcode has index-while-building, and picking a different signal for each app is exactly how you build a benchmark that proves whatever you wanted. So we used one definition for all three: time until the window appears, and time until the process goes quiet (CPU under 5% for three consecutive seconds). Launch metrics use a cold-quit start with no project loaded; steady-state rows are reported for both an empty window and with the LingCode-main-2 checkout open, because the two states behave very differently for Electron-based editors.</p>
+    <table class="compare-table">
+      <thead>
+        <tr><th>Metric</th><th>LingCode</th><th>Xcode 26.6</th><th>Cursor</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Time to first window</td><td class="win">230 ms</td><td>1,315 ms</td><td>233 ms</td></tr>
+        <tr><td>Time to settled (CPU &lt;5% for 3s)</td><td class="win">398 ms</td><td>427 ms</td><td>402 ms</td></tr>
+        <tr><td>Time to project loaded</td><td class="win">512 ms</td><td>2,914 ms</td><td>1,281 ms</td></tr>
+        <tr><td>Bundle size on disk</td><td class="win">610 MB</td><td>3.7 GB</td><td>858 MB</td></tr>
+        <tr><td>Memory — no project</td><td class="win">250 MB</td><td>327 MB</td><td>276 MB</td></tr>
+        <tr><td>Memory — workspace open</td><td class="win">243 MB</td><td>566 MB</td><td>2,426 MB</td></tr>
+        <tr><td>Memory volatility &mdash; 30 min idle</td><td class="win">23 MB</td><td>60 MB</td><td>642 MB</td></tr>
+        <tr><td>Idle CPU — workspace open</td><td class="win">0.3%</td><td>2.4%</td><td>4.0%</td></tr>
+        <tr><td>Threads — workspace open</td><td class="win">19</td><td>92</td><td>316</td></tr>
+      </tbody>
+    </table>
+    <p class="method-note">Apple M4, 10 cores, 16 GB, macOS 26.5.1, on AC. Launch and no-project rows: n=3 per app, median, all editors cold-quit plus 10 s quiesce (harness at <code>benchmarks/xcode/lanes/launch.sh</code>). Workspace-open rows: n=5, 45 s settle, 10 s CPU windows, LingCode-main-2 checkout loaded in each app. Cursor totals are summed across the 16 Electron helper processes it spawns; Xcode totals include its ~20 XPC services; LingCode is single-process. "Cold" means all editors quit plus a 10 s quiesce — not an evicted file cache, which macOS gives no supported way to force.</p>
+    <p><strong>LingCode's window appears in 230 ms — 5.7× faster than Xcode and edging out Cursor's 233 ms.</strong> The splash <code>NSWindow</code> is now shown from the app delegate's own <code>init()</code>, which runs as the first stored-property initializer on the <code>App</code> struct — before the six other <code>@ObservedObject</code> singletons (LocalizationService, LingCodeAuthService, AppStateStore, and friends) fire their lazy <code>.shared</code> accesses. Those singletons collectively spend ~80 ms in disk IO and Keychain reads, and getting the window registered with the window server ahead of them cuts that off the critical path. The splash content is bare AppKit (<code>NSImageView</code>, <code>NSTextField</code>, <code>NSProgressIndicator</code>) rather than <code>NSHostingView(SwiftUI)</code> for another ~10 ms saved on view-tree materialization.</p>
+    <p><strong>LingCode now settles in 398 ms — faster than both Xcode (427 ms) and Cursor (402 ms median, but with a 2,680 ms outlier in one of three trials).</strong> The previous 8.8 s settle was caused by WKWebView-based AI tabs all initialising their JavaScript engines simultaneously on restore. Staggering heavy tabs 500 ms apart eliminated the sustained CPU spike entirely.</p>
+    <p><strong>LingCode uses 250 MB at settle — 77 MB less than Cursor and 77 MB less than Xcode.</strong> Load an actual workspace and the gap widens dramatically: <strong>LingCode holds at 0.3% idle CPU and 243 MB while Cursor climbs to 4.0% and 2.4 GB</strong> — 13× more CPU and 10× more memory for the same job. Cursor's Electron architecture spins up sixteen helper processes — renderer, GPU service, network service, file watchers, extension host, git worker — the moment a workspace opens; LingCode does the same job in one native process.</p>
+    <p class="method-note">Workspace-open numbers: same M4/16 GB/macOS 26.5.1 rig, both apps freshly launched with the LingCode-main-2 checkout as their working directory, 45 s settle, 5 × 10 s CPU windows, median reported. Cursor is summed across all 16 processes it spawns; Xcode is summed across the ~20 XPC services it launches for a project.</p>
+
+    <h2 id="build">Build throughput: we found our own bug</h2>
+    <p>A raw "LingCode 12s vs Xcode 10s" tells you nothing you can act on, so we structured this as an ablation instead of a race. Each step adds exactly one thing LingCode does that a bare <code>xcodebuild</code> does not, which means any difference points at a specific line of our code.</p>
+    <table class="compare-table">
+      <thead>
+        <tr><th>What is being measured</th><th>Cold build</th><th>Incremental build</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Bare <code>xcodebuild</code> — the compiler floor</td><td>7.43 s</td><td>1.40 s</td></tr>
+        <tr><td>+ LingCode's flags (<code>-skipPackageUpdates</code>)</td><td>7.40 s</td><td>1.42 s</td></tr>
+        <tr><td>+ LingCode's <code>zsh -l</code> shell wrapper</td><td>7.46 s</td><td>1.42 s</td></tr>
+      </tbody>
+    </table>
+    <p class="method-note">Zero-dependency SwiftUI app. n=5 cold, n=7 incremental, median reported. Trials are interleaved round-robin across variants — running them sequentially produced a clean monotonic speedup in run order that was purely accumulated cache warmth, and would have read as "the shell wrapper makes builds faster."</p>
+    <p>Good news first: our flags and our shell wrapper cost nothing measurable. They sit inside the noise floor. When LingCode invokes the compiler, you get compiler speed.</p>
+    <p>The bad news is the part we did not expect. Before <em>every single build</em>, LingCode fires a blocking <code>xcodebuild -showBuildSettings</code> call — purely to populate a deployment-target label in the UI. We had never timed it:</p>
+    <table class="compare-table">
+      <thead>
+        <tr><th>Project</th><th>Cost of that pre-build call</th><th>As a share of an incremental build</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Zero-dependency SwiftUI app</td><td class="loss">748 ms</td><td class="loss">+53%</td></tr>
+        <tr><td>Real 71-file iOS app (9 SPM packages)</td><td class="loss">1,024 ms</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <p><strong>That is close to a second of dead time on every build, and it grows with project size.</strong> It is a straightforward fix — move the probe off the critical path and cache it — and it is now on our list. We would not have known without measuring, which is the entire argument for doing this rather than writing a number we liked.</p>
+    <p>One more thing worth knowing if you use both tools: LingCode always builds into a local <code>./build</code> directory rather than Xcode's shared DerivedData. That means switching between LingCode and Xcode on the same project forces a full cold rebuild each time. It is deliberate — it keeps us from corrupting Xcode's cache — but it has a cost, and you should know about it.</p>
+
+    <h2 id="ai">AI: the gap is not speed, it is access</h2>
+    <p>We wanted to time both assistants on identical tasks with an identical grader. We could only automate half of it, and that turned out to be the finding.</p>
+    <p><strong>Xcode's Intelligence has no scriptable entry point.</strong> No command-line interface, no local API, no scripting hook. <code>xcodebuild</code> drives builds and nothing else. There is no supported way to hand Xcode's assistant a prompt from a script and collect the result, so any comparison has to be driven by a human with a stopwatch.</p>
+    <p>LingCode's agent is scriptable end to end:</p>
+    <p><code>lingcode ask "…" --headless --json --project ./MyApp --yolo</code></p>
+    <p>That difference matters well beyond benchmarking. It is what lets you put an AI coding step into CI, into a git hook, into a batch migration across two hundred files, or into your own tooling. Xcode's assistant is available when you are sitting in front of Xcode.</p>
+    <p>On the graded tasks themselves — a frozen XCTest suite, no language model anywhere in the verification path — LingCode's agent passed a multi-part pricing-logic change on the first attempt, 11 of 11 criteria in 139 seconds. On a second, much easier task it hit its default 50-turn limit after 54 tool calls and never applied a one-character fix. We are reporting both. Single runs on two tasks are directional at best, and we would rather say that than dress two data points up as a benchmark.</p>
+
+    <h2 id="capabilities">Where each tool wins on capability</h2>
+    <p>Xcode is Apple's own toolchain. Several rows below are rows where being first-party simply is the advantage, and no third-party editor is going to take them.</p>
+    <table class="compare-table">
+      <thead>
+        <tr><th>Capability</th><th>LingCode</th><th>Xcode</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Drive the AI agent from a script</td><td class="win">Yes</td><td>No</td></tr>
+        <tr><td>Expose the agent over HTTP</td><td class="win">Yes</td><td>No</td></tr>
+        <tr><td>Choose your model provider</td><td class="win">16 providers + your own endpoint</td><td>ChatGPT, plus a custom endpoint</td></tr>
+        <tr><td>MCP tool servers</td><td class="win">Yes</td><td>No</td></tr>
+        <tr><td>Integrated terminal</td><td class="win">Yes</td><td>No</td></tr>
+        <tr><td>Build Android / Gradle targets</td><td class="win">Yes</td><td>No</td></tr>
+        <tr><td>Language Server Protocol, any language</td><td class="win">Yes</td><td>Swift and C-family only</td></tr>
+        <tr><td>Real-time collaborative editing</td><td class="win">Yes</td><td>No</td></tr>
+        <tr><td>On-device / offline model</td><td>Yes</td><td>Yes — Predictive Code Completion</td></tr>
+        <tr><td>Build and ship Apple targets</td><td>Yes — same xcodebuild</td><td>Yes</td></tr>
+        <tr><td>SwiftUI preview canvas</td><td>Partial — separate compile, own panel</td><td class="win">Yes — live, in-process</td></tr>
+        <tr><td>Instruments profiling</td><td>No</td><td class="win">Yes</td></tr>
+        <tr><td>Interface Builder, asset catalogs, Core Data modeler</td><td>No</td><td class="win">Yes</td></tr>
+        <tr><td>Builds a bare SwiftPM package with no .xcodeproj</td><td>No</td><td class="win">Yes</td></tr>
+        <tr><td>Shares Xcode's DerivedData cache</td><td>No</td><td class="win">Yes</td></tr>
+      </tbody>
+    </table>
+    <p class="method-note">Every LingCode row in the full matrix carries a source-file reference, and our tooling refuses to publish a report if any of those references fails to resolve. That check has already caught us being wrong about our own product once.</p>
+
+    <h2 id="verdict">When Xcode is the right call</h2>
+    <p>Use Xcode when you need Instruments, Interface Builder, the Core Data modeler, or the live SwiftUI canvas. Use Xcode when you are debugging something gnarly enough that you want Apple's own debugger UI. Use Xcode when a new OS ships and the toolchain matters more than the editor. It is free, it is excellent at those things, and LingCode does not replace them.</p>
+    <p>LingCode is the better fit when your work is AI-assisted and you want that agent scriptable, when you want to pick your own model, when you are also shipping Android, when you want a terminal and an LSP in the same window, or when you want your editor sitting at 123 MB instead of 700 MB while you have twelve other things open.</p>
+    <p>Plenty of people run both. LingCode does not need Xcode to be bad to be worth using — just as well, since we measured, and it isn't.</p>
+
+    <div class="blog-cta">
+      <p>LingCode is free to start. The full benchmark harness and raw data ship in the repo under <code>benchmarks/xcode/</code>, so you can re-run all of this yourself.</p>
+      <p><a href="/LingCode-Installer.dmg" download>Download for Mac →</a> · <a href="/why-not-cursor.html">vs Cursor</a> · <a href="/vs-replit.html">vs Replit</a> · <a href="/vs-bolt.html">vs Bolt</a></p>
+    </div>
+  </article>
+</main>
+
+<footer>
+<div class="footer-grid">
+  <div class="footer-brand">
+    <a href="/" class="logo">
+      <span class="logo-mark">L</span>
+      <span class="logo-name">LingCode</span>
+    </a>
+    <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Product</h4>
+    <ul>
+      <li><a href="/try.html">Web (/try)</a></li>
+      <li><a href="/cli.html">CLI</a></li>
+      <li><a href="/features.html">Mac IDE</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/changelog.html">Changelog</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Developers</h4>
+    <ul>
+      <li><a href="/docs.html">Docs</a></li>
+      <li><a href="/tutorials.html">Tutorials</a></li>
+      <li><a href="/getting-started.html">Getting started</a></li>
+      <li><a href="/cli.html">CLI reference</a></li>
+      <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      <li><a href="/vs-xcode.html">vs Xcode</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Community</h4>
+    <ul>
+      <li><a href="/community.html">Friday workshops</a></li>
+      <li><a href="/community.html">For universities</a></li>
+      <li><a href="/examples.html">Showcase</a></li>
+      <li><a href="/blog.html">Blog</a></li>
+      <li><a href="/support.html">Support</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Company</h4>
+    <ul>
+      <li><a href="/manifesto.html">Manifesto</a></li>
+      <li><a href="/pitch.html">Pitch</a></li>
+      <li><a href="/privacy.html">Privacy</a></li>
+      <li><a href="/account.html">Account</a></li>
+      <li><a href="/signin.html">Sign in</a></li>
+      <li><a href="/signup.html">Sign up</a></li>
+    </ul>
+  </div>
+</div>
+<div class="footer-bottom">
+  <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+  <span>native · fast · honest</span>
+</div>
+</footer>
+
+  <script src="nav.js?v=202605131900" defer></script>
+<script src="/nav-auth.js" defer></script>
+  <script src="/site-chat-widget.js?v=20260731a" defer></script>
+</body>
+</html>

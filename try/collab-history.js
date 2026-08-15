@@ -40,7 +40,7 @@ function renderTimeline(entries, containerEl) {
       'background:#7c3aed;color:#fff;',
       'font-size:11px;font-weight:600;',
       'display:flex;align-items:center;justify-content:center;',
-      'flex-shrink:0;font-family:system-ui,sans-serif;',
+      'flex-shrink:0;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;',
     ].join('');
     avatar.textContent = entry.initials || '?';
     row.appendChild(avatar);
@@ -74,7 +74,7 @@ export async function openHistoryPanel(prototypeId) {
     'background:#fff;border-left:1px solid #e5e7eb;',
     'box-shadow:-4px 0 16px rgba(0,0,0,.1);',
     'z-index:9900;display:flex;flex-direction:column;',
-    'font-family:system-ui,sans-serif;',
+    'font-family:Helvetica Neue,Helvetica,Arial,sans-serif;',
   ].join('');
 
   const header = document.createElement('div');

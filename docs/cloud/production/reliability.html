@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reliability | LingCode Cloud Docs</title>
+  <meta name="description" content="Design LingCode Cloud applications for timeouts, retries, idempotency, database pools, realtime reconnects, backups, restores, and graceful degradation.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/production/reliability.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/production/reliability.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/production/reliability.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html" aria-current="page">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Reliability</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="reliability">Reliability</h1>
+<p>Reliability is the ability to keep serving correct results—or fail safely—when dependencies slow down, clients disconnect, processes restart, and operators deploy changes.</p>
+<h2 id="timeouts">Timeouts</h2>
+<p>Every layer needs a bounded deadline:</p>
+<ul>
+<li>client request timeout;</li>
+<li>gateway request and body limit;</li>
+<li>PostgreSQL statement timeout;</li>
+<li>function wall-clock timeout;</li>
+<li>vendor HTTP timeout;</li>
+<li>compute-job timeout.</li>
+</ul>
+<p>A longer outer timeout cannot rescue a shorter inner timeout. Set the client deadline slightly above the expected server maximum so the UI receives the server&#39;s structured failure instead of abandoning first.</p>
+<h2 id="retries">Retries</h2>
+<p>Retry only failures likely to be transient and only when the operation is safe to repeat.</p>
+<p>Reads are generally safe to retry. Writes require a unique constraint, idempotency key, or application-specific deduplication. External side effects require the vendor&#39;s idempotency mechanism or reconciliation workflow.</p>
+<p>Use bounded exponential backoff with jitter. Unlimited immediate retries turn a partial outage into a larger one.</p>
+<h2 id="database-transactions">Database transactions</h2>
+<p>One current gateway write or SQL RPC call is one PostgreSQL transaction. Use one SQL function when several statements must be atomic today.</p>
+<p>Keep transactions short. Do not hold a transaction open while waiting for user input or an external network response. Long transactions retain locks and old row versions, increase contention, and consume a pool connection.</p>
+<h2 id="connection-pool">Connection pool</h2>
+<p>The API uses a small per-process <code>pg</code> pool in front of PgBouncer transaction pooling. Reliability depends on bounding both the number and duration of checked-out connections.</p>
+<p>Monitor total, idle, and waiting clients. Sustained waiters mean requests are arriving faster than the pool or database can complete them. Investigate slow queries and transaction duration before increasing the pool, because a larger pool can overload PostgreSQL.</p>
+<p><code>LISTEN/NOTIFY</code> uses a direct stable PostgreSQL connection rather than transaction-pooled PgBouncer. The listener reconnects after error or end events.</p>
+<h2 id="realtime-reconnect">Realtime reconnect</h2>
+<p>The current Realtime stream can disconnect because of sleep, network transition, proxy timeout, deploy, or process restart. Clients should reconnect and refetch current state before applying new events.</p>
+<p>Large rows may produce a body-less refetch signal because PostgreSQL NOTIFY payloads are bounded. Treat that as an instruction to query the source of truth.</p>
+<p>Never assume receiving every row event is required for correctness. Store durable state in PostgreSQL and use Realtime to reduce latency.</p>
+<h2 id="graceful-degradation">Graceful degradation</h2>
+<p>Decide what the application does when one capability is unavailable:</p>
+<ul>
+<li>show cached read-only content when writes fail;</li>
+<li>queue a user-visible retry instead of silently dropping intent;</li>
+<li>keep authentication errors distinct from network errors;</li>
+<li>allow core database work when an optional vendor is down;</li>
+<li>expose function-runtime unavailability without pretending a slug is missing;</li>
+<li>disable oversized uploads before transferring bytes.</li>
+</ul>
+<h2 id="backups">Backups</h2>
+<p>Production PostgreSQL uses physical or logical backup procedures appropriate to the deployment, with point-in-time recovery where configured. Object storage and application deployment artifacts have separate durability and retention characteristics.</p>
+<p>A backup policy defines frequency, retention, encryption, access, off-host storage, and acceptable recovery point. The existence of a scheduled backup job is not proof of recoverability.</p>
+<h2 id="restore-testing">Restore testing</h2>
+<p>Regularly restore to an isolated environment and verify:</p>
+<ul>
+<li>PostgreSQL starts and accepts reads;</li>
+<li>expected schemas, roles, extensions, and recent rows exist;</li>
+<li>authentication and RLS still behave correctly;</li>
+<li>object references resolve;</li>
+<li>application migrations recognize the restored state;</li>
+<li>measured restore time matches the recovery objective.</li>
+</ul>
+<p>Never test restore by overwriting the only production database.</p>
+<h2 id="deployment-failure">Deployment failure</h2>
+<p>Backend manifest apply is artifact-aware and retry-safe, but an application can still be incompatible with a partially completed release. Deploy backward-compatible schema first, then application code, then cleanup schema.</p>
+<p>If a high-risk change fails, stop automatic retries, preserve logs and hashes, assess committed state, obtain a fresh preview, and continue only after the remaining plan is understood.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/production/">Previous: Production checklist</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/production/observability.html">Next: Observability</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#timeouts">Timeouts</a></li><li class="toc-level-2"><a href="#retries">Retries</a></li><li class="toc-level-2"><a href="#database-transactions">Database transactions</a></li><li class="toc-level-2"><a href="#connection-pool">Connection pool</a></li><li class="toc-level-2"><a href="#realtime-reconnect">Realtime reconnect</a></li><li class="toc-level-2"><a href="#graceful-degradation">Graceful degradation</a></li><li class="toc-level-2"><a href="#backups">Backups</a></li><li class="toc-level-2"><a href="#restore-testing">Restore testing</a></li><li class="toc-level-2"><a href="#deployment-failure">Deployment failure</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

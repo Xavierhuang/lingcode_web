@@ -18,9 +18,9 @@
   <meta property="og:locale" content="zh_CN">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/style.css?v=20260531a">
-  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
   <style>
     .fn-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; }
     .fn-table th, .fn-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
@@ -178,7 +178,26 @@ window.location.href = data.url; // 托管的 Stripe Checkout</code></pre>
       </div>
 
       <h2>自定义函数</h2>
-      <p>当没有内置函数合适时，就写你自己的。你在 Cloud 控制台 / IDE 里编写自定义函数——给函数一个 <strong>slug</strong> 和它的 <strong>TypeScript 源码</strong>（这是控制台里的一步编写动作，不是 agent 工具替你完成的事）。它们在 Deno 沙箱运行时里运行，用和内置函数同一个 <code>functions.invoke(slug, body?)</code> 调用来触发。</p>
+      <p>当没有内置函数合适时，就写你自己的。LingCode 会把自定义函数和数据库迁移保存在可提交到 Git 的 <code>lingcode/</code> 目录里，然后由 agent 通过 Cloud MCP 工具部署并测试。你不再需要把源码复制到后端控制台。</p>
+      <pre><code>lingcode/
+  backend.json
+  migrations/
+    0001_initial.sql
+  functions/
+    message-api.ts</code></pre>
+      <p><code>backend.json</code> 按顺序列出迁移，并把函数 slug 映射到 TypeScript 文件；格式由 <a href="/schemas/backend-v1.schema.json"><code>backend-v1.schema.json</code></a> 定义。编辑并提交本地文件后，Agent 先以预览模式调用 <code>deploy_backend_manifest</code>。开发环境可以自动应用无风险预览；生产环境会显示准确的迁移/函数摘要和风险警告，并等待你明确点击<strong>部署</strong>。计划 10 分钟后过期，任何文件改变都必须重新预览；生产环境绝不会通过文件监听自动部署。应用后，Agent 用 <code>backend_source_status</code> 核对哈希；带 <code>testInput</code> 的函数会在应用阶段做草稿测试。已经应用的迁移 ID 不可改写；请新增下一份迁移。省略函数不会删除线上函数，删除仍然必须显式执行。仓库只提交密钥<strong>名称</strong>，密钥值继续留在保险库。</p>
+      <pre><code>{
+  "$schema": "https://lingcode.dev/schemas/backend-v1.schema.json",
+  "version": 1,
+  "migrations": [{ "id": "0001_initial", "path": "migrations/0001_initial.sql" }],
+  "functions": [{
+    "slug": "message-api",
+    "path": "functions/message-api.ts",
+    "enabled": true,
+    "secrets": ["MESSAGE_SIGNING_KEY"],
+    "testInput": { "text": "hello" }
+  }]
+}</code></pre>
 
       <h3>约定</h3>
       <p>你的源码必须 <code>export default</code> 一个 handler。你 <code>return</code> 的东西就成为调用结果的 <code>data</code>。原生支持 TypeScript——Deno 直接运行，无需构建步骤：</p>
@@ -228,15 +247,40 @@ console.log(data.tempC);</code></pre>
         </thead>
         <tbody>
           <tr><td>超时（墙钟时间，超过即 SIGKILL）</td><td>3s</td><td>10s</td><td>30s</td></tr>
-          <tr><td>自定义函数数量（<code>maxFunctions</code>）</td><td>2</td><td>10</td><td>50</td></tr>
+          <tr><td>自定义函数数量</td><td colspan="3">无限制</td></tr>
           <tr><td>源码体积</td><td colspan="3">最多 256 KB</td></tr>
           <tr><td>内存</td><td colspan="3">128 MB</td></tr>
         </tbody>
       </table>
       <p>函数是<strong>短命的</strong>。超过墙钟超时后，进程会被 SIGKILL——没有优雅的延长机制。不要把任何运行超过约 30 秒的东西放进函数。</p>
 
+      <h2 id="python-runtime">Python 运行时（预览）</h2>
+      <p>除了 Deno-TS，你还可以用<strong>纯标准库的 Python 3</strong> 写自定义函数——运行在 firejail 沙箱里，wire 契约和 TS 完全对齐。<strong>需要按后端申请开通</strong>：默认每个后端上的 <code>python_runtime_enabled</code> 都是 0，由运维方在 <code>account_backends</code> 里把它置为 1，你才能保存 <code>runtime: "python"</code> 的函数。</p>
+      <p>handler 契约和 TS 一一对应，用 Python 的 snake_case 写法：</p>
+      <pre><code>def handler(input, ctx):
+    title = (input or {}).get("title", "").strip()
+    if not title:
+        raise ValueError("title is required")
+    result = ctx.db.query(
+        "insert into todos (title) values ($1) returning id, title, completed",
+        [title],
+    )
+    return result["rows"][0]</code></pre>
+      <p>必须是一个顶层的<strong>同步</strong> <code>def handler(input, ctx)</code>；<code>async def</code> 在预览版里不被接受。返回值必须能被 <code>json.dumps</code> 序列化，<code>None</code> 会被序列化成 <code>null</code>。</p>
+      <p><code>ctx</code> 用 snake_case 属性和方法：<code>ctx.backend_id</code>、<code>ctx.gateway</code>、<code>ctx.secrets</code>、<code>ctx.request</code>；<code>ctx.db.query(sql, params)</code> / <code>ctx.db.query_read(sql, params)</code>；<code>ctx.storage.upload_url(path, **opts)</code> / <code>.url(path, **opts)</code> / <code>.remove(path, **opts)</code>。这些方法都是<strong>同步的</strong>——它们会阻塞 handler 直到请求返回。</p>
+      <div class="info-box">
+        <h3>预览版限制</h3>
+        <ul>
+          <li><strong>只允许 Python 3 标准库。</strong>没有 <code>pip</code>、没有 <code>requirements.txt</code>、没有 PyPI。要触达外部服务，就用 <code>ctx.storage</code>、<code>ctx.db</code>，或者受沙箱网络策略约束的 <code>urllib.request</code>。</li>
+          <li><strong>沙箱由 firejail 提供</strong>：全新的 tmpfs $HOME、丢掉全部 Linux capabilities、seccomp 系统调用过滤、只读的文件系统。网络要么只放行到后端网关（运维方跑了 <code>scripts/bootstrap-python-runtime.sh</code> 之后），要么就是 <code>--net=none</code> 完全禁用。禁用时，<code>ctx.db</code> / <code>ctx.storage</code> 会抛出 <code>RuntimeError: backend access is unavailable in this function</code>。</li>
+          <li><strong>冷启动</strong>比 Deno 多 40–120 ms（firejail 命名空间搭建 + CPython 启动）。</li>
+          <li>源码体积、内存、墙钟超时和 TS 完全一致（256 KB / 128 MB / 各档超时）。</li>
+        </ul>
+      </div>
+      <p>要在 API 主机上启用这个运行时，运维方跑一次：<code>sudo GATEWAY_HOST=api.lingcode.dev NET_IFACE=eth0 ./scripts/bootstrap-python-runtime.sh</code>——脚本会装好 <code>firejail</code> 和 <code>python3</code>、解析网关主机、写入 <code>/etc/lingcode/fn-gateway.nft</code>；再把 <code>LC_FN_NET_IFACE</code> 和 <code>LC_FN_NFTABLES</code> 加进 API 服务的环境变量、重启。想看完整的 API 契约、错误码和一系列示例，去<a href="/docs/cloud/functions/custom-functions.html#python-runtime-preview">英文文档的 Python 运行时（预览）</a>那节。</p>
+
       <h2 id="availability">可用性</h2>
-      <p>自定义函数需要 Deno 运行时，而它<strong>已经在生产环境安装并上线</strong>——自定义函数现在就能用。如果某次部署确实缺少运行时，自定义调用会返回 <code>503 functions_runtime_unavailable</code>，而<strong>内置函数照常工作</strong>（它们不依赖 Deno 沙箱）。所以自定义函数上的 503 是一个运行时可用性信号；内置函数失败则是另一回事。还要记住——<code>unknown_function</code> 永远是 slug 写错的错误，从不表示可用性问题。</p>
+      <p>自定义函数需要 Deno 运行时，而它<strong>已经在生产环境安装并上线</strong>——自定义函数现在就能用。如果某次部署确实缺少运行时，自定义调用会返回 <code>503 functions_runtime_unavailable</code>，而<strong>内置函数照常工作</strong>（它们不依赖 Deno 沙箱）。Python 运行时是另外的路径：<code>503 python_runtime_unavailable</code> 表示 API 主机上缺 firejail 或 <code>python3</code>；<code>403 python_runtime_not_enabled</code> 表示当前后端还没被开通预览。所以自定义函数上的 503 是一个运行时可用性信号；内置函数失败则是另一回事。还要记住——<code>unknown_function</code> 永远是 slug 写错的错误，从不表示可用性问题。</p>
 
       <div class="warn-box">
         <strong>函数不适合做什么。</strong>没有长时间运行的进程、没有后台队列、没有常驻的 WebSocket 服务器，也没有任何超过约 30 秒的东西——那些都属于<a href="/zh/docs/cloud/hosting.html">托管的 Worker 应用</a>，不属于函数。一个诚实的具体例子：一个需要原始请求体签名校验的 <strong>Stripe webhook 处理器</strong><em>不是</em>这些内置函数之一，而且很难用一个短小的自定义函数来表达——把它放进你托管应用自己的路由（Worker/SSR 路由）里。<code>stripe-checkout</code> 内置函数只<em>创建</em> Checkout Session；它不接收 webhook。
@@ -320,6 +364,6 @@ console.log(data.tempC);</code></pre>
     <span>native · fast · honest</span>
   </div>
 </footer>
-  <script src="/site-chat-widget.js?v=20260603" defer></script>
+  <script src="/site-chat-widget.js?v=20260731a" defer></script>
 </body>
 </html>

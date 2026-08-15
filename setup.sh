@@ -6,6 +6,7 @@
 # Run from website/:   ./setup.sh
 #
 # Local preview:       ./website/setup.sh serve
+# Build Cloud docs:    ./website/setup.sh docs
 # Custom port:          LINGCODE_PORT=9000 ./website/setup.sh serve
 # Upload (wraps):      ./website/setup.sh deploy
 #
@@ -68,6 +69,15 @@ serve_site() {
   python3 -m http.server "$PORT"
 }
 
+build_docs() {
+  if ! command -v node >/dev/null 2>&1; then
+    echo "node not found. Install Node.js to build Cloud documentation."
+    exit 1
+  fi
+  node "$SCRIPT_DIR/scripts/docs/build.mjs"
+  node "$SCRIPT_DIR/scripts/docs/check.mjs"
+}
+
 run_deploy() {
   if [ ! -f "$DEPLOY_SCRIPT" ]; then
     echo "Cannot find deploy.sh at $DEPLOY_SCRIPT"
@@ -95,10 +105,14 @@ case "${1:-}" in
   deploy|-d)
     run_deploy
     ;;
+  docs|--docs)
+    build_docs
+    ;;
   help|-h|--help)
-    echo "Usage: $0 [serve|deploy|help]"
+    echo "Usage: $0 [serve|docs|deploy|help]"
     echo "  (no args)  Check files and python3; print hints (matches deploy.sh env for host/user)"
     echo "  serve      Start python3 -m http.server on LINGCODE_PORT (default $PORT)"
+    echo "  docs       Build Cloud docs and verify generated output and internal links"
     echo "  deploy     Run deploy.sh in this directory (scp website/* to server)"
     ;;
   "")

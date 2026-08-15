@@ -18,9 +18,9 @@
   <meta property="og:locale" content="zh_CN">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/style.css?v=20260531a">
-  <link rel="stylesheet" href="/tutorials-newdesign.css?v=202605132000">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
 </head>
 <body>
   <nav class="site-nav">
@@ -139,11 +139,14 @@ export default async (req, ctx) =&gt; {
       <p>后端会在存储达到 <strong>80%</strong> 和 <strong>95%</strong> 时发出告警——盯住这些警告，别等到被硬性截停。又因为函数是短生命周期的（<strong>≤30s</strong>），任何更长的任务都必须卸载出去——拆分它、排队它，或者把它挪到托管的 Worker 上。各套餐上限列在<a href="/pricing.html">定价页</a>。</p>
 
       <h2>7. 迁移规范</h2>
-      <p>环境之间的 schema 漂移，是「在我的后端上能跑」这句话背后悄无声息的杀手。让迁移成为 schema 变更的<strong>唯一</strong>途径——永远不要临时手点着改结构。</p>
+      <p>环境之间的 schema 漂移，是「在我的后端上能跑」这句话背后悄无声息的杀手。把后端定义放进 Git 中的 <code>lingcode/</code> 目录，并让迁移成为 schema 变更的<strong>唯一</strong>途径——永远不要临时手点着改结构。</p>
       <ul>
-        <li>所有 DDL 都通过控制台的 <strong>SQL</strong> 标签页或 <code>apply_migration</code> 执行。</li>
-        <li>写<strong>幂等</strong>的 DDL——<code>create table if not exists</code>、<code>create index if not exists</code>——这样重复执行才安全。</li>
+        <li>在 <code>lingcode/backend.json</code> 中按顺序声明迁移文件，并在应用前以预览模式运行 <code>deploy_backend_manifest</code>。</li>
+        <li>开发环境可以自动应用无风险预览；生产环境会显示准确的变更和警告，并要求明确点击<strong>部署</strong>，绝不会通过文件监听自动部署。</li>
+        <li>生产部署计划 10 分钟后过期；任何已声明文件发生变化，都要重新预览，让批准始终绑定到准确的 SHA-256 哈希。</li>
+        <li>绝不改写已经应用的迁移 ID；新增下一份迁移，让 Git 历史和生产历史都可复现。</li>
         <li>把<strong>索引、约束、视图和 RLS 策略</strong>跟它们所属的表放在同一份迁移里，而不是当成一次性的控制台改动。</li>
+        <li>部署后用 <code>backend_source_status</code> 比对本地文件；SHA-256 一致就表示仓库和后端一致。</li>
       </ul>
       <pre><code>create table if not exists invites (
   id         uuid primary key default gen_random_uuid(),
@@ -151,7 +154,7 @@ export default async (req, ctx) =&gt; {
   created_at timestamptz not null default now()
 );
 create index if not exists idx_invites_email on invites (email);</code></pre>
-      <p>迁移的具体机制见<a href="/zh/docs/cloud/database.html">数据库指南</a>。</p>
+      <p>清单格式和函数流程见<a href="/zh/docs/cloud/functions.html">函数指南</a>；迁移的具体机制见<a href="/zh/docs/cloud/database.html">数据库指南</a>。</p>
 
       <h2>8. 性能</h2>
       <p>三个习惯能在不增加额外基础设施的前提下让应用保持响应迅速：</p>
@@ -251,6 +254,6 @@ create index if not exists idx_invites_email on invites (email);</code></pre>
     <span>native · fast · honest</span>
   </div>
 </footer>
-  <script src="/site-chat-widget.js?v=20260603" defer></script>
+  <script src="/site-chat-widget.js?v=20260731a" defer></script>
 </body>
 </html>

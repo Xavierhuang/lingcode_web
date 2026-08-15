@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const { issueToken } = require('./account-tokens');
 const { getUserFromRequest } = require('./auth-helpers');
 const { broadcastToPrototype, getUserRole, getInitials } = require('./collab-server');
 const { sendResendEmail } = require('./mail-resend');
@@ -250,11 +251,14 @@ function registerCollabRoutes(app, db) {
       joined_at: r.created_at,
     }));
 
-    // Caller's API access token (so they can attach it to the WS URL). The
-    // bridge could read its own token from disk, but returning it here keeps
-    // the connection ceremony to a single round-trip.
-    const tokenRow = db.prepare('SELECT api_access_token FROM users WHERE id = ?').get(callerUser.id);
-    const apiToken = tokenRow && tokenRow.api_access_token ? tokenRow.api_access_token : null;
+    // Mint a short-lived room-scoped token rather than exposing the caller's
+    // long-lived account credential in the WebSocket URL.
+    const apiToken = issueToken(db, callerUser.id, {
+      scope: 'project',
+      projectKey: `collab:${protoId}`,
+      caps: 'collab',
+      expiresAt: Date.now() + 60 * 60 * 1000,
+    }).token;
 
     const publicOrigin = String(process.env.PUBLIC_ORIGIN || '').replace(/\/$/, '') || 'https://lingcode.dev';
     const wsBase = publicOrigin.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
@@ -262,6 +266,8 @@ function registerCollabRoutes(app, db) {
       ? `${wsBase}/ws/collab/${protoId}?token=${encodeURIComponent(apiToken)}`
       : `${wsBase}/ws/collab/${protoId}`;
 
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
     res.json({
       ok: true,
       prototypeId: protoId,

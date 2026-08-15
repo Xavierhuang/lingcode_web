@@ -37,6 +37,32 @@ function siblingDomain(domain) {
 
 const APPS_DOMAIN = process.env.LINGCODE_APPS_DOMAIN || 'run.lingcode.dev';
 
+// DNS zone that hosts one subdomain per Python app hosted by cloud-hosted-apps.
+// Kept in sync with cloud-hosted-app-caddy.js's `wildcardZone` (both default
+// to 'apps.lingcode.dev'; both read the same env override). Used by the
+// /api/cloud/domains/verify handler below to approve on-demand TLS for any
+// live hosted-app subdomain.
+const HOSTED_APPS_ZONE = (process.env.HOSTED_APP_WILDCARD_ZONE || 'apps.lingcode.dev').toLowerCase();
+
+// A single DNS label — the leading part of `<slug>.apps.lingcode.dev`. Keep in
+// sync with the hosted_apps.subdomain validator; this pattern must be a subset
+// of what the app registration flow accepts.
+const HOSTED_APPS_SLUG_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
+
+// Given `<slug>.apps.lingcode.dev`, extract `<slug>` — otherwise null.
+// Rejects `foo.bar.apps.lingcode.dev` (multi-label), the bare zone itself,
+// anything above the zone, and anything with illegal characters. Case-normalized
+// input assumed (Caddy lowercases the SNI hostname before it reaches us).
+function extractHostedAppSubdomain(domain, zone) {
+  if (!domain || !zone) return null;
+  const suffix = '.' + zone;
+  if (!domain.endsWith(suffix)) return null;
+  const label = domain.slice(0, domain.length - suffix.length);
+  if (!label || label.includes('.')) return null;
+  if (!HOSTED_APPS_SLUG_RE.test(label)) return null;
+  return label;
+}
+
 function ownsPrototype(db, prototypeId, userId) {
   return !!db.prepare('SELECT 1 FROM saved_prototypes WHERE id = ? AND user_id = ?').get(prototypeId, userId);
 }
@@ -253,11 +279,43 @@ async function resolveZoneNameservers(domain) {
 }
 
 function registerCustomDomainRoutes(app, db) {
-  // ── Edge ask: gate on-demand TLS issuance to registered domains only ──
+  // ── Edge ask: gate on-demand TLS issuance ──
+  //
+  // Called by the custom-domain-edge droplet's Caddy `on_demand_tls { ask ... }`
+  // before it will mint a Let's Encrypt cert. Returns 200 for two families of
+  // hostnames:
+  //
+  // (1) Customer-owned custom domains registered via /api/cloud/domains
+  //     (myapp.com pointed at our edge). Existing behavior, unchanged.
+  //
+  // (2) LingCode-owned hosted-app subdomains — `<slug>.apps.lingcode.dev` where
+  //     <slug> matches a row in `hosted_apps` that hasn't been deleted. This
+  //     lets the same edge droplet answer TLS for the Python app-hosting tier
+  //     without a second Caddy fighting nginx on the API droplet for :443.
+  //     Deleted rows are explicitly excluded so a freed-up slug can't have a
+  //     fresh cert minted (which could then be reused for phishing while the
+  //     wildcard DNS record still resolves to our IP).
+  //
+  // Anything else → 403 + the string "not registered" (Caddy logs it verbatim).
   app.get('/api/cloud/domains/verify', (req, res) => {
     const domain = String((req.query && req.query.domain) || '').trim().toLowerCase();
-    const ok = domain && db.prepare("SELECT 1 FROM custom_domains WHERE domain = ? AND status = 'active'").get(domain);
-    if (ok) return res.status(200).send('ok');
+    if (!domain) return res.status(403).send('not registered');
+
+    // (1) Customer-owned custom domain.
+    const customOk = db
+      .prepare("SELECT 1 FROM custom_domains WHERE domain = ? AND status = 'active'")
+      .get(domain);
+    if (customOk) return res.status(200).send('ok');
+
+    // (2) Hosted-app subdomain under the wildcard zone.
+    const slug = extractHostedAppSubdomain(domain, HOSTED_APPS_ZONE);
+    if (slug) {
+      const hostedOk = db
+        .prepare("SELECT 1 FROM hosted_apps WHERE subdomain = ? AND status != 'deleted'")
+        .get(slug);
+      if (hostedOk) return res.status(200).send('ok');
+    }
+
     return res.status(403).send('not registered');
   });
 
@@ -342,4 +400,4 @@ function registerCustomDomainRoutes(app, db) {
   });
 }
 
-module.exports = { installCustomDomainMiddleware, installWorkerDomainProxy, registerCustomDomainRoutes, HOST_RE, siblingDomain, probeHttps };
+module.exports = { installCustomDomainMiddleware, installWorkerDomainProxy, registerCustomDomainRoutes, HOST_RE, siblingDomain, probeHttps, extractHostedAppSubdomain };

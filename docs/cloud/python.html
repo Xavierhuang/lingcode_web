@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python on LingCode Cloud — sandboxed functions (live) and FastAPI app hosting (not yet available) | Docs</title>
+  <meta name="description" content="Python custom functions run on LingCode Cloud today in a firejail sandbox (stdlib-only, Preview). Python app hosting (FastAPI/uvicorn on Docker) is designed and code-shipped but the runtime is not yet stood up on prod — deploys will queue and never swap in. For long-running FastAPI, host it elsewhere and call it from a function; see the FastAPI tutorial.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/python.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/python.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/python.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev/docs/cloud/python.html">
+  <meta property="og:title" content="Python on LingCode Cloud">
+  <meta property="og:description" content="Two Python tiers on LingCode Cloud: sandboxed per-invocation functions and long-running FastAPI app hosting. Runtimes, sandboxes, limits, and when to reach for which.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <style>
+    .py-table { width: 100%; border-collapse: collapse; margin: 22px 0; font-size: 0.9rem; }
+    .py-table th, .py-table td { text-align: left; padding: 12px 14px; border: 1px solid var(--border); vertical-align: top; }
+    .py-table th { background: var(--bg-card); font-weight: 600; color: var(--text); }
+    .py-table td { color: var(--text-dim); line-height: 1.5; }
+    .py-table td strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html">Sign in</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+  <div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/docs.html">Docs</a>
+      <span>/</span>
+      <a href="/search.html">Search</a>
+      <span>/</span>
+      <a href="/docs/cloud/">LingCode Cloud</a>
+      <span>/</span>
+      <span>Python</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📘 Reference</span>
+        <span class="badge badge-beginner">● Functions: Preview (live) · App hosting: not yet available</span>
+        <span class="badge badge-date">Updated 2026-08-13</span>
+      </div>
+      <h1>Python on LingCode Cloud</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Python runs on LingCode Cloud in two tiers. <strong>Python custom functions</strong> — short-lived per-request work in a <strong>firejail</strong> sandbox, stdlib-only, with a single network hole to the backend gateway — <strong>are live in Preview today</strong> and this doc's function section applies. <strong>Python app hosting</strong> (FastAPI/uvicorn / long-running Docker containers) is <strong>designed and code-shipped but the runtime is not yet stood up on prod</strong> — deploys currently queue and never swap in (the runner throws <code>caddy_admin_unreachable</code> until an operator runs <code>scripts/bootstrap-hosted-apps.sh</code>). Everything below the "Python app hosting" heading describes the intended shape and is not yet a promise. For long-running FastAPI today, host it elsewhere (Fly / Render / a droplet) and call it from a Cloud custom function — see the <a href="/tutorials/use-fastapi-with-lingcode-cloud.html">FastAPI with LingCode Cloud tutorial</a>.</p>
+
+      <div class="warn-box">
+        <strong>Availability at a glance (2026-08-13, evening).</strong>
+        <ul>
+          <li><strong>Python custom functions</strong> — <strong>live in Preview</strong>. Runtime deployed, sandbox verified end-to-end.</li>
+          <li><strong>Python app hosting</strong> — <strong>partially bootstrapped, TLS ingress not wired yet</strong>. Docker, the <code>lingcode-hosted-apps.slice</code> cgroup (4 GiB / 400% CPU / 4096 tasks aggregate ceiling), the state directories, and the <code>ghcr.io/lingcode/py-app-runtime:3.12</code> base image are now in place on the API droplet. What's still missing is the HTTPS ingress path for <code>*.apps.lingcode.dev</code> — installing a second Caddy on <code>.39.39</code> would collide with the existing nginx on port 443, so the follow-on will reuse the Caddy already running on the custom-domain edge droplet and needs a small change to <code>cloud-domains.js</code>'s <code>/api/cloud/domains/verify</code> endpoint so it approves live <code>hosted_apps</code> rows in addition to registered custom domains. Until that ships, deploys queue and never route.</li>
+        </ul>
+        This section will be flipped to a live guide once the TLS + routing follow-on lands and a real FastAPI upload has been smoke-tested end-to-end.
+      </div>
+
+      <p class="intro">This page is a factual reference for the two Python surfaces on LingCode Cloud: what runs, what sandboxes it, what the hard caps are, and where the line falls between them.</p>
+    </div>
+
+    <div class="tutorial-body">
+      <h2>The two Python tiers</h2>
+      <p>They exist because the trade-offs are genuinely different. One is optimized for cheap, safe, short bursts of code that trust nothing. The other is optimized for the &quot;my whole app is Python&quot; case where you want a real long-running process.</p>
+
+      <table class="py-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Python custom functions</th>
+            <th>Python app hosting</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Shape</strong></td>
+            <td>A single file with <code>def handler(input, ctx)</code>. One invocation = one <code>python3</code> process.</td>
+            <td>A full source tree with <code>requirements.txt</code> or <code>pyproject.toml</code>. One deploy = one long-running container.</td>
+          </tr>
+          <tr>
+            <td><strong>Runtime</strong></td>
+            <td>System <code>python3</code> (3.12 on the current droplet), run with <code>-I -B -S</code> (isolated, no site, no <code>.pyc</code>).</td>
+            <td><code>python:3.12</code> Docker base image. Version is pinned in <code>SUPPORTED_RUNTIME_VERSIONS</code>; only 3.12 is currently published.</td>
+          </tr>
+          <tr>
+            <td><strong>Dependencies</strong></td>
+            <td><strong>Stdlib only.</strong> No <code>pip install</code>. Talk to the outside world through <code>ctx.db</code> / <code>ctx.storage</code> / the RPC gateway — <code>urllib.request</code> is fine for that.</td>
+            <td><code>pip install -r requirements.txt</code> at build time. Full PyPI ecosystem.</td>
+          </tr>
+          <tr>
+            <td><strong>Sandbox</strong></td>
+            <td><strong>firejail</strong>: fresh mount namespace, <code>--net=none</code> + a single <code>--netfilter</code> hole to the gateway host on 443, <code>--caps.drop=all</code>, <code>--seccomp</code>, <code>--nonewprivs</code>, <code>--noroot</code>.</td>
+            <td>Docker container isolation. Egress is via the shared Caddy front-end; no arbitrary inbound.</td>
+          </tr>
+          <tr>
+            <td><strong>Where it's served</strong></td>
+            <td>Invoked over your backend's function URL — same route as Deno-TS functions.</td>
+            <td><code>https://&lt;app-id&gt;.apps.lingcode.dev/</code> on a per-app subdomain, or your own custom domain.</td>
+          </tr>
+          <tr>
+            <td><strong>Hard caps</strong></td>
+            <td>256&nbsp;KB source, 2&nbsp;MB output, 128&nbsp;MB memory, 32 processes, wall-clock timeout enforced.</td>
+            <td>100&nbsp;MB uncompressed source, 500 files, 5&nbsp;MB per file.</td>
+          </tr>
+          <tr>
+            <td><strong>Reach for it when</strong></td>
+            <td>Server-side vendor call, webhook handler, quick DB write — anything that fits &quot;take a JSON in, return a JSON out.&quot;</td>
+            <td>FastAPI / Flask / Django / anything WSGI or ASGI — anything that expects to be a real, long-running web process.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box">
+        <h3>Why the sharp split</h3>
+        <p>A per-invocation sandbox that&nbsp;can&nbsp;<code>pip install</code> arbitrary packages is very hard to make safe and very hard to make fast — every invocation would have to either warm a container or trust random C extensions. Instead the function tier is deliberately &quot;stdlib only, but it starts in tens of milliseconds and is boxed off from the machine.&quot; The app-hosting tier accepts the container overhead in exchange for the full PyPI ecosystem and a real process lifecycle. You pick the one whose trade-offs you actually want.</p>
+      </div>
+
+      <h2>Python custom functions</h2>
+      <p>A Python function is a single file with a <code>handler</code> entry point:</p>
+      <pre><code>def handler(input, ctx):
+    row = ctx.db.query_read(
+        "select id, title from posts where id = %s",
+        [input["post_id"]],
+    )
+    return {"post": row[0] if row else None}
+</code></pre>
+      <p><code>input</code> is whatever JSON the caller sent. <code>ctx</code> exposes <code>ctx.db</code> and <code>ctx.storage</code> — both are synchronous wrappers over the same backend RPC endpoint (<code>/_fn-rpc</code>) that the Deno-TS runtime uses, so the wire contract is identical. Return value must be JSON-serializable; it's what the caller gets back.</p>
+
+      <h3>Runtime shape</h3>
+      <ul>
+        <li>Interpreter: system <code>python3</code>, invoked as <code>python3 -I -B -S -</code>.
+          <ul>
+            <li><code>-I</code> — isolated: ignores <code>PYTHONPATH</code>, <code>PYTHONHOME</code>, and user site.</li>
+            <li><code>-B</code> — don't write <code>.pyc</code> files.</li>
+            <li><code>-S</code> — don't run <code>site.py</code>.</li>
+          </ul>
+        </li>
+        <li>STDIN: a JSON envelope <code>{ source, input, ctx }</code>. STDOUT: an <code>__LC_RESULT__</code> sentinel line followed by JSON <code>{ok, data|error}</code>. Same protocol as the Deno-TS runtime; observability tools see one contract.</li>
+        <li>Source, output, memory, process count, and wall clock are all capped (see the table above). If you exceed one you get an error result, not a silent kill.</li>
+      </ul>
+
+      <h3>Sandbox in one paragraph</h3>
+      <p>Each invocation runs as its own <code>firejail</code>-wrapped process:</p>
+      <pre><code>firejail --quiet --noprofile --private --net=none \
+  --netfilter=/etc/lingcode/fn-gateway.nft \
+  --caps.drop=all --seccomp --nonewprivs --nogroups --noroot \
+  --rlimit-as=&lt;memMb&gt;MB --rlimit-cpu=&lt;timeout+2s&gt; --rlimit-nproc=32 \
+  -- python3 -I -B -S -
+</code></pre>
+      <p>Python has no in-interpreter &quot;deny read this file&quot; / &quot;deny open this socket&quot; primitive, so the guarantee comes from below the interpreter: a fresh mount namespace with a tmpfs <code>$HOME</code> and no writable filesystem beyond <code>/usr</code>, no network except a single <code>--netfilter</code>-punched hole for the backend gateway on port 443, no ambient capabilities, no <code>setuid</code>. If the container is compromised, there is nowhere useful to go. Setup is one-time via <code>scripts/bootstrap-python-runtime.sh</code>; you don't operate it.</p>
+
+      <div class="warn-box">
+        <strong>Stdlib means stdlib.</strong> There is no <code>pip install</code> step and no shared virtualenv. If you need <code>requests</code>, use <code>urllib.request</code>. If you need <code>pydantic</code>, hand-roll the validation. If you actually need a third-party library, that is exactly the signal that you want the app-hosting tier for this piece of work, not a function.
+      </div>
+
+      <h2>Python app hosting <span style="opacity:0.7">— not yet available</span></h2>
+      <div class="warn-box">
+        <strong>Section status:</strong> this describes the intended shape once the runtime is stood up. As of 2026-08-13 the code is deployed and the runner is started, but the operator has not yet run <code>scripts/bootstrap-hosted-apps.sh</code> on the API droplet, so Caddy admin API and the base Docker image are absent. Deploys will queue and never swap in (<code>caddy_admin_unreachable</code>). Use <a href="/tutorials/use-fastapi-with-lingcode-cloud.html">host FastAPI elsewhere + call via a Cloud custom function</a> today.
+      </div>
+      <p>The app-hosting tier accepts a full source tree — an app you'd normally deploy to a VPS — and turns it into a per-app Docker image running behind Caddy with automatic TLS. This is where FastAPI, Flask, Django, Starlette, or anything else in the Python web ecosystem lives.</p>
+
+      <h3>What you upload</h3>
+      <p>An extractable source tree with, at minimum, <strong>either a <code>requirements.txt</code> or a <code>pyproject.toml</code></strong> at the top level. Without one of those, there's nothing for <code>pip install</code> to consume and the intake validator rejects the upload.</p>
+      <p>Everything else follows the ordinary Python conventions:</p>
+      <ul>
+        <li>A FastAPI or ASGI app usually exposed as <code>app</code> in a module like <code>main.py</code> or <code>app/main.py</code>.</li>
+        <li>Optional <code>Procfile</code> with a <code>web:</code> line if you want to override the default entrypoint (<code>uvicorn</code> for ASGI, <code>gunicorn</code> for WSGI).</li>
+        <li>Static files, templates, whatever your framework expects — all shipped in-tree.</li>
+      </ul>
+      <p>Hard caps at intake: <strong>100&nbsp;MB uncompressed</strong> total, <strong>500 files</strong>, <strong>5&nbsp;MB per file</strong>. These exist to keep <code>pip install</code>'s working set predictable and to cap the blast radius of a &quot;million tiny files&quot; extractor attack.</p>
+
+      <h3>What the platform builds</h3>
+      <p>A per-app Dockerfile on top of a pinned <code>ghcr.io/lingcode/py-app-runtime:3.12</code> base image (only 3.12 is in <code>SUPPORTED_RUNTIME_VERSIONS</code> today). The build is layered to keep rebuilds fast:</p>
+      <pre><code>FROM ghcr.io/lingcode/py-app-runtime:3.12
+WORKDIR /app
+COPY requirements.txt* ./
+RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi
+COPY . .
+ENV PORT=8080 HEALTHCHECK_PATH=/
+EXPOSE 8080
+CMD [&quot;uvicorn&quot;, &quot;main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8080&quot;]
+</code></pre>
+      <p>Requirements are copied and installed <em>before</em> the source is copied — that way editing your app doesn't invalidate the Python-dependency layer, and rebuilds after a source-only change are fast. The <code>PORT</code> and <code>HEALTHCHECK_PATH</code> environment variables are baked in with defaults but can be overridden at deploy time without a rebuild.</p>
+
+      <h3>How requests get in</h3>
+      <p>Each app gets an <code>&lt;app-id&gt;.apps.lingcode.dev</code> subdomain, served by <strong>Caddy with on-demand TLS</strong> — certificates are minted automatically the first time a hostname is hit. Custom domains work by pointing a <code>CNAME</code> at <code>apps.lingcode.dev</code> (or an <code>A</code> record at the edge IP) with proxying turned off in your DNS provider; the on-demand TLS handshake completes and the app is reachable. Same DNS story as for the Worker tier — see <a href="/tutorials/connect-a-custom-domain.html">Connect a custom domain</a>.</p>
+      <p>The container has one job: bind <code>0.0.0.0:$PORT</code> and serve HTTP. Health is probed via <code>GET $HEALTHCHECK_PATH</code>; when that returns non-2xx for too long, the container is restarted.</p>
+
+      <div class="info-box">
+        <h3>Difference from the Worker tier</h3>
+        <p>A hosted <strong>Worker</strong> app (see <a href="/docs/cloud/hosting.html">App hosting</a>) is a V8 isolate — no filesystem, no <code>child_process</code>, no long-lived connections. A hosted <strong>Python</strong> app is a normal Linux process inside a container — it <em>can</em> hold a WebSocket open, run a background <code>asyncio</code> task, or open a file, because there is a real OS underneath. The tradeoff is start-up time and per-app footprint; hosted Python is heavier per instance than a Worker.</p>
+      </div>
+
+      <h2>Everything else — same backend</h2>
+      <p>Both tiers plug into the rest of the managed backend the same way:</p>
+      <ul>
+        <li><strong>Secrets</strong> live in the <a href="/docs/cloud/secrets.html">vault</a> and are injected into function <code>ctx</code> or hosted-app environment. Never checked into your source tree.</li>
+        <li><strong>Database</strong> access is the <a href="/docs/cloud/database.html">managed Postgres</a> — for functions via <code>ctx.db</code>, for hosted apps via a normal <code>psycopg</code> / <code>asyncpg</code> / SQLAlchemy connection using the credentials in your environment.</li>
+        <li><strong>Storage</strong> is the same object store; functions call <code>ctx.storage</code>, hosted apps use the REST endpoints or a client library.</li>
+      </ul>
+      <p>The point is that your Python code doesn't have to change if you decide a piece of work is better served as a hosted app instead of a function (or vice versa) — the surrounding pieces stay put.</p>
+
+      <h2>Which one should this be?</h2>
+      <p>Two heuristics that tend to give the right answer <em>once app hosting is live</em>:</p>
+      <ul>
+        <li>&quot;Do I need PyPI?&quot; If yes, it will be the <strong>hosted-app</strong> tier — for now, host elsewhere and call via a function. If no, functions handle it today.</li>
+        <li>&quot;Does anything about this call have to <em>keep running</em> — a WebSocket, a job queue worker, a background task, an in-memory cache — after the request that started it returns?&quot; If yes, it will be the <strong>hosted-app</strong> tier — for now, host elsewhere. Functions are per-invocation processes.</li>
+      </ul>
+      <p>Everything else is a genuinely local call, and the smaller, sandboxed function surface is the right default today.</p>
+
+      <h2>Status &amp; what's next</h2>
+      <ul>
+        <li><strong>Python custom functions</strong> — Preview, live. Runtime deployed 2026-08-13, sandbox hardened (see PR #28). Expect caps and the pinned interpreter version to move as usage patterns emerge; the <code>handler(input, ctx)</code> shape and stdlib-only rule are stable.</li>
+        <li><strong>Python app hosting</strong> — partially bootstrapped, TLS ingress not wired. Docker, cgroup slice, state dirs, and the <code>py-app-runtime:3.12</code> base image are on the API droplet. Blocking work: extend <code>cloud-domains.js</code>'s <code>/api/cloud/domains/verify</code> to approve <code>*.apps.lingcode.dev</code> names that match a live <code>hosted_apps</code> row, add a wildcard DNS record for <code>*.apps.lingcode.dev</code> pointing at the custom-domain edge droplet, add an nginx <code>Host</code>-routing rule on the API droplet's VPC port to reach the hosted-app dispatcher, stub out <code>cloud-hosted-app-caddy.js</code>, and rework <code>cloud-hosted-app-runner.js</code>'s port-publishing model. Then smoke-test a real FastAPI upload. This section will be flipped to a live guide when that's done.</li>
+      </ul>
+
+      <div class="tutorial-next">
+        <div class="tutorial-next-grid">
+          <a class="tutorial-next-card" href="/tutorials/use-fastapi-with-lingcode-cloud.html">
+            <span class="card-eyebrow">Tutorial</span>
+            <h3>Use FastAPI with LingCode Cloud →</h3>
+            <p>End-to-end walkthrough: FastAPI project, <code>requirements.txt</code>, deploy, and hit it from a browser.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/functions.html">
+            <span class="card-eyebrow">Compute</span>
+            <h3>Functions →</h3>
+            <p>The custom-function surface as a whole — Python is one runtime, Deno-TS is the other, and both invoke the same way.</p>
+          </a>
+          <a class="tutorial-next-card" href="/docs/cloud/hosting.html">
+            <span class="card-eyebrow">Deploy</span>
+            <h3>App hosting →</h3>
+            <p>The Worker / V8-isolate tier for JavaScript apps. Same platform, different runtime — useful contrast to the Python hosted tier.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+  <script src="/site-chat-widget.js?v=20260731a" defer></script>
+</body>
+</html>

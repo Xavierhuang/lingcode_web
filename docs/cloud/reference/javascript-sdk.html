@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JavaScript SDK | LingCode Cloud Docs</title>
+  <meta name="description" content="Use the LingCode Cloud JavaScript client for data, authentication, files, functions, realtime subscriptions, vectors, push, and telemetry.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/reference/javascript-sdk.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/reference/javascript-sdk.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/reference/javascript-sdk.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html" aria-current="page">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>JavaScript SDK</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="javascript-sdk">JavaScript SDK</h1>
+<p>The JavaScript SDK is the main application client for LingCode Cloud. It exposes one typed client for database access, authentication, storage, custom functions, realtime subscriptions, vector search, push, telemetry, and remote configuration.</p>
+<h2 id="create-a-client">Create a client</h2>
+<p>Import <code>createClient</code> and initialize it with the backend URL and public anonymous key shown in the LingCode backend panel.</p>
+<pre><code class="language-js">import { createClient } from &quot;@lingcode/cloud&quot;;
+
+const cloud = createClient(&quot;https://your-backend.example.com&quot;, &quot;your-anon-key&quot;);</code></pre>
+<p>Do not ship service-role credentials in browser or mobile applications. The anonymous key identifies the backend; row-level security and the signed-in user&#39;s session determine what a client may access.</p>
+<h2 id="results-and-errors">Results and errors</h2>
+<p>Asynchronous SDK operations return a typed Result&lt;T&gt; value with either data or a structured error. Check the error before using the data.</p>
+<pre><code class="language-ts">const { data, error } = await cloud.from(&quot;messages&quot;).select();
+if (error) {
+  console.error(error.code, error.message);
+  return;
+}</code></pre>
+<p>Errors can include a stable machine-readable code, a human-readable message, optional details, and the related HTTP status. Applications should branch on the code rather than matching message text.</p>
+<h2 id="tables">Tables</h2>
+<p>Start a table operation with <code>from(table)</code>. Selection supports filters, ordering, limits, ranges, and single-row helpers.</p>
+<pre><code class="language-js">const { data, error } = await cloud
+  .from(&quot;messages&quot;)
+  .select(&quot;id, body, created_at&quot;)
+  .eq(&quot;room_id&quot;, roomId)
+  .order(&quot;created_at&quot;, { ascending: false })
+  .limit(50);</code></pre>
+<p>Use <code>insert</code>, <code>upsert</code>, <code>update</code>, and <code>delete</code> for writes. Every operation is evaluated using the current user session and the backend&#39;s row-level security policies.</p>
+<h2 id="authentication">Authentication</h2>
+<p>The <code>auth</code> namespace manages sign-up, sign-in, sign-out, session refresh, password recovery, and auth-state listeners. Persist sessions only through the SDK&#39;s supported storage adapter.</p>
+<pre><code class="language-js">const { data, error } = await cloud.auth.signInWithPassword({ email, password });
+const unsubscribe = cloud.auth.onAuthStateChange((event, session) =&gt; {
+  // Update application state.
+});</code></pre>
+<h2 id="storage">Storage</h2>
+<p>Use <code>storage.from(bucket)</code> to upload, download, list, move, copy, or remove objects. Bucket policies are enforced independently from table policies.</p>
+<h2 id="custom-functions">Custom functions</h2>
+<p>Invoke a deployed custom function with <code>functions.invoke</code>. The body is JSON-encoded unless you pass a supported binary body.</p>
+<pre><code class="language-js">const { data, error } = await cloud.functions.invoke(&quot;send-welcome-email&quot;, {
+  body: { userId },
+});</code></pre>
+<p>Function compute is metered separately from the number of saved definitions. See <a href="/docs/cloud/limits.html">Limits and quotas</a> for the current contract.</p>
+<h2 id="realtime">Realtime</h2>
+<p>Create a channel, attach database-change or broadcast handlers, and subscribe. Remove channels when a screen or component no longer needs them. Treat reconnects as normal: handlers should tolerate duplicate delivery and refresh authoritative state after a connection gap.</p>
+<h2 id="vector-push-telemetry-and-config">Vector, push, telemetry, and config</h2>
+<p>The <code>vector</code> namespace performs similarity search against configured embeddings. The <code>push</code> namespace registers devices and manages notification preferences. <code>telemetry</code> records application events, while <code>config</code> reads remotely managed application configuration.</p>
+<p>Keep high-cardinality or secret values out of telemetry properties. Remote config is not a secrets store.</p>
+<h2 id="typescript">TypeScript</h2>
+<p>The package includes TypeScript declarations for the client, builders, data values, sessions, and structured errors. Supply your generated database types to improve table and column inference in application code.</p>
+<h2 id="related-guides">Related guides</h2>
+<ul>
+<li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li>
+<li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li>
+<li><a href="/docs/cloud/production/reliability.html">Reliability</a></li>
+<li><a href="/docs/cloud/security.html">Security</a></li>
+</ul>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/limits.html">Previous: Limits and quotas</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/reference/rest-api.html">Next: REST API</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#create-a-client">Create a client</a></li><li class="toc-level-2"><a href="#results-and-errors">Results and errors</a></li><li class="toc-level-2"><a href="#tables">Tables</a></li><li class="toc-level-2"><a href="#authentication">Authentication</a></li><li class="toc-level-2"><a href="#storage">Storage</a></li><li class="toc-level-2"><a href="#custom-functions">Custom functions</a></li><li class="toc-level-2"><a href="#realtime">Realtime</a></li><li class="toc-level-2"><a href="#vector-push-telemetry-and-config">Vector, push, telemetry, and config</a></li><li class="toc-level-2"><a href="#typescript">TypeScript</a></li><li class="toc-level-2"><a href="#related-guides">Related guides</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>

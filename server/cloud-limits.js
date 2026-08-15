@@ -29,6 +29,11 @@
 // maxRowsPerWrite = max rows accepted in ONE batch insert/upsert call
 // (/insert or /upsert with an array body). Bounds a single multi-row statement;
 // the data plane also enforces a hard 10k backstop regardless of this value.
+// maxRowsPerRead = max rows a single /select (incl. nested-select embedding)
+// returns for the tier — the shared-cluster blast-radius guard on the anon data
+// gateway. free 200 / pro 500 / max_pro 1000; the data plane clamps to a hard
+// 2000 backstop regardless. Pagination (offset/range) is the path for larger sets;
+// heavy/unbounded reads belong on the container-compute LINGCODE_DB_URL, not here.
 // maxComputeJobs / maxComputeConcurrentRuns / maxComputeTimeoutSec /
 // maxComputeMemoryMb govern the COMPUTE TIER (cloud-compute.js): how many
 // long-running container jobs a user may declare per backend, how many runs may
@@ -36,14 +41,21 @@
 // enforces at `docker run`. This is the heavy tier the 30s function/cron paths
 // can't serve — `free.maxComputeJobs: 0` keeps it off for free (a paid feature),
 // and `pro.maxComputeTimeoutSec: 1800` comfortably covers cliffslist's 800s batch.
+//
+// maxHostedApps / maxAppMemoryMb / maxAppCpuShares / maxAppUptimeHrsPerMonth /
+// maxAppEgressGbPerDay govern the HOSTED-APPS TIER (cloud-hosted-apps.js —
+// long-lived Python HTTP apps behind Caddy at <slug>.apps.lingcode.dev).
+// Reuses the compute Docker substrate. `free.maxHostedApps: 0` matches the
+// compute posture — paid feature; pro gets one small app, max_pro up to five.
+// Uptime hours = per-app monthly budget (730 h ≈ 24/7 for one app on pro).
 const TIER_LIMITS = {
-  free:    { maxTables: 10,  maxObjects: 50,   maxObjectBytes: 1 * 1024 * 1024, maxUploadBytes: 50 * 1024 * 1024,        maxUsers: 100,    maxFunctions: 2,  maxEmailsPerDay: 30,    maxFunctionMs: 3000,  maxStorageBytes: 500 * 1024 * 1024, maxWorkers: 10,  maxCrons: 2,   maxWorkerRequestsPerDay: 100000,   maxRowsPerWrite: 100,  maxComputeJobs: 0,  maxComputeConcurrentRuns: 0, maxComputeTimeoutSec: 0,    maxComputeMemoryMb: 0,    maxComputeSchedules: 0 },
-  pro:     { maxTables: 50,  maxObjects: 1000, maxObjectBytes: 5 * 1024 * 1024, maxUploadBytes: 1 * 1024 * 1024 * 1024,  maxUsers: 10000,  maxFunctions: 10, maxEmailsPerDay: 1000,  maxFunctionMs: 10000, maxStorageBytes: 5 * 1024 * 1024 * 1024, maxWorkers: 25,  maxCrons: 20,  maxWorkerRequestsPerDay: 2000000,  maxRowsPerWrite: 1000, maxComputeJobs: 10, maxComputeConcurrentRuns: 2, maxComputeTimeoutSec: 1800, maxComputeMemoryMb: 1024, maxComputeSchedules: 40 },
-  max_pro: { maxTables: 200, maxObjects: 10000,maxObjectBytes: 10 * 1024 * 1024,maxUploadBytes: 5 * 1024 * 1024 * 1024,  maxUsers: 100000, maxFunctions: 50, maxEmailsPerDay: 10000, maxFunctionMs: 30000, maxStorageBytes: 20 * 1024 * 1024 * 1024, maxWorkers: 100, maxCrons: 100, maxWorkerRequestsPerDay: 20000000, maxRowsPerWrite: 5000, maxComputeJobs: 50, maxComputeConcurrentRuns: 8, maxComputeTimeoutSec: 3600, maxComputeMemoryMb: 4096, maxComputeSchedules: 200 },
+  free:    { maxTables: 10,  maxObjects: 50,   maxObjectBytes: 1 * 1024 * 1024, maxUploadBytes: 50 * 1024 * 1024,        maxUsers: 100,    maxFunctions: 2,  maxEmailsPerDay: 30,    maxFunctionMs: 3000,  maxStorageBytes: 500 * 1024 * 1024, maxWorkers: 10,  maxCrons: 2,   maxWorkerRequestsPerDay: 100000,   maxRowsPerWrite: 100,  maxRowsPerRead: 200,  maxComputeJobs: 0,  maxComputeConcurrentRuns: 0, maxComputeTimeoutSec: 0,    maxComputeMemoryMb: 0,    maxComputeSchedules: 0,   maxHostedApps: 0, maxAppMemoryMb: 0,   maxAppCpuShares: 0,    maxAppUptimeHrsPerMonth: 0,    maxAppEgressGbPerDay: 0  },
+  pro:     { maxTables: 50,  maxObjects: 1000, maxObjectBytes: 5 * 1024 * 1024, maxUploadBytes: 1 * 1024 * 1024 * 1024,  maxUsers: 10000,  maxFunctions: 10, maxEmailsPerDay: 1000,  maxFunctionMs: 10000, maxStorageBytes: 5 * 1024 * 1024 * 1024, maxWorkers: 25,  maxCrons: 20,  maxWorkerRequestsPerDay: 2000000,  maxRowsPerWrite: 1000, maxRowsPerRead: 500,  maxComputeJobs: 10, maxComputeConcurrentRuns: 2, maxComputeTimeoutSec: 1800, maxComputeMemoryMb: 1024, maxComputeSchedules: 40,  maxHostedApps: 1, maxAppMemoryMb: 256, maxAppCpuShares: 512,  maxAppUptimeHrsPerMonth: 730,  maxAppEgressGbPerDay: 1  },
+  max_pro: { maxTables: 200, maxObjects: 10000,maxObjectBytes: 10 * 1024 * 1024,maxUploadBytes: 5 * 1024 * 1024 * 1024,  maxUsers: 100000, maxFunctions: 50, maxEmailsPerDay: 10000, maxFunctionMs: 30000, maxStorageBytes: 20 * 1024 * 1024 * 1024, maxWorkers: 100, maxCrons: 100, maxWorkerRequestsPerDay: 20000000, maxRowsPerWrite: 5000, maxRowsPerRead: 1000, maxComputeJobs: 50, maxComputeConcurrentRuns: 8, maxComputeTimeoutSec: 3600, maxComputeMemoryMb: 4096, maxComputeSchedules: 200, maxHostedApps: 5, maxAppMemoryMb: 512, maxAppCpuShares: 1024, maxAppUptimeHrsPerMonth: 3650, maxAppEgressGbPerDay: 20 },
 };
 
 const CLOUD_TIERS = ['free', 'pro', 'max_pro'];
-const CLOUD_FIELDS = ['maxTables', 'maxObjects', 'maxObjectBytes', 'maxUploadBytes', 'maxUsers', 'maxFunctions', 'maxEmailsPerDay', 'maxFunctionMs', 'maxStorageBytes', 'maxWorkers', 'maxCrons', 'maxWorkerRequestsPerDay', 'maxRowsPerWrite', 'maxComputeJobs', 'maxComputeConcurrentRuns', 'maxComputeTimeoutSec', 'maxComputeMemoryMb', 'maxComputeSchedules'];
+const CLOUD_FIELDS = ['maxTables', 'maxObjects', 'maxObjectBytes', 'maxUploadBytes', 'maxUsers', 'maxFunctions', 'maxEmailsPerDay', 'maxFunctionMs', 'maxStorageBytes', 'maxWorkers', 'maxCrons', 'maxWorkerRequestsPerDay', 'maxRowsPerWrite', 'maxRowsPerRead', 'maxComputeJobs', 'maxComputeConcurrentRuns', 'maxComputeTimeoutSec', 'maxComputeMemoryMb', 'maxComputeSchedules', 'maxHostedApps', 'maxAppMemoryMb', 'maxAppCpuShares', 'maxAppUptimeHrsPerMonth', 'maxAppEgressGbPerDay'];
 
 // Flat allow-list of every editable app_config key. The admin endpoint rejects
 // anything outside this set loudly, instead of silently bloating app_config.
@@ -116,7 +128,11 @@ function computeCapabilities(tier) {
       // coupling and never probes at boot (cloud-functions-runtime only pulls in
       // child_process, so there's no import cycle back to cloud-limits).
       custom: require('./cloud-functions-runtime').isAvailable(),
-      maxFunctions: lim.maxFunctions,
+      // Saved definitions are unlimited. Keep the historical per-tier field in
+      // TIER_LIMITS/app_config for admin and older configuration compatibility,
+      // but do not advertise it as an enforced runtime cap.
+      maxFunctions: null,
+      unlimitedSavedDefinitions: true,
       maxFunctionMs: lim.maxFunctionMs,
       genericApiProxy: 'To integrate ANY third-party API with a server-side secret, use the http-fetch builtin — invoke it with { url, method, headers: { Authorization: "Bearer {{SECRET_NAME}}" }, body }. No per-vendor function needed; the key stays server-side. The owner allow-lists the host first (Settings → Allowed fetch hosts).',
       invoke: 'POST /api/cloud/be/<backendId>/functions/<slug> — or window.lingcode.functions.invoke(slug, input) from app code',
@@ -146,7 +162,7 @@ function computeCapabilities(tier) {
     containerCompute: lim.maxComputeJobs > 0 ? {
       available: true,
       what: 'Long-running CONTAINER jobs (NO ~30s cap) that run arbitrary code — 800s+ batches, headless-Chromium scraping, OpenAI/ingestion loops — the workloads the serverless functions can\'t host.',
-      privilegedDb: 'Each job gets LINGCODE_DB_URL: a real, role-scoped Postgres connection with FULL SQL (multi-statement transactions, advisory locks, COPY, unbounded result sets) and NONE of the gateway caps (no 200-row select / 1000-row rpc / single-statement limits). The path for heavy server-side data work.',
+      privilegedDb: 'Each job gets LINGCODE_DB_URL: a real, role-scoped Postgres connection with FULL SQL (multi-statement transactions, advisory locks, COPY, unbounded result sets) and NONE of the gateway caps (no per-tier row cap on select / 1000-row rpc / single-statement limits). The path for heavy server-side data work.',
       secrets: 'The backend\'s vault secrets (OPENAI_API_KEY, RESEND_API_KEY, …) are injected as env vars automatically — no hardcoded keys.',
       scheduler: 'Jobs run on a 5-field cron with overlap control (skip/queue/allow) and automatic retries with backoff — for a real pipeline of scheduled jobs.',
       browser: 'A managed Playwright/Chromium base image is available for scraping/render jobs.',

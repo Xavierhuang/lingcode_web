@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security at LingCode Cloud | LingCode Cloud Docs</title>
+  <meta name="description" content="The security controls, operational boundaries, and shared-responsibility model used to protect LingCode Cloud accounts, credentials, applications, and data.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/docs/cloud/security/">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/docs/cloud/security/">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/docs/cloud/security/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <link rel="stylesheet" href="/docs-cloud.css?v=20260809a">
+</head>
+<body>
+  <a class="cloud-docs-skip" href="#cloud-docs-content">Skip to documentation</a>
+  <nav class="site-nav">
+    <a href="/" class="logo"><span class="logo-mark">L</span><span class="logo-name">LingCode</span></a>
+    <ul class="nav-links"><li><a href="/cloud.html">Cloud</a></li><li><a href="/docs.html">Docs</a></li><li><a href="/tutorials.html">Tutorials</a></li></ul>
+    <div class="nav-cta"><a class="btn btn-ghost" href="/signin.html">Sign in</a><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download →</a></div>
+  </nav>
+  <button class="cloud-docs-mobile-toggle" type="button" aria-expanded="false" aria-controls="cloud-docs-sidebar">Browse Cloud docs</button>
+  <div class="cloud-docs-shell">
+    <nav class="cloud-docs-sidebar" aria-label="Cloud documentation" id="cloud-docs-sidebar">
+        <section class="cloud-docs-nav-section">
+          <h2>Start</h2>
+          <ul><li><a href="/docs/cloud/">LingCode Cloud</a></li><li><a href="/docs/cloud/concepts/">Core concepts</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Functions</h2>
+          <ul><li><a href="/docs/cloud/functions/">Functions overview</a></li><li><a href="/docs/cloud/functions/custom-functions.html">Custom functions</a></li><li><a href="/docs/cloud/functions/queries.html">Queries · Preview</a></li><li><a href="/docs/cloud/functions/mutations.html">Mutations · Preview</a></li><li><a href="/docs/cloud/functions/actions.html">Actions · Preview</a></li><li><a href="/docs/cloud/functions/validation.html">Validation · Preview</a></li><li><a href="/docs/cloud/functions/errors.html">Error handling · Preview</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Deployments</h2>
+          <ul><li><a href="/docs/cloud/deployments/">Deployment overview</a></li><li><a href="/docs/cloud/deployments/backend-as-code.html">Backend-as-code</a></li><li><a href="/docs/cloud/deployments/production-approval.html">Production approval</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Production</h2>
+          <ul><li><a href="/docs/cloud/security/" aria-current="page">Security</a></li><li><a href="/docs/cloud/production/">Production checklist</a></li><li><a href="/docs/cloud/production/reliability.html">Reliability</a></li><li><a href="/docs/cloud/production/observability.html">Observability</a></li><li><a href="/docs/cloud/limits.html">Limits and quotas</a></li></ul>
+        </section>
+        <section class="cloud-docs-nav-section">
+          <h2>Reference</h2>
+          <ul><li><a href="/docs/cloud/reference/javascript-sdk.html">JavaScript SDK</a></li><li><a href="/docs/cloud/reference/rest-api.html">REST API</a></li><li><a href="/docs/cloud/reference/cli-mcp.html">CLI and MCP</a></li></ul>
+        </section>
+    </nav>
+    <main id="cloud-docs-content" class="cloud-docs-article" data-pagefind-body>
+      <div class="cloud-docs-breadcrumb"><a href="/docs.html">Docs</a><span>/</span><a href="/docs/cloud/">Cloud</a><span>/</span><span>Security at LingCode Cloud</span></div>
+      <div class="cloud-docs-meta"><span class="cloud-docs-status is-available">Available</span><span>Updated 2026-08-09</span></div>
+      <h1 id="security-at-lingcode-cloud">Security at LingCode Cloud</h1>
+<p>LingCode Cloud is designed with layered controls across authentication, tenant isolation, secrets, functions, deployments, and operations. Security is an ongoing risk-management process, not a promise that any online service is invulnerable. This page documents controls customers can evaluate and the responsibilities they retain.</p>
+<h2 id="account-and-credential-protection">Account and credential protection</h2>
+<ul>
+<li>Production starts fail closed when the session secret, token pepper, or configured Cloud signing secret is missing or weak.</li>
+<li>Password sign-in uses bcrypt and dual account/address password throttling. Authentication failures do not disclose whether an account exists.</li>
+<li>Newly issued account credentials use hashed token lookup with a versioned HMAC-SHA-256 digest. The raw credential is returned only at issuance and credential responses use <code>Cache-Control: no-store</code>.</li>
+<li>Existing credentials receive digest coverage through an additive migration with no forced reconnect. Compatibility plaintext is retained only for the staged migration and is measured by a read-only migration report.</li>
+<li>IDE and agent access uses an expiring project-scoped token. Remote and collaboration links use separate one-hour scoped credentials instead of exposing a long-lived account credential.</li>
+<li>Explicit rotation and password reset revoke active credential families.</li>
+</ul>
+<h2 id="data-and-tenant-isolation">Data and tenant isolation</h2>
+<ul>
+<li>Each managed backend receives a separate PostgreSQL tenant schema and database role.</li>
+<li>The data gateway resolves the authenticated backend and role before executing an operation.</li>
+<li>Row-level security supports per-user application authorization. Application teams must enable and test policies for client-accessible tables; administrative server paths remain a privileged boundary.</li>
+<li>Public anonymous keys identify a backend but are not secrets. Authorization must come from row-level policies, authenticated user context, and server-only credentials.</li>
+</ul>
+<h2 id="secrets-and-function-execution">Secrets and function execution</h2>
+<ul>
+<li>User-provided service credentials are encrypted with AES-256-GCM before storage and are decrypted only for the operation that needs them.</li>
+<li>Custom functions run with deny-by-default Deno permissions, bounded execution time, restricted request size, and an outbound-host allowlist.</li>
+<li>Server-side fetch validation blocks unsupported protocols and private or loopback destinations. Additional DNS-pinning defenses remain on the security roadmap.</li>
+<li>Logs and migration reports are designed to exclude raw credentials, token digests, cookies, and secret values.</li>
+</ul>
+<h2 id="deployment-safeguards">Deployment safeguards</h2>
+<ul>
+<li>Production backend changes use a preview followed by an exact, digest-bound approval.</li>
+<li>Approval plans expire after 10 minutes, are single-use, and cannot be replayed with altered content.</li>
+<li>Production has no automatic watch deployment. Destructive and security-sensitive actions require an explicit target and confirmation.</li>
+<li>Backend source status compares deployed artifacts with their expected SHA-256 hashes.</li>
+</ul>
+<h2 id="browser-and-transport-safeguards">Browser and transport safeguards</h2>
+<ul>
+<li>Production sessions use Secure, HttpOnly, SameSite cookies.</li>
+<li>Responses set content-type, framing, referrer, browser-permission, and HTTPS transport security headers.</li>
+<li>LingCode Cloud is served over HTTPS; customers must also use HTTPS for their own custom domains and upstream services.</li>
+</ul>
+<h2 id="shared-responsibility">Shared responsibility</h2>
+<p>LingCode protects the managed control plane, gateway, credential lifecycle, and platform isolation controls. Customers remain responsible for:</p>
+<ul>
+<li>writing and testing row-level security policies for their application data;</li>
+<li>granting the minimum project roles and removing access when it is no longer needed;</li>
+<li>keeping secrets out of source code, prompts, client bundles, and logs;</li>
+<li>validating function inputs and authorization, especially before external side effects;</li>
+<li>reviewing production plans, monitoring their application, and maintaining appropriate retention and recovery requirements.</li>
+</ul>
+<p>Use the <a href="/docs/cloud/production/">Production checklist</a> before launching an application that handles sensitive or regulated data.</p>
+<h2 id="verification-and-security-roadmap">Verification and security roadmap</h2>
+<p>This release includes automated tests for production configuration, security headers, password throttling, token migration, expiry, revocation, project scoping, deployment confirmation, function sandboxing, and private-network request blocking.</p>
+<p>The security roadmap includes per-backend signing-key rotation, stronger default row-level-security enforcement for newly created backends, DNS-pinned outbound requests, compute host-isolation release gates, recurring backup-restore exercises, and independent penetration testing. Roadmap items are not represented as completed controls.</p>
+<h2 id="reporting-a-security-concern">Reporting a security concern</h2>
+<p>Do not include passwords, access tokens, private keys, or customer data in an initial report. Contact LingCode support with a concise description, affected URL or component, reproduction conditions, and potential impact. Reports are triaged privately and remediation is prioritized by exploitability and customer impact.</p>
+<p>Last reviewed: August 9, 2026.</p>
+      <footer class="cloud-docs-page-footer">
+        <div><a class="cloud-docs-prev" href="/docs/cloud/deployments/production-approval.html">Previous: Production approval</a></div>
+        <div><a class="cloud-docs-next" href="/docs/cloud/production/">Next: Production checklist</a></div>
+      </footer>
+    </main>
+    <nav class="cloud-docs-toc" aria-label="On this page"><h2>On this page</h2><ol><li class="toc-level-2"><a href="#account-and-credential-protection">Account and credential protection</a></li><li class="toc-level-2"><a href="#data-and-tenant-isolation">Data and tenant isolation</a></li><li class="toc-level-2"><a href="#secrets-and-function-execution">Secrets and function execution</a></li><li class="toc-level-2"><a href="#deployment-safeguards">Deployment safeguards</a></li><li class="toc-level-2"><a href="#browser-and-transport-safeguards">Browser and transport safeguards</a></li><li class="toc-level-2"><a href="#shared-responsibility">Shared responsibility</a></li><li class="toc-level-2"><a href="#verification-and-security-roadmap">Verification and security roadmap</a></li><li class="toc-level-2"><a href="#reporting-a-security-concern">Reporting a security concern</a></li></ol></nav>
+  </div>
+  <script src="/nav.js?v=20260809a"></script>
+  <script src="/docs-cloud.js?v=20260809c"></script>
+</body>
+</html>
