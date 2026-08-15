@@ -28,6 +28,20 @@ elif [ "${SKIP_DOCS_BUILD:-0}" = "1" ]; then
   echo "Skipping Cloud documentation build (SKIP_DOCS_BUILD=1)."
 fi
 
+# Regenerate changelog.html from docs/gtm/releases/ + docs/gtm/backend/ before
+# it ships. release-and-deploy.sh already does this at its step 3, but a bare
+# ./website/deploy.sh would otherwise upload whatever changelog.html happens to
+# be on disk — so a release entry written without a full release run would
+# silently never reach the site. That drift is exactly what the GTM pipeline
+# exists to prevent. Regeneration is idempotent, so running it twice is free.
+# Skip with SKIP_GTM=1.
+if [ "${SKIP_GTM:-0}" != "1" ] && [ -f "$WEBSITE_DIR/../scripts/gtm-render.mjs" ]; then
+  echo "Regenerating changelog.html from docs/gtm/..."
+  node "$WEBSITE_DIR/../scripts/gtm-render.mjs" --all
+else
+  echo "Skipping changelog regeneration (SKIP_GTM=1 or pipeline absent)."
+fi
+
 # Regenerate sitemap.xml (+ the per-locale children) from the live page
 # inventory, then assert the SEO invariants. Both derive their idea of a
 # "public page" from scripts/seo/pages.py, which parses robots.txt — that is

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How do I connect an agent to Xcode's MCP server? | LingCode Tutorials</title>
+  <meta name="description" content="Xcode 26.3 exposes its build system, tests, Previews and docs over MCP. Turn it on in Intelligence settings and wire up Claude Code or Codex with xcrun mcpbridge.">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/tutorials/connect-an-agent-to-xcodes-mcp-server.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/tutorials/connect-an-agent-to-xcodes-mcp-server.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <meta property="article:modified_time" content="2026-08-15">
+  <meta property="article:published_time" content="2026-08-15">
+  <meta name="author" content="LingCode">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://lingcode.dev/tutorials/connect-an-agent-to-xcodes-mcp-server.html">
+  <meta name="robots" content="index, follow">
+  <meta property="og:url" content="https://lingcode.dev/tutorials/connect-an-agent-to-xcodes-mcp-server.html">
+  <meta property="og:title" content="How do I connect an agent to Xcode's MCP server?">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="LingCode">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How do I connect an agent to Xcode's MCP server?">
+  <meta property="og:description" content="Xcode 26.3 exposes its build system, tests, Previews and docs over MCP. Turn it on in Intelligence settings and wire up Claude Code or Codex with xcrun mcpbridge.">
+  <meta name="twitter:description" content="Xcode 26.3 exposes its build system, tests, Previews and docs over MCP. Turn it on in Intelligence settings and wire up Claude Code or Codex with xcrun mcpbridge.">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How do I connect an agent to Xcode's MCP server?",
+  "description": "Give Claude Code or Codex access to Xcode's build system, tests, Previews and documentation over the Model Context Protocol.",
+  "url": "https://lingcode.dev/tutorials/connect-an-agent-to-xcodes-mcp-server.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-08-15",
+  "dateModified": "2026-08-15",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Turn on external agent access",
+      "text": "Choose Xcode > Settings, select Intelligence in the sidebar, and under Model Context Protocol turn on 'Allow external agents to use Xcode tools.'"
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Register the bridge with your agent",
+      "text": "Run claude mcp add --transport stdio xcode -- xcrun mcpbridge, or codex mcp add xcode -- xcrun mcpbridge for Codex."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Verify the registration",
+      "text": "Run claude mcp list or codex mcp list and confirm the xcode entry appears."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Open the project in Xcode first",
+      "text": "The bridge talks to a running Xcode with your project open. Prompting the agent before opening the project gives it nothing to act on."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Tell the agent the tools exist",
+      "text": "Add a line to CLAUDE.md or AGENTS.md pointing at the Xcode tools so the agent builds and tests instead of guessing."
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Tutorials", "item": "https://lingcode.dev/tutorials.html" },
+    { "@type": "ListItem", "position": 3, "name": "Native Mac IDE", "item": "https://lingcode.dev/tutorials.html?level=intermediate" },
+    { "@type": "ListItem", "position": 4, "name": "Connect an agent to Xcode's MCP server", "item": "https://lingcode.dev/tutorials/connect-an-agent-to-xcodes-mcp-server.html" }
+  ]
+}
+  </script>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+<div class="tutorial-detail-wrap">
+    <div class="tutorial-breadcrumb">
+      <a href="/tutorials.html">Tutorials</a>
+      <span>/</span>
+      <a href="/tutorials.html?level=intermediate">Native Mac IDE</a>
+      <span>/</span>
+      <span>Connect an agent to Xcode's MCP server</span>
+    </div>
+
+    <div class="tutorial-header">
+      <div class="badge-row">
+        <span class="badge badge-format">📝 Written</span>
+        <span class="badge badge-intermediate">● Intermediate</span>
+        <span class="badge badge-date">Updated 2026-08-15</span>
+      </div>
+      <h1>How do I connect an agent to Xcode's MCP server?</h1>
+      <p class="tldr"><strong>TL;DR:</strong> Xcode&nbsp;26.3 ships an MCP server. Turn on <em>Allow external agents to use Xcode tools</em> in <strong>Xcode&nbsp;&gt;&nbsp;Settings&nbsp;&gt;&nbsp;Intelligence</strong>, then run <code>claude mcp add --transport stdio xcode -- xcrun mcpbridge</code>. Your agent can now build, test and read Apple docs itself.</p>
+      <p class="intro">This is the single biggest change to agentic iOS development so far: the agent stops guessing whether its Swift compiles and starts finding out. Everything below is Apple's own supported path, not a workaround.</p>
+    </div>
+
+    <div class="tutorial-body">
+
+      <h2>What Xcode exposes</h2>
+
+      <p>With agentic coding, Xcode makes its toolchain available over the Model Context Protocol, so any MCP-compatible agent can drive it. In practice that means the agent can:</p>
+
+      <ul>
+        <li><strong>Build the project and read the errors</strong> — the feedback loop that used to run through you.</li>
+        <li><strong>Run tests</strong> and act on the failures.</li>
+        <li><strong>Search Apple documentation</strong>, which pulls in current snippets and samples so it stops writing deprecated APIs from memory.</li>
+        <li><strong>Capture Xcode Previews</strong> and check its own UI work visually.</li>
+        <li><strong>Explore the file structure and update project settings</strong> through Xcode rather than by hand-editing <code>project.pbxproj</code>.</li>
+      </ul>
+
+      <p>That last one matters more than it sounds. The most common way an agent wrecks an Xcode project is editing the project file directly; giving it a sanctioned route removes the temptation. See <a href="/tutorials/use-claude-code-with-xcode.html">use Claude Code with Xcode</a> for the rest of that problem.</p>
+
+      <h2>1. Allow external agents in Intelligence settings</h2>
+
+      <p>Choose <strong>Xcode &gt; Settings</strong> and select <strong>Intelligence</strong> in the sidebar. Under <strong>Model Context Protocol</strong>, turn on <em>“Allow external agents to use Xcode tools.”</em></p>
+
+      <p>Xcode alerts you when an external agent connects and while it is active, so you are never wondering whether something is driving your IDE in the background.</p>
+
+      <h2>2. Register the bridge with your agent</h2>
+
+      <p>Xcode ships <code>xcrun mcpbridge</code> as the stdio transport. Register it once per agent.</p>
+
+      <p>For Claude Code:</p>
+
+      <pre><code>claude mcp add --transport stdio xcode -- xcrun mcpbridge</code></pre>
+
+      <p>For Codex:</p>
+
+      <pre><code>codex mcp add xcode -- xcrun mcpbridge</code></pre>
+
+      <h2>3. Verify it registered</h2>
+
+      <pre><code>claude mcp list
+# or
+codex mcp list</code></pre>
+
+      <p>You want to see an <code>xcode</code> entry. If it is missing, the add command failed silently — re-run it and read the output rather than assuming.</p>
+
+      <h2>4. Open the project in Xcode before you prompt</h2>
+
+      <p>This is the step people skip. The bridge talks to a <em>running</em> Xcode with your project open; it does not open one for you. Prompt an agent with Xcode closed and the tools are there but have nothing to act on, which produces confusing "I couldn't build the project" replies that look like a broken install.</p>
+
+      <div class="warn-box">
+        <strong>Order matters:</strong> open the project in Xcode → then start the agent. Not the other way round.
+      </div>
+
+      <h2>5. Tell the agent the tools exist</h2>
+
+      <p>Registering a server does not guarantee an agent reaches for it. Add a line to your <code>CLAUDE.md</code> (or <code>AGENTS.md</code> for Codex) so it builds rather than guesses:</p>
+
+      <pre><code>## Build
+Xcode is connected over MCP. Build with the Xcode tools and read the
+diagnostics yourself before telling me something works. Do not edit
+project.pbxproj directly — use the Xcode project-settings tools.</code></pre>
+
+      <p>Apple explicitly suggests adding hints about Xcode and your project to these files. <a href="/tutorials/generate-a-claude-md-with-init.html">Generate a CLAUDE.md with init</a> covers the rest.</p>
+
+      <h2>Where this leaves LingCode</h2>
+
+      <p>Worth being straight about: if all you wanted was an agent that can build and test, Xcode 26.3 plus Claude Code now does that, and it is free. LingCode is still the better tool when you want several agent sessions at once, a provider you chose rather than one of two, rewindable edits, or Kotlin and a backend in the same window as your Swift — see <a href="/claude-code-gui.html">the Claude Code GUI page</a>. It is not the better tool merely because Xcode's own agent story used to be weak. That gap closed.</p>
+
+      <p>LingCode also speaks MCP as a client, so the same Xcode server can be registered there — <a href="/tutorials/connect-an-mcp-server.html">connect an MCP server</a> covers the general case.</p>
+
+      <h2>Sources</h2>
+
+      <p>Apple's documentation for this is <a href="https://developer.apple.com/documentation/xcode/giving-external-agents-access-to-xcode" rel="noopener">Giving external agents access to Xcode</a>, and the feature was announced with <a href="https://www.apple.com/newsroom/2026/02/xcode-26-point-3-unlocks-the-power-of-agentic-coding/" rel="noopener">Xcode 26.3</a>. Check those before following any third-party guide, this one included — the commands are Apple's and may change with a point release.</p>
+
+      <div class="tutorial-next">
+        <h2>What's next</h2>
+        <div class="tutorial-next-grid">
+          <a href="/tutorials/use-claude-code-with-xcode.html" class="tutorial-next-card">
+            <h3>Use Claude Code with Xcode</h3>
+            <p>Keeping the agent on your Swift and off the project file</p>
+          </a>
+          <a href="/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+            <h3>Connect an MCP server</h3>
+            <p>The general case: any server, any typed tools</p>
+          </a>
+          <a href="/tutorials/generate-a-claude-md-with-init.html" class="tutorial-next-card">
+            <h3>Generate a CLAUDE.md with init</h3>
+            <p>Where the build instructions above belong</p>
+          </a>
+          <a href="/tutorials/author-your-own-mcp-server.html" class="tutorial-next-card">
+            <h3>Author your own MCP server</h3>
+            <p>Expose your own build or deploy steps the same way</p>
+          </a>
+        </div>
+      </div>
+
+    </div>
+</div>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+        <li><a href="/claude-code-gui.html">Claude Code GUI</a></li>
+        <li><a href="/vs-alex-sidebar.html">vs Alex Sidebar</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="https://forum.lingcode.dev">Forum</a></li>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+<script src="/nav.js?v=20260809a"></script>
+</body>
+</html>
