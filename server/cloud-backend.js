@@ -18,6 +18,8 @@ const dataPlane = require('./cloud-data-plane');
 const cloudFunctions = require('./cloud-functions');
 const { limitsForTier, assertUnderLimit, assertStorageRoom, storageUsedBytes, storageWarningLevel } = require('./cloud-limits');
 const secretsVault = require('./secrets-vault');
+const { complianceFor } = require('./cloud-compliance');
+const { queryAuditLog } = require('./cloud-audit');
 const storage = require('./cloud-storage');
 const functionsRuntime = require('./cloud-functions-runtime');
 const fnInvoke = require('./cloud-fn-invoke');
@@ -696,6 +698,65 @@ function registerCloudBackendRoutes(app, db) {
     if (ctx.row.status !== 'live') return res.status(409).json({ ok: false, error: 'not_provisioned' });
     try { res.json({ ok: true, data: await dataPlane.advisorsFor(ctx.row.id) }); }
     catch (err) { sendErr(res, err, 'account_advisors'); }
+  });
+
+  // ── SOC 2 readiness ────────────────────────────────────────────────────────
+  // Technical controls this backend either meets or doesn't, mapped to Trust
+  // Services Criteria. Unlike /advisors this still returns useful output when
+  // the data plane is unreachable — the control-plane half of the report does
+  // not depend on Postgres, and "unknown" is reported rather than "passing".
+  app.get('/api/cloud/account/backends/:backendId/compliance', async (req, res) => {
+    const ctx = accountBackend(req, res, "viewer"); if (!ctx) return;
+    try {
+      const report = await complianceFor(db, ctx.row.id,
+        ctx.row.status === 'live' ? (id) => dataPlane.advisorsFor(id) : null);
+      res.json({ ok: true, data: report });
+    } catch (err) { sendErr(res, err, 'account_compliance'); }
+  });
+
+  // Auditor-facing evidence bundle: the readiness report plus the raw audit
+  // extract behind it, so a reviewer can check the claims rather than trust the
+  // summary. `format=csv` returns the audit rows alone for spreadsheet review.
+  app.get('/api/cloud/account/backends/:backendId/compliance/evidence', async (req, res) => {
+    const ctx = accountBackend(req, res, "owner"); if (!ctx) return;
+    try {
+      const days = Math.min(Math.max(parseInt(req.query.days, 10) || 90, 1), 400);
+      const since = Date.now() - days * 86400000;
+      const events = queryAuditLog(db, { resourceId: ctx.row.id, since, limit: 10000 });
+
+      if (String(req.query.format || '') === 'csv') {
+        const cols = ['id', 'created_at', 'action', 'outcome', 'actor_user_id', 'actor_token_id',
+          'resource_type', 'resource_id', 'project_id', 'ip', 'request_id', 'metadata_json'];
+        // Prefix cells that a spreadsheet would evaluate as a formula. Audit
+        // metadata is attacker-influenced (a user-chosen secret NAME lands in
+        // it), and an auditor opening this in Excel is exactly the CSV-injection
+        // target. Quote-escape after prefixing so the guard can't be broken out of.
+        const cell = (v) => {
+          let s = v == null ? '' : String(v);
+          if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+          return `"${s.replace(/"/g, '""')}"`;
+        };
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="lingcode-audit-${ctx.row.id}-${days}d.csv"`);
+        return res.send([cols.join(','), ...events.map((e) => cols.map((c) => cell(e[c])).join(','))].join('\n'));
+      }
+
+      const report = await complianceFor(db, ctx.row.id,
+        ctx.row.status === 'live' ? (id) => dataPlane.advisorsFor(id) : null);
+      res.setHeader('Content-Disposition', `attachment; filename="lingcode-evidence-${ctx.row.id}.json"`);
+      res.json({
+        ok: true,
+        data: {
+          generatedAt: Date.now(),
+          backendId: ctx.row.id,
+          window: { since, until: Date.now(), days },
+          report,
+          auditEvents: events,
+          // Stated so a reader doesn't mistake a short extract for a quiet system.
+          truncated: events.length >= 10000,
+        },
+      });
+    } catch (err) { sendErr(res, err, 'account_compliance_evidence'); }
   });
 
   // ── Storage: list / upload / delete objects (owner, session-authed) ──

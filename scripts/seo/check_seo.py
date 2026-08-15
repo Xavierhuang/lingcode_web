@@ -43,6 +43,10 @@ HREF_RE = re.compile(r'href=["\']([^"\']+)["\']')
 LANG_RE = re.compile(r'hreflang=["\']([^"\']+)["\']')
 LD_RE = re.compile(r'(?s)<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', re.I)
 ANALYTICS_RE = re.compile(r'src=["\']/analytics\.js', re.I)
+# Code samples legitimately contain href="/about.html" as illustrative text;
+# strip them before looking for real links or every tutorial about HTML fails.
+CODE_RE = re.compile(r"(?s)<(code|pre)\b.*?</\1>", re.I)
+INTERNAL_HREF_RE = re.compile(r'href="(/[^":#?]*\.html)"')
 
 REQUIRED_META = ("og:title", "og:description", "og:image", "twitter:card")
 
@@ -148,6 +152,14 @@ def main() -> int:
 
         if not ANALYTICS_RE.search(html):
             err(f"{where}: does not load /analytics.js")                   # 8
+
+        # Internal links must resolve on disk. Production is a superset of the
+        # repo (rsync has no --delete) so a dead link can keep working there
+        # long after its target is gone, which is how a renamed tutorial went
+        # unnoticed. Check the repo, not the server.
+        for href in set(INTERNAL_HREF_RE.findall(CODE_RE.sub(" ", html))):  # 14
+            if not (WEBSITE_DIR / href.lstrip("/")).is_file():
+                err(f"{where}: links to {href}, which does not exist")
 
         # hreflang targets must resolve, and the cluster must be reciprocal
         declared = {}

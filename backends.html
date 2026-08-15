@@ -891,6 +891,7 @@
         + '<button class="btn2 sm" id="g-cols">Edit columns</button>'
         + '<button class="btn2 sm" id="g-schema">Schema</button>'
         + '<button class="btn2 sm" id="g-advisors">Advisors</button>'
+        + '<button class="btn2 sm" id="g-soc2">SOC 2</button>'
         + (hasVec ? '<button class="btn2 sm" id="g-vec">Vector search</button>' : '')
         + '<button class="btn2 sm" id="g-fts">Search</button>'
         + '<button class="btn2 sm" id="g-csv">Export CSV</button>'
@@ -907,6 +908,7 @@
       document.getElementById('g-cols').onclick = editColumns;
       document.getElementById('g-schema').onclick = schemaModal;
       document.getElementById('g-advisors').onclick = advisorsModal;
+      document.getElementById('g-soc2').onclick = complianceModal;
       document.getElementById('g-fts').onclick = searchModal;
       document.getElementById('g-csv').onclick = exportTableCSV;
       document.getElementById('g-add').onclick = function () { editRow(-1); };
@@ -1188,6 +1190,66 @@
         var perf = rows.filter(function (x) { return x.category === 'performance'; });
         box.innerHTML = (sec.length ? '<h3 style="margin:4px 0 4px">Security · ' + sec.length + '</h3>' + sec.map(card).join('') : '')
           + (perf.length ? '<h3 style="margin:16px 0 4px">Performance · ' + perf.length + '</h3>' + perf.map(card).join('') : '');
+      });
+    }
+
+    // ── SOC 2 readiness: technical controls this backend meets or doesn't ──
+    // Split by who has to fix it. Merging the two lists would be the misleading
+    // choice: a user cannot act on LingCode's backup gap, and hiding it would
+    // let a 100% score imply an audit-ready platform.
+    function complianceModal() {
+      var ov = modal('SOC 2 readiness · ' + esc(beName(cur())),
+        '<p class="muted" style="margin:-4px 0 10px">Technical controls LingCode can observe, mapped to Trust Services Criteria. '
+        + 'Organisational controls (policies, training, vendor management) are not covered — see the note at the bottom.</p>'
+        + '<div id="soc2-body"><p class="faint">Checking…</p></div>',
+        function (ov) { ov.remove(); }, 'Close');
+      ov.querySelector('.modal').classList.add('wide');
+      api(base() + '/compliance').then(function (r) {
+        var box = ov.querySelector('#soc2-body'); if (!box) return;
+        if (!r.ok) { box.innerHTML = '<p class="muted">Couldn’t run the readiness check.</p>'; return; }
+        var d = (r.j && r.j.data) || {};
+        var controls = d.controls || [];
+
+        var card = function (c) {
+          var lvl = c.status === 'fail' ? 'error' : (c.status === 'warn' ? 'warn' : 'info');
+          var mark = c.status === 'pass' ? '✓' : (c.status === 'fail' ? '✗' : '!');
+          return '<div class="card" style="margin:8px 0;padding:12px 14px">'
+            + '<div class="kv" style="margin:0"><span class="lvl ' + lvl + '">' + mark + ' ' + esc(c.status) + '</span>'
+            + '<b>' + esc(c.title) + '</b><code class="mono">' + esc(c.criteria) + '</code></div>'
+            + '<p class="muted" style="margin:6px 0 0">' + esc(c.detail) + '</p>'
+            + (c.remediation ? '<p style="margin:6px 0 0;font-size:13px"><b>Fix:</b> ' + esc(c.remediation) + '</p>' : '')
+            + '</div>';
+        };
+
+        var yours = controls.filter(function (c) { return c.ownedBy === 'you'; });
+        var ours = controls.filter(function (c) { return c.ownedBy === 'lingcode'; });
+        var pct = d.score && d.score.percent;
+        var scoreColor = pct === 100 ? 'var(--ok, #16a34a)' : (pct >= 60 ? 'var(--warn, #d97706)' : 'var(--err, #dc2626)');
+
+        var html = '<div class="card" style="padding:14px;margin-bottom:12px">'
+          + '<div style="font-size:26px;font-weight:700;color:' + scoreColor + '">'
+          + (pct == null ? '—' : pct + '%') + '</div>'
+          + '<div class="faint" style="font-size:13px">'
+          + (d.score ? d.score.passing + ' of ' + d.score.total + ' controls you own are met' : '') + '</div></div>';
+
+        html += '<h3 style="margin:4px 0 4px">Your app · ' + yours.length + '</h3>' + yours.map(card).join('');
+        html += '<h3 style="margin:16px 0 4px">LingCode platform · ' + ours.length + '</h3>'
+          + '<p class="faint" style="margin:0 0 6px;font-size:13px">Controls LingCode owns. Listed so you can answer a questionnaire accurately — including where LingCode falls short.</p>'
+          + ours.map(card).join('');
+
+        if (d.scope) {
+          html += '<div class="card" style="margin-top:16px;padding:12px 14px">'
+            + '<b>Not covered here</b><p class="muted" style="margin:6px 0">' + esc(d.scope.note) + '</p><ul style="margin:6px 0 0;padding-left:18px">'
+            + (d.scope.notCovered || []).map(function (x) {
+                return '<li class="muted" style="font-size:13px"><code class="mono">' + esc(x.criteria) + '</code> ' + esc(x.item) + '</li>';
+              }).join('')
+            + '</ul><p style="margin:8px 0 0;font-size:13px">' + esc(d.scope.suggestion || '') + '</p></div>';
+        }
+
+        html += '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'
+          + '<a class="btn2 sm" href="' + base() + '/compliance/evidence?days=90" download>Download evidence (JSON)</a>'
+          + '<a class="btn2 sm" href="' + base() + '/compliance/evidence?days=90&format=csv" download>Audit log (CSV)</a></div>';
+        box.innerHTML = html;
       });
     }
 
