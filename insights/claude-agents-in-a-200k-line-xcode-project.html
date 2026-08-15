@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<!--
+  SAMPLE / TEMPLATE POST for the Insights section.
+  Author and details are placeholder. Replace this file with a real
+  commissioned piece, or use it as a structural reference for new ones.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Template/sample post with placeholder authorship: must stay out of the index
+       until it is replaced by a real commissioned piece. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>How I use Claude agents in a 200K-line Xcode project — LingCode Insights</title>
+  <meta name="description" content="Six months running an autonomous AI agent on a real iOS codebase. Where it shines, where it breaks, and the five workflow patterns that became habit.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .insight-detail {
+      max-width: 720px;
+      margin: 80px auto 100px;
+      padding: 0 24px;
+    }
+    .insight-breadcrumb {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      font-family: var(--font-mono);
+    }
+    .insight-breadcrumb a { color: var(--text-muted); text-decoration: none; }
+    .insight-breadcrumb a:hover { color: var(--text); }
+    .insight-template-banner {
+      padding: 12px 16px;
+      margin-bottom: 32px;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #b45309;
+    }
+    .insight-detail h1 {
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+      margin: 0 0 16px;
+    }
+    .insight-byline-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .insight-byline-row strong { color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 600; }
+    .insight-detail .lead {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: var(--text);
+      margin: 0 0 36px;
+    }
+    .insight-detail h2 {
+      font-size: 1.45rem;
+      margin: 48px 0 16px;
+      letter-spacing: -0.01em;
+    }
+    .insight-detail p { line-height: 1.65; margin: 0 0 18px; font-size: 1.02rem; }
+    .insight-detail ul { line-height: 1.65; padding-left: 22px; margin: 0 0 18px; }
+    .insight-detail li { margin-bottom: 8px; }
+    .insight-detail blockquote {
+      border-left: 3px solid #6366f1;
+      padding: 4px 0 4px 18px;
+      margin: 24px 0;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .insight-detail pre {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      overflow-x: auto;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin: 0 0 18px;
+    }
+    .insight-author-box {
+      margin-top: 64px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    .insight-author-box strong { display: block; font-size: 1rem; margin-bottom: 4px; }
+    .insight-author-box .muted { color: var(--text-muted); font-size: 0.85rem; }
+
+    /* Comments */
+    .comments-section { margin-top: 72px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .comments-section h2 { font-size: 1.4rem; margin: 0 0 8px; }
+    .comments-section .comments-count { color: var(--text-muted); font-size: 0.9rem; font-family: var(--font-mono); margin-bottom: 24px; }
+    .comment { padding: 18px 0; border-bottom: 1px solid var(--border); }
+    .comment:last-child { border-bottom: none; }
+    .comment-meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+    .comment-meta strong { color: var(--text); font-weight: 600; }
+    .comment-body { font-size: 0.95rem; line-height: 1.55; white-space: pre-wrap; }
+    .comments-empty { color: var(--text-muted); font-size: 0.9rem; padding: 20px 0; }
+    .comments-compose { margin-top: 32px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); }
+    .comments-compose textarea {
+      width: 100%; min-height: 90px; padding: 12px; font: inherit; font-size: 0.95rem;
+      border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
+      color: var(--text); resize: vertical; box-sizing: border-box;
+    }
+    .comments-compose textarea:focus { outline: 2px solid #6366f1; outline-offset: -1px; }
+    .comments-compose-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 12px; flex-wrap: wrap; }
+    .comments-compose-row .as { color: var(--text-muted); font-size: 0.85rem; }
+    .comments-compose-row button {
+      padding: 8px 18px; background: #6366f1; color: white; border: 0; border-radius: 999px;
+      font: inherit; font-weight: 500; font-size: 0.9rem; cursor: pointer;
+    }
+    .comments-compose-row button:hover { background: #4f46e5; }
+    .comments-compose-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .signin-cta {
+      display: inline-block; padding: 10px 20px; background: #6366f1; color: white;
+      border-radius: 999px; text-decoration: none; font-weight: 500; font-size: 0.9rem;
+    }
+    .signin-cta:hover { background: #4f46e5; }
+    .comments-error { color: #b45309; font-size: 0.85rem; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <header class="nav-bar">
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-checkbox" aria-label="Toggle navigation menu">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">LingCode</a>
+      <label for="nav-toggle" class="nav-burger" aria-hidden="true">
+        <span class="nav-burger-line"></span>
+        <span class="nav-burger-line"></span>
+        <span class="nav-burger-line"></span>
+      </label>
+      <nav class="nav-links" aria-label="Main">
+  <a href="/try.html">Try</a>
+  <a href="/features.html">Features</a>
+  <a href="/pricing.html">Pricing</a>
+  <a href="/docs.html">Docs</a>
+  <a href="/tutorials.html">Tutorials</a>
+  <a href="/community.html">Community</a>
+  <form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form>
+  <a href="#" class="nav-cta">Sign up</a>
+</nav>
+    </div>
+  </header>
+
+  <article class="insight-detail">
+    <div class="insight-breadcrumb">
+      <a href="/insights.html">Insights</a> / How I use Claude agents in a 200K-line Xcode project
+    </div>
+
+    <div class="insight-template-banner">
+      ⚠️ <strong>Template / sample post.</strong> The author and specifics are placeholder. Use this file as the structural reference for new pieces, then replace with the real contributor's content.
+    </div>
+
+    <h1>How I use Claude agents in a 200K-line Xcode project</h1>
+
+    <div class="insight-byline-row">
+      <span>By <strong>Mei Chen</strong></span>
+      <span>·</span>
+      <span>Engineering Lead, Cipher</span>
+      <span>·</span>
+      <span>2026-05-11</span>
+      <span>·</span>
+      <span>12 min read</span>
+    </div>
+
+    <p class="lead">Six months ago we turned on autonomous AI agents in our main iOS codebase — 200K lines, eight years of accumulated architecture, eleven engineers — and let them ship real code. This is what worked, what didn't, and the five workflow patterns I've kept.</p>
+
+    <h2>The setup, briefly</h2>
+    <p>Our app is a mature B2B iOS product. Swift, UIKit + a growing SwiftUI surface, a custom dependency-injection layer, three feature modules each with their own owner. The kind of codebase where "make a small change" is rarely small.</p>
+    <p>The agent setup: Claude as the primary, DeepSeek as the cost-conscious fallback for routine work, and an explicit hand-off protocol I'll describe below. Agents run from the chat panel during business hours; I don't let them run unattended overnight.</p>
+
+    <h2>Lesson 1: the project file is the danger zone</h2>
+    <p>The first thing that broke was <code>project.pbxproj</code>. The agent added a new file, the file references landed in the wrong target, and a teammate's build started failing two days later because their target was missing the file. The agent's reasoning was correct; its <em>edit</em> to a complex Apple-internal XML format was not.</p>
+    <p>What I do now:</p>
+    <ul>
+      <li><strong>Snapshots on every <code>.pbxproj</code> touch.</strong> I never accept a project-file edit without the snapshot being green. Recovery is one click; debugging an unexplained build break is half a day.</li>
+      <li><strong>Manual review for new files.</strong> When the agent adds a file, I check the Xcode target membership manually before merging. Trust but verify; the verify part is fast.</li>
+    </ul>
+
+    <h2>Lesson 2: separate the "think" from the "do"</h2>
+    <p>The single biggest workflow win was making "plan first, execute second" a habit. Plan mode → read-only analysis → review the proposed plan → switch to acceptEdits mode → let it execute.</p>
+    <p>The plan step catches the kind of bad decision that's hard to undo: choosing the wrong abstraction, splitting a refactor at the wrong boundary, deciding to "just rewrite this." The execute step then runs fast because you're past the judgment calls.</p>
+    <blockquote>"Show me what you'd do before you do it" is the prompt I type more than any other.</blockquote>
+
+    <h2>Lesson 3: providers aren't interchangeable</h2>
+    <p>I ran the same six prompts on Claude and DeepSeek and graded the results. Claude won on complex refactors, multi-file edits, and anything requiring conventions inference. DeepSeek won on raw code generation and the kind of mechanical work (apply this pattern across 40 files) where the constraint is throughput, not judgment.</p>
+    <p>The split I ended up with:</p>
+    <ul>
+      <li><strong>Claude</strong> for design conversations, architecture choices, anything that touches the dependency-injection layer.</li>
+      <li><strong>DeepSeek</strong> for "lint and migrate" tasks: format passes, naming consistency, adopting a new utility everywhere it should be used.</li>
+      <li><strong>Switch mid-conversation</strong> when an agent stalls; usually the second model gets unstuck faster than I can rewrite the prompt.</li>
+    </ul>
+    <p>Cost matters at our usage levels but it's not the main factor. Match the model to the task and you reduce both cost <em>and</em> latency.</p>
+
+    <h2>Lesson 4: subagents are for the boring scary stuff</h2>
+    <p>I write more subagents than I expected. The pattern: any task that the main chat keeps getting wrong because of context dilution becomes a subagent with a tight system prompt and a restricted tool set.</p>
+    <p>Two subagents I rely on weekly:</p>
+    <ul>
+      <li><strong>pre-merge-review</strong> — read-only review with tools <code>Read, Grep, Glob, Bash</code> only. Can't propose edits. Surfaces flaky tests, weird error handling, and the "you forgot to add a test for X" gap.</li>
+      <li><strong>doc-aligner</strong> — when our README and code drift, this subagent fixes the README. Its only tools touch markdown files. Can't break code by definition.</li>
+    </ul>
+    <p>The narrower the surface, the more useful the subagent. Counterintuitive at first; obvious after you've written three.</p>
+
+    <h2>Lesson 5: worktrees changed how I run experiments</h2>
+    <p>I used to fight the impulse to let the agent try something speculative because "what if it makes a mess." Now I fork a worktree, let it run, and either keep what it built or delete the whole tree.</p>
+    <p>The unlock isn't the git plumbing — I knew worktrees existed before LingCode. It's that the IDE makes the fork-experiment-merge loop fast enough that I'll actually do it. Five minutes from "I want to try X" to "I've tried X and decided."</p>
+
+    <h2>Where it still breaks</h2>
+    <p>Not everything works. Three categories where I still drive manually:</p>
+    <ul>
+      <li><strong>Performance work.</strong> The agent will optimize the wrong thing. "Make this faster" is a question about your production traces, not your source code, and the agent doesn't have those.</li>
+      <li><strong>Cross-team boundary changes.</strong> When the change spans modules owned by different people, the social and code review surface area exceeds what the agent can usefully reason about.</li>
+      <li><strong>Anything depending on a third-party SDK in flux.</strong> The agent's prior beats current reality. Always verify against the actual SDK's current docs.</li>
+    </ul>
+
+    <h2>What I'd tell a teammate starting tomorrow</h2>
+    <p>Three rules:</p>
+    <ul>
+      <li>Plan mode first; never accept a non-trivial edit without a plan you read.</li>
+      <li>Snapshots are not optional on config files. The cost is zero; the upside is one full day of work you don't lose.</li>
+      <li>When the agent gets stuck, switch models. It's faster than re-prompting in the same model.</li>
+    </ul>
+    <p>The mental model that took the longest to internalize: the agent isn't a junior engineer who happens to type fast. It's a fundamentally different kind of collaborator with different strengths, different blind spots, and a different cost profile. Treating it like a junior leads to over-supervision; treating it like infrastructure leads to under-supervision. The right setting is somewhere in between, and it took me three months to find it.</p>
+
+    <div class="insight-author-box">
+      <strong>Mei Chen</strong>
+      <span class="muted">Engineering Lead at Cipher, where she leads the iOS team. Previously at Twitter and Etsy. She writes occasionally about working with AI tools in established codebases.</span>
+    </div>
+
+    <!-- Comments -->
+    <section class="comments-section">
+      <h2>Comments</h2>
+      <div class="comments-count" id="comments-count">Loading…</div>
+      <div id="comments-list"></div>
+      <div id="comments-compose" class="comments-compose"></div>
+      <div id="comments-error" class="comments-error" style="display:none"></div>
+    </section>
+
+  </article>
+
+  <script>
+    (function () {
+      const articleSlug = location.pathname; // unique key per article
+      const $count = document.getElementById('comments-count');
+      const $list = document.getElementById('comments-list');
+      const $compose = document.getElementById('comments-compose');
+      const $error = document.getElementById('comments-error');
+
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+      }
+
+      async function fetchAuth() {
+        try {
+          const r = await fetch('/api/account/me', { credentials: 'include', cache: 'no-store' });
+          if (!r.ok) return null;
+          return await r.json();
+        } catch (_) { return null; }
+      }
+
+      async function fetchComments() {
+        try {
+          const r = await fetch('/api/comments?article=' + encodeURIComponent(articleSlug), {
+            credentials: 'include', cache: 'no-store'
+          });
+          if (!r.ok) return null; // null = endpoint not available
+          return await r.json();
+        } catch (_) { return null; }
+      }
+
+      async function postComment(body) {
+        return fetch('/api/comments', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ article: articleSlug, body: body })
+        });
+      }
+
+      function renderList(comments) {
+        if (!comments || comments.length === 0) {
+          $count.textContent = 'No comments yet.';
+          $list.innerHTML = '';
+          return;
+        }
+        $count.textContent = comments.length + (comments.length === 1 ? ' comment' : ' comments');
+        $list.innerHTML = comments.map(c => `
+          <div class="comment">
+            <div class="comment-meta">
+              <strong>${esc(c.author_name || 'Anonymous')}</strong>
+              · ${new Date(c.created_at).toLocaleDateString()}
+            </div>
+            <div class="comment-body">${esc(c.body)}</div>
+          </div>
+        `).join('');
+      }
+
+      function renderComposeSignedIn(me) {
+        $compose.innerHTML = `
+          <form id="comment-form">
+            <textarea name="body" placeholder="Share your perspective…" required maxlength="4000"></textarea>
+            <div class="comments-compose-row">
+              <span class="as">Posting as <strong>${esc(me.name || me.email || 'you')}</strong></span>
+              <button type="submit">Post comment</button>
+            </div>
+          </form>
+        `;
+        document.getElementById('comment-form').addEventListener('submit', async e => {
+          e.preventDefault();
+          const btn = e.target.querySelector('button');
+          const body = e.target.body.value.trim();
+          if (!body) return;
+          btn.disabled = true; btn.textContent = 'Posting…';
+          const r = await postComment(body);
+          if (r.ok) {
+            e.target.reset();
+            render(); // refresh list
+          } else if (r.status === 401) {
+            $error.style.display = 'block';
+            $error.textContent = 'Your session expired. Sign in again to comment.';
+            btn.disabled = false; btn.textContent = 'Post comment';
+          } else {
+            $error.style.display = 'block';
+            $error.textContent = 'Could not post your comment. Please try again.';
+            btn.disabled = false; btn.textContent = 'Post comment';
+          }
+        });
+      }
+
+      function renderComposeSignedOut() {
+        const next = encodeURIComponent(location.pathname);
+        $compose.innerHTML = `
+          <p style="margin:0 0 12px;color:var(--text-muted);font-size:0.9rem">
+            Sign in to leave a comment.
+          </p>
+          <a href="/signin.html?next=${next}" class="signin-cta">Sign in</a>
+        `;
+      }
+
+      function renderComposeUnavailable() {
+        $compose.innerHTML = '<p style="margin:0;color:var(--text-muted);font-size:0.9rem">Comments are not enabled yet.</p>';
+      }
+
+      async function render() {
+        $error.style.display = 'none';
+        const [me, comments] = await Promise.all([fetchAuth(), fetchComments()]);
+
+        if (comments === null) {
+          // API endpoint not available yet
+          $count.textContent = '';
+          $list.innerHTML = '';
+          renderComposeUnavailable();
+          return;
+        }
+
+        renderList(comments);
+        if (me) renderComposeSignedIn(me);
+        else renderComposeSignedOut();
+      }
+
+      render();
+    })();
+  </script>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="footer-logo">LingCode</span>
+        <span class="footer-tagline">Swift-native AI IDE · macOS only · No Electron</span>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <span class="footer-col-title">Product</span>
+          <ul>
+            <li><a href="/try.html">Try in browser</a></li>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/community.html">Community</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <span class="footer-col-title">Learn</span>
+          <ul>
+            <li><a href="/cli.html">CLI</a></li>
+            <li><a href="/tutorials.html">Tutorials</a></li>
+            <li><a href="/search.html">Search</a></li>
+            <li><a href="/insights.html">Insights</a></li>
+            <li><a href="/insights.html">Insights</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <span class="footer-col-title">Support</span>
+          <ul>
+            <li><a href="/cdn-cgi/l/email-protection#523a3a27333c3525373b383b3312353f333b3e7c313d3f">Email</a></li>
+            <li><a href="https://discord.gg/GvtVX77K" target="_blank" rel="noopener">Discord</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <span class="footer-col-title">Legal</span>
+          <ul>
+            <li><a href="/terms.html">Terms</a></li>
+            <li><a href="/privacy.html">Privacy</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024–2026 HainanMandi Tech. All rights reserved.</span>
+      <span>Made with ♥ for the Mac.</span>
+    </div>
+  </footer>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-toggle').checked = false;
+      });
+    });
+  </script>
+</body>
+</html>
