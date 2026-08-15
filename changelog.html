@@ -138,14 +138,33 @@
           <span class="release-date">14 August 2026</span>
           <span class="release-tag release-tag--cloud">Cloud</span>
         </div>
-        <h3>Added</h3>
-        <ul>
-          <li>Groundwork for Python app hosting — host-header dispatch to app containers and an external-routing mode for the app proxy. Not yet available to users.</li>
-        </ul>
         <h3>Fixed</h3>
         <ul>
           <li>Deleted LingCodeBaby apps stop serving immediately instead of persisting in the CDN edge cache for minutes.</li>
+          <li>LingCodeBaby deploys from Windows no longer fail with a Node version error.</li>
           <li>A deploy that fails to mark its app as running now surfaces as failed and rolls back the new container, instead of leaving a healthy container behind a permanent "Building" placeholder.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">LingCode Cloud</h2>
+          <span class="release-date">13 August 2026</span>
+          <span class="release-tag release-tag--cloud">Cloud</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Python app hosting is now functional end to end. Deploys no longer stall in "building" — the Dockerfile generation, container status transitions, and state-directory permission bugs that were blocking it are all fixed.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>Saved cloud functions no longer report a per-tier cap.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>A hung deploy no longer stops the runner from picking up later deploys on the same worker. Timed-out deploys now report as failed rather than silently stalling.</li>
+          <li>App lifecycle events — deploy, pause, resume, crash, restart — were being dropped from the observability timeline, and now persist correctly.</li>
+          <li>LingModel returned empty responses when <code>max_tokens</code> was set low; the budget is now capped automatically to leave room for the reply.</li>
         </ul>
       </div>
 
@@ -187,18 +206,34 @@
           <h2 class="release-version">v2.7.2</h2>
           <span class="release-date">8 August 2026</span>
           <span class="release-tag release-tag--mac">Mac</span>
+          <span class="release-tag release-tag--web">/try</span>
         </div>
         <h3>Added</h3>
         <ul>
-          <li>Project-local backend-as-code workflows for cloud functions and database migrations.</li>
+          <li>Remote Coding — drive your Mac from the browser at /remote. An embedded SSH server attaches to a Claude Code terminal, and a live-session mirror lets you drive an already-open Claude Code tab remotely. Codex and interactive terminal surfaces are supported too.</li>
+          <li>Claude Code (Web) and Codex (Web) tabs inside the IDE, alongside the existing Terminal and Native tabs.</li>
+          <li>Project sharing with owner / editor / viewer collaborators, project ownership transfer, and an in-browser project editor.</li>
+          <li>LingCode Cloud — a managed backend with a Supabase/Firebase-parity feature set and a management console.</li>
+          <li>Project-local backend-as-code workflows for cloud functions and database migrations, so IDE agents can create, test, update, and deploy cloud functions without opening the backend dashboard.</li>
+          <li>Cloud deploy handles framework-aware SSR, one-click monorepo deploys, and a project deploy manifest.</li>
+          <li>Image attachments preview inline in the Claude composer, the Codex composer, and the unified AI panel.</li>
+          <li>More models and endpoints — GLM-5.2, per-endpoint custom models, and a Fable 5 option.</li>
+          <li>Xcode scaffolding covers tvOS, Rust/UniFFI, and localhost HLS, and generates a unit-test target for new projects. Monorepos get an Xcode project picker, and dev containers support multi-service docker-compose.</li>
+          <li>Editor and terminal quality-of-life — <code>.docx</code> opens as editable rich text with structure preserved, tree-sitter highlighting for C, Objective-C and PHP, a VS Code-style shell-integration context menu, a per-turn fold control for long agent steps, an "Always Allow" option on approval dialogs, and message queueing while the Claude tab is streaming.</li>
         </ul>
         <h3>Improved</h3>
         <ul>
-          <li>IDE agents can now create, test, update, and deploy cloud functions without opening the backend dashboard.</li>
+          <li>Launch is substantially faster — blocking work moved off the main thread, and idle CPU burn and launch-time hangs fixed.</li>
+          <li>The Claude Code tab no longer lags on long conversations. Streaming render, scroll jank, and transcript blanking were all addressed.</li>
+          <li>Agent turns auto-resume after a network reconnect, on the Claude, DeepSeek, and OpenAI-compatible loops.</li>
+          <li>The autonomous agent asks first and checkpoints rather than running away, and chats are scoped per project with unresumable conversations recoverable.</li>
+          <li>The toolbar, activity bar, and bottom tabs now adapt to the project type, the activity bar can be customized, and the provider menus merged into a single AI menu.</li>
         </ul>
         <h3>Fixed</h3>
         <ul>
-          <li>Activity Bar control alignment, and clearer setup guidance.</li>
+          <li>The Claude Code tab no longer goes blank mid-stream or hangs on long bypass-mode turns.</li>
+          <li>Magic Push no longer demands an API key from LingModel users.</li>
+          <li>A Kotlin/Android LSP crash, a Settings window freeze, a stuck Run pulse, a stale run destination that broke ⌘R, and a bottom panel that restored at an unusable sliver height.</li>
         </ul>
       </div>
 

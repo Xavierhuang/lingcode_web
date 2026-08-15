@@ -18,6 +18,7 @@ const tarStream = require('tar-stream');
 const { getUserFromRequest } = require('./auth-helpers');
 const { sendResendEmail } = require('./mail-resend');
 const { roleAtLeast, projectRole } = require('./project-access');
+const { AUDIT, recordAudit } = require('./cloud-audit');
 const dataPlane = require('./cloud-data-plane');
 // Resource teardown, shared with each resource's own DELETE route. Used by the
 // project-delete cascade so deleting a project can actually take its deployed
@@ -438,6 +439,14 @@ function registerProjectRoutes(app, db) {
   app.post('/api/projects/:id/leave', requireProjectRole('viewer'), (req, res) => {
     if (req._projRole === 'owner') return res.status(400).json({ ok: false, error: 'owner_cannot_leave', message: 'Transfer ownership or delete the project instead.' });
     db.prepare('DELETE FROM project_members WHERE project_id = ? AND user_id = ?').run(req.params.id, req._projUser.id);
+    // Self-removal. Still an access change, and the actor is the subject — which
+    // is what distinguishes it from an owner revoking someone.
+    recordAudit(db, {
+      action: AUDIT.PROJECT_MEMBER_REMOVE, req,
+      actorUserId: req._projUser.id,
+      resourceType: 'project_member', resourceId: req._projUser.id, projectId: req.params.id,
+      metadata: { prior_role: req._projRole, kind: 'self_leave' },
+    });
     res.json({ ok: true });
   });
 
@@ -532,6 +541,14 @@ function registerProjectRoutes(app, db) {
         db.prepare('INSERT INTO project_pending_invites (id, project_id, email, role, token, invited_by, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
           .run(crypto.randomUUID(), req.params.id, email, role, token, req._projUser.id, now, expiresAt);
       }
+      // Granting access to someone with no account yet (CC6.2). The claim token
+      // is deliberately omitted — it is a bearer credential.
+      recordAudit(db, {
+        action: AUDIT.PROJECT_INVITE, req,
+        actorUserId: req._projUser.id,
+        resourceType: 'project', resourceId: req.params.id, projectId: req.params.id,
+        metadata: { email, role, kind: 'pending_invite', renewed: !!existing },
+      });
       let emailSent = false;
       try {
         const claimUrl = `${publicOrigin()}/api/projects/claim?token=${encodeURIComponent(token)}`;
@@ -553,11 +570,23 @@ function registerProjectRoutes(app, db) {
     if (existing) {
       if (existing.role !== role && existing.role !== 'owner') {
         db.prepare('UPDATE project_members SET role = ? WHERE project_id = ? AND user_id = ?').run(role, req.params.id, invitee.id);
+        recordAudit(db, {
+          action: AUDIT.PROJECT_ROLE_CHANGE, req,
+          actorUserId: req._projUser.id,
+          resourceType: 'project_member', resourceId: invitee.id, projectId: req.params.id,
+          metadata: { email, from_role: existing.role, to_role: role, via: 'invite' },
+        });
       }
       return res.json({ ok: true, action: 'updated', role });
     }
     db.prepare('INSERT INTO project_members (id, project_id, user_id, role, invited_by, created_at) VALUES (?, ?, ?, ?, ?, ?)')
       .run(crypto.randomUUID(), req.params.id, invitee.id, role, req._projUser.id, Date.now());
+    recordAudit(db, {
+      action: AUDIT.PROJECT_INVITE, req,
+      actorUserId: req._projUser.id,
+      resourceType: 'project_member', resourceId: invitee.id, projectId: req.params.id,
+      metadata: { email, role, kind: 'direct_add' },
+    });
     let emailSent = false;
     try {
       const inviterName = (req._projUser.email || '').split('@')[0] || 'A collaborator';
@@ -578,7 +607,16 @@ function registerProjectRoutes(app, db) {
     if (!requireJsonContent(req, res)) return;
     const email = String((req.body || {}).email || '').trim().toLowerCase();
     if (!email) return res.status(400).json({ ok: false, error: 'invalid_email' });
-    db.prepare('DELETE FROM project_pending_invites WHERE project_id = ? AND email = ? AND consumed_at IS NULL').run(req.params.id, email);
+    const revoked = db.prepare('DELETE FROM project_pending_invites WHERE project_id = ? AND email = ? AND consumed_at IS NULL')
+      .run(req.params.id, email).changes;
+    if (revoked) {
+      recordAudit(db, {
+        action: AUDIT.PROJECT_MEMBER_REMOVE, req,
+        actorUserId: req._projUser.id,
+        resourceType: 'project_invite', resourceId: email, projectId: req.params.id,
+        metadata: { email, kind: 'invite_revoked' },
+      });
+    }
     res.json({ ok: true });
   });
 
@@ -588,9 +626,19 @@ function registerProjectRoutes(app, db) {
     const targetId = req.params.userId;
     const role = String((req.body || {}).role || '');
     if (!['editor', 'viewer'].includes(role)) return res.status(400).json({ ok: false, error: 'invalid_role' });
+    const prior = db.prepare('SELECT role FROM project_members WHERE project_id = ? AND user_id = ?').get(req.params.id, targetId);
     const result = db.prepare("UPDATE project_members SET role = ? WHERE project_id = ? AND user_id = ? AND role != 'owner'")
       .run(role, req.params.id, targetId);
     if (result.changes === 0) return res.status(404).json({ ok: false, error: 'not_found_or_owner' });
+    // Privilege change (CC6.3). Both roles are recorded: an auditor reviewing
+    // access wants the delta, and "was viewer, became editor" is the reviewable
+    // fact — the resulting role alone doesn't show an escalation happened.
+    recordAudit(db, {
+      action: AUDIT.PROJECT_ROLE_CHANGE, req,
+      actorUserId: req._projUser.id,
+      resourceType: 'project_member', resourceId: targetId, projectId: req.params.id,
+      metadata: { from_role: prior && prior.role, to_role: role, via: 'patch' },
+    });
     res.json({ ok: true });
   });
 
@@ -603,6 +651,13 @@ function registerProjectRoutes(app, db) {
     db.prepare('DELETE FROM project_members WHERE project_id = ? AND user_id = ?').run(req.params.id, targetId);
     // Void any pending ownership transfer aimed at the member we just removed.
     db.prepare('DELETE FROM project_pending_transfers WHERE project_id = ? AND to_user_id = ?').run(req.params.id, targetId);
+    // Deprovisioning (CC6.3) — the half of access management auditors test hardest.
+    recordAudit(db, {
+      action: AUDIT.PROJECT_MEMBER_REMOVE, req,
+      actorUserId: req._projUser.id,
+      resourceType: 'project_member', resourceId: targetId, projectId: req.params.id,
+      metadata: { prior_role: target.role, kind: 'removed_by_owner' },
+    });
     res.json({ ok: true });
   });
 
@@ -631,6 +686,15 @@ function registerProjectRoutes(app, db) {
     if (existing) return res.json({ ok: true, role: existing.role, action: 'already_member' });
     db.prepare('INSERT INTO project_members (id, project_id, user_id, role, invited_by, created_at) VALUES (?, ?, ?, ?, ?, ?)')
       .run(crypto.randomUUID(), req.params.id, u.id, 'viewer', ownerRow.user_id, Date.now());
+    // Self-service access grant via share link. Distinguished from an owner-driven
+    // invite by `kind`, because a link that leaked grants access without the owner
+    // taking any action per joiner — an access review needs to tell those apart.
+    recordAudit(db, {
+      action: AUDIT.PROJECT_INVITE, req,
+      actorUserId: u.id,
+      resourceType: 'project_member', resourceId: u.id, projectId: req.params.id,
+      metadata: { role: 'viewer', kind: 'share_link_join', link_owner: ownerRow.user_id },
+    });
     res.status(201).json({ ok: true, role: 'viewer', action: 'joined' });
   });
 
@@ -657,6 +721,12 @@ function registerProjectRoutes(app, db) {
         to_user_id = excluded.to_user_id, from_user_id = excluded.from_user_id,
         token = excluded.token, created_at = excluded.created_at, expires_at = excluded.expires_at
     `).run(crypto.randomUUID(), req.params.id, target.id, req._projUser.id, token, now, expiresAt);
+    recordAudit(db, {
+      action: AUDIT.PROJECT_TRANSFER, req,
+      actorUserId: req._projUser.id,
+      resourceType: 'project', resourceId: req.params.id, projectId: req.params.id,
+      metadata: { stage: 'offered', to_user_id: target.id, to_email: email, from_user_id: req._projUser.id },
+    });
     let emailSent = false;
     try {
       const inviterName = (req._projUser.email || '').split('@')[0] || 'The owner';
@@ -698,6 +768,19 @@ function registerProjectRoutes(app, db) {
       db.prepare('UPDATE cloud_workers  SET user_id = ? WHERE project_id = ?').run(u.id, req.params.id);
       db.prepare('DELETE FROM project_pending_transfers WHERE project_id = ?').run(req.params.id);
     })();
+    // Deliberately after the transaction commits: a rolled-back transfer must
+    // not leave a row claiming ownership changed. This is the highest-privilege
+    // change in the product — it moves the backend, its data, the deployment and
+    // billing to a different account — so it is recorded from both directions.
+    recordAudit(db, {
+      action: AUDIT.PROJECT_TRANSFER, req,
+      actorUserId: u.id,
+      resourceType: 'project', resourceId: req.params.id, projectId: req.params.id,
+      metadata: {
+        stage: 'accepted', new_owner_id: u.id, prior_owner_id: oldOwnerId,
+        prior_owner_demoted_to: 'editor', resources_reassigned: ['account_backends', 'cloud_apps', 'cloud_workers'],
+      },
+    });
     res.json({ ok: true, role: 'owner' });
   });
 

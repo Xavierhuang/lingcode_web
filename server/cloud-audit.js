@@ -139,9 +139,23 @@ function actorFromRequest(req) {
  * @param {string} [entry.projectId]
  * @param {object} [entry.metadata]    redacted before storage
  */
+// Lazy retention sweep, throttled. Follows the same shape as the telemetry
+// prune (cloud-telemetry.js:80-84) rather than adding a scheduler: retention
+// that depends on a cron nobody restarts is retention that silently stops.
+const PRUNE_INTERVAL_MS = 60 * 60 * 1000;
+let _lastPrune = 0;
+
+function maybePrune(db) {
+  const now = Date.now();
+  if (now - _lastPrune < PRUNE_INTERVAL_MS) return;
+  _lastPrune = now;
+  pruneAuditLog(db);
+}
+
 function recordAudit(db, entry) {
   try {
     if (!db || !entry || !entry.action) return;
+    maybePrune(db);
     const from = actorFromRequest(entry.req);
     let metadata = '{}';
     try {

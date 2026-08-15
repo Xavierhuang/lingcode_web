@@ -37,6 +37,7 @@ const path = require('path');
 const { execFile } = require('child_process');
 const { getUserFromRequest } = require('./auth-helpers');
 const { resolveResourceAccess, projectRole } = require('./project-access');
+const { AUDIT, recordAudit } = require('./cloud-audit');
 const express = require('express');
 const dns = require('dns').promises;
 const { readAllBackendSecrets, readAllWorkerSecrets, listWorkerSecretMeta, setWorkerSecret, deleteWorkerSecret, KEY_PATTERN } = require('./secrets-vault');
@@ -587,6 +588,21 @@ async function handleDeploy(db, req, res, mode /* 'create' | 'update' */) {
         db.prepare(`INSERT INTO cloud_workers (id, user_id, title, hostname, version, created_at, updated_at)
                     VALUES (?,?,?,?,?,?,?)`).run(id, u.id, title, `${id}.${APPS_DOMAIN}`, 1, now, now);
       }
+      // Change management (CC8.1). Until now a Worker deploy left no trail at
+      // all — `cloud_workers.version` is an integer with no history, so "which
+      // change broke production, made by whom" was unanswerable. Recorded here
+      // rather than at request time because only now is the script actually live.
+      recordAudit(db, {
+        action: AUDIT.WORKER_DEPLOY, req,
+        actorUserId: u.id,
+        resourceType: 'worker', resourceId: id,
+        metadata: {
+          mode: existing ? 'update' : 'create',
+          version: (db.prepare('SELECT version FROM cloud_workers WHERE id=?').get(id) || {}).version,
+          title,
+          hostname: `${id}.${APPS_DOMAIN}`,
+        },
+      });
       // Attach to the IDE's project (if it sent one) so the worker is co-managed.
       maybeLinkWorkerToProject(db, req, id, u.id);
       // Mirror the linked backend's vault into the Worker's env (c.env.X). Best-
@@ -789,12 +805,26 @@ function registerCloudWorkerRoutes(app, db) {
   app.post('/api/account/cloud-workers/:id/suspend', (req, res) => {
     const ctx = workerAccess(db, req, res, 'owner'); if (!ctx) return;
     setWorkerStatus(db, ctx.row.id, 'suspended', 'manual');
+    // Taking a live app off the edge is an availability event (A1.x) as well as
+    // a change (CC8.1) — "who turned it off and when" is the first question in
+    // the postmortem, and until now nothing recorded it.
+    recordAudit(db, {
+      action: AUDIT.WORKER_SUSPEND, req,
+      actorUserId: ctx.user && ctx.user.id,
+      resourceType: 'worker', resourceId: ctx.row.id, projectId: ctx.row.project_id || null,
+      metadata: { reason: 'manual' },
+    });
     res.json({ ok: true, id: ctx.row.id, status: 'suspended' });
   });
 
   app.post('/api/account/cloud-workers/:id/resume', (req, res) => {
     const ctx = workerAccess(db, req, res, 'owner'); if (!ctx) return;
     setWorkerStatus(db, ctx.row.id, 'active');
+    recordAudit(db, {
+      action: AUDIT.WORKER_RESUME, req,
+      actorUserId: ctx.user && ctx.user.id,
+      resourceType: 'worker', resourceId: ctx.row.id, projectId: ctx.row.project_id || null,
+    });
     res.json({ ok: true, id: ctx.row.id, status: 'active' });
   });
 
@@ -835,6 +865,14 @@ function registerCloudWorkerRoutes(app, db) {
         const conn = await domainee.createConnection(domain, originUrl);
         attachWorkerDomain(db, ctx.row.id, ctx.user.id, domain, conn.id);
         const sum = domainee.summarize(conn);
+        // Recorded on this branch too: it returns before the own-edge path below,
+        // so a Domainee-attached domain would otherwise leave no trail at all.
+        recordAudit(db, {
+          action: AUDIT.DOMAIN_ADD, req,
+          actorUserId: ctx.user && ctx.user.id,
+          resourceType: 'domain', resourceId: domain, projectId: ctx.row.project_id || null,
+          metadata: { worker_id: ctx.row.id, provider: 'domainee', status: sum.status },
+        });
         return res.json({ ok: true, data: { domain, status: sum.status, provider: 'domainee', dns: { cname: { name: domain, value: sum.cname } }, also: [] } });
       } catch (e) {
         return res.status(502).json({ ok: false, error: 'domainee_failed', message: String((e && e.message) || e).slice(0, 200) });
@@ -849,6 +887,12 @@ function registerCloudWorkerRoutes(app, db) {
     if (sib && attachWorkerDomain(db, ctx.row.id, ctx.user.id, sib) === 'added') {
       also.push({ domain: sib, status: 'active', dns: domainDns(sib) });
     }
+    recordAudit(db, {
+      action: AUDIT.DOMAIN_ADD, req,
+      actorUserId: ctx.user && ctx.user.id,
+      resourceType: 'domain', resourceId: domain, projectId: ctx.row.project_id || null,
+      metadata: { worker_id: ctx.row.id, provider: 'edge', also: also.map((a) => a.domain) },
+    });
     res.json({ ok: true, data: { domain, status: 'active', provider: 'edge', dns: domainDns(domain), also: also } });
   });
 
@@ -891,6 +935,15 @@ function registerCloudWorkerRoutes(app, db) {
     if (!row) return res.status(404).json({ ok: false, error: 'not_found' });
     if (row.domainee_id) domainee.deleteConnection(row.domainee_id).catch(() => {});   // best-effort teardown
     db.prepare('DELETE FROM custom_domains WHERE domain = ? AND worker_id = ?').run(domain, ctx.row.id);
+    // custom_domains has no actor column, so removal was previously untraceable.
+    // Detaching a domain takes the app off its public name — an availability
+    // change someone will need to attribute later.
+    recordAudit(db, {
+      action: AUDIT.DOMAIN_REMOVE, req,
+      actorUserId: ctx.user && ctx.user.id,
+      resourceType: 'domain', resourceId: domain, projectId: ctx.row.project_id || null,
+      metadata: { worker_id: ctx.row.id, provider: row.domainee_id ? 'domainee' : 'edge' },
+    });
     res.json({ ok: true });
   });
 }

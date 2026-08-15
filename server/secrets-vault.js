@@ -31,6 +31,7 @@
 
 const crypto = require('crypto');
 const { getUserFromRequest } = require('./auth-helpers');
+const { AUDIT, recordAudit } = require('./cloud-audit');
 
 const VERSION = 0x01;
 const NONCE_LEN = 12;
@@ -271,8 +272,22 @@ function registerSecretsVaultRoutes(app, db) {
     }
     try {
       setSecret(db, prototypeId, user.id, key, value);
+      // Confidentiality (C1.1). The key name and size are recorded; the value
+      // never is — recordAudit also shape-redacts as a second line of defence.
+      recordAudit(db, {
+        action: AUDIT.SECRET_WRITE, req,
+        actorUserId: user.id,
+        resourceType: 'prototype', resourceId: prototypeId,
+        metadata: { key, replaced: isReplacing, value_bytes: Buffer.byteLength(value, 'utf8') },
+      });
       res.json({ ok: true });
     } catch (err) {
+      recordAudit(db, {
+        action: AUDIT.SECRET_WRITE, outcome: 'failure', req,
+        actorUserId: user.id,
+        resourceType: 'prototype', resourceId: prototypeId,
+        metadata: { key, error: 'encrypt_failed' },
+      });
       res.status(500).json({ ok: false, error: 'encrypt_failed', message: err.message });
     }
   });
@@ -287,6 +302,14 @@ function registerSecretsVaultRoutes(app, db) {
       return res.status(404).json({ ok: false, error: 'prototype_not_found' });
     }
     const removed = deleteSecret(db, prototypeId, key);
+    if (removed) {
+      recordAudit(db, {
+        action: AUDIT.SECRET_DELETE, req,
+        actorUserId: user.id,
+        resourceType: 'prototype', resourceId: prototypeId,
+        metadata: { key },
+      });
+    }
     res.json({ ok: true, data: { removed } });
   });
 }
