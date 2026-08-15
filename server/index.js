@@ -1118,7 +1118,7 @@ app.post('/oauth/complete', async (req, res) => {
 
   // Each device gets an independent digest-backed credential. Existing device
   // tokens remain valid, so signing in here never disconnects another client.
-  const accessToken = issueToken(db, row.id, { scope: 'account' }).token;
+  const accessToken = issueToken(db, row.id, { scope: 'account', req }).token;
   const params = new URLSearchParams();
   params.set('access_token', accessToken);
   params.set('email', email);
@@ -1185,7 +1185,7 @@ function finalizeSocialAuth(req, res, user, source) {
   // Mac (LCI) or LCB standalone: mint a per-device token and redirect the
   // browser to the custom scheme so the app picks up ?access_token=…&email=…
   // (see AppDelegate URL-scheme handlers).
-  const accessToken = issueToken(db, user.id, { scope: 'account' }).token;
+  const accessToken = issueToken(db, user.id, { scope: 'account', req }).token;
   const p = new URLSearchParams();
   p.set('access_token', accessToken);
   p.set('email', user.email);
@@ -2042,7 +2042,7 @@ app.post('/api/account/app-handoff', (req, res) => {
   if (row.email_verified != null && Number(row.email_verified) === 0) {
     return res.status(403).json({ ok: false, error: 'Verify your email before opening the app.' });
   }
-  const accessToken = issueToken(db, row.id, { scope: 'account' }).token;
+  const accessToken = issueToken(db, row.id, { scope: 'account', req }).token;
   const params = new URLSearchParams();
   params.set('access_token', accessToken);
   params.set('email', row.email);
@@ -2312,7 +2312,7 @@ app.post('/api/account/verify-code', (req, res) => {
   db.prepare(
     'UPDATE users SET login_code = NULL, login_code_expires = NULL, email_verified = 1 WHERE id = ?'
   ).run(row.id);
-  const token = issueToken(db, row.id, { scope: 'account' }).token;
+  const token = issueToken(db, row.id, { scope: 'account', req }).token;
   noStoreCredentials(res);
   res.json({ ok: true, token, email: row.email });
 });
@@ -2493,7 +2493,7 @@ app.post('/api/account/cli-token', (req, res) => {
   const u = getUserFromRequest(db, req);
   if (!u) return res.status(401).json({ ok: false, error: 'unauthorized' });
   if (req.tokenScope) return res.status(403).json({ ok: false, error: 'scoped_token_cannot_mint' });
-  const token = issueToken(db, u.id, { scope: 'account' }).token;
+  const token = issueToken(db, u.id, { scope: 'account', req }).token;
   noStoreCredentials(res);
   res.json({ ok: true, token });
 });
@@ -2507,7 +2507,7 @@ app.delete('/api/account/cli-token', (req, res) => {
   db.transaction(() => {
     db.prepare('UPDATE users SET api_access_token=NULL WHERE id=?').run(u.id);
     revokeUserTokens(db, u.id, { scope: 'account' });
-    token = issueToken(db, u.id, { scope: 'account' }).token;
+    token = issueToken(db, u.id, { scope: 'account', req }).token;
   })();
   noStoreCredentials(res);
   res.json({ ok: true, token });

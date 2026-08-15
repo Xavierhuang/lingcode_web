@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code GUI for Mac — A Native App, Not a Terminal</title>
+  <meta name="description" content="A native macOS GUI for Claude Code: multiple parallel sessions, history that survives a relaunch, click-to-switch models, and a real editor beside the agent.">
+  <meta name="keywords" content="claude code gui, claude code desktop app, claude code mac, claude code alternative, claude code ui, native mac ide, codex, gemini cli">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lingcode.dev/claude-code-gui.html">
+  <link rel="alternate" hreflang="en" href="https://lingcode.dev/claude-code-gui.html">
+  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev/claude-code-gui.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lingcode.dev/claude-code-gui.html">
+  <meta property="og:title" content="Claude Code GUI for Mac — A Native App, Not a Terminal">
+  <meta property="og:description" content="A native macOS GUI for Claude Code: multiple parallel sessions, history that survives a relaunch, click-to-switch models, and a real editor beside the agent.">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="LingCode">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Claude Code GUI for Mac — A Native App, Not a Terminal">
+  <meta name="twitter:description" content="A native macOS GUI for Claude Code: multiple parallel sessions, history that survives a relaunch, click-to-switch models, and a real editor beside the agent.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/style.css?v=20260731a">
+  <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is there an official Claude Code GUI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Anthropic ships Claude Code as a terminal tool and a desktop surface. LingCode is a separate, third-party native macOS IDE that runs Claude Code inside it, alongside Codex and Gemini CLI, with a file explorer and editor in the same window."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I run more than one Claude Code session at once?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. LingCode runs several Claude Code editor tabs at the same time, each an independent session with its own conversation, and each history persists across quit and relaunch."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I switch models without restarting the session?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Click the sonnet, opus or haiku badge at the top of a Claude Code native tab to change model mid-session. The choice persists across launches and applies from the next message."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work with providers other than Claude?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Claude Code, Codex and Gemini CLI are all built in, and agent mode runs across every supported provider with the same native Swift tool registry."
+      }
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://lingcode.dev/" },
+    { "@type": "ListItem", "position": 2, "name": "Claude Code GUI", "item": "https://lingcode.dev/claude-code-gui.html" }
+  ]
+}
+  </script>
+  <script src="/analytics.js?v=20260428a" async></script>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="/" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-name">LingCode</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/try.html">Try</a></li>
+    <li><a href="/features.html">Features</a></li>
+    <li><a href="/cloud.html">Cloud</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="/tutorials.html">Tutorials</a></li>
+    <li><a href="/community.html">Community</a></li>
+    <li class="nav-search-li"><form class="nav-search" action="/search.html" method="get" role="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" name="q" placeholder="Search" aria-label="Search the site" autocomplete="off"/></form></li>
+  </ul>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="/signin.html" id="nav-signin">Sign in</a>
+    <a class="btn btn-ghost" href="#" id="nav-signout" hidden>Sign out</a>
+    <a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Start downloading →</a>
+  </div>
+</nav>
+
+<main class="tutorial-page" data-pagefind-body>
+  <div class="tutorial-container">
+
+    <div class="tutorial-breadcrumb">
+      <a href="/">Home</a>
+      <span>/</span>
+      <span>Claude Code GUI</span>
+    </div>
+
+    <h1>A Claude Code GUI for Mac</h1>
+
+    <p class="tldr">Claude Code is excellent and the terminal is a fine place to run it — until you want two sessions at once, a file tree beside the conversation, or your history to still be there tomorrow. LingCode is a native macOS IDE with Claude Code running inside it, so you get the agent you already use and a real window around it.</p>
+
+    <h2>What the terminal makes awkward</h2>
+
+    <p>None of these are bugs. They are just what a terminal is: one buffer, one scrollback, no model of your project.</p>
+
+    <ul>
+      <li><strong>One session at a time.</strong> Running a second agent means a second tab you have to place, name and remember — and a second working directory to keep straight.</li>
+      <li><strong>Scrollback is not history.</strong> Close the window and the conversation is gone. There is no going back to what the agent decided three days ago.</li>
+      <li><strong>No editor next to it.</strong> Reviewing a diff means switching apps, which is exactly when you stop reviewing carefully.</li>
+      <li><strong>Changing model means restarting.</strong> Deciding mid-task that this one needs a bigger model costs you the session.</li>
+    </ul>
+
+    <h2>What a native window gives you instead</h2>
+
+    <h3>Several Claude Code sessions, side by side</h3>
+    <p>Run more than one Claude Code editor tab at a time. Each is a separate session with its own conversation, so a long refactor in one tab does not disturb a quick fix in another. Conversations persist across quit and relaunch — reopen LingCode and you are where you left off, same project, same open files, same conversations.</p>
+
+    <h3>Switch model mid-session</h3>
+    <p>Click the <code>sonnet</code> / <code>opus</code> / <code>haiku</code> badge at the top of a native tab to change model without restarting. The choice sticks across launches and takes effect from your next message, so you can start cheap and escalate only when the task turns out to be hard.</p>
+
+    <h3>The explorer and editor are right there</h3>
+    <p>File tree, editor and agent in one native window. When the agent proposes a change you read it in the same place you would have written it, not in a second application.</p>
+
+    <h3>Edits you can undo</h3>
+    <p>Every edit is captured and rewindable, which is what makes it reasonable to let an agent be aggressive. The worst case is a rewind, not an afternoon spent reconstructing what it did.</p>
+
+    <h3>Not only Claude</h3>
+    <p>Claude Code, Codex and Gemini CLI are all built in. Agent mode runs across every supported provider against the same registry of 60+ native Swift tools — file operations, search, bash, LSP, build and run, diagnostics, worktree isolation and MCP.</p>
+
+    <h2>What it is not</h2>
+
+    <p>LingCode is a third-party IDE, not an Anthropic product, and it does not replace Claude Code — it runs it. If you are happy in the terminal, stay there; the same agent is doing the work either way. This is worth installing when you have outgrown one buffer, not because the terminal is wrong.</p>
+
+    <p>It is also a Mac application, built on AppKit and SwiftUI rather than Electron. That is the reason it can sit beside Xcode all day without the fan coming on — the same argument is laid out at length in <a href="/why-not-cursor.html">why Cursor can't do what LingCode does</a>.</p>
+
+    <h2>Getting started</h2>
+
+    <p>macOS 14 or later, Apple Silicon or Intel. Zero telemetry. Free to start — see <a href="/pricing.html">pricing</a> for what the paid tiers add.</p>
+
+    <p><a class="btn btn-primary" href="/LingCode-Installer.dmg" download>Download for Mac →</a></p>
+
+    <h2>Frequently asked</h2>
+
+    <h3>Is there an official Claude Code GUI?</h3>
+    <p>Anthropic ships Claude Code as a terminal tool and a desktop surface. LingCode is a separate, third-party native macOS IDE that runs Claude Code inside it, next to Codex and Gemini CLI, with a file explorer and editor in the same window.</p>
+
+    <h3>Do I need my own Anthropic account?</h3>
+    <p>You can sign in with your existing Claude account, or route through LingCode's own inference layer. See <a href="/tutorials/understanding-providers.html">understanding providers</a> for how the options differ.</p>
+
+    <h3>Does it work with MCP servers?</h3>
+    <p>Yes — MCP is part of the shared tool registry. <a href="/tutorials/connect-an-mcp-server.html">Connect an MCP server</a> walks through it.</p>
+
+    <div class="tutorial-next">
+      <h2>Related</h2>
+      <div class="tutorial-next-grid">
+        <a href="/why-not-cursor.html" class="tutorial-next-card">
+          <h3>Cursor alternative for Swift and Xcode</h3>
+          <p>Why an Electron editor hits a ceiling on native Mac work</p>
+        </a>
+        <a href="/vs-xcode.html" class="tutorial-next-card">
+          <h3>Xcode alternative for Mac</h3>
+          <p>Launch time, memory and build throughput, benchmarked</p>
+        </a>
+        <a href="/tutorials/connect-an-mcp-server.html" class="tutorial-next-card">
+          <h3>Connect an MCP server</h3>
+          <p>Give the agent typed tools for Linear, GitHub or your database</p>
+        </a>
+        <a href="/features.html" class="tutorial-next-card">
+          <h3>Everything LingCode can do</h3>
+          <p>The full feature surface, native tab by native tab</p>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development. Built for founders who want to ship and engineers who want a real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/why-not-cursor.html">Why not Cursor</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="https://forum.lingcode.dev">Forum</a></li>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/account.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+<script src="/nav.js?v=20260809a"></script>
+</body>
+</html>
