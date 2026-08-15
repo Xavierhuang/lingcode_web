@@ -81,8 +81,77 @@ def fix_dom(html: str) -> tuple[str, int]:
     return BREADCRUMB_DIV_RE.sub(repl, html), removed
 
 
+ITEM_LIST_KEY_RE = re.compile(r'"itemListElement"\s*:\s*\[')
+POSITION_RE = re.compile(r'("position"\s*:\s*)(\d+)')
+
+
+def _array_span(text: str, open_idx: int) -> tuple[int, int]:
+    """Given the index of a '[', return (start, end) spanning to its matching ']'."""
+    depth = 0
+    in_str = False
+    esc = False
+    for i in range(open_idx, len(text)):
+        ch = text[i]
+        if esc:
+            esc = False
+            continue
+        if ch == "\\":
+            esc = True
+            continue
+        if ch == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth -= 1
+            if depth == 0:
+                return open_idx, i
+    raise ValueError("unterminated array")
+
+
+def _object_spans(text: str, start: int, end: int) -> list[tuple[int, int]]:
+    """Spans of the top-level {...} objects between start and end (exclusive of brackets)."""
+    spans = []
+    depth = 0
+    obj_start = -1
+    in_str = False
+    esc = False
+    for i in range(start, end):
+        ch = text[i]
+        if esc:
+            esc = False
+            continue
+        if ch == "\\":
+            esc = True
+            continue
+        if ch == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if ch == "{":
+            if depth == 0:
+                obj_start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                spans.append((obj_start, i + 1))
+    return spans
+
+
 def fix_jsonld(html: str) -> tuple[str, int, list[str]]:
-    """Drop the Search ListItem from any BreadcrumbList and renumber positions."""
+    """Drop the Search ListItem from any BreadcrumbList and renumber positions.
+
+    Works directly on the raw text rather than re-serialising, because the
+    tutorials carry two different hand/tool-authored layouts for this block:
+    one object per line (compact) and one key per line (expanded). Editing
+    the text in place preserves whichever layout a file already uses, so the
+    diff stays to the lines that actually changed.
+    """
     removed = 0
     problems: list[str] = []
 
@@ -97,27 +166,70 @@ def fix_jsonld(html: str) -> tuple[str, int, list[str]]:
 
         if not isinstance(data, dict) or data.get("@type") != "BreadcrumbList":
             return m.group(0)
-
-        items = data.get("itemListElement")
-        if not isinstance(items, list):
+        if not isinstance(data.get("itemListElement"), list):
             return m.group(0)
 
-        # Guard: only rewrite when we can reproduce the original byte-for-byte.
-        # If the source used different dump settings, leave it alone rather
-        # than reformat the whole block and bury the real fix in noise.
-        if json.dumps(data, indent=2, ensure_ascii=False) != body.strip():
-            problems.append("JSON-LD does not round-trip; left unchanged")
+        key = ITEM_LIST_KEY_RE.search(body)
+        if not key:
+            problems.append("could not locate itemListElement array")
             return m.group(0)
 
-        kept = [it for it in items if not (isinstance(it, dict) and is_search_item(it))]
-        if len(kept) == len(items):
+        arr_start, arr_end = _array_span(body, key.end() - 1)
+        spans = _object_spans(body, arr_start + 1, arr_end)
+
+        victim = None
+        for span in spans:
+            chunk = body[span[0]:span[1]]
+            try:
+                if is_search_item(json.loads(chunk)):
+                    victim = span
+                    break
+            except json.JSONDecodeError:
+                continue
+        if victim is None:
             return m.group(0)
 
-        for i, it in enumerate(kept, start=1):
-            it["position"] = i
-        data["itemListElement"] = kept
-        removed += len(items) - len(kept)
-        return prefix + json.dumps(data, indent=2, ensure_ascii=False) + suffix
+        # Swallow the separator too: the comma after this object, or the one
+        # before it when it is the last element. Trailing whitespace on the
+        # line goes with it so no blank line is left behind.
+        cut_start, cut_end = victim
+
+        # Extend the cut back over the victim's own indentation. Without this
+        # the leading whitespace survives and gets prepended to whatever
+        # follows, double-indenting the next item.
+        line_start = body.rfind("\n", 0, cut_start) + 1
+        if body[line_start:cut_start].strip() == "":
+            cut_start = line_start
+
+        after = body[cut_end:arr_end]
+        comma_after = re.match(r"\s*,", after)
+        if comma_after:
+            cut_end += comma_after.end()
+            trailing = re.match(r"[ \t]*\r?\n?", body[cut_end:])
+            cut_end += trailing.end() if trailing else 0
+        else:
+            before = body[arr_start + 1:cut_start]
+            comma_before = re.search(r",\s*$", before)
+            if comma_before:
+                cut_start = arr_start + 1 + comma_before.start()
+
+        new_body = body[:cut_start] + body[cut_end:]
+
+        # Renumber every position in document order so they stay contiguous.
+        counter = iter(range(1, len(spans)))
+        new_body = POSITION_RE.sub(lambda pm: f"{pm.group(1)}{next(counter)}", new_body)
+
+        try:
+            check = json.loads(new_body)
+        except json.JSONDecodeError as exc:
+            problems.append(f"edit produced invalid JSON ({exc}); left unchanged")
+            return m.group(0)
+        if len(check.get("itemListElement", [])) != len(spans) - 1:
+            problems.append("edit dropped the wrong number of items; left unchanged")
+            return m.group(0)
+
+        removed += 1
+        return prefix + new_body + suffix
 
     return LD_BLOCK_RE.sub(repl, html), removed, problems
 
