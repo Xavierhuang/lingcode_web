@@ -169,28 +169,54 @@ def alternates(rel: str) -> dict[str, str]:
     return {"en": url_for(en), "zh": url_for(zh), "x-default": url_for(en)}
 
 
-@lru_cache(maxsize=None)
-def lastmod(rel: str) -> str:
-    """Last modified date as YYYY-MM-DD, from git, falling back to file mtime.
+# The one-time "Commit current live site state as baseline" import. It brought
+# 475 modified + 622 untracked files under version control in a single commit,
+# so git dates every one of them to that day even though the content had not
+# changed. Treat it as bookkeeping, not authorship, and look behind it.
+BASELINE_IMPORT = "2cb40c6"
 
-    The fallback is not optional: the tree routinely carries untracked pages
-    (three tutorials were untracked at the time this was written), and those
-    would otherwise get an empty lastmod.
-    """
+
+def _git(args: list[str]) -> str:
     try:
         res = subprocess.run(
-            ["git", "log", "-1", "--format=%cs", "--", rel],
-            cwd=WEBSITE_DIR, capture_output=True, text=True, timeout=15,
+            ["git", *args], cwd=WEBSITE_DIR,
+            capture_output=True, text=True, timeout=15,
         )
-        stamp = res.stdout.strip()
-        if stamp:
-            return stamp
+        return res.stdout.strip()
     except (OSError, subprocess.SubprocessError):
-        pass
+        return ""
+
+
+def _mtime(rel: str) -> str:
     try:
         return date.fromtimestamp((WEBSITE_DIR / rel).stat().st_mtime).isoformat()
     except OSError:
         return date.today().isoformat()
+
+
+@lru_cache(maxsize=None)
+def lastmod(rel: str) -> str:
+    """Last-modified date as YYYY-MM-DD.
+
+    Normally the date of the last commit that touched the file. Two fallbacks
+    matter:
+
+      * If that commit is the baseline import, the file did not really change
+        then, so look at the commit before it. Without this every page in the
+        sitemap shares one lastmod, which Google learns to ignore.
+      * If the file was untracked before the import (622 of them were), there
+        is no earlier commit, so use the file mtime — which still reflects the
+        bulk publish that actually produced it.
+    """
+    out = _git(["log", "-1", "--format=%H %cs", "--", rel])
+    if not out:
+        return _mtime(rel)
+    sha, _, stamp = out.partition(" ")
+    if not sha.startswith(BASELINE_IMPORT):
+        return stamp or _mtime(rel)
+
+    earlier = _git(["log", "-1", "--format=%cs", f"{BASELINE_IMPORT}~1", "--", rel])
+    return earlier or _mtime(rel)
 
 
 def main() -> None:

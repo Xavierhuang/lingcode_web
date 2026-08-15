@@ -28,6 +28,22 @@ elif [ "${SKIP_DOCS_BUILD:-0}" = "1" ]; then
   echo "Skipping Cloud documentation build (SKIP_DOCS_BUILD=1)."
 fi
 
+# Regenerate sitemap.xml (+ the per-locale children) from the live page
+# inventory, then assert the SEO invariants. Both derive their idea of a
+# "public page" from scripts/seo/pages.py, which parses robots.txt — that is
+# what stops the sitemap drifting out of sync with it again, as it had
+# (220 URLs listed for 426 pages, 9 of them robots-Disallowed).
+# check_seo.py exits non-zero on a real defect, and `set -e` is on, so a
+# broken canonical or a dangling hreflang blocks the deploy rather than
+# shipping. Skip with SKIP_SEO=1 for an emergency non-content push.
+if [ "${SKIP_SEO:-0}" != "1" ]; then
+  echo "Generating sitemaps and checking SEO invariants..."
+  python3 "$WEBSITE_DIR/scripts/seo/gen_sitemap.py"
+  python3 "$WEBSITE_DIR/scripts/seo/check_seo.py"
+else
+  echo "Skipping sitemap generation and SEO checks (SKIP_SEO=1)."
+fi
+
 # Build the Pagefind static-search index over website/.
 # Output lives at website/pagefind/ and is served alongside the rest of the site.
 # Skipped if SKIP_PAGEFIND=1 (e.g. for a quick non-content change).
@@ -91,7 +107,14 @@ ssh "$USER@$HOST" "KEEP_DMGS=$KEEP_DMGS; cd '$REMOTE_PATH' && $(declare -f prune
 echo "Deploying $WEBSITE_DIR to $USER@$HOST:$REMOTE_PATH"
 echo "(excluding website/server/ — run the Node admin API separately, not from nginx root)"
 if command -v rsync >/dev/null 2>&1; then
-  rsync -avz --exclude='.git' --exclude='server/' --exclude='marketing/' --exclude='.DS_Store' -e ssh "$WEBSITE_DIR/" "$USER@$HOST:$REMOTE_PATH/"
+  # node_modules/ was being rsynced into the web root and served (27 MB of
+  # better-sqlite3, reachable and not robots-blocked). docs-src/ and scripts/
+  # are build inputs, not web assets. Note there is deliberately no --delete:
+  # the remote is a superset of the repo, so removing a page here does NOT
+  # remove it from production — see the orphan 301s in nginx-lingcode.conf.
+  rsync -avz --exclude='.git' --exclude='server/' --exclude='marketing/' \
+    --exclude='node_modules/' --exclude='docs-src/' --exclude='scripts/' \
+    --exclude='.DS_Store' -e ssh "$WEBSITE_DIR/" "$USER@$HOST:$REMOTE_PATH/"
 else
   echo "rsync not found; falling back to scp (may upload website/server — remove it on the server if present)"
   scp -r website/* "$USER@$HOST:$REMOTE_PATH/"
@@ -104,6 +127,10 @@ fi
 # auto-update is unaffected; it fetches the uniquely-named versioned DMG). Purge
 # just those fixed-name URLs so the download button + appcast go fresh at once.
 # Versioned build DMGs have unique names and never need purging.
+# sitemap*.xml and robots.txt are in the list for the same reason: HTML is sent
+# with Cache-Control: no-cache by nginx, but these are not .html, so they fall
+# into `location / {}` with no cache header and get stranded at the edge —
+# meaning a regenerated sitemap would not reach Googlebot for hours.
 # Requires CLOUDFLARE_API_TOKEN (Zone → Cache Purge perm) + CLOUDFLARE_ZONE_ID;
 # no-ops with a manual reminder if unset.
 SITE_URL="${LINGCODE_SITE_URL:-https://lingcode.dev}"
@@ -113,9 +140,9 @@ if [[ -n "${CLOUDFLARE_API_TOKEN:-}" && -n "${CLOUDFLARE_ZONE_ID:-}" ]]; then
     "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
     -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
     -H "Content-Type: application/json" \
-    --data "{\"files\":[\"${SITE_URL}/LingCode-Installer.dmg\",\"${SITE_URL}/LingCode-Intel-Installer.dmg\",\"${SITE_URL}/appcast.xml\"]}")"
+    --data "{\"files\":[\"${SITE_URL}/LingCode-Installer.dmg\",\"${SITE_URL}/LingCode-Intel-Installer.dmg\",\"${SITE_URL}/appcast.xml\",\"${SITE_URL}/sitemap.xml\",\"${SITE_URL}/sitemap-en.xml\",\"${SITE_URL}/sitemap-zh.xml\",\"${SITE_URL}/robots.txt\"]}")"
   if echo "$cf_resp" | grep -q '"success":true'; then
-    echo "  ✓ Purged: LingCode-Installer.dmg, LingCode-Intel-Installer.dmg, appcast.xml"
+    echo "  ✓ Purged: DMGs, appcast.xml, sitemap*.xml, robots.txt"
   else
     echo "  ⚠️  Cloudflare purge failed — purge manually or new downloads serve the OLD build until the edge TTL expires."
     echo "     response: $cf_resp"
@@ -125,6 +152,11 @@ else
   echo "   Until then, purge these in the CF dashboard after each deploy or new downloads serve the OLD build for ~4h:"
   echo "     $SITE_URL/LingCode-Installer.dmg"
   echo "     $SITE_URL/LingCode-Intel-Installer.dmg"
+  echo "     $SITE_URL/appcast.xml"
+  echo "     $SITE_URL/sitemap.xml"
+  echo "     $SITE_URL/sitemap-en.xml"
+  echo "     $SITE_URL/sitemap-zh.xml"
+  echo "     $SITE_URL/robots.txt"
 fi
 
 echo "Done. https://lingcode.dev"
