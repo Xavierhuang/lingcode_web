@@ -32,6 +32,10 @@ function getUserFromRequest(db, req) {
     if (resolved.tokenScope) {
       try { req.tokenScope = resolved.tokenScope; } catch (_) {}
     }
+    // Stamped for the audit trail: records which credential acted, not just which
+    // user. Without it a leaked token is indistinguishable from the real owner
+    // after the fact, so revocation can't be scoped to the compromised token.
+    try { req.tokenId = resolved.tokenId || null; } catch (_) {}
     return resolved.user;
   }
   if (req.session && req.session.account && req.session.account.userId) {

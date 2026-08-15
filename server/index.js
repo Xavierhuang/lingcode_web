@@ -17,6 +17,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { validateProductionSecurity, securityHeaders, requestId } = require('./security-config');
+const { AUDIT, recordAudit } = require('./cloud-audit');
 const { createLoginLimiter } = require('./login-rate-limit');
 validateProductionSecurity(process.env);
 
@@ -976,6 +977,16 @@ app.post('/oauth/complete', async (req, res) => {
   if (oauthMode === 'signin') {
     const attempt = loginLimiter.check({ account: email, ip: req.ip });
     if (!attempt.allowed) {
+      // Throttle decisions are their own event: a burst of these against one
+      // account is the brute-force signal, and it is invisible if only the
+      // underlying failures are recorded.
+      recordAudit(db, {
+        action: AUDIT.AUTH_THROTTLED,
+        outcome: 'denied',
+        req,
+        resourceType: 'account',
+        metadata: { email, retry_after_ms: attempt.retryAfterMs },
+      });
       res.setHeader('Retry-After', String(Math.max(1, Math.ceil(attempt.retryAfterMs / 1_000))));
       return res.status(429).send(renderAuthPage(req.body, flow, {
         title: 'Incorrect email or password.',
@@ -994,6 +1005,15 @@ app.post('/oauth/complete', async (req, res) => {
     return res.status(500).send('Something went wrong. Try again.');
   }
   if (!auth.ok) {
+    // Recorded once here, before the per-error branching below, so no failure
+    // path can be added later that silently escapes the trail.
+    recordAudit(db, {
+      action: oauthMode === 'signup' ? AUDIT.AUTH_SIGNUP : AUDIT.AUTH_SIGNIN,
+      outcome: 'failure',
+      req,
+      resourceType: 'account',
+      metadata: { email, reason: auth.error, flow },
+    });
     if (oauthMode === 'signin' && ['no_account', 'invalid_credentials', 'password_policy'].includes(auth.error)) {
       loginLimiter.fail({ account: email, ip: req.ip });
       return res.status(401).send(renderAuthPage(req.body, flow, {
@@ -1045,6 +1065,15 @@ app.post('/oauth/complete', async (req, res) => {
   }
   if (oauthMode === 'signin') loginLimiter.success({ account: email });
   const row = auth.row;
+  recordAudit(db, {
+    action: oauthMode === 'signup' ? AUDIT.AUTH_SIGNUP : AUDIT.AUTH_SIGNIN,
+    outcome: 'success',
+    req,
+    actorUserId: (row && row.id) || null,
+    resourceType: 'account',
+    resourceId: (row && row.id) || null,
+    metadata: { email, flow },
+  });
   // Referral attribution — only on a fresh signup, guarded so it never throws.
   if (oauthMode === 'signup' && row) referrals.attributeOnSignup(db, req, row.id);
   const state = req.body.state != null ? String(req.body.state) : '';
