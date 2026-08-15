@@ -60,4 +60,29 @@ function securityHeaders(options = {}) {
   };
 }
 
-module.exports = { validateProductionSecurity, securityHeaders };
+// Correlation id for every request. Audit rows, error logs and support requests
+// all carry the same value so one user-reported symptom can be traced across
+// them — SOC 2 CC7.2 wants events to be reconstructable, which is impossible
+// when nothing ties log lines to each other.
+//
+// An inbound X-Request-Id is honoured (so a proxy or the SDK can thread its own
+// id through) but sanitised first: it lands in audit_log and gets echoed back in
+// a response header, so untrusted input must not carry header-splitting bytes or
+// unbounded length. Anything unusable is replaced with a fresh uuid.
+const crypto = require('crypto');
+
+const REQUEST_ID_MAX = 64;
+const REQUEST_ID_SAFE = /^[A-Za-z0-9._-]+$/;
+
+function requestId() {
+  return (req, res, next) => {
+    const inbound = String(req.headers['x-request-id'] || '').trim();
+    req.requestId = inbound.length && inbound.length <= REQUEST_ID_MAX && REQUEST_ID_SAFE.test(inbound)
+      ? inbound
+      : crypto.randomUUID();
+    res.setHeader('X-Request-Id', req.requestId);
+    next();
+  };
+}
+
+module.exports = { validateProductionSecurity, securityHeaders, requestId };

@@ -2128,4 +2128,72 @@ function migrateHostedAppsTables(db) {
   } catch (_) { /* hosted_app_events just created above — this should not fail */ }
 }
 
-module.exports = { migrateUsersTable, migrateAccountTokensTable, migrateVoucherTables, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, migrateComputeTables, migrateBackendParentFKs, stripBackendParentFK, migrateHostedAppsTables, bumpCollabSchemaToMultiFile };
+// Audit-log retention, in ms. 400 days ≈ 13 months: long enough to cover a
+// 12-month SOC 2 Type II observation window plus the lag before an auditor
+// actually pulls the evidence. Mirrored in cloud-audit.js — change both.
+const AUDIT_RETENTION_MS = 400 * 24 * 60 * 60 * 1000;
+
+/**
+ * Append-only audit log for control-plane actions (who did what, when, from where).
+ *
+ * Shape follows voucher_audit_events (the best-formed audit table already here),
+ * with the actor promoted to real columns instead of being interpolated into a
+ * message string the way backend_logs does it (cloud-backend.js:67-76).
+ *
+ * Two properties an auditor will actually look for:
+ *
+ *  - Append-only. SQLite has no REVOKE, so immutability is enforced with triggers.
+ *    UPDATE is blocked outright. DELETE is blocked only for rows still inside the
+ *    retention window — that is precisely the shape tampering takes, while still
+ *    letting the retention sweeper prune genuinely aged-out rows. A blanket DELETE
+ *    ban would make retention impossible and get worked around instead.
+ *  - Gap-detectable ids. INTEGER PRIMARY KEY AUTOINCREMENT never reuses a rowid,
+ *    so a missing id is evidence of a removed row even if someone reaches the file.
+ *
+ * @param {import('better-sqlite3').Database} db
+ */
+function migrateAuditLogTable(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at INTEGER NOT NULL,
+      action TEXT NOT NULL,
+      outcome TEXT NOT NULL DEFAULT 'success',
+      actor_user_id TEXT,
+      actor_token_id TEXT,
+      resource_type TEXT,
+      resource_id TEXT,
+      project_id TEXT,
+      ip TEXT,
+      user_agent TEXT,
+      request_id TEXT,
+      metadata_json TEXT NOT NULL DEFAULT '{}'
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at);
+    CREATE INDEX IF NOT EXISTS idx_audit_log_actor ON audit_log(actor_user_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_audit_log_resource ON audit_log(resource_type, resource_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_audit_log_project ON audit_log(project_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action, created_at);
+    CREATE INDEX IF NOT EXISTS idx_audit_log_request ON audit_log(request_id);
+  `);
+
+  // Immutability triggers. Created separately from the CREATE TABLE block so an
+  // existing deployment picks them up on the next boot without a table rebuild.
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS trg_audit_log_no_update
+    BEFORE UPDATE ON audit_log
+    BEGIN
+      SELECT RAISE(ABORT, 'audit_log is append-only: UPDATE is not permitted');
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS trg_audit_log_no_delete_within_retention
+    BEFORE DELETE ON audit_log
+    WHEN OLD.created_at > ((CAST(strftime('%s','now') AS INTEGER) * 1000) - ${AUDIT_RETENTION_MS})
+    BEGIN
+      SELECT RAISE(ABORT, 'audit_log is append-only: rows inside the retention window cannot be deleted');
+    END;
+  `);
+}
+
+module.exports = { migrateUsersTable, migrateAccountTokensTable, migrateVoucherTables, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, migrateComputeTables, migrateBackendParentFKs, stripBackendParentFK, migrateHostedAppsTables, bumpCollabSchemaToMultiFile, migrateAuditLogTable, AUDIT_RETENTION_MS };

@@ -16,7 +16,7 @@
 
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
-const { validateProductionSecurity, securityHeaders } = require('./security-config');
+const { validateProductionSecurity, securityHeaders, requestId } = require('./security-config');
 const { createLoginLimiter } = require('./login-rate-limit');
 validateProductionSecurity(process.env);
 
@@ -28,7 +28,7 @@ const bcrypt = require('bcrypt');
 const Database = require('better-sqlite3');
 const Stripe = require('stripe');
 const http = require('http');
-const { migrateUsersTable, migrateAccountTokensTable, migrateVoucherTables, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, migrateComputeTables, migrateBackendParentFKs, migrateHostedAppsTables } = require('./migrate');
+const { migrateUsersTable, migrateAccountTokensTable, migrateVoucherTables, migrateStatsTables, migrateTelemetryTables, migrateCLITables, migrateSavedPrototypesTable, migrateSupabaseTables, migrateSecretsVaultTable, migratePrototypeDomainsTable, migrateCollabTables, migrateAppConfigTable, migrateAgentSdkTables, migrateFeedbackTable, migrateCloudBackendTables, migrateCloudAppsTables, migrateProjectsTables, migrateCloudTelemetryTables, migrateSlackTables, migrateRemoteHostsTable, migrateComputeTables, migrateBackendParentFKs, migrateHostedAppsTables, migrateAuditLogTable } = require('./migrate');
 const { migrateAccountTokens, issueToken, revokeUserTokens } = require('./account-tokens');
 const { initCollabServer } = require('./collab-server');
 const { registerCollabRoutes } = require('./collab-routes');
@@ -58,6 +58,8 @@ const { createSlackEventsHandler } = require('./slack-events');
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const app = express();
+// First: every downstream middleware, log line and audit row correlates by this id.
+app.use(requestId());
 app.use(securityHeaders());
 
 // Prometheus metrics: time every request (low-cardinality route labels). Added
@@ -139,6 +141,7 @@ migrateProjectsTables(db); // after CloudBackend + CloudApps: unified project en
 migrateCloudTelemetryTables(db); // analytics/perf/crash aggregates (backbone ①)
 migrateSlackTables(db);
 migrateRemoteHostsTable(db); // easy-remote-coding hosts (room id == host id)
+migrateAuditLogTable(db); // append-only control-plane audit trail (who/what/when)
 
 // Deep Agent startup housekeeping: drop stale usage rows (>13 months) and
 // remove on-disk workspace dirs that survived a server restart but have no
