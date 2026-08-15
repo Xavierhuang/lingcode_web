@@ -3,6 +3,16 @@
 const crypto = require('node:crypto');
 const { migrateAccountTokensTable } = require('./migrate');
 
+// Resolved on first use rather than at module load. This file sits underneath
+// the request-auth path, so a future require cycle (cloud-audit → anything →
+// account-tokens) would otherwise hand back a half-initialised module and break
+// token resolution for every request. Cached after the first call.
+let _audit = null;
+function audit() {
+  if (!_audit) _audit = require('./cloud-audit');
+  return _audit;
+}
+
 const DEVELOPMENT_PEPPER = 'lingcode-local-development-token-pepper-do-not-use-in-production';
 const LAST_USED_WRITE_INTERVAL_MS = 5 * 60 * 1000;
 const MAX_ACTIVE_ACCOUNT_TOKENS = 10;
@@ -88,6 +98,7 @@ function issueToken(db, userId, options = {}) {
   if (scope === 'project' && !projectKey) throw new Error('projectKey is required for a project token');
   const caps = scope === 'project' ? String(options.caps || 'cloud+inference') : '';
 
+  const autoRevoked = [];
   db.transaction(() => {
     db.prepare(`INSERT INTO account_tokens
       (id,user_id,digest_version,token_digest,display_prefix,scope,project_key,caps,created_at,expires_at)
@@ -101,9 +112,34 @@ function issueToken(db, userId, options = {}) {
           AND (expires_at IS NULL OR expires_at>?)
         ORDER BY created_at DESC, id DESC LIMIT -1 OFFSET ?`).all(userId, now, MAX_ACTIVE_ACCOUNT_TOKENS);
       const revoke = db.prepare('UPDATE account_tokens SET revoked_at=? WHERE id=? AND revoked_at IS NULL');
-      for (const row of excess) revoke.run(now, row.id);
+      for (const row of excess) { revoke.run(now, row.id); autoRevoked.push(row.id); }
     }
   })();
+
+  // Credential provisioning (CC6.2). The token itself is never logged — only its
+  // id, scope and display prefix, which is what a revocation decision needs.
+  audit().recordAudit(db, {
+    action: audit().AUDIT.TOKEN_ISSUE,
+    req: options.req,
+    actorUserId: userId,
+    resourceType: 'token',
+    resourceId: id,
+    projectId: projectKey || null,
+    metadata: { scope, caps: caps || undefined, expires_at: expiresAt, display_prefix: token.slice(0, 12) },
+  });
+  // Hitting the 10-token cap silently kills the oldest tokens. That is a
+  // deprovisioning event and reads as an outage to whoever held them, so it is
+  // recorded rather than left to be inferred from a token that stopped working.
+  if (autoRevoked.length) {
+    audit().recordAudit(db, {
+      action: audit().AUDIT.TOKEN_REVOKE,
+      req: options.req,
+      actorUserId: userId,
+      resourceType: 'token',
+      resourceId: autoRevoked.join(','),
+      metadata: { reason: 'active_token_cap_exceeded', cap: MAX_ACTIVE_ACCOUNT_TOKENS, count: autoRevoked.length },
+    });
+  }
   return { token, id, scope, projectKey, expiresAt };
 }
 
@@ -169,8 +205,22 @@ function resolveToken(db, rawToken, options = {}) {
 
 function revokeToken(db, tokenId, userId, options = {}) {
   const now = options.now == null ? Date.now() : Number(options.now);
-  return db.prepare('UPDATE account_tokens SET revoked_at=? WHERE id=? AND user_id=? AND revoked_at IS NULL')
+  const revoked = db.prepare('UPDATE account_tokens SET revoked_at=? WHERE id=? AND user_id=? AND revoked_at IS NULL')
     .run(now, tokenId, userId).changes > 0;
+  // Only a real state change is recorded. A no-op revoke (already revoked, or
+  // someone else's token id) would otherwise let anyone write arbitrary rows
+  // into the audit log by guessing ids.
+  if (revoked) {
+    audit().recordAudit(db, {
+      action: audit().AUDIT.TOKEN_REVOKE,
+      req: options.req,
+      actorUserId: userId,
+      resourceType: 'token',
+      resourceId: tokenId,
+      metadata: { reason: options.reason || 'explicit' },
+    });
+  }
+  return revoked;
 }
 
 function revokeUserTokens(db, userId, options = {}) {
@@ -179,6 +229,17 @@ function revokeUserTokens(db, userId, options = {}) {
   const result = scope
     ? db.prepare('UPDATE account_tokens SET revoked_at=? WHERE user_id=? AND scope=? AND revoked_at IS NULL').run(now, userId, scope)
     : db.prepare('UPDATE account_tokens SET revoked_at=? WHERE user_id=? AND revoked_at IS NULL').run(now, userId);
+  // Bulk revocation is the response to a suspected compromise (it fires on
+  // password reset, index.js:2205). Worth a row even at count 0, since "we
+  // revoked everything and there was nothing to revoke" is itself the answer to
+  // an incident-response question.
+  audit().recordAudit(db, {
+    action: audit().AUDIT.TOKEN_REVOKE,
+    req: options.req,
+    actorUserId: userId,
+    resourceType: 'token',
+    metadata: { reason: options.reason || 'bulk', scope: scope || 'all', count: result.changes },
+  });
   return result.changes;
 }
 
