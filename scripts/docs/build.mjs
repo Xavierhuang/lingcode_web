@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseDocument } from './frontmatter.mjs';
 import { renderMarkdown } from './markdown.mjs';
 import { flattenNavigation, renderPage } from './template.mjs';
+
+const WEBSITE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 function optionsFrom(argv) {
   const options = {};
@@ -43,12 +46,23 @@ export async function buildDocs({ sourceRoot, outputRoot }) {
     if (relativeOutput.startsWith('..') || path.isAbsolute(relativeOutput)) throw new Error(`output escapes root: ${page.output}`);
     const document = parseDocument(await readFile(sourcePath, 'utf8'), page.source);
     const rendered = renderMarkdown(document.markdown);
+    // A hreflang alternate may only be emitted when the Chinese file actually
+    // exists: a cluster that points at a 404 makes Google discard the whole
+    // cluster, not just the broken edge. The zh docs are hand-translated, so
+    // coverage is partial and has to be probed per page.
+    // Anchored to this script, not to outputRoot: check.mjs rebuilds into a
+    // temp directory to byte-compare, and an outputRoot-relative probe would
+    // find no zh files there, emit a different head, and report every page
+    // as stale.
+    const zhPath = path.resolve(WEBSITE_ROOT, 'zh/docs/cloud', page.output);
+    const hasZh = existsSync(zhPath);
     const pageHtml = renderPage({
       metadata: document.metadata,
       html: rendered.html,
       headings: rendered.headings,
       navigation,
       currentOutput: page.output,
+      hasZh,
     });
     await mkdir(path.dirname(outputPath), { recursive: true });
     await writeFile(outputPath, pageHtml);

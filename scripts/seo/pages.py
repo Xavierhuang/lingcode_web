@@ -55,9 +55,52 @@ EXCLUDED_PREFIXES = (
     "examples/",
 )
 
-NOINDEX_RE = re.compile(
-    r'<meta[^>]+name=["\']robots["\'][^>]*content=["\'][^"\']*noindex', re.I
-)
+META_OPEN_RE = re.compile(r"<meta\b", re.I)
+ATTR_RE = re.compile(r'([\w:.-]+)\s*=\s*"([^"]*)"|([\w:.-]+)\s*=\s*\'([^\']*)\'')
+
+
+def _meta_tags(html: str):
+    """Yield each <meta …> tag, honouring quotes when looking for the closing >.
+
+    A plain `<meta[^>]*>` stops at the first `>` even when it sits inside a
+    quoted value. docs/cloud/api-reference.html describes a route as
+    `/api/cloud/be/<id>/…` inside its description, so a naive scan truncates
+    the tag mid-attribute and reports the description as empty.
+    """
+    for m in META_OPEN_RE.finditer(html):
+        i, quote = m.end(), ""
+        while i < len(html):
+            ch = html[i]
+            if quote:
+                if ch == quote:
+                    quote = ""
+            elif ch in "\"'":
+                quote = ch
+            elif ch == ">":
+                yield html[m.start(): i + 1]
+                break
+            i += 1
+
+
+def meta_map(html: str) -> dict[str, str]:
+    """Every <meta> keyed by its name/property, lowercased.
+
+    Attribute order varies across the site — try.html writes
+    `<meta content="…" name="description"/>` while everything else writes
+    name first. Regexes that assumed one order silently missed the other,
+    which would mean injecting a duplicate description and reporting a
+    missing one. Parse the attributes instead of assuming their order.
+    """
+    out: dict[str, str] = {}
+    for tag in _meta_tags(html):
+        attrs: dict[str, str] = {}
+        for m in ATTR_RE.finditer(tag):
+            key = (m.group(1) or m.group(3) or "").lower()
+            attrs[key] = m.group(2) if m.group(1) else (m.group(4) or "")
+        key = attrs.get("name") or attrs.get("property")
+        if key:
+            out.setdefault(key.lower(), attrs.get("content", ""))
+    return out
 
 
 @lru_cache(maxsize=1)
@@ -126,7 +169,7 @@ def is_noindex(rel: str) -> bool:
         head = path.read_text(encoding="utf-8", errors="replace")[:4000]
     except OSError:
         return False
-    return bool(NOINDEX_RE.search(head))
+    return "noindex" in meta_map(head).get("robots", "").lower()
 
 
 def indexable() -> list[str]:

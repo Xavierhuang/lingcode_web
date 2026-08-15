@@ -37,14 +37,10 @@ WEBSITE_DIR = pages.WEBSITE_DIR
 SM_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
 
 TITLE_RE = re.compile(r"<title>(.*?)</title>", re.S | re.I)
-DESC_RE = re.compile(r'<meta[^>]+name=["\']description["\'][^>]+content=["\'](.*?)["\']', re.S | re.I)
 CANON_RE = re.compile(r'<link[^>]+rel=["\']canonical["\'][^>]*>', re.I)
 ALT_RE = re.compile(r'<link[^>]+rel=["\']alternate["\'][^>]*>', re.I)
 HREF_RE = re.compile(r'href=["\']([^"\']+)["\']')
 LANG_RE = re.compile(r'hreflang=["\']([^"\']+)["\']')
-META_PROP_RE = re.compile(
-    r'<meta[^>]+(?:property|name)=["\']([^"\']+)["\'][^>]+content=["\'](.*?)["\']', re.S | re.I
-)
 LD_RE = re.compile(r'(?s)<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', re.I)
 ANALYTICS_RE = re.compile(r'src=["\']/analytics\.js', re.I)
 
@@ -119,6 +115,7 @@ def main() -> int:
     for rel in indexable:
         html = (WEBSITE_DIR / rel).read_text(encoding="utf-8", errors="replace")
         where = rel
+        metas = pages.meta_map(html)
 
         title_m = TITLE_RE.search(html)
         if not title_m or not title_m.group(1).strip():
@@ -126,13 +123,11 @@ def main() -> int:
         elif len(title_m.group(1).strip()) > 60:
             warn(f"{where}: title is {len(title_m.group(1).strip())} chars (>60)")
 
-        desc_m = DESC_RE.search(html)
-        if not desc_m or not desc_m.group(1).strip():
+        desc = metas.get("description", "").strip()
+        if not desc:
             err(f"{where}: no meta description")
-        else:
-            n = len(desc_m.group(1).strip())
-            if not 120 <= n <= 160:
-                warn(f"{where}: meta description is {n} chars (want 120-160)")
+        elif not 120 <= len(desc) <= 160:
+            warn(f"{where}: meta description is {len(desc)} chars (want 120-160)")
 
         # canonical must exist, be unique across the site, and be self-referential
         canon_m = CANON_RE.search(html)
@@ -147,7 +142,6 @@ def main() -> int:
                 if href.group(1) != pages.url_for(rel):
                     err(f"{where}: canonical is {href.group(1)}, expected {pages.url_for(rel)}")  # 11
 
-        metas = {k.lower(): v for k, v in META_PROP_RE.findall(html)}
         for key in REQUIRED_META:
             if key not in metas or not metas[key].strip():
                 err(f"{where}: missing {key}")                             # 7

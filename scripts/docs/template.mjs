@@ -27,7 +27,7 @@ function renderToc(headings) {
   return `<ol>${visible.map((heading) => `<li class="toc-level-${heading.level}"><a href="#${escapeHtml(heading.id)}">${escapeHtml(heading.text)}</a></li>`).join('')}</ol>`;
 }
 
-export function renderPage({ metadata, html, headings, navigation, currentOutput }) {
+export function renderPage({ metadata, html, headings, navigation, currentOutput, hasZh = false }) {
   const pages = flattenNavigation(navigation);
   const position = pages.findIndex((page) => page.output === currentOutput);
   const previous = position > 0 ? pages[position - 1] : null;
@@ -47,7 +47,43 @@ export function renderPage({ metadata, html, headings, navigation, currentOutput
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://lingcode.dev${canonicalPath}">
   <link rel="alternate" hreflang="en" href="https://lingcode.dev${canonicalPath}">
-  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev${canonicalPath}">
+${hasZh ? `  <link rel="alternate" hreflang="zh" href="https://lingcode.dev/zh/docs/cloud/${currentOutput}">\n` : ''}  <link rel="alternate" hreflang="x-default" href="https://lingcode.dev${canonicalPath}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lingcode.dev${canonicalPath}">
+  <meta property="og:title" content="${escapeHtml(metadata.title)}">
+  <meta property="og:description" content="${escapeHtml(metadata.description)}">
+  <meta property="og:image" content="https://lingcode.dev/og-image.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="LingCode">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(metadata.title)}">
+  <meta name="twitter:description" content="${escapeHtml(metadata.description)}">
+  <script type="application/ld+json">
+${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: metadata.title,
+    description: metadata.description,
+    url: `https://lingcode.dev${canonicalPath}`,
+    image: 'https://lingcode.dev/og-image.png',
+    dateModified: metadata.updated,
+    inLanguage: 'en',
+    isPartOf: { '@type': 'WebSite', name: 'LingCode', url: 'https://lingcode.dev/' },
+    publisher: { '@type': 'Organization', name: 'LingCode', url: 'https://lingcode.dev/' },
+  }, null, 2)}
+  </script>
+  <script type="application/ld+json">
+${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Docs', item: 'https://lingcode.dev/docs.html' },
+      { '@type': 'ListItem', position: 2, name: 'Cloud', item: 'https://lingcode.dev/docs/cloud/' },
+      { '@type': 'ListItem', position: 3, name: metadata.title, item: `https://lingcode.dev${canonicalPath}` },
+    ],
+  }, null, 2)}
+  </script>
+  <script src="/analytics.js?v=20260428a" async></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
