@@ -23,6 +23,7 @@
 // both.
 
 const { auditHealth } = require('./cloud-audit');
+const compliancePresets = require('./cloud-compliance-presets');
 
 // Who has to fix it. The shared-responsibility split is the honest part of a
 // readiness score: a user cannot fix LingCode's backups, and LingCode cannot
@@ -129,12 +130,38 @@ function authControls(db, backendId) {
  * Row-level-security posture, derived from the existing schema advisor rather
  * than re-querying pg_catalog. `advisors` is the array advisorsFor() returned.
  */
+// Tables LingCode creates and owns inside a tenant schema. They are protected by
+// having no tenant-role grants and by a gateway denylist, NOT by RLS — enabling
+// RLS on them would accomplish nothing, and the owner cannot meaningfully act on
+// them anyway. Counting them against the user's score both inflates their
+// failures and hands them an instruction they should not follow.
+const PLATFORM_MANAGED_TABLES = ['auth_users', 'auth_refresh_tokens', 'auth_mfa_factors'];
+const isPlatformTable = (t) => PLATFORM_MANAGED_TABLES.includes(String(t));
+
 function rlsControls(advisors) {
   const list = Array.isArray(advisors) ? advisors : [];
-  const rlsOff = list.filter((a) => a.id === 'rls_disabled');
-  const inertPolicies = list.filter((a) => a.id === 'policy_exists_rls_disabled');
-  const mutablePath = list.filter((a) => a.id === 'function_search_path_mutable');
+  // Partition before scoring: the user's RLS control must reflect the user's own
+  // tables. An earlier version reported "3 tables have RLS off" naming only
+  // LingCode's auth tables, which read as the owner's failure and told them to
+  // attach policies to the platform's credential store.
+  const userTables = (id) => list.filter((a) => a.id === id && !isPlatformTable(a.table));
+  const rlsOff = userTables('rls_disabled');
+  const inertPolicies = userTables('policy_exists_rls_disabled');
+  const mutablePath = userTables('function_search_path_mutable');
+  const platformRlsOff = list.filter((a) => a.id === 'rls_disabled' && isPlatformTable(a.table));
   const out = [];
+
+  if (platformRlsOff.length) {
+    out.push(control({
+      id: 'managed_auth_tables_isolated',
+      criteria: 'CC6.1',
+      status: PASS,
+      ownedBy: LINGCODE,
+      title: 'Managed auth tables are unreachable from client keys',
+      detail: `LingCode's auth tables (${platformRlsOff.map((a) => a.table).join(', ')}) hold password hashes, session token hashes and MFA secrets. They carry no tenant-role privileges and the data API refuses them outright, so a client holding the public anon key cannot read or write them. They deliberately do not use RLS — access is denied at the grant and gateway layers instead.`,
+      evidence: { tables: platformRlsOff.map((a) => a.table), protected_by: ['no_tenant_grants', 'gateway_denylist'] },
+    }));
+  }
 
   out.push(control({
     id: 'rls_enabled_all_tables',
@@ -242,17 +269,106 @@ function platformControls(db, backendId) {
  * because a readiness report that shows only what passes is marketing. These
  * mirror the public roadmap in docs-src/cloud/security/index.md.
  */
-function knownGaps() {
-  return [
+function knownGaps(db) {
+  // A1.2 is graded on the RESTORE, not the backup. Auditors ask for evidence
+  // that a restore was exercised, because an untested backup is a belief rather
+  // than a control — and the failure mode (a dump that never restores) is
+  // invisible until the day it matters. Read from the audit trail so this
+  // control reflects reality instead of a hardcoded verdict that goes stale the
+  // moment backups are switched on.
+  let lastDrill = null;
+  try {
+    lastDrill = db.prepare(
+      `SELECT created_at, outcome, metadata_json FROM audit_log
+       WHERE action = 'backup.restore_test' ORDER BY created_at DESC LIMIT 1`
+    ).get() || null;
+  } catch (_) { lastDrill = null; }
+
+  const DRILL_MAX_AGE_MS = 100 * 86400000;   // ~quarterly, with slack
+  const drillAgeMs = lastDrill ? Date.now() - Number(lastDrill.created_at) : null;
+  const drillSucceeded = lastDrill && lastDrill.outcome === 'success';
+  const drillFresh = drillSucceeded && drillAgeMs < DRILL_MAX_AGE_MS;
+  // A drill that ran and FAILED is the worst of the three states, not a middling
+  // one: it is positive evidence the backups do not restore. Only a stale
+  // success is a warning — there the control worked, the cadence slipped.
+  const backupStatus = drillFresh ? PASS
+    : (drillSucceeded ? WARN : FAIL);
+
+  const gaps = [
     control({
       id: 'tenant_database_backups',
       criteria: 'A1.2',
-      status: FAIL,
+      status: backupStatus,
       ownedBy: LINGCODE,
-      title: 'Managed Postgres backup and tested restore',
-      detail: 'Automated backups with a tested restore are not yet in place for the managed Postgres tier. This is required for the Availability criterion and is on the roadmap.',
-      remediation: 'Tracked by LingCode. Export critical data yourself if your own RPO depends on it today.',
-      evidence: { status: 'roadmap' },
+      title: 'Tenant database backup verified by restore',
+      detail: drillFresh
+        ? `Continuous WAL archiving (pgBackRest) provides point-in-time recovery, and a restore was last verified ${Math.floor(drillAgeMs / 86400000)} day(s) ago.`
+        : lastDrill
+          ? `Backups are running, but the last restore drill ${lastDrill.outcome === 'success' ? `was ${Math.floor(drillAgeMs / 86400000)} days ago (older than the ~quarterly cadence)` : 'did not succeed'}. An unverified backup is not yet a control.`
+          // Deliberately does not claim backups are absent. The tenant database
+          // runs continuous WAL archiving via pgBackRest; what has never been
+          // demonstrated is a RESTORE, which is what A1.2 actually grades. An
+          // earlier version of this control asserted "no backups", which was
+          // wrong — it inferred infrastructure state from the application repo,
+          // where host-level backup config does not appear.
+          : 'Continuous WAL archiving is configured for the tenant database, but no restore has been verified. An auditor grades A1.2 on the restore, not the backup, so this stays open until a drill is recorded.',
+      // Points at the drill that actually exists. An earlier version named a
+      // scripts/restore-drill.sh that was removed once it turned out to
+      // duplicate the weekly pgbackrest-restore-test.sh already in cron —
+      // remediation text that names a deleted file is worse than none, because
+      // it reads as an action someone has already taken.
+      remediation: drillFresh ? null : 'Tracked by LingCode: the weekly pgbackrest-restore-test.sh drill needs to report into the audit log via scripts/record-backup-event.js.',
+      evidence: {
+        last_drill_at: lastDrill ? Number(lastDrill.created_at) : null,
+        last_drill_outcome: lastDrill ? lastDrill.outcome : null,
+        drill_max_age_days: Math.round(DRILL_MAX_AGE_MS / 86400000),
+      },
+    }),
+    (function controlPlaneBackup() {
+      // Tracked separately from the tenant database because they fail
+      // independently: managed Postgres backups do nothing for the SQLite
+      // control plane, and losing that loses accounts, tokens, project
+      // membership and the audit log itself.
+      let last = null;
+      try {
+        last = db.prepare(
+          `SELECT created_at, outcome FROM audit_log
+           WHERE action = 'backup.run' AND resource_id = 'control-plane'
+           ORDER BY created_at DESC LIMIT 1`
+        ).get() || null;
+      } catch (_) { last = null; }
+      const ageMs = last ? Date.now() - Number(last.created_at) : null;
+      const fresh = last && last.outcome === 'success' && ageMs < 2 * 86400000;
+      return control({
+        id: 'control_plane_backups',
+        criteria: 'A1.2',
+        status: fresh ? PASS : (last && last.outcome === 'success' ? WARN : FAIL),
+        ownedBy: LINGCODE,
+        title: 'Control-plane database backed up off-host',
+        detail: fresh
+          ? 'The control-plane database is snapshotted, integrity-checked, encrypted and shipped off-host daily.'
+          : last
+            ? `The last off-host backup ${last.outcome === 'success' ? `succeeded ${Math.floor(ageMs / 3600000)} hours ago, which is outside the daily cadence` : 'did not succeed'}.`
+            : 'No off-host control-plane backup has been recorded. On-host snapshots do not survive loss of the host.',
+        remediation: fresh ? null : 'Tracked by LingCode: schedule scripts/backup-control-plane.sh.',
+        evidence: { last_backup_at: last ? Number(last.created_at) : null, last_outcome: last ? last.outcome : null },
+      });
+    })(),
+    control({
+      id: 'database_connection_encrypted',
+      criteria: 'CC6.7',
+      // Read from the connection string rather than asserted: `sslmode` is
+      // absent from CLOUD_PG_ADMIN_URL in production, and the server confirms
+      // `ssl = off` on live connections. Application traffic to the tenant
+      // database therefore crosses the network unencrypted.
+      status: /sslmode=(require|verify-ca|verify-full)/.test(String(process.env.CLOUD_PG_ADMIN_URL || '')) ? PASS : FAIL,
+      ownedBy: LINGCODE,
+      title: 'Database connections encrypted in transit',
+      detail: /sslmode=(require|verify-ca|verify-full)/.test(String(process.env.CLOUD_PG_ADMIN_URL || ''))
+        ? 'Connections from the API to the tenant database require TLS.'
+        : 'Connections from the API to the tenant database do not require TLS. Traffic stays inside the private VPC, but application data — including rows returned to the gateway — is not encrypted on the wire.',
+      remediation: 'Tracked by LingCode: append sslmode=require to CLOUD_PG_ADMIN_URL and CLOUD_PG_DIRECT_URL, and confirm with SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid().',
+      evidence: { sslmode_in_connection_string: /sslmode=[a-z-]+/.exec(String(process.env.CLOUD_PG_ADMIN_URL || ''))?.[0] || null },
     }),
     control({
       id: 'per_backend_signing_keys',
@@ -275,6 +391,7 @@ function knownGaps() {
       evidence: { status: 'roadmap' },
     }),
   ];
+  return gaps;
 }
 
 /**
@@ -306,26 +423,64 @@ function outOfScopeNotice() {
  *        stays free of a hard dependency on the data plane (and testable without Postgres)
  */
 async function complianceFor(db, backendId, advisorsForFn) {
-  let advisors = [];
+  // Three distinct states, and conflating any two produces a false report.
+  // `advisors` starts null (unknown) rather than [] (scanned, clean): an empty
+  // array is indistinguishable from "no violations found", so defaulting to it
+  // makes an UNSCANNED backend report RLS as passing — the exact unearned green
+  // tick this module exists to avoid.
+  let advisors = null;
+  let scan = 'skipped';               // 'ok' | 'failed' | 'skipped'
   if (typeof advisorsForFn === 'function') {
     // A data-plane outage must degrade the report, not fail it: the
     // control-plane checks below are still worth returning.
-    try { advisors = await advisorsForFn(backendId); } catch (_) { advisors = null; }
+    try { advisors = await advisorsForFn(backendId); scan = 'ok'; }
+    catch (_) { advisors = null; scan = 'failed'; }
   }
 
+  const scanUnavailable = control({
+    id: 'schema_scan_unavailable',
+    criteria: 'CC6.1',
+    status: WARN,
+    ownedBy: scan === 'failed' ? LINGCODE : YOU,
+    title: 'Row-level security could not be verified',
+    detail: scan === 'failed'
+      ? 'The database could not be reached, so RLS and function checks did not run. Their status is unknown — not passing.'
+      : 'This backend is not provisioned yet, so there is no schema to check. RLS will be verified once it is live; until then its status is unknown.',
+    remediation: scan === 'failed'
+      ? 'Re-run once the backend is reachable.'
+      : 'Provision the backend, then re-run this check before relying on the score.',
+    evidence: { scanned: false, reason: scan },
+  });
+
+  // Compliance-preset controls surface the settings each preset locks and
+  // the acknowledgments the operator has (or has not) recorded. The preset
+  // module returns its own finding shape; wrap it into the shared
+  // control() shape so one renderer serves both. Owned by YOU because the
+  // operator chose the preset and controls its acknowledgments.
+  const presetEval = compliancePresets.evaluatePreset(db, backendId);
+  const presetControls = presetEval.controls.map((c) =>
+    control({
+      id: c.id,
+      criteria: 'CC1.1',
+      status: c.status === 'pass' ? PASS : c.status === 'fail' ? FAIL : WARN,
+      ownedBy: YOU,
+      title: c.title,
+      detail: c.detail,
+      remediation:
+        c.status === 'pass'
+          ? null
+          : presetEval.active === 'none'
+            ? 'Apply a preset in the console → Compliance tab, or via PUT /api/cloud/account/backends/<id>/compliance-preset.'
+            : `Record the missing acknowledgment in the console → Compliance tab, or via POST /api/cloud/account/backends/<id>/compliance-preset/acknowledgments { key: '<key>' }.`,
+    }),
+  );
+
   const controls = [
+    ...presetControls,
     ...authControls(db, backendId),
-    ...(advisors === null ? [control({
-      id: 'schema_scan_unavailable',
-      criteria: 'CC6.1',
-      status: WARN,
-      ownedBy: LINGCODE,
-      title: 'Schema checks could not run',
-      detail: 'The database could not be reached, so RLS and function checks were skipped. Their status is unknown rather than passing.',
-      evidence: { scanned: false },
-    })] : rlsControls(advisors)),
+    ...(scan === 'ok' ? rlsControls(advisors) : [scanUnavailable]),
     ...platformControls(db, backendId),
-    ...knownGaps(),
+    ...knownGaps(db),
   ];
 
   // Scored over controls the user can act on. Including LingCode's own gaps

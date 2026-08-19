@@ -962,6 +962,35 @@ function migrateCloudBackendTables(db) {
   if (!accountBackendColumns.has('python_runtime_enabled')) {
     db.exec('ALTER TABLE account_backends ADD COLUMN python_runtime_enabled INTEGER NOT NULL DEFAULT 0');
   }
+  // compliance_preset: named security bundle applied to this backend
+  // ('none' | 'soc2' | 'hipaa' | 'iso27001'). See cloud-compliance-presets.js
+  // for the settings each locks in and the acknowledgments it requires.
+  // Default 'none' so existing backends are unaffected.
+  if (!accountBackendColumns.has('compliance_preset')) {
+    db.exec(
+      "ALTER TABLE account_backends ADD COLUMN compliance_preset TEXT NOT NULL DEFAULT 'none' " +
+        "CHECK(compliance_preset IN ('none','soc2','hipaa','iso27001'))",
+    );
+  }
+
+  // Operator acknowledgments for compliance presets. One row per
+  // (backend_id, ack_key). Presence of a row IS the acknowledgment;
+  // the row's timestamp doubles as the audit artifact ("BAA on file
+  // since <at> by <acknowledged_by>"). No content column on purpose —
+  // legal weight lives outside the platform.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS backend_compliance_acknowledgments (
+      backend_id       TEXT NOT NULL,
+      ack_key          TEXT NOT NULL,
+      acknowledged_at  TEXT NOT NULL,
+      acknowledged_by  TEXT,
+      PRIMARY KEY (backend_id, ack_key),
+      FOREIGN KEY (backend_id) REFERENCES account_backends(id) ON DELETE CASCADE
+    )
+  `);
+  db.exec(
+    'CREATE INDEX IF NOT EXISTS idx_backend_compliance_acks_by ON backend_compliance_acknowledgments(acknowledged_by)',
+  );
 
   // Short-lived, hash-bound production deployment previews. The payload is the
   // already-normalized manifest content, never arbitrary request fields or
@@ -1576,15 +1605,18 @@ function migrateProjectsTables(db) {
   db.exec('CREATE INDEX IF NOT EXISTS idx_ppi_token   ON project_pending_invites(token)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_ppi_project ON project_pending_invites(project_id)');
 
-  // Pending ownership transfers — accept-required handoff. The target must
-  // already be a member; on accept the swap is atomic (projects.owner_id +
-  // the two project_members rows). project_id is UNIQUE so re-initiating a
-  // transfer replaces the prior pending one (one in flight per project).
+  // Pending ownership transfers — accept-required handoff. The target does NOT
+  // have to be a member, or even have an account: `to_email` is the address the
+  // offer was sent to and `to_user_id` is NULL until a matching account claims
+  // the token. On accept the swap is atomic (projects.owner_id + the member rows
+  // + the project's resources). project_id is UNIQUE so re-initiating a transfer
+  // replaces the prior pending one (one in flight per project).
   db.exec(`
     CREATE TABLE IF NOT EXISTS project_pending_transfers (
       id           TEXT PRIMARY KEY,
       project_id   TEXT NOT NULL UNIQUE,
-      to_user_id   TEXT NOT NULL,
+      to_user_id   TEXT,
+      to_email     TEXT NOT NULL DEFAULT '',
       from_user_id TEXT NOT NULL,
       token        TEXT NOT NULL UNIQUE,
       created_at   INTEGER NOT NULL,
@@ -1594,7 +1626,44 @@ function migrateProjectsTables(db) {
       FOREIGN KEY(from_user_id) REFERENCES users(id)
     )
   `);
-  db.exec('CREATE INDEX IF NOT EXISTS idx_ppt_to ON project_pending_transfers(to_user_id)');
+  // Rebuild for DBs created before non-member transfers: `to_user_id` was
+  // NOT NULL and there was no `to_email`. SQLite can't relax NOT NULL in place,
+  // so copy → drop → rename. Rows are ephemeral (7-day TTL, one per project),
+  // but they're carried over rather than dropped so an in-flight offer survives.
+  try {
+    const pptCols = new Set(db.prepare('PRAGMA table_info(project_pending_transfers)').all().map((c) => c.name));
+    if (pptCols.size && !pptCols.has('to_email')) {
+      db.exec('DROP TABLE IF EXISTS project_pending_transfers_new');
+      db.exec(`
+        CREATE TABLE project_pending_transfers_new (
+          id           TEXT PRIMARY KEY,
+          project_id   TEXT NOT NULL UNIQUE,
+          to_user_id   TEXT,
+          to_email     TEXT NOT NULL DEFAULT '',
+          from_user_id TEXT NOT NULL,
+          token        TEXT NOT NULL UNIQUE,
+          created_at   INTEGER NOT NULL,
+          expires_at   INTEGER NOT NULL,
+          FOREIGN KEY(project_id)   REFERENCES projects(id),
+          FOREIGN KEY(to_user_id)   REFERENCES users(id),
+          FOREIGN KEY(from_user_id) REFERENCES users(id)
+        )
+      `);
+      db.exec(`
+        INSERT INTO project_pending_transfers_new
+          (id, project_id, to_user_id, to_email, from_user_id, token, created_at, expires_at)
+        SELECT pt.id, pt.project_id, pt.to_user_id,
+               COALESCE((SELECT u.email FROM users u WHERE u.id = pt.to_user_id), ''),
+               pt.from_user_id, pt.token, pt.created_at, pt.expires_at
+        FROM project_pending_transfers pt
+      `);
+      db.exec('DROP TABLE project_pending_transfers');
+      db.exec('ALTER TABLE project_pending_transfers_new RENAME TO project_pending_transfers');
+      console.log('[migrate] rebuilt project_pending_transfers (nullable to_user_id + to_email)');
+    }
+  } catch (e) { console.error('[migrate] project_pending_transfers rebuild failed:', e.message); }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_ppt_to    ON project_pending_transfers(to_user_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_ppt_email ON project_pending_transfers(to_email)');
 
   // Net-new "source snapshot" tier — bytes of a project source tarball for the
   // repo-less fallback path (git remote is preferred). blob_key keys into the

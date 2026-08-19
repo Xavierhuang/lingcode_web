@@ -19,7 +19,15 @@ const cloudFunctions = require('./cloud-functions');
 const { limitsForTier, assertUnderLimit, assertStorageRoom, storageUsedBytes, storageWarningLevel } = require('./cloud-limits');
 const secretsVault = require('./secrets-vault');
 const { complianceFor } = require('./cloud-compliance');
-const { queryAuditLog } = require('./cloud-audit');
+const compliancePresets = require('./cloud-compliance-presets');
+const { queryAuditLog, recordAudit, AUDIT } = require('./cloud-audit');
+
+// sendErr is defined at module scope and called from 67 sites without a db
+// argument, so it cannot reach the handle passed to registerCloudBackendRoutes.
+// Captured once at registration. Without this the denial recorder would throw a
+// ReferenceError inside its own try/catch and silently record nothing — telemetry
+// that looks installed and isn't.
+let _controlPlaneDb = null;
 const storage = require('./cloud-storage');
 const functionsRuntime = require('./cloud-functions-runtime');
 const fnInvoke = require('./cloud-fn-invoke');
@@ -157,6 +165,21 @@ function consolePreflight(req, res, db, prototypeId) {
 }
 
 function sendErr(res, err, route) {
+  // An attempt to read a credential table through the data API. Recorded before
+  // the response is shaped so no return path can skip it. Best-effort by way of
+  // recordAudit, which never throws — telemetry must not turn a 404 into a 500.
+  if (err && err.code === 'auth_private_table') {
+    try {
+      recordAudit(_controlPlaneDb, {
+        action: AUDIT.SECRET_READ,
+        outcome: 'denied',
+        req: res.req,
+        resourceType: 'table',
+        resourceId: err.deniedTable || null,
+        metadata: { route, reason: 'auth_private_table_blocked' },
+      });
+    } catch (_) { /* never let telemetry break the response */ }
+  }
   let status = (err && err.status) || 500;
   // Postgres unique_violation (23505) → 409 Conflict. Data-plane insert/upsert
   // clients treat 409 as "already exists" (idempotent write) — without this map
@@ -299,6 +322,7 @@ async function teardownBackend(db, id) {
  * @param {import('better-sqlite3').Database} db
  */
 function registerCloudBackendRoutes(app, db) {
+  _controlPlaneDb = db;
   // ── Provision a backend for a prototype ──────────────────────────────
   app.post('/api/cloud/backends', async (req, res) => {
     const prototypeId = String((req.body && req.body.prototype_id) || '');
@@ -880,11 +904,110 @@ function registerCloudBackendRoutes(app, db) {
     // Preserve omitted fields so a partial PUT can toggle one without clobbering the other.
     const mfaRequired = ('mfa_required' in b) ? (b.mfa_required ? 1 : 0) : (cur.mfa_required ? 1 : 0);
     const requireVerify = ('require_email_verification' in b) ? (b.require_email_verification ? 1 : 0) : (cur.require_email_verification ? 1 : 0);
+
+    // If a compliance preset is active, block writes that would violate its
+    // locked values unless the caller ALSO passes `unlock_preset: '<name>'`
+    // (a deliberate signal they know they are dropping compliance). The
+    // preset row itself stays set until the caller applies 'none'
+    // explicitly — the unlock is one-shot and leaves an audit trace.
+    const enforcement = compliancePresets.enforcePreset(
+      db,
+      ctx.row.id,
+      { mfa_required: mfaRequired, require_email_verification: requireVerify },
+      { unlockPreset: b.unlock_preset },
+    );
+    if (!enforcement.ok) {
+      return res.status(409).json({
+        ok: false,
+        error: 'preset_locked',
+        message:
+          `The ${enforcement.active} preset locks ${enforcement.violations.map((v) => v.key).join(', ')}. ` +
+          `Pass unlock_preset: '${enforcement.active}' in the same request to override, or apply the 'none' preset first.`,
+        active: enforcement.active,
+        violations: enforcement.violations,
+      });
+    }
+
     db.prepare(`INSERT INTO backend_auth_settings (backend_id, mfa_required, require_email_verification, updated_at) VALUES (?, ?, ?, ?)
       ON CONFLICT(backend_id) DO UPDATE SET mfa_required = excluded.mfa_required, require_email_verification = excluded.require_email_verification, updated_at = excluded.updated_at`)
       .run(ctx.row.id, mfaRequired, requireVerify, new Date().toISOString());
-    logEvent(db, ctx.row.id, 'auth', 'info', `Auth settings updated (mfa=${mfaRequired}, verify=${requireVerify})`);
-    res.json({ ok: true, data: { mfa_required: !!mfaRequired, require_email_verification: !!requireVerify } });
+    logEvent(db, ctx.row.id, 'auth', 'info', `Auth settings updated (mfa=${mfaRequired}, verify=${requireVerify})${enforcement.unlocked ? ` [preset ${enforcement.active} unlocked]` : ''}`);
+    res.json({ ok: true, data: { mfa_required: !!mfaRequired, require_email_verification: !!requireVerify, unlocked: !!enforcement.unlocked } });
+  });
+
+  // ── Compliance presets: SOC 2 / HIPAA / ISO 27001 bundles ──────────
+  // GET lists the applied preset + evaluated controls (locked settings
+  // and acknowledgment gaps). PUT applies a preset atomically. POST to
+  // /acknowledgments records an operator acknowledgment of a required
+  // control. DELETE /acknowledgments/:key revokes one. Owner-only.
+  app.get('/api/cloud/account/backends/:backendId/compliance-preset', (req, res) => {
+    const ctx = accountBackend(req, res, 'viewer'); if (!ctx) return;
+    const evalResult = compliancePresets.evaluatePreset(db, ctx.row.id);
+    const acks = compliancePresets.loadBackendAcknowledgments(db, ctx.row.id);
+    res.json({
+      ok: true,
+      data: {
+        active: evalResult.active,
+        controls: evalResult.controls,
+        acknowledgments: acks,
+        available: compliancePresets.knownPresets().map((name) => {
+          const preset = compliancePresets.getPreset(name);
+          return {
+            name,
+            title: preset.title,
+            description: preset.description,
+            lockedAuth: preset.lockedAuth,
+            requiredAcknowledgments: preset.requiredAcknowledgments,
+          };
+        }),
+      },
+    });
+  });
+
+  app.put('/api/cloud/account/backends/:backendId/compliance-preset', (req, res) => {
+    const ctx = accountBackend(req, res, 'owner'); if (!ctx) return;
+    const b = req.body || {};
+    const preset = compliancePresets.normalizePresetName(b.preset);
+    if (!preset) {
+      return res.status(400).json({
+        ok: false,
+        error: 'unknown_preset',
+        message: `preset must be one of: ${compliancePresets.knownPresets().join(', ')}`,
+      });
+    }
+    try {
+      const result = compliancePresets.applyPreset(db, ctx.row.id, preset, { userId: ctx.user.id });
+      logEvent(
+        db,
+        ctx.row.id,
+        'compliance',
+        'info',
+        `Preset ${preset} applied by ${ctx.user.email || ctx.user.id} (${result.changes.length} setting change${result.changes.length === 1 ? '' : 's'})`,
+      );
+      res.json({ ok: true, data: result });
+    } catch (err) {
+      sendErr(res, err, 'apply_preset');
+    }
+  });
+
+  app.post('/api/cloud/account/backends/:backendId/compliance-preset/acknowledgments', (req, res) => {
+    const ctx = accountBackend(req, res, 'owner'); if (!ctx) return;
+    const key = String((req.body && req.body.key) || '').trim();
+    if (!key || key.length > 64) {
+      return res.status(400).json({ ok: false, error: 'invalid_request', message: 'key required (1-64 chars)' });
+    }
+    const record = compliancePresets.acknowledgeControl(db, ctx.row.id, key, { userId: ctx.user.id });
+    logEvent(db, ctx.row.id, 'compliance', 'info', `Acknowledged ${key} by ${ctx.user.email || ctx.user.id}`);
+    res.json({ ok: true, data: record });
+  });
+
+  app.delete('/api/cloud/account/backends/:backendId/compliance-preset/acknowledgments/:key', (req, res) => {
+    const ctx = accountBackend(req, res, 'owner'); if (!ctx) return;
+    const result = compliancePresets.revokeAcknowledgment(db, ctx.row.id, String(req.params.key || ''));
+    if (result.revoked) {
+      logEvent(db, ctx.row.id, 'compliance', 'info', `Revoked ${req.params.key} by ${ctx.user.email || ctx.user.id}`);
+    }
+    res.json({ ok: true, data: result });
   });
 
   // ── Secrets: 3rd-party API keys for function templates (owner only) ──
