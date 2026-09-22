@@ -114,7 +114,17 @@ function startServer(db, runner) {
       resolve({
         server,
         base: `http://127.0.0.1:${port}/api/cloud/account/backends`,
-        close: () => new Promise((r) => server.close(() => r())),
+        // server.close() stops accepting NEW connections but then waits for
+        // every existing socket to drain. The SSE logs test leaves one behind:
+        // cancelling the response reader does not necessarily destroy the
+        // socket (undici keeps it pooled for keep-alive reuse), and the stub
+        // runner's emitter never emits 'end', so the response is never ended
+        // server-side either. The result was a suite that hung forever on this
+        // file — `npm test` could not complete. Destroy the sockets explicitly.
+        close: () => new Promise((r) => {
+          server.close(() => r());
+          if (typeof server.closeAllConnections === 'function') server.closeAllConnections();
+        }),
       });
     });
   });
@@ -163,6 +173,70 @@ test('create app on pro tier → 200', async () => {
     // A "created" event was written to the ring buffer.
     const ev = db.prepare('SELECT kind FROM hosted_app_events WHERE app_id=?').all(body.data.id);
     assert.ok(ev.some((e) => e.kind === 'created'));
+  } finally { await s.close(); }
+});
+
+test('create Node app on pro tier → 200 with runtime="node"', async () => {
+  const db = freshDb();
+  seedUser(db, 'u1', 't-pro', 'pro');
+  seedBackend(db, 'be1', 'u1', 'pro');
+  const s = await startServer(db, makeStubRunner());
+  try {
+    const r = await fetch(`${s.base}/be1/apps`, {
+      method: 'POST',
+      headers: { ...bearer('t-pro'), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'chat-relay', runtime: 'node', runtimeVersion: '20' }),
+    });
+    const body = await r.json();
+    assert.equal(r.status, 200, JSON.stringify(body));
+    assert.equal(body.data.runtime, 'node');
+    assert.equal(body.data.runtimeVersion, '20');
+    // Row on disk carries the runtime column so the runner dispatches
+    // correctly when it later processes the queued deploy.
+    const row = db.prepare('SELECT runtime, runtime_version FROM hosted_apps WHERE id=?').get(body.data.id);
+    assert.equal(row.runtime, 'node');
+    assert.equal(row.runtime_version, '20');
+    // Event message includes the runtime tag so ops audit logs distinguish
+    // Python vs Node deploys at a glance.
+    const ev = db.prepare('SELECT message FROM hosted_app_events WHERE app_id=? AND kind=?').all(body.data.id, 'created');
+    assert.ok(ev.some((e) => /runtime=node\/20/.test(e.message)));
+  } finally { await s.close(); }
+});
+
+test('create app rejects unknown runtime → 400', async () => {
+  const db = freshDb();
+  seedUser(db, 'u1', 't-pro', 'pro');
+  seedBackend(db, 'be1', 'u1', 'pro');
+  const s = await startServer(db, makeStubRunner());
+  try {
+    const r = await fetch(`${s.base}/be1/apps`, {
+      method: 'POST',
+      headers: { ...bearer('t-pro'), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'x', runtime: 'ruby' }),
+    });
+    const body = await r.json();
+    assert.equal(r.status, 400);
+    assert.match(body.message, /runtime must be one of/);
+  } finally { await s.close(); }
+});
+
+test('create Node app rejects unsupported Node version → 400 with node-specific list', async () => {
+  const db = freshDb();
+  seedUser(db, 'u1', 't-pro', 'pro');
+  seedBackend(db, 'be1', 'u1', 'pro');
+  const s = await startServer(db, makeStubRunner());
+  try {
+    const r = await fetch(`${s.base}/be1/apps`, {
+      method: 'POST',
+      headers: { ...bearer('t-pro'), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'x', runtime: 'node', runtimeVersion: '18' }),
+    });
+    const body = await r.json();
+    assert.equal(r.status, 400);
+    // Message must enumerate the NODE list, not the Python one, so users
+    // don't get a "must be 3.12" error when they picked runtime=node.
+    assert.match(body.message, /runtime="node"/);
+    assert.match(body.message, /20, 22/);
   } finally { await s.close(); }
 });
 
@@ -292,6 +366,69 @@ test('source upload: rejects tarball with no .py at top level', async () => {
     assert.equal(r.status, 422);
     assert.equal(body.error, 'hosted_app_invalid_source');
     assert.match(body.message, /\.py/);
+  } finally { await s.close(); }
+});
+
+// The two tests below cover the wired Node path at PUT /source. The buildpack's
+// own test calls validateSourceTree({runtime:'node'}) directly, and the route
+// test above only covers Node at POST /apps — so between them the HTTP source
+// path could (and did) validate every upload as Python while both stayed green.
+// These assert against the ROUTE, which is the only place row.runtime is known.
+test('source upload: accepts a Node tarball (package.json + server.js, no .py)', async () => {
+  const db = freshDb();
+  seedUser(db, 'u1', 't', 'pro');
+  seedBackend(db, 'be1', 'u1', 'pro');
+  const runner = makeStubRunner();
+  const s = await startServer(db, runner);
+  try {
+    const c = await fetch(`${s.base}/be1/apps`, {
+      method: 'POST', headers: { ...bearer('t'), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'relay', runtime: 'node', runtimeVersion: '20' }),
+    }).then((x) => x.json());
+    const appId = c.data.id;
+
+    const gz = await buildTarballGz({
+      'package.json': '{"name":"relay","version":"1.0.0","scripts":{"start":"node server.js"}}\n',
+      'server.js': 'require("http").createServer((q,s)=>s.end("ok")).listen(8080);\n',
+    });
+    const r = await fetch(`${s.base}/be1/apps/${appId}/source`, {
+      method: 'PUT', headers: { ...bearer('t'), 'content-type': 'application/gzip' }, body: gz,
+    });
+    const body = await r.json();
+    // Before the fix this was 422 "missing requirements.txt or pyproject.toml
+    // at the top level; no .py files found at the top level" — the Python
+    // branch running against a Node app because `runtime` was never passed.
+    assert.equal(r.status, 200, JSON.stringify(body));
+    assert.equal(body.ok, true);
+    assert.equal(body.data.filesCount, 2);
+
+    // The deploy actually queued, so the runner can pick it up.
+    const dep = db.prepare('SELECT * FROM hosted_app_deploys WHERE id = ?').get(body.data.deployId);
+    assert.ok(dep && dep.status === 'queued');
+    assert.equal(runner.calls.enqueueDeploy.length, 1);
+  } finally { await s.close(); }
+});
+
+test('source upload: Node app rejects a Python-only tarball naming package.json', async () => {
+  const db = freshDb();
+  seedUser(db, 'u1', 't', 'pro');
+  seedBackend(db, 'be1', 'u1', 'pro');
+  const s = await startServer(db, makeStubRunner());
+  try {
+    const c = await fetch(`${s.base}/be1/apps`, {
+      method: 'POST', headers: { ...bearer('t'), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'relay', runtime: 'node', runtimeVersion: '20' }),
+    }).then((x) => x.json());
+    const gz = await buildTarballGz({ 'requirements.txt': 'fastapi\n', 'app.py': 'x = 1\n' });
+    const r = await fetch(`${s.base}/be1/apps/${c.data.id}/source`, {
+      method: 'PUT', headers: { ...bearer('t') }, body: gz,
+    });
+    const body = await r.json();
+    assert.equal(r.status, 422);
+    assert.equal(body.error, 'hosted_app_invalid_source');
+    // Naming package.json (not requirements.txt) is what proves the NODE
+    // branch ran. A Python-branch run would have passed this tarball outright.
+    assert.match(body.message, /package\.json/);
   } finally { await s.close(); }
 });
 
@@ -459,7 +596,9 @@ test('logs endpoint returns SSE with correct headers + heartbeat', async () => {
       body: JSON.stringify({ name: 'demo' }),
     }).then((x) => x.json());
     const r = await fetch(`${s.base}/be1/apps/${c.data.id}/logs?tail=10`, { headers: bearer('t') });
-    assert.equal(r.headers.get('content-type'), 'text/event-stream');
+    // Express appends "; charset=utf-8", so match the media type rather than
+    // comparing the whole header.
+    assert.match(r.headers.get('content-type') || '', /^text\/event-stream\b/);
     assert.match(r.headers.get('cache-control') || '', /no-cache/);
 
     // Read a couple of chunks then abort so the test doesn't hang on the

@@ -1,10 +1,15 @@
 'use strict';
 
-// cloud-hosted-apps.js — owner-only CRUD + lifecycle for the LingCode Cloud
-// HOSTED-APPS TIER (long-running Python HTTP apps behind Caddy at
+// cloud-hosted-apps.js — CRUD + lifecycle for the LingCode Cloud HOSTED-APPS
+// TIER (long-running Python HTTP apps behind Caddy at
 // <slug>.apps.lingcode.dev). Sibling of cloud-functions-routes.js (serverless
-// Deno) and cloud-compute.js (batch containers) — same auth/ownership shape,
-// same account_backends gate, same {ok,data|error,message} contract.
+// Deno) and cloud-compute.js (batch containers) — same auth shape, same
+// account_backends gate, same {ok,data|error,message} contract.
+//
+// Access is project-role-aware (not owner-only): the backend is resolved via
+// project-access.js:resolveResourceAccess, so collaborators on a shared project
+// reach this tier. read = viewer, write/lifecycle = editor, delete = owner.
+// A backend with no project_id falls back to direct ownership, unchanged.
 //
 // This module is the CONTROL PLANE ONLY: it owns HTTP routes, session
 // auth, ownership + quota checks, tar-source intake, deploy-queue writes,
@@ -28,6 +33,7 @@ const zlib = require('zlib');
 const tar = require('tar-stream');
 const { Readable } = require('stream');
 const { getUserFromRequest } = require('./auth-helpers');
+const { resolveResourceAccess } = require('./project-access');
 const dataPlane = require('./cloud-data-plane');
 const { limitsForTier } = require('./cloud-limits');
 const buildpack = require('./cloud-hosted-app-buildpack');
@@ -74,17 +80,31 @@ function subdomainFor(name, appId) {
   return suffix ? `${name}-${suffix}` : name;
 }
 
-// Ownership gate — mirrors cloud-functions-routes.js:ownerBackend exactly.
-// Returns { user, row } or writes the response + returns null.
+// Access gate. Resolves the backend through project membership (the same
+// primitive cloud-backend.js uses for its routes) rather than direct ownership,
+// so a project collaborator reaches the hosted-apps tier instead of getting a
+// flat backend_not_found. `minRole` follows the house mapping: read = viewer,
+// write/lifecycle = editor, destructive = owner.
+//
+// A backend with no project_id is legacy/solo and resolveResourceAccess falls
+// back to direct ownership, so the pre-project behaviour is unchanged.
+// Returns { user, row, role } or writes the response + returns null.
 function ownerBackendFactory(db) {
-  return function ownerBackend(req, res) {
+  return function ownerBackend(req, res, minRole = 'owner') {
     if (!dataPlane.isConfigured()) { res.status(503).json({ ok: false, error: 'cloud_not_configured' }); return null; }
     const user = getUserFromRequest(db, req);
     if (!user) { res.status(401).json({ ok: false, error: 'unauthorized' }); return null; }
     const backendId = String(req.params.backendId || '');
-    const row = db.prepare('SELECT * FROM account_backends WHERE id = ? AND user_id = ?').get(backendId, user.id);
-    if (!row) { res.status(404).json({ ok: false, error: 'backend_not_found' }); return null; }
-    return { user, row };
+    const access = resolveResourceAccess(db, {
+      resourceTable: 'account_backends', resourceId: backendId, userId: user.id, minRole,
+    });
+    if (!access.ok) {
+      // not_found covers "no such backend" AND "not a member" so we don't leak
+      // another tenant's backend id; forbidden is a real member ranked too low.
+      if (access.code === 'forbidden') { res.status(403).json({ ok: false, error: 'forbidden', message: `This action needs at least ${minRole} access to the project.` }); return null; }
+      res.status(404).json({ ok: false, error: 'backend_not_found' }); return null;
+    }
+    return { user, row: access.row, role: access.role };
   };
 }
 
@@ -93,6 +113,19 @@ function ownerBackendFactory(db) {
 // wrong id or the app belongs to a *different* backend of the same owner —
 // both are surfaced as hosted_app_not_found (never 403), so we don't leak
 // which backend a given app id belongs to.
+// Effective tier for quota decisions.
+//
+// account_backends.tier is a denormalised copy written when the backend is
+// created and never updated afterwards, so it goes stale the moment a user
+// upgrades. Ten backends on this deployment disagreed with their owner — six
+// sitting on `free` limits (maxHostedApps: 0, so hosted apps were refused
+// outright) while the account paid for pro. The owning user's tier is what the
+// customer actually bought, and it is what cloud-account-mcp.js has always
+// used; this brings the hosted-app paths in line.
+function effectiveTier(ctx) {
+  return (ctx && ctx.user && ctx.user.tier) || (ctx && ctx.row && ctx.row.tier) || 'free';
+}
+
 function findApp(db, backendId, appId, res) {
   const row = db.prepare('SELECT * FROM hosted_apps WHERE id = ? AND backend_id = ?').get(String(appId || ''), backendId);
   if (!row) { res.status(404).json({ ok: false, error: 'hosted_app_not_found' }); return null; }
@@ -232,6 +265,11 @@ function topLevelFlags(files) {
     hasAppPy: top.has('app.py'),
     hasMainPy: top.has('main.py'),
     hasProcfile: top.has('Procfile'),
+    // Node counterparts. The buildpack's runtime==='node' branch has always
+    // expected these two; nothing produced them, so that branch was dead and
+    // every upload was validated as Python.
+    hasPackageJson: top.has('package.json'),
+    hasJs: [...top].some((n) => /\.(js|mjs|cjs|ts)$/.test(n)),
   };
 }
 
@@ -265,15 +303,32 @@ function registerHostedAppRoutes(app, db, runner) {
   // PUT /:id/source. Enforces the tier's maxHostedApps cap and rejects on
   // slug collisions within the backend + globally (via the subdomain UNIQUE).
   app.post(base, (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
+    const ctx = ownerBackend(req, res, 'editor'); if (!ctx) return;
     const body = req.body || {};
     const name = String(body.name || '').trim().toLowerCase();
     if (!SLUG_RE.test(name) || name.length > 40) {
       return res.status(400).json({ ok: false, error: 'invalid_slug', message: 'name must be lowercase letters/digits/dashes, starting with a letter, ≤40 chars' });
     }
-    const runtimeVersion = String(body.runtimeVersion || '3.12');
-    if (!buildpack.SUPPORTED_RUNTIME_VERSIONS.includes(runtimeVersion)) {
-      return res.status(400).json({ ok: false, error: 'invalid_request', message: `runtimeVersion must be one of: ${buildpack.SUPPORTED_RUNTIME_VERSIONS.join(', ')}` });
+    // Runtime dispatch. Default 'python' preserves the pre-Node behaviour;
+    // 'node' picks the ghcr.io/lingcode/node-app-runtime base image + the
+    // Node entrypoint priority (Procfile > scripts.start > main > server.js
+    // > index.js). Per-runtime version whitelists live on the buildpack.
+    const runtime = String(body.runtime || 'python').toLowerCase();
+    if (!buildpack.SUPPORTED_RUNTIMES.includes(runtime)) {
+      return res.status(400).json({
+        ok: false, error: 'invalid_request',
+        message: `runtime must be one of: ${buildpack.SUPPORTED_RUNTIMES.join(', ')}`,
+      });
+    }
+    const versionsForRuntime = runtime === 'node'
+      ? buildpack.SUPPORTED_NODE_VERSIONS
+      : buildpack.SUPPORTED_PYTHON_VERSIONS;
+    const runtimeVersion = String(body.runtimeVersion || (runtime === 'node' ? '20' : '3.12'));
+    if (!versionsForRuntime.includes(runtimeVersion)) {
+      return res.status(400).json({
+        ok: false, error: 'invalid_request',
+        message: `runtimeVersion for runtime="${runtime}" must be one of: ${versionsForRuntime.join(', ')}`,
+      });
     }
     const healthcheckPath = String(body.healthcheckPath || '/');
     if (!healthcheckPath.startsWith('/') || healthcheckPath.length > 200) {
@@ -281,7 +336,7 @@ function registerHostedAppRoutes(app, db, runner) {
     }
 
     // Per-tier cap. Free tier's maxHostedApps=0 → every create returns 403.
-    const tier = ctx.row.tier || 'free';
+    const tier = effectiveTier(ctx);
     const lim = limitsForTier(tier);
     const cap = Number(lim.maxHostedApps || 0);
     const count = db.prepare("SELECT COUNT(*) AS n FROM hosted_apps WHERE backend_id = ? AND status != 'deleted'").get(ctx.row.id).n;
@@ -307,10 +362,16 @@ function registerHostedAppRoutes(app, db, runner) {
     const memMb = Math.min(Number(lim.maxAppMemoryMb) || 256, 512);
     const cpu = Math.min(Number(lim.maxAppCpuShares) || 512, 1024);
     try {
+      // `kind` stays 'python-web' for continuity — the existing CHECK
+      // constraint restricts it to that single value and rewriting it needs
+      // a full SQLite table rebuild (deferred until a second reason
+      // justifies the churn). Runtime dispatch lives on the new `runtime`
+      // column, added by migrateHostedAppsTables. Readers should prefer
+      // `runtime`; `kind` is vestigial for new rows.
       db.prepare(`INSERT INTO hosted_apps
-          (id, backend_id, user_id, name, subdomain, kind, status, procfile_web, runtime_version, healthcheck_path, memory_mb, cpu_shares, created_at, updated_at)
-          VALUES (?,?,?,?,?, 'python-web', 'building', NULL, ?, ?, ?, ?, ?, ?)`)
-        .run(id, ctx.row.id, ctx.user.id, name, subdomain, runtimeVersion, healthcheckPath, memMb, cpu, now, now);
+          (id, backend_id, user_id, name, subdomain, kind, status, procfile_web, runtime, runtime_version, healthcheck_path, memory_mb, cpu_shares, created_at, updated_at)
+          VALUES (?,?,?,?,?, 'python-web', 'building', NULL, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(id, ctx.row.id, ctx.user.id, name, subdomain, runtime, runtimeVersion, healthcheckPath, memMb, cpu, now, now);
     } catch (e) {
       if (String(e && e.message || '').includes('UNIQUE') && String(e.message).includes('subdomain')) {
         return res.status(409).json({ ok: false, error: 'hosted_app_subdomain_taken', message: 'subdomain already taken on this droplet' });
@@ -318,18 +379,18 @@ function registerHostedAppRoutes(app, db, runner) {
       return res.status(500).json({ ok: false, error: 'invalid_request', message: String(e && e.message || e).slice(0, 500) });
     }
 
-    emitEvent(db, id, 'created', `name=${name} subdomain=${subdomain} runtime=${runtimeVersion}`);
-    res.json({ ok: true, data: { id, name, subdomain, status: 'building', runtimeVersion, healthcheckPath } });
+    emitEvent(db, id, 'created', `name=${name} subdomain=${subdomain} runtime=${runtime}/${runtimeVersion}`);
+    res.json({ ok: true, data: { id, name, subdomain, status: 'building', runtime, runtimeVersion, healthcheckPath } });
   });
 
   // GET / — list apps on this backend. `status != 'deleted'` mirrors the
   // create-count filter so the console sees a consistent tally.
   app.get(base, (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
-    const rows = db.prepare(`SELECT id, name, subdomain, status, runtime_version, healthcheck_path, port,
+    const ctx = ownerBackend(req, res, 'viewer'); if (!ctx) return;
+    const rows = db.prepare(`SELECT id, name, subdomain, status, runtime, runtime_version, healthcheck_path, port,
         current_deploy_id, memory_mb, cpu_shares, restart_count, created_at, updated_at, paused_at
         FROM hosted_apps WHERE backend_id = ? AND status != 'deleted' ORDER BY name`).all(ctx.row.id);
-    const tier = ctx.row.tier || 'free';
+    const tier = effectiveTier(ctx);
     const lim = limitsForTier(tier);
     res.json({ ok: true, data: {
       apps: rows,
@@ -340,11 +401,11 @@ function registerHostedAppRoutes(app, db, runner) {
   // GET /:id — detail. Includes recent deploys + current-quota tally so the
   // web console can render the app page without a round-trip storm.
   app.get(`${base}/:id`, (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
+    const ctx = ownerBackend(req, res, 'viewer'); if (!ctx) return;
     const row = findApp(db, ctx.row.id, req.params.id, res); if (!row) return;
     const deploys = db.prepare(`SELECT id, source_sha256, requirements_sha, image_tag, status, error, started_at, finished_at
         FROM hosted_app_deploys WHERE app_id = ? ORDER BY started_at DESC LIMIT 20`).all(row.id);
-    const tier = ctx.row.tier || 'free';
+    const tier = effectiveTier(ctx);
     const lim = limitsForTier(tier);
     // Include the active-count quota so the UI can show "1 of 5 apps used".
     const activeCount = db.prepare("SELECT COUNT(*) AS n FROM hosted_apps WHERE backend_id = ? AND status != 'deleted'").get(ctx.row.id).n;
@@ -365,7 +426,7 @@ function registerHostedAppRoutes(app, db, runner) {
   // runner.enqueueDeploy so a live scheduler can pick it up instantly instead
   // of waiting for the next tick.
   app.put(`${base}/:id/source`, async (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
+    const ctx = ownerBackend(req, res, 'editor'); if (!ctx) return;
     const row = findApp(db, ctx.row.id, req.params.id, res); if (!row) return;
     if (row.status === 'deleted') return res.status(404).json({ ok: false, error: 'hosted_app_not_found' });
 
@@ -396,11 +457,20 @@ function registerHostedAppRoutes(app, db, runner) {
     // Semantic validation via the buildpack's pure verdict. Aggregates ALL
     // errors so the UI can display every problem in one round-trip.
     const flags = topLevelFlags(parsed.files);
+    // `runtime` MUST be passed: buildpack._normalizeRuntime maps undefined to
+    // 'python', so omitting it silently validated Node uploads against the
+    // Python rules — a Node-only tree 422'd on "missing requirements.txt",
+    // and a Python tree uploaded to a Node app was accepted. findApp does
+    // SELECT *, so row.runtime is present; `|| 'python'` covers rows written
+    // before the runtime column existed.
     const verdict = buildpack.validateSourceTree({
       files: parsed.files,
+      runtime: row.runtime || 'python',
       hasRequirements: flags.hasRequirements,
       hasPyproject: flags.hasPyproject,
       hasPy: flags.hasPy,
+      hasPackageJson: flags.hasPackageJson,
+      hasJs: flags.hasJs,
     });
     if (!verdict.ok) {
       return res.status(422).json({ ok: false, error: 'hosted_app_invalid_source', message: verdict.errors.join('; '), errors: verdict.errors });
@@ -470,7 +540,7 @@ function registerHostedAppRoutes(app, db, runner) {
   // deploy before any source was ever uploaded. This keeps ONE source of
   // truth for the deploy queue (the PUT /source handler).
   app.post(`${base}/:id/deploy`, (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
+    const ctx = ownerBackend(req, res, 'editor'); if (!ctx) return;
     const row = findApp(db, ctx.row.id, req.params.id, res); if (!row) return;
     const queued = db.prepare("SELECT id FROM hosted_app_deploys WHERE app_id = ? AND status = 'queued' ORDER BY started_at DESC LIMIT 1").get(row.id);
     if (queued) {
@@ -490,8 +560,40 @@ function registerHostedAppRoutes(app, db, runner) {
   // POST /:id/pause — docker stop + Caddy route delete via runner. The runner
   // is authoritative for the "paused" state transition; we only surface its
   // result. On success we bump paused_at + status locally.
+  // Marketplace listing consent. See the cloud-apps.js twin for the reasoning;
+  // same policy across all three hosting tiers.
+  //
+  // 'owner' here, though pause/resume/deploy below accept 'editor'. Operating
+  // someone's app and consenting to publish it under their name are different
+  // permissions, and only the second is irreversible in public.
+  app.patch(`${base}/:id/showcase`, (req, res) => {
+    const ctx = ownerBackend(req, res, 'owner'); if (!ctx) return;
+    const row = findApp(db, ctx.row.id, req.params.id, res); if (!row) return;
+    if (row.status === 'deleted') return res.status(404).json({ ok: false, error: 'hosted_app_not_found' });
+
+    const optIn = req.body?.showcase_opt_in ? 1 : 0;
+    const raw = typeof req.body?.showcase_blurb === 'string' ? req.body.showcase_blurb.trim() : null;
+    const blurb = raw ? raw.slice(0, 200) : null;
+
+    db.prepare('UPDATE hosted_apps SET showcase_opt_in = ?, showcase_blurb = ?, updated_at = ? WHERE id = ?')
+      .run(optIn, blurb, nowMs(), row.id);
+
+    const after = db
+      .prepare('SELECT showcase_opt_in, showcase_approved, showcase_blurb FROM hosted_apps WHERE id = ?')
+      .get(row.id);
+    res.json({
+      ok: true,
+      data: {
+        showcase_opt_in: after.showcase_opt_in,
+        showcase_approved: after.showcase_approved,
+        showcase_blurb: after.showcase_blurb,
+        listed: after.showcase_opt_in === 1 && after.showcase_approved === 1,
+      },
+    });
+  });
+
   app.post(`${base}/:id/pause`, async (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
+    const ctx = ownerBackend(req, res, 'editor'); if (!ctx) return;
     const row = findApp(db, ctx.row.id, req.params.id, res); if (!row) return;
     if (row.status === 'deleted') return res.status(404).json({ ok: false, error: 'hosted_app_not_found' });
     if (row.status === 'paused') return res.json({ ok: true, data: { status: 'paused' } });
@@ -509,7 +611,7 @@ function registerHostedAppRoutes(app, db, runner) {
 
   // POST /:id/resume — docker start + Caddy route upsert. Symmetrical to pause.
   app.post(`${base}/:id/resume`, async (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
+    const ctx = ownerBackend(req, res, 'editor'); if (!ctx) return;
     const row = findApp(db, ctx.row.id, req.params.id, res); if (!row) return;
     if (row.status === 'deleted') return res.status(404).json({ ok: false, error: 'hosted_app_not_found' });
     if (row.status === 'running' || row.status === 'building') return res.json({ ok: true, data: { status: row.status } });
@@ -528,7 +630,7 @@ function registerHostedAppRoutes(app, db, runner) {
   // POST /:id/restart — docker restart + reset restart_count so the crash
   // debounce window starts fresh. The runner does the actual container work.
   app.post(`${base}/:id/restart`, async (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
+    const ctx = ownerBackend(req, res, 'editor'); if (!ctx) return;
     const row = findApp(db, ctx.row.id, req.params.id, res); if (!row) return;
     if (row.status === 'deleted') return res.status(404).json({ ok: false, error: 'hosted_app_not_found' });
     if (row.status === 'paused') return res.status(409).json({ ok: false, error: 'hosted_app_paused', message: 'app is paused; resume before restarting' });
@@ -550,7 +652,7 @@ function registerHostedAppRoutes(app, db, runner) {
   // called BEFORE the DB delete so a runner failure can be surfaced without
   // stranding a container.
   app.delete(`${base}/:id`, async (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
+    const ctx = ownerBackend(req, res, 'owner'); if (!ctx) return;
     const row = findApp(db, ctx.row.id, req.params.id, res); if (!row) return;
     try {
       if (runner && typeof runner.deleteApp === 'function') await runner.deleteApp({ appId: row.id });
@@ -574,7 +676,7 @@ function registerHostedAppRoutes(app, db, runner) {
   // add a 15 s heartbeat comment so proxies (nginx, Caddy) don't idle-close
   // the connection during quiet periods.
   app.get(`${base}/:id/logs`, async (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
+    const ctx = ownerBackend(req, res, 'viewer'); if (!ctx) return;
     const row = findApp(db, ctx.row.id, req.params.id, res); if (!row) return;
 
     const tail = Math.min(Math.max(parseInt(req.query.tail, 10) || 200, 1), 5000);
@@ -641,7 +743,7 @@ function registerHostedAppRoutes(app, db, runner) {
   // matches how the console renders (newest at top) and avoids a second sort
   // client-side. `since` is inclusive-exclusive: rows with id > since.
   app.get(`${base}/:id/events`, (req, res) => {
-    const ctx = ownerBackend(req, res); if (!ctx) return;
+    const ctx = ownerBackend(req, res, 'viewer'); if (!ctx) return;
     const row = findApp(db, ctx.row.id, req.params.id, res); if (!row) return;
     const since = Math.max(parseInt(req.query.since, 10) || 0, 0);
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), MAX_EVENTS_PER_PAGE);
