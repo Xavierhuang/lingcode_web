@@ -16,7 +16,7 @@
   <meta property="og:title" content="LingCode Changelog">
   <meta property="og:description" content="Release notes for the LingCode macOS IDE, /try playground, and CLI.">
   <meta name="twitter:card" content="summary">
-  <link rel="stylesheet" href="style.css?v=20260731a">
+  <link rel="stylesheet" href="style.css?v=20260930a">
   <link rel="stylesheet" href="/tutorials-newdesign.css?v=20260731a">
   <style>
     .changelog-hero { padding: 140px 32px 40px; text-align: center; }
@@ -62,6 +62,62 @@
   <meta property="og:site_name" content="LingCode">
   <meta name="twitter:title" content="Changelog">
   <meta name="twitter:description" content="What's new in LingCode. Release notes for the macOS IDE, the /try playground, and the lingcode CLI.">
+  <script src="/attribution.js?v=20260915a" defer></script>
+  <!-- page-schema:v1 -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "name": "Changelog",
+  "description": "What's new in LingCode. Release notes for the macOS IDE, the /try playground, and the lingcode CLI.",
+  "url": "https://lingcode.dev/changelog.html",
+  "image": "https://lingcode.dev/og-image.png",
+  "datePublished": "2026-01-01",
+  "dateModified": "2026-09-30",
+  "author": {
+    "@id": "https://lingcode.dev/#organization",
+    "@type": "Organization",
+    "name": "LingCode",
+    "url": "https://lingcode.dev/"
+  },
+  "publisher": {
+    "@id": "https://lingcode.dev/#organization",
+    "@type": "Organization",
+    "name": "Aurelian Labs Inc.",
+    "url": "https://lingcode.dev/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://lingcode.dev/og-image.png"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://lingcode.dev/changelog.html"
+  },
+  "inLanguage": "en-US",
+  "headline": "Changelog"
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://lingcode.dev/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Changelog",
+      "item": "https://lingcode.dev/changelog.html"
+    }
+  ]
+}
+  </script>
 </head>
 <body>
 
@@ -100,19 +156,742 @@
 
       <div class="release">
         <div class="release-meta">
-          <h2 class="release-version">v2.7.6</h2>
-          <span class="release-date">14 August 2026</span>
+          <h2 class="release-version">v2.7.54</h2>
+          <span class="release-date">30 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>the App Store check now looks at accessibility in iOS apps: image-only buttons VoiceOver can't describe, text that ignores the user's text size setting, and buttons smaller than Apple's 44-point minimum. These are warnings, not blockers — Apple doesn't reject for them, but people who rely on these settings can't use the app without them. Each one can be handed to the agent to fix, and it can add Apple's own on-screen accessibility test to the app.</li>
+          <li>when the App Store check is wrong about your app, click "Not accurate" under that problem to hide it for this project. The check strip still shows how many are hidden, and the list is saved in the project (.lingcode/audit-ignore.json) so the command-line <code>lingcode audit</code> respects it too.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>opening a project no longer sits on "Checking Claude Code…" while Xcode is being installed or updated. The Claude check runs on its own, and the Xcode row shows its own progress.</li>
+          <li>the phone in the preview pane no longer shows a black band above the screen, and its Dynamic Island sits where a real phone's does instead of over the clock.</li>
+          <li>the App Store check no longer says an app uses tracking because its code handles location or network errors (<code>didFailWithError</code>). It had been asking apps that track nobody to add a tracking permission message.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.53</h2>
+          <span class="release-date">30 September 2026</span>
+          
           <span class="release-tag release-tag--mac">Mac</span>
         </div>
         <h3>Improved</h3>
         <ul>
-          <li>Internal telemetry — bridge watchdog now emits notice-level breadcrumbs visible in the unified log without requiring <code>sudo log config</code>, so future bridge issues are easier to diagnose from Console.</li>
+          <li>the simulator mirror skips frames while its pane is collapsed instead of drawing into an empty view.</li>
         </ul>
         <h3>Fixed</h3>
         <ul>
-          <li>Claude Code native tab no longer gets stuck on "Puzzling…" after long sessions — a wedged Node agent bridge is detected via a heartbeat watchdog and restarted automatically, and the Node process is proactively recycled every 25 idle turns.</li>
-          <li>Large file writes no longer get killed with "Claude stopped responding" mid-generation — the stall watchdogs now tolerate long tool-input generation (up to 10 min) instead of the old 90s ceiling that deterministically aborted big Write commands.</li>
-          <li>A frozen app now terminates on Quit instead of hanging until Force Quit — the main-thread watchdog force-exits after 15s of continuous freeze (3s once Quit was requested).</li>
+          <li>LingCode no longer crashes when you click a simulator in the preview pane on a Mac whose Xcode is too old to accept taps from outside Simulator.app. Clicks there now do nothing instead of closing the app.</li>
+          <li>Intel Macs now receive an Intel update instead of the Apple Silicon one. If an in-app update since June left LingCode unable to open on an Intel Mac, download it once from lingcode.dev and updates work from then on.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.52</h2>
+          <span class="release-date">29 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>invite friends from the gift button next to your account at the bottom of the sidebar, or from the account menu. Share your link to Messages, Mail, AirDrop or WeChat with the Share button, or copy it; when a friend signs up and enters it within 48 hours, you each get 100 extra free LingModel prompts. You are rewarded for up to 20 friends.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.51</h2>
+          <span class="release-date">29 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Improved</h3>
+        <ul>
+          <li>the agent can deploy a server-rendered web app to LingCode Cloud by itself: Next.js, SvelteKit, Nuxt, Astro, TanStack Start and React Router 7. It prepares the Cloudflare build, runs it, uploads the result and waits until the app is live. A brand-new public app is shown to you for approval first.</li>
+          <li>the Deploy button and the agent now update the same web app, instead of each creating its own.</li>
+          <li>the agent can add in-app purchases to an iOS app. It gives the app a ready-made StoreKit client that ties each purchase to the signed-in user and has LingCode Cloud verify it with Apple, and it creates the subscriptions and one-time products in App Store Connect with <code>lingcode iap</code>, priced in every country. Purchases and LingCode Payments subscriptions come back together as what the user has paid for.</li>
+          <li>the App Review check recognises a web checkout shown only on the US App Store, which Apple allows for digital goods, and explains the rules instead of warning it will be rejected.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>a new install of LingCode starts in Simple mode and in Dark appearance, as 2.7.50 intended. It had been starting in the full editor with the System appearance, because every fresh install was mistaken for an existing one.</li>
+          <li>the <code>lingcode</code> command line bundled with LingCode can reach LingCode Cloud's tools again.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.50</h2>
+          <span class="release-date">28 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Improved</h3>
+        <ul>
+          <li>the agent can set up LingCode Payments for your app (connect a payout account, add products, run a test checkout, list orders) and connect a native iOS app to LingCode Cloud with a ready-made Swift client. It also knows iOS apps selling digital goods must use Apple's in-app purchase.</li>
+          <li>the "ship an iOS app" skill fills in the App Store listing with LingCode's automated App Store Connect tools or the <code>lingcode</code> command line, instead of telling you to do it by hand.</li>
+          <li>the tabs above Simple mode's preview pane look like tabs: plain text with an underline on the selected one. With only Preview open, it is a plain label rather than something that looks like a button.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>in the Claude Code tab, a reply from DeepSeek, LingModel or a custom endpoint is labelled with that model instead of "Claude".</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.49</h2>
+          <span class="release-date">28 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>each chat in Simple mode's chats list has a "..." menu, on hover or right-click: open it in the detailed editor or Claude Code (Web), Pin, Mark as unread, Rename, Fork, Archive and Delete. Pinned chats sit at the top, archived chats fold into one row, and unread chats show a dot. Open Codex, DeepSeek, Gemini and Grok tabs can be renamed or closed.</li>
+          <li>LingModel and DeepSeek chats in the Claude Code tab can read attached PDFs, scanned ones included. LingCode sends those models the PDF's text; Claude models still get the PDF itself.</li>
+          <li>Word documents (.doc, .docx) attached in the Claude Code tab are now read by every model. They used to be dropped without a word.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li><code>lingcode</code>'s /fork in Claude sessions now really forks. It used to continue, and change, the original session.</li>
+          <li>reading a large .docx file no longer hangs, and an old-style .doc file no longer comes back as unreadable characters. This also affects the editor and the agent's file tools.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.48</h2>
+          <span class="release-date">28 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>the Simple-mode tour now covers the check strip above the message box and, for phone apps, the device picker. The chats step points out your account at the bottom of the list.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>LingCode now opens the native Claude Code tab by default: when a project reopens, after onboarding, for a new project, and when you send a selection to Claude. The web tab is still in AI → Claude Code → Web.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>picking a DeepSeek model in the Claude Code tab no longer fails every message with "API Error: 400 Invalid schema for function 'Artifact'".</li>
+          <li>the tour's message-box step now highlights the box for whichever agent is open (Claude, Codex, DeepSeek, OpenRouter, Gemini or Grok), not only Claude.</li>
+          <li>the tour's last card now names the right setting: Settings → AI → Transcript detail.</li>
+          <li>the tour no longer stutters each time you click Next or Back.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.47</h2>
+          <span class="release-date">27 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>File → Open Folder… has a New Folder button, so you can make a project folder without leaving the panel.</li>
+          <li>in Simple mode, a website's check strip ends with a Live stage instead of Store-ready. It shows whether your last LingCode Cloud deploy is up, and says so when the last deploy failed.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>a static site deployed to LingCode Cloud now has an address like yourname.lingcode.app, the same shape as server apps. The deploy sheet shows and checks that address; older yourname.apps.lingcode.dev links keep working.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>the Deploy to LingCode Cloud sheet had no way to close it before deploying. It now has a close button in its header, and Esc closes it too. A deploy already under way keeps running.</li>
+          <li>DeepSeek and other non-Claude agent chats could hang forever after the agent started a server in the background (for example <code>cd site &amp;&amp; python3 -m http.server 8000 &amp;</code>). The command now returns as soon as it has started, and the server keeps running.</li>
+          <li>in Simple mode, the window no longer cuts off the project name, the settings button and the preview pane after the preview was widened in a larger window.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.46</h2>
+          <span class="release-date">27 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>an Interface font setting (Settings → Theme). Inter is the new default, with Roboto, Montserrat and the system font to choose from; code, the editor and terminals keep their own fonts.</li>
+          <li>Simple mode has its own first-run tour, pointing at the message box, chats, Run app, the preview pane and Publish. Help now lists "Show Simple Mode Tour" and "Show Editor Tour".</li>
+          <li>the account card sits at the bottom of the chats pane in Simple mode, and clicking your name opens an account menu: Settings, Usage, Language, Get help, plans, updates, changelog, and log out.</li>
+          <li>Publish's deploy sheet offers LingCode Cloud first.</li>
+          <li>Deploy to LingCode Cloud lets you choose a static app's address (yourname.apps.lingcode.dev, checked live) and which existing app a deploy updates.</li>
+          <li>an OpenRouter agent tab (AI menu → OpenRouter) running any OpenRouter model with tool use on LingCode's own agent loop.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>the preview pane in Simple mode resizes by dragging its divider, and Run app brings the Preview tab forward.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>File → Open Folder… in Simple mode shows the picker and switches the window to the chosen project instead of opening a duplicate window.</li>
+          <li>a stray empty pill at the end of the Claude Code (Web) composer row.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.45</h2>
+          <span class="release-date">26 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>an OpenRouter agent tab (AI menu → OpenRouter). Paste your OpenRouter key in Settings → AI Configuration and run any model OpenRouter fronts, with LingCode's own tool use, in a tab of its own. The model badge lists common models and <code>/model vendor/model</code> switches to any other.</li>
+          <li>in Simple mode a turn's tool activity is one line, the step under way, with a chevron for the full list, instead of a row per step. The chats pane names the project the chats belong to.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>in Claude Code (Web) the model and effort pickers sit under the input with the other per-message controls.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>a window only lists the chats and reopens the tabs of its own project. Relaunching no longer restores one project's folder with another window's tabs.</li>
+          <li>reopening a Claude conversation from history shows its tool cards again instead of "[Bash]".</li>
+          <li>the main window could come back with a blank band above the top bar and the panes running off the bottom after a toolbar change.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.44</h2>
+          <span class="release-date">26 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>a "+" in Simple mode's right pane opens more tabs next to the Preview: Review (what changed, with diffs), Terminal (a shell in the project), Browser (any page, with an address bar), Files (the project tree and a viewer) and Side chat (a second conversation beside the main one). Tabs are remembered per project.</li>
+          <li>PHP projects now show as web apps in Simple mode, and Run app starts PHP's built-in server. If PHP isn't installed, the preview says so and how to install it.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>in Simple mode the model picker and the composer buttons now sit beneath the message box, so the box is just your message.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>a narrow Simple-mode window no longer cuts off New chat on the left and Pop out on the right; the window keeps the width its panes need.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.43</h2>
+          <span class="release-date">25 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>a "New chat with…" menu beside New chat in the Chats pane. Pick Claude Code, Codex, DeepSeek, Gemini or Grok; New chat itself still starts Claude in one click.</li>
+          <li>each open Codex, DeepSeek, Gemini or Grok chat is listed at the top of the Chats pane with the agent's name on the row, so switching between agents is one click.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>in Simple mode, choosing Codex, DeepSeek, Gemini or Grok from the AI menu now shows that agent in the chat pane. Before, the tab opened out of sight and the pane went back to Claude.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.42</h2>
+          <span class="release-date">25 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Improved</h3>
+        <ul>
+          <li>the installer download is about a quarter smaller (LZMA-compressed disk images for both Apple Silicon and Intel).</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>with several Claude Code tabs open in the detailed editor, the Claude Code (Web) tab stayed blank and the device preview never finished starting. Each tab's bridge was holding two of the app's worker threads while idle; it no longer holds any.</li>
+          <li>the phone in the preview pane no longer jumps the moment its screen first appears.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.41</h2>
+          <span class="release-date">24 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>a new window layout for Simple mode — your conversations on the left, the chat in the middle, and your app running on a phone on the right. Detailed mode keeps the full editor; switch either way in Settings → Transcript detail or the command palette.</li>
+          <li>one device menu in the top bar that lists whatever is connected — a real phone over USB or Wi-Fi, an Android emulator, an iOS simulator — and shows its state. Emulators start on the first Run, without their own window, and stay warm afterwards.</li>
+          <li>your phone's screen in the preview pane. The iOS simulator is embedded outright — LingCode reads its screen straight from the simulator, every frame, with no Simulator.app window and no Screen Recording permission; emulators and real phones are mirrored (real phones watch-only). Click a simulator screen to tap, drag to swipe or scroll, type to enter text, press Home or Lock, switch light and dark appearance, and ⌥-click to point at something — the annotated screenshot attaches to your next message. A badge in the corner says whether the picture is live and how fast it is arriving.</li>
+          <li>guided setup for testing on a real Android phone (wireless pairing code, or USB) or iPhone (Apple ID in Xcode, Trust, Developer Mode), with each step detected as it completes. Free Apple IDs get the 7-day warning up front; paid accounts get a TestFlight option.</li>
+          <li>each reply in Simple mode shows what was done as plain steps with checkmarks — "Edited MainActivity.kt", "Ran npm test" — with the raw tool output behind "Show technical details".</li>
+          <li>a check strip above the composer — Code checks, Builds, Tests, Store-ready. Click a failed check to see what it found and have the AI fix it. A starter screen offers four things to do, and LingCode opens on your latest conversation.</li>
+          <li>the sidebar Simulator pane gets a 60 fps live view of the Simulator.app window, with taps, drags, scrolling and typing forwarded to the simulator, and Home, rotate, shake, lock, screenshot, record, dark/light and shutdown controls. It keeps a 5 fps mirror until Screen Recording is allowed, and says so.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>conversations are titled from your first real request (no more chats called "hi"), grouped by day, and chats that never got going fold away.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>the sidebar simulator mirror showed nothing on Xcode 26.</li>
+          <li>a new window landed on an empty chat instead of your latest conversation.</li>
+          <li>Play uploads no longer fail with "version code already used". The versionCode is taken from what Play already has, not from the file.</li>
+          <li>App Store uploads no longer fail with ITMS-90189 for a reused build number, for the same reason.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.40</h2>
+          <span class="release-date">24 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>the Agents / Conversations sidebar can close a live conversation. Right-click an Active row and choose Close, or hover it and click the ×. The tab closes the same way its own × does, so the conversation moves to Recent and can be reopened. If the agent is mid-turn, waiting for an approval, or has background tasks, LingCode says what will stop before it closes.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>a new Claude Code (Web) tab hid the history button until the first message was sent, so a past conversation could not be resumed before typing. The button now stays visible on an empty tab.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.39</h2>
+          <span class="release-date">23 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Transcript detail in Settings → Agent (also in the AI panel menu, and asked once at onboarding). Simple hides thinking and narration, folds each turn's tool calls behind one line such as "Edited 2 files · Ran 1 command" that expands on click, and leads approval prompts with plain English. Detailed is what you have today.</li>
+          <li>Simple also strips the window down to the conversation: the activity bar keeps Agents and Search, the status bar and right AI panel go away, and the developer icons (select, account, subagents, skills, tokens, session id) are hidden on the Claude, Codex and DeepSeek tabs, web and native.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>the DeepSeek tab now has the Claude tab's composer, attachments, approvals with an editable command, history, restore and export, and the same lighter chat cards. The sidebar Agents panel lists DeepSeek conversations alongside Claude and Codex.</li>
+          <li>the AI toolbar menu is always present and covers every assistant: Claude Code, Codex, DeepSeek, Gemini and Grok.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>an Android project's run destination picker offered Mac and iPhone simulators. It now lists only Android devices and emulators, says why a list is empty, and can install the Android Emulator and your AVDs' system images with one click when the SDK is missing them.</li>
+          <li>the divider between the sidebar and the editor was invisible with the Agents panel open.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.38</h2>
+          <span class="release-date">23 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+          <span class="release-tag release-tag--cli">CLI</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Mobile → Generate Signed Bundle / APK… builds a release <code>.aab</code> or <code>.apk</code> the way Android Studio does. Pick or create a keystore, choose the key alias from the keystore's own list, and LingCode adds the release signing config to <code>build.gradle</code> for you, builds, and confirms the result is signed before handing it over.</li>
+          <li>agent tools <code>create_keystore</code>, <code>list_keystore_aliases</code> and <code>generate_signed_android_artifact</code>, so the agent can take an Android project from first build to a signed bundle. The signing preflight now checks the release keystore and the Gradle signing config, with one-click fixes.</li>
+          <li><code>lingcode play --build-only [--apk]</code> builds a signed artifact without uploading; <code>--keystore</code>, <code>--key-alias</code> and <code>--check</code> report signing readiness. Failed builds now exit non-zero.</li>
+          <li>GPT-6 Sol and GPT-6 Luna in the model pickers and pricing tables. No default model changes; pick them explicitly when your account has access.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>Ship, Magic Deploy's Google Play upload and <code>lingcode play</code> all sign with the same keystore, keep passwords out of the command line, and refuse to upload a bundle that is not signed. Previously an unsigned bundle was only rejected by Google Play after the upload.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.36</h2>
+          <span class="release-date">21 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Fixed</h3>
+        <ul>
+          <li>opening a folder, or clicking a project in the Explorer, could pin the CPU and leave the app unresponsive on projects that use Swift Package Manager dependencies. LingCode now reads a project's schemes without resolving packages over the network, asks for them once instead of nine times, and never waits on a stuck command forever.</li>
+          <li>a background command whose output was discarded kept one CPU core busy for as long as that command ran. This affected many routine checks, so the app is measurably cooler and quieter under normal use.</li>
+          <li>command output containing accented or non-Latin characters could lose a chunk of text when it arrived split across a buffer boundary.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.35</h2>
+          <span class="release-date">20 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>pick the model when you start a remote coding session from <code>/remote</code> or your phone, and switch a running session's model from any device. The Mac publishes the models it can actually run, so the list on every surface is the one this build supports.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>the iPad app could not be built at all, so nothing in that target could ship.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.34</h2>
+          <span class="release-date">20 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>LingCode Payments — sell from your app with Stripe Connect. Connect a payout account in the console, add products and prices, and call <code>client.payments.checkout()</code>. Orders, subscriptions and refunds included, settling to your own Stripe account.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>Pro and Max Pro now include LingCode Payments at 1% per transaction, with no extra subscription.</li>
+          <li>the Payments console is a proper catalogue manager — prices in dollars with a fee preview, editable products, and retire/restore for prices.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>refunds are recorded correctly and return the platform fee.</li>
+          <li>the Product Journey panel showed a database error instead of the Set up stage's blockers when more than one project had the same signing problem.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.33</h2>
+          <span class="release-date">19 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Fixed</h3>
+        <ul>
+          <li>The Run Console no longer cuts off the start of every line once a run prints a long line, such as a Gradle report path. It follows new output down and stays at the left edge.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.32</h2>
+          <span class="release-date">19 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Manage custom domains from the Cloud popover whenever a folder already has a deployment, with no redeploy needed. That includes server and SSR (Worker) apps, which had no custom-domain controls before.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>After a deploy, the Cloud panel could show <code>apps.lingcode.dev</code> as the CNAME target for a domain you'd attached earlier. That address no longer resolves; it now shows <code>custom.lingcode.app</code>.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.31</h2>
+          <span class="release-date">19 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Before you submit an app for App Review, Magic Submit shows the screenshots Apple will check against your build, and warns when your app's UI has changed since they were last confirmed. App Review rejects screenshots that don't show the version being submitted, and until now you only found out when the rejection arrived, about two days later.</li>
+          <li>A new version inherits the previous version's screenshots in App Store Connect. Magic Submit now shows you exactly which ones before you submit, so an update can't go to review with an old design by accident.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>The LingCode agent shows you the same screenshots and asks before it submits anything for review.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.30</h2>
+          <span class="release-date">15 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Fixed</h3>
+        <ul>
+          <li>The editor and terminal no longer fall back to the light theme when macOS is set to an increased-contrast or vibrant dark appearance.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.29</h2>
+          <span class="release-date">15 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Coding agents know LingCode Cloud can send push notifications, and that native push needs only the app's own Firebase or APNs key.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>Find in Files searches as you type, highlights matches, jumps to the exact match, and adds Match Case, Whole Word, include/exclude filters and a Respect .gitignore toggle. Very broad searches stop at 20,000 matches.</li>
+          <li>LingCode now includes ripgrep, so the agent's grep and glob tools and Find in Files work the same on every Mac: they respect .gitignore, page through results in a stable order, and show ripgrep's error for an invalid regex instead of "no matches".</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>Searching for accented, Korean or Japanese kana text found nothing.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.28</h2>
+          <span class="release-date">14 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>The AI panel's model menu offers DeepSeek V4 Pro and DeepSeek V4 Flash. They use the DeepSeek API key from Settings → AI Providers, so the panel can run on DeepSeek without leaving it for the DeepSeek tab.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.27</h2>
+          <span class="release-date">14 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Claude Code tabs keep their agent session open between replies, so a background task can finish and Claude reports back on its own. A pill shows how many background tasks are running.</li>
+          <li>DeepSeek conversations are saved and come back after closing the tab or restarting LingCode. Open or delete them from the tab's History menu or the Agents panel's Recent list, and open DeepSeek tabs appear under Active.</li>
+          <li>The DeepSeek tab composer supports @ file mentions, drag-and-drop attachments, and slash commands (/clear, /model, /export, plus your .claude/commands and skills).</li>
+          <li>The DeepSeek tab follows your project's CLAUDE.md and skills, uses your MCP servers, can dispatch subagents defined in .claude/agents, and shows context usage, tokens and an estimated cost.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>The DeepSeek tab renders markdown and code blocks with copy buttons, shows DeepSeek's thinking, and shows tool calls as expandable cards with diffs.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>Claude Code tabs no longer answer every new message with "A Claude query is already running." after a slow or stopped reply.</li>
+          <li>The DeepSeek tab blocks the same destructive commands as the other agent tabs, and "Always allow" on a shell command no longer approves other commands.</li>
+          <li>DeepSeek replies are no longer cut off at 4,096 tokens, long tasks run up to 50 steps, and stopping a turn no longer breaks the next message.</li>
+          <li>When DeepSeek's servers are busy, the DeepSeek tab shows the request is queued, and a connection DeepSeek drops before replying now shows an error instead of an empty reply.</li>
+          <li>The Agents panel's Recent list no longer shows the same old Codex chats in every project.</li>
+          <li>@ file mentions in the Claude Code and Codex tabs resolve in projects opened through a symlinked path.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.26</h2>
+          <span class="release-date">14 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Improved</h3>
+        <ul>
+          <li>A Next.js version the Cloud Workers runtime can't build now stops the deploy right away, naming your version and the range it needs, instead of failing minutes later with "Build failed (exit 1)".</li>
+          <li>Your agent can read the result of your last Cloud deploy — the live URL, or the exact error and build log — so it reports what actually happened instead of guessing URLs or asking what the dialog said.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>Deploy to LingCode Cloud now finds a web app in any subfolder of your project — for example an Xcode project whose website sits in its own folder — instead of calling the project native and offering nothing to deploy.</li>
+          <li>The "Retry with --legacy-peer-deps" button no longer appears for server-rendered apps, where it retried the wrong kind of deploy.</li>
+          <li>Choosing a model in one Claude Code tab no longer changes the model in your other open tabs. Each tab keeps its own.</li>
+          <li>Starting a new agent from lingcode.dev/remote while another session is running now opens exactly the agent you started.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.25</h2>
+          <span class="release-date">13 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Paste files and folders into the Explorer. Copy them in Finder, then right-click empty space for the project root, right-click a folder to paste into it, or press ⌘V with the Explorer focused. Pasting where an item already is makes a Finder-style copy.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>Copying a large folder into the Explorer shows real progress — bytes copied out of the total and the item in progress — instead of a bar that sat at zero until the copy was over. Copies can be cancelled.</li>
+          <li>A cancelled or failed copy leaves nothing half-copied in the project, and replacing an existing item removes the original only once the new copy is complete.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>LingCode no longer stalls while a large folder is copied in. The Explorer used to reload every few seconds for the whole copy; it now reloads once when the copy finishes.</li>
+          <li>The copy progress window sometimes never appeared. It now opens even when another dialog is already attached to the window.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.24</h2>
+          <span class="release-date">13 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Mobile → Pre-Submission Audit… checks an iOS, macOS or Android project against the guidelines apps are most often rejected for — missing permission explanations, no privacy manifest, no way to delete an account — before you submit. The Ship wizard runs it first and shows any blockers before you ship.</li>
+          <li>App Privacy answers worked out from the app's privacy manifest, ready to paste. Apple has no API for that form, so LingCode prepares the answers rather than claiming to submit them.</li>
+          <li>The rest of a first App Store listing can be set without opening App Store Connect — price or free, availability, copyright, content rights, the App Review contact and demo account, name, subtitle, categories, and a 4+ age rating.</li>
+          <li>Several languages and app preview videos in one submit. Videos are checked for size, length and count before anything uploads, and Apple's processing result is reported back.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>Every App Store character limit — name and subtitle 30, keywords 100, promotional text 170, description 4000 — is checked before anything is sent.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>Submitting for App Review now happens last. It used to go out before the rest of the listing was written, and App Store Connect locks a version's details once it is waiting for review, so those later changes failed.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.16</h2>
+          <span class="release-date">6 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>visionOS is now a platform you can create a project for. The New Project gallery has a visionOS App template, and the generated project builds and runs on the visionOS Simulator — verified against visionOS 26.5. Its app icon is emitted as the layered solid image stack Vision Pro requires, ready for real artwork.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>When no devices are connected, the hint now describes how that platform actually connects. Apple Vision Pro and Apple TV pair over the network with Developer Mode turned on, and an Apple Watch is reached through its paired iPhone — none of them plug in and show a Trust prompt, which is what every project was told to do regardless of what it targeted.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>visionOS, tvOS and watchOS projects showed no Devices section in the run destination picker at all. The picker decided whether to offer hardware by asking whether the project built for iOS, and a visionOS project declares its platforms as "xros xrsimulator" — no mention of iPhone — so the answer was no and the section simply was not drawn. tvOS and watchOS had the same problem since they were added.</li>
+          <li>visionOS simulators were filtered out of the run destination list, so an installed Apple Vision Pro simulator never appeared.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.15</h2>
+          <span class="release-date">5 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Ask the agent for an A/B test and it now uses the built-in experiments — creating it, installing the analytics SDK if the project lacks it, and logging the outcome event the result depends on. Previously it did not know the feature existed and would write its own bucketing, which looks correct and cannot be read in the console.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>Account ▸ LingCode Cloud ▸ Open Backend Console now opens the current project's backend instead of the console's backend picker, so Database, Telemetry and Experiments are one click away rather than a list to search.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>Reopening a chat from the AGENTS panel always opened a native tab, even when the conversation had been started in a web tab. Both surfaces of a provider share one history store and the entry never recorded which one it came from, so the panel had nothing to route on and defaulted to native. Conversations saved from now on reopen where they were saved; older ones keep opening native, because their origin genuinely was not recorded.</li>
+          <li>Claude Code (Web) and Codex (Web) tabs disappeared when the app restarted. Session restore had no token for either of them, so a web tab fell through to a file path — which a virtual tab does not have — and was dropped from the saved session entirely. It was not restored wrongly; it was never written down.</li>
+          <li>Restoring any agent tab that carried a conversation quietly failed. An off-by-one in the restore key produced a trailing underscore, so the key matched nothing and the app fell back to opening a file literally named after the token. Tabs with no conversation attached skipped that path, which is why it went unseen. All six tab kinds were affected.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.12</h2>
+          <span class="release-date">1 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Claude Fable 5.1 and Sonnet 5 across all four Anthropic surfaces. Sonnet 5 had been missing from every picker in the app.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>Refreshed the Codex pickers, which still listed a superseded set of GPT-5 variants.</li>
+          <li>Upgrading your plan now shows up as soon as you switch back to the app, instead of staying on the old plan until the next restart.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>Opus 5 was billed at the retired $15/$75 rate and Fable at $5/$25 instead of $10/$50 — neither matched the branch that sets their real price, so the cost shown for a session was wrong for both.</li>
+          <li>No Claude 5 model matched the 1M-context branch, so the status bar measured them against a 200K window and over-reported context use fivefold. A session that had used a fifth of its context looked full.</li>
+          <li>The agent was still told the newest model family was 4.8/4.7/4.6, so it reasoned about its own capabilities from a stale list.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.11</h2>
+          <span class="release-date">1 September 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Improved</h3>
+        <ul>
+          <li>The account and entitlement endpoints now explicitly refuse to be cached. They were never meant to be, but they carried no cache instruction at all — the same shape that once left a file pinned at the CDN for four hours. A cached plan would have meant paying and then being told for hours that you hadn't.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>After paying for an upgrade, the sidebar kept saying "Free plan" and offering an Upgrade button until you quit and reopened the app. Your subscription was live the whole time — the plan label was the only thing left behind. Checkout happens in a browser, and nothing told the app to look again, so it kept showing the plan it had cached at launch. It now re-checks when you switch back to the app, which is exactly when you return from paying.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.7</h2>
+          <span class="release-date">29 August 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Improved</h3>
+        <ul>
+          <li>Signing in to Claude no longer sends you to Terminal. LingCode ships the Claude Code binary inside the app, so it opens a Claude tab and signs you in there — and when the binary can't be loaded, the message now says reinstalling LingCode is the fix rather than telling you to install a CLI you already have.</li>
+          <li>The embedded Claude Code terminal falls back to the bundled binary when you have no <code>claude</code> install of your own, instead of showing an install wall.</li>
+          <li>Headless runs no longer carry two directives that only describe the GUI — a product description and a map of Xcode symptoms to LingCode menus, which don't exist outside the app. Together they cost 6,596 tokens per query.</li>
+          <li>Terminal text is no longer flush against the pane border, and divider lines sit on the panel edge rather than floating beside it.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>The Claude tab could open a turn by reading a file path that doesn't exist, then hunt for the file with <code>find</code>. It was running with **no system prompt at all** — an omitted system prompt means empty rather than default in the agent SDK, so the model never received Claude Code's tool guidance or the environment section that states the working directory. It now gets both, which means fewer wasted tool calls and no more invented paths.</li>
+          <li>When the bundled Claude binary couldn't be loaded, the error offered no way forward. The recovery banner was checking for a message nothing in the app produces, so the guidance it was meant to show was unreachable — you got a bare error instead.</li>
+          <li>The first-run tour never appeared for anyone who already had a project open when the app launched. It was triggered only by a state *change*, and for a returning user the state was already correct before the view existed.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">v2.7.6</h2>
+          <span class="release-date">29 August 2026</span>
+          
+          <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Improved</h3>
+        <ul>
+          <li>Devices connected over Wi-Fi are marked as such. Wireless debugging only needs the phone on the same network, not near you, so a device you can't see is a legitimate build target rather than a stale entry — and when one is unreachable it now explains the actual reason for its transport instead of always blaming a cable.</li>
+          <li>Signing failures arrive with the fix attached. A rejected Apple ID, a device not registered to the team, a profile that predates the device, and a missing profile each say what to do about it, rather than restating the error.</li>
+          <li>Clicking Refresh in the picker during an in-flight refresh no longer does nothing. Concurrent requests were discarded rather than queued, so the manual escape hatch failed in exactly the window you'd reach for it.</li>
+          <li>Signing in to Claude no longer sends you to Terminal. Where the tab used to tell you to run <code>claude</code> and <code>/login</code> yourself, it now offers a /login button that opens a Claude tab and signs you in there.</li>
+          <li>When the bundled Claude Code CLI can't be loaded, the message now explains that LingCode ships it and that reinstalling is the fastest fix, instead of telling you to install a CLI you already have.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>Physical devices showed as "iPhone — Unknown" instead of their model. The <code>devicectl</code> parser read <code>marketingName</code> and <code>productType</code> out of <code>deviceProperties</code>, which contains neither key — both live in <code>hardwareProperties</code> — so every iPhone and iPad on every Mac fell back to "Unknown" whether or not it was reachable. The OS version came from the right dictionary, which is why it kept rendering correctly and hid the bug.</li>
+          <li>The run destination list didn't notice devices connecting. Its refresh was attached to the toolbar button's <code>onAppear</code>, which fires once at launch, so opening the picker never re-read anything — a phone plugged in afterwards stayed invisible while its row advised you to connect the cable you had just connected. The list now refreshes when the picker opens, polls while it's open for devices reachable over the network, and watches USB attach and detach.</li>
+          <li>Builds that failed for signing or provisioning reported "0 errors, 0 warnings" above a green "No issues" checkmark. Every diagnostic pattern required a file, line and column, so the project-level errors xcodebuild emits for signing, provisioning, destinations and schemes matched nothing at all — and the same empty list was handed to the in-app agent, which was told a failing build was clean. A failed build can no longer report zero errors.</li>
+          <li>Long diagnostics split across two reads of the build output were dropped. Each chunk was parsed on its own, so a signing error that straddled the boundary became two fragments that matched nothing and vanished from the Problems list while still failing the build.</li>
+          <li>Device detection now understands Xcode 26. Apple deprecated the three property dictionaries LingCode parsed in favour of a nested one and changed three value shapes in the process; both generations are read, so this keeps working on Xcode 15 and 16 and won't break when the old keys are removed.</li>
         </ul>
       </div>
 
@@ -120,6 +899,7 @@
         <div class="release-meta">
           <h2 class="release-version">v2.7.5</h2>
           <span class="release-date">14 August 2026</span>
+          
           <span class="release-tag release-tag--mac">Mac</span>
         </div>
         <h3>Improved</h3>
@@ -136,6 +916,7 @@
         <div class="release-meta">
           <h2 class="release-version">LingCode Cloud</h2>
           <span class="release-date">14 August 2026</span>
+          
           <span class="release-tag release-tag--cloud">Cloud</span>
         </div>
         <h3>Fixed</h3>
@@ -150,6 +931,7 @@
         <div class="release-meta">
           <h2 class="release-version">LingCode Cloud</h2>
           <span class="release-date">13 August 2026</span>
+          
           <span class="release-tag release-tag--cloud">Cloud</span>
         </div>
         <h3>Added</h3>
@@ -172,6 +954,7 @@
         <div class="release-meta">
           <h2 class="release-version">v2.7.4</h2>
           <span class="release-date">9 August 2026</span>
+          
           <span class="release-tag release-tag--mac">Mac</span>
         </div>
         <h3>Added</h3>
@@ -188,6 +971,7 @@
         <div class="release-meta">
           <h2 class="release-version">v2.7.3</h2>
           <span class="release-date">9 August 2026</span>
+          
           <span class="release-tag release-tag--mac">Mac</span>
         </div>
         <h3>Added</h3>
@@ -205,42 +989,81 @@
         <div class="release-meta">
           <h2 class="release-version">v2.7.2</h2>
           <span class="release-date">8 August 2026</span>
+          
           <span class="release-tag release-tag--mac">Mac</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Project-local backend-as-code workflows for cloud functions and database migrations.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>IDE agents can now create, test, update, and deploy cloud functions without opening the backend dashboard.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>Activity Bar control alignment, and clearer setup guidance.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">/try playground</h2>
+          <span class="release-date">4 June 2026 – 29 June 2026</span>
+          
           <span class="release-tag release-tag--web">/try</span>
         </div>
         <h3>Added</h3>
         <ul>
-          <li>Remote Coding — drive your Mac from the browser at /remote. An embedded SSH server attaches to a Claude Code terminal, and a live-session mirror lets you drive an already-open Claude Code tab remotely. Codex and interactive terminal surfaces are supported too.</li>
-          <li>Claude Code (Web) and Codex (Web) tabs inside the IDE, alongside the existing Terminal and Native tabs.</li>
-          <li>Project sharing with owner / editor / viewer collaborators, project ownership transfer, and an in-browser project editor.</li>
-          <li>LingCode Cloud — a managed backend with a Supabase/Firebase-parity feature set and a management console.</li>
-          <li>Project-local backend-as-code workflows for cloud functions and database migrations, so IDE agents can create, test, update, and deploy cloud functions without opening the backend dashboard.</li>
-          <li>Cloud deploy handles framework-aware SSR, one-click monorepo deploys, and a project deploy manifest.</li>
-          <li>Image attachments preview inline in the Claude composer, the Codex composer, and the unified AI panel.</li>
-          <li>More models and endpoints — GLM-5.2, per-endpoint custom models, and a Fable 5 option.</li>
-          <li>Xcode scaffolding covers tvOS, Rust/UniFFI, and localhost HLS, and generates a unit-test target for new projects. Monorepos get an Xcode project picker, and dev containers support multi-service docker-compose.</li>
-          <li>Editor and terminal quality-of-life — <code>.docx</code> opens as editable rich text with structure preserved, tree-sitter highlighting for C, Objective-C and PHP, a VS Code-style shell-integration context menu, a per-turn fold control for long agent steps, an "Always Allow" option on approval dialogs, and message queueing while the Claude tab is streaming.</li>
+          <li>A LingCode Cloud console inside /try — the managed backend is now the default for new projects, not an opt-in.</li>
+          <li>A Domains tab, with registrar-aware setup so connecting a domain you already own is guided rather than guessed at.</li>
+          <li>A Stripe checkout template on the managed Cloud path, so a prototype can take payments.</li>
+          <li>Dashboard quota bars, and a Chinese LingCode Cloud page.</li>
+          <li>Project source sharing and an in-browser project editor.</li>
+          <li>Framework-aware SSR deploys, and Cloud upsert/rpc/batch operations that agents know how to use.</li>
+          <li>GLM-5.2 and per-endpoint custom models.</li>
         </ul>
         <h3>Improved</h3>
         <ul>
-          <li>Launch is substantially faster — blocking work moved off the main thread, and idle CPU burn and launch-time hangs fixed.</li>
-          <li>The Claude Code tab no longer lags on long conversations. Streaming render, scroll jank, and transcript blanking were all addressed.</li>
-          <li>Agent turns auto-resume after a network reconnect, on the Claude, DeepSeek, and OpenAI-compatible loops.</li>
-          <li>The autonomous agent asks first and checkpoints rather than running away, and chats are scoped per project with unresumable conversations recoverable.</li>
-          <li>The toolbar, activity bar, and bottom tabs now adapt to the project type, the activity bar can be customized, and the provider menus merged into a single AI menu.</li>
+          <li>A saved prototype re-binds on resume, so Cloud, Domains, and Back all survive a page reload.</li>
         </ul>
         <h3>Fixed</h3>
         <ul>
-          <li>The Claude Code tab no longer goes blank mid-stream or hangs on long bypass-mode turns.</li>
-          <li>Magic Push no longer demands an API key from LingModel users.</li>
-          <li>A Kotlin/Android LSP crash, a Settings window freeze, a stuck Run pulse, a stale run destination that broke ⌘R, and a bottom panel that restored at an unusable sliver height.</li>
+          <li>Publishing a large prototype failed with a 413 — chat history is now trimmed and oversized thumbnails shed before saving.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">/try playground</h2>
+          <span class="release-date">24 May 2026 – 31 May 2026</span>
+          
+          <span class="release-tag release-tag--web">/try</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>A scope-and-design gate — before building, /try summarizes what it understood and asks clarifying questions, presented full-screen so the decision gets your attention.</li>
+          <li>A chat-centric canvas — a build checklist, the conversation, and the live preview in one workspace, with the checklist collapsible.</li>
+          <li>An editable project name, working thumbnails, and a conditional Compare view that only appears when comparing is relevant.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>The workspace appears the moment you hit send, rather than after the gate resolves, so nothing looks frozen while it thinks.</li>
+          <li>The inline preview renders as a top-level overlay, fixing the Cloud panel appearing behind the preview iframe.</li>
+          <li>Loading animations on every waiting state in the gate flow.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>Launch silently did nothing in several cases — not signed in, a late re-render, or a hidden workspace. All now either proceed or send you to sign in immediately.</li>
+          <li>Dark-mode chat text was unreadable, and the preview column had no empty state.</li>
         </ul>
       </div>
 
       <div class="release">
         <div class="release-meta">
           <h2 class="release-version">v2.7.1</h2>
-          <span class="release-date">22 May 2026</span>
+          <span class="release-date">21 May 2026 – 3 August 2026</span>
+          <span class="release-date">56 builds (49–131)</span>
           <span class="release-tag release-tag--mac">Mac</span>
           <span class="release-tag release-tag--web">/try</span>
           <span class="release-tag release-tag--cli">CLI</span>
@@ -248,29 +1071,66 @@
         <h3>Added</h3>
         <ul>
           <li>Real-time collaboration on /try and the Mac IDE — Yjs CRDT, live cursors via the awareness protocol, threaded comments anchored to elements, role-based permissions (owner / editor / viewer), and audit-log history. Invite by email or 48-hour share link.</li>
-          <li>Architect spec live panel in the swarm pipeline — watch the JSON spec stream as it's written instead of staring at empty panes for 30 seconds.</li>
-          <li>Chinese parity for /try — full feature set, all 14 toolbar buttons, locale-aware template labels.</li>
-          <li>CLI v0.8.16 with a new <code>auth</code> subcommand and improved <code>doctor</code> diagnostics.</li>
-          <li>SQLite session store on the API server — sessions survive restart, so deploys no longer sign everyone out.</li>
+          <li>Remote Coding — drive your Mac from the browser at /remote. An embedded SSH server attaches to a Claude Code terminal, and a live-session mirror lets you drive an already-open Claude Code tab remotely. Codex and interactive terminal surfaces are supported too.</li>
+          <li>Claude Code (Web) and Codex (Web) tabs inside the IDE, alongside the existing Terminal and Native tabs.</li>
+          <li>Project sharing with owner / editor / viewer collaborators, project ownership transfer, and an in-browser project editor.</li>
+          <li>LingCode Cloud — a managed backend with a Supabase/Firebase-parity feature set and a management console.</li>
+          <li>Cloud deploy handles framework-aware SSR, one-click monorepo deploys, and a project deploy manifest.</li>
+          <li>Image attachments preview inline in the Claude composer, the Codex composer, and the unified AI panel.</li>
+          <li>More models and endpoints — GLM-5.2, per-endpoint custom models, and a Fable 5 option.</li>
+          <li>Xcode scaffolding covers tvOS, Rust/UniFFI, and localhost HLS, and generates a unit-test target for new projects. Monorepos get an Xcode project picker, and dev containers support multi-service docker-compose.</li>
+          <li><code>.docx</code> opens as editable rich text with structure preserved, plus tree-sitter highlighting for C, Objective-C and PHP, a VS Code-style shell-integration context menu, a per-turn fold control for long agent steps, an "Always Allow" option on approval dialogs, and message queueing while the Claude tab is streaming.</li>
+          <li>Architect spec live panel in the swarm pipeline, Chinese parity for /try, CLI v0.8.16 with an <code>auth</code> subcommand and improved <code>doctor</code>, and a SQLite session store so deploys no longer sign everyone out.</li>
         </ul>
         <h3>Improved</h3>
         <ul>
-          <li>Mac IDE polish — composer keybindings, terminal theming, and build-log ⌘A no longer hijacks chat-input select-all.</li>
-          <li>/try preview iframe respects viewport-mode (Tablet/Mobile) constraints so generated pages can't overflow the simulated viewport.</li>
-          <li>HTML cache headers set <code>Cache-Control: no-cache</code> so deploys reach users immediately, with no hard refresh.</li>
+          <li>Launch is substantially faster — blocking work moved off the main thread, and idle CPU burn and launch-time hangs fixed.</li>
+          <li>The Claude Code tab no longer lags on long conversations. Streaming render, scroll jank, and transcript blanking were all addressed.</li>
+          <li>Agent turns auto-resume after a network reconnect, on the Claude, DeepSeek, and OpenAI-compatible loops.</li>
+          <li>The autonomous agent asks first and checkpoints rather than running away, and chats are scoped per project with unresumable conversations recoverable.</li>
+          <li>The toolbar, activity bar, and bottom tabs adapt to the project type, the activity bar can be customized, and the provider menus merged into a single AI menu.</li>
+          <li>/try preview respects viewport-mode constraints, and HTML cache headers let deploys reach users without a hard refresh.</li>
         </ul>
         <h3>Fixed</h3>
         <ul>
-          <li>"Fix with AI" banner removed — it overlapped the prompt area and confused users.</li>
-          <li>The bottom main prompt hides once a session is active, leaving only the per-pane "Ask for tweaks".</li>
-          <li>Focus-mode close button restyled for the light theme, and toolbar buttons no longer overflow the workspace tab bar in focus mode.</li>
+          <li>The Claude Code tab no longer goes blank mid-stream or hangs on long bypass-mode turns.</li>
+          <li>Magic Push no longer demands an API key from LingModel users.</li>
+          <li>A Kotlin/Android LSP crash, a Settings window freeze, a stuck Run pulse, a stale run destination that broke ⌘R, and a bottom panel that restored at an unusable sliver height.</li>
+          <li>On /try — the "Fix with AI" banner removed, the bottom prompt hidden once a session is active, and focus-mode styling corrected.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">/try playground</h2>
+          <span class="release-date">14 May 2026 – 21 May 2026</span>
+          
+          <span class="release-tag release-tag--web">/try</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>Visual editing — click any text-bearing element in the preview and edit it directly, in a side panel, instead of describing the change in a prompt.</li>
+          <li>A saved-prototypes sidebar — everything you build is kept, with rename, delete, and a Continue editing button that restores the prototype and its chat history.</li>
+          <li>A credential scan before every publish. If an API key or secret is detected in what you're about to make public, publishing stops and shows you what it found.</li>
+          <li>A phone-preview QR flow — scan to open your prototype on a real device.</li>
+          <li>Chat history is packaged with a published prototype, so resuming picks up the conversation rather than a bare file.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>A full-viewport workspace so panes fill the screen, and the nine advanced tools collapsed into a single dropdown.</li>
+          <li>Generation survives the sign-in redirect on Publish, instead of being lost when you're bounced to sign in.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>Clicking to inline-edit no longer selects all the text in the element.</li>
         </ul>
       </div>
 
       <div class="release">
         <div class="release-meta">
           <h2 class="release-version">v2.7.0</h2>
-          <span class="release-date">7 May 2026</span>
+          <span class="release-date">4 May 2026 – 21 May 2026</span>
+          <span class="release-date">11 builds (27–48)</span>
           <span class="release-tag release-tag--mac">Mac</span>
           <span class="release-tag release-tag--cli">CLI</span>
         </div>
@@ -294,8 +1154,52 @@
 
       <div class="release">
         <div class="release-meta">
+          <h2 class="release-version">/try playground</h2>
+          <span class="release-date">4 May 2026</span>
+          
+          <span class="release-tag release-tag--web">/try</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>An AI app generator — describe an app and /try builds it, with a live preview pane rather than a wall of prose.</li>
+          <li>Animated stage progress in the preview pane, so a long build shows what it's doing instead of appearing stuck.</li>
+          <li>Accounts and subscriptions — Stripe-backed checkout, with three tiers: Free, LingModel Pro, and Max Pro.</li>
+          <li>App Generator Pro bundled into the LingModel Pro subscription rather than sold separately.</li>
+        </ul>
+        <h3>Fixed</h3>
+        <ul>
+          <li>The preview pane rendered raw prose instead of the generated page.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
+          <h2 class="release-version">/try playground</h2>
+          <span class="release-date">25 April 2026 – 30 April 2026</span>
+          
+          <span class="release-tag release-tag--web">/try</span>
+        </div>
+        <h3>Added</h3>
+        <ul>
+          <li>/try — run the same prompt against multiple AI providers side by side, in the browser, with nothing to install.</li>
+          <li>A LingModel free tier — 100 queries for signed-in users, so the first run needs no API key of your own.</li>
+          <li>Bring your own keys for any provider, saved per key with show and delete controls.</li>
+          <li>Responses render as live markdown — tables, lists, and syntax-highlighted code blocks with a copy button on each.</li>
+          <li>Full Chinese translation and an i18n module, with the brand rendered as 灵码 on Chinese pages.</li>
+          <li>Pre-baked example prompt chips, so a first-time visitor doesn't face an empty box.</li>
+          <li>Seven more providers behind a "More providers" section, including z.ai — split into a general preset and a Coding Plan opt-in, since the two need different keys.</li>
+        </ul>
+        <h3>Improved</h3>
+        <ul>
+          <li>A full mobile responsive pass, and an actionable fallback message on Safari and Firefox where the File System Access API is missing.</li>
+        </ul>
+      </div>
+
+      <div class="release">
+        <div class="release-meta">
           <h2 class="release-version">v2.0</h2>
-          <span class="release-date">29 April 2026</span>
+          <span class="release-date">22 April 2026 – 3 May 2026</span>
+          <span class="release-date">11 builds (15–25)</span>
           <span class="release-tag release-tag--mac">Mac</span>
         </div>
         <h3>Added</h3>
@@ -314,6 +1218,7 @@
         <div class="release-meta">
           <h2 class="release-version">v1.1</h2>
           <span class="release-date">21 April 2026</span>
+          <span class="release-date">3 builds (12–14)</span>
           <span class="release-tag release-tag--mac">Mac</span>
         </div>
         <h3>Improved</h3>
@@ -326,7 +1231,85 @@
     </article>
   </main>
 
-<script src="/nav-auth.js" defer></script>
+  <!-- footer:start -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="/" class="logo">
+        <span class="logo-mark">L</span>
+        <span class="logo-name">LingCode</span>
+      </a>
+      <p>Native AI app development with the backend built in. For founders who want to ship and engineers who want one real tool.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/try.html">Web (/try)</a></li>
+        <li><a href="/cli.html">CLI</a></li>
+        <li><a href="/features.html">Mac IDE</a></li>
+        <li><a href="/cloud.html">Cloud</a></li>
+        <li><a href="/console.html">Console</a></li>
+        <li><a href="/slack.html">Slack</a></li>
+        <li><a href="/intro.html">iPhone apps</a></li>
+        <li><a href="/pricing.html">Pricing</a></li>
+        <li><a href="/changelog.html">Changelog</a></li>
+        <li><a href="/insights.html">Insights</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Developers</h4>
+      <ul>
+        <li><a href="/docs.html">Docs</a></li>
+        <li><a href="/docs/cloud/">Cloud docs</a></li>
+        <li><a href="/tutorials.html">Tutorials</a></li>
+        <li><a href="/getting-started.html">Getting started</a></li>
+        <li><a href="/cli.html">CLI reference</a></li>
+        <li><a href="/cursor-alternative-swift.html">Why not Cursor</a></li>
+        <li><a href="/vs-aws-and-google-cloud.html">Cloud vs AWS &amp; GCP</a></li>
+        <li><a href="/last-mile-deployment.html">Last-mile deployment</a></li>
+        <li><a href="/claude-code-gui.html">Claude Code GUI</a></li>
+        <li><a href="/vs-alex-sidebar.html">vs Alex Sidebar</a></li>
+        <li><a href="/mobile-app-development.html">Mobile app development</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="https://forum.lingcode.dev">Forum</a></li>
+        <li><a href="/community.html">Friday workshops</a></li>
+        <li><a href="/community.html">For universities</a></li>
+        <li><a href="/examples.html">Showcase</a></li>
+        <li><a href="/built-with-lingcode.html">Marketplace</a></li>
+        <li><a href="/blog.html">Blog</a></li>
+        <li><a href="/support.html">Support</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/manifesto.html">Manifesto</a></li>
+        <li><a href="/pitch.html">Pitch</a></li>
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/data-handling.html">Data handling</a></li>
+        <li><a href="/trust.html">Trust</a></li>
+        <li><a href="/sub-processors.html">Sub-processors</a></li>
+        <li><a href="/dpa.html">DPA</a></li>
+        <li><a href="/customer-policies.html">Customer policies</a></li>
+        <li><a href="/terms.html">Terms</a></li>
+        <li><a href="/console.html">Account</a></li>
+        <li><a href="/signin.html">Sign in</a></li>
+        <li><a href="/signup.html">Sign up</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>LingCode by Aurelian Labs Inc. · © 2026 · Made for shipping</span>
+    <span>native · fast · honest</span>
+  </div>
+</footer>
+<!-- footer:end -->
+
+<script src="/nav-auth.js?v=20260822" defer></script>
   <script src="/site-chat-widget.js?v=20260731a" defer></script>
 </body>
 </html>
