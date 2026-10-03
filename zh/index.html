@@ -1142,6 +1142,26 @@
   .hero-title em { display: block; font-size: 0.62em; white-space: nowrap; margin-top: 0.12em; }
   @media (max-width: 560px) { .hero-title em { white-space: normal; } }
   .hero { padding-top: 112px; }
+  /* ── Motion (2026-10-02): hero entrance, staggered cards, arrow nudge.
+     All of it is switched off by the prefers-reduced-motion rule above. */
+  @keyframes lc-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .hero-title, .hero-sub, .hero-actions, .hero-hint, .hero-video { animation: lc-rise 0.7s cubic-bezier(.2,.7,.2,1) both; }
+  .hero-sub { animation-delay: 0.12s; }
+  .hero-actions { animation-delay: 0.22s; }
+  .hero-hint { animation-delay: 0.30s; }
+  .hero-video { animation-delay: 0.38s; }
+  .reveal .demo-card, .reveal .path-card, .reveal .scenario, .reveal .cloud-card, .reveal .safety-card, .reveal .step {
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(.2,.7,.2,1);
+  }
+  .reveal.in .demo-card, .reveal.in .path-card, .reveal.in .scenario, .reveal.in .cloud-card, .reveal.in .safety-card, .reveal.in .step { opacity: 1; transform: none; }
+  .reveal.in :is(.demo-card, .path-card, .scenario, .cloud-card, .safety-card, .step):nth-child(2) { transition-delay: 0.08s; }
+  .reveal.in :is(.demo-card, .path-card, .scenario, .cloud-card, .safety-card, .step):nth-child(3) { transition-delay: 0.16s; }
+  .reveal.in :is(.demo-card, .path-card, .scenario, .cloud-card, .safety-card, .step):nth-child(4) { transition-delay: 0.24s; }
+  .reveal.in :is(.demo-card, .path-card, .scenario, .cloud-card, .safety-card, .step):nth-child(5) { transition-delay: 0.32s; }
+  .reveal.in :is(.demo-card, .path-card, .scenario, .cloud-card, .safety-card, .step):nth-child(6) { transition-delay: 0.40s; }
+  .lc-arrow { display: inline-block; transition: transform 0.2s ease; }
+  a:hover .lc-arrow, button:hover .lc-arrow { transform: translateX(3px); }
   @media (max-width: 720px) { .hero { padding-top: 84px; } }
 </style>
   <script src="/attribution.js?v=20260915a" defer></script>
@@ -2029,6 +2049,22 @@
           tabs.forEach(function (x) { x.classList.toggle('active', x === t); });
           panels.forEach(function (p) { p.classList.toggle('active', p.dataset.panel === target); });
         });
+      });
+    })();
+
+    // Wrap a trailing "→" in buttons and links so it can nudge on hover.
+    (function () {
+      document.querySelectorAll('a, button').forEach(function (el) {
+        if (el.querySelector('.lc-arrow')) return;
+        for (var n = el.lastChild; n; n = n.previousSibling) {
+          if (n.nodeType === 3 && /→\s*$/.test(n.nodeValue)) {
+            var t = n.nodeValue.replace(/→\s*$/, '');
+            var s = document.createElement('span'); s.className = 'lc-arrow'; s.textContent = '→';
+            n.nodeValue = t; n.parentNode.insertBefore(s, n.nextSibling);
+            return;
+          }
+          if (n.nodeType === 3 && /\S/.test(n.nodeValue)) return;
+        }
       });
     })();
 
