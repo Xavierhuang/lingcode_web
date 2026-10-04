@@ -91,7 +91,9 @@
   <script src="/analytics.js?v=20260428a" async></script>
   <!-- seo-meta:v2 -->
   <link rel="canonical" href="https://lingcode.dev/remote/">
-  <meta name="robots" content="index, follow">
+  <!-- noindex: app shell: 37 words of static text, content is fetched after auth. Also Disallow'd in robots.txt, which is what
+       drops it from the sitemap (scripts/seo/pages.py derives from it). -->
+  <meta name="robots" content="noindex, follow">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://lingcode.dev/remote/">
   <meta property="og:title" content="Remote Coding">
@@ -121,18 +123,24 @@
       <button id="mode-agent" class="ghost" style="padding:5px 12px;">New agent</button>
       <button id="mode-live" class="ghost" style="padding:5px 12px;">Live sessions</button>
       <button id="share" class="ghost" style="padding:5px 12px;display:none;">🔗 Share view-only</button>
+      <button id="invite" class="ghost" style="padding:5px 12px;display:none;" title="Let someone you trust chat with this computer's AI agent for 2 hours">🙋 Invite a helper</button>
       <button id="unshare" class="ghost" style="padding:5px 12px;display:none;">Stop sharing</button>
       <span id="mode-hint" class="who" style="margin-left:auto;"></span>
     </div>
     <div id="transcript" class="transcript"><div class="empty">Pick an online host to start coding remotely.</div></div>
     <div id="attachments" class="attachments"></div>
     <div class="composer">
-      <!-- Vestigial: New agent now drives the IDE's own Claude Code session, so
-           there's no client-side provider choice. Hidden; kept to avoid churn. -->
-      <select id="provider" title="Model provider" disabled style="display:none">
-        <option value="lingmodel">LingModel</option>
-        <option value="claude">Claude</option>
+      <!-- Provider + model for the session. The model list is NOT hardcoded
+           here: the Mac pushes its own catalogue on lc-agent-models, because a
+           model id this Mac's bundled Claude Code doesn't know is a hard 400 on
+           the first message, not a fallback. Before a session exists these pick
+           what "New agent" starts; once attached, changing the model switches
+           the running session. -->
+      <select id="provider" title="Which agent to start" disabled style="display:none">
+        <option value="claude">Claude Code</option>
+        <option value="codex">Codex</option>
       </select>
+      <select id="model" title="Model" disabled style="display:none"></select>
       <button id="mic" class="iconbtn" title="Dictate with your voice" disabled style="display:none">🎤</button>
       <button id="photo" class="iconbtn" title="Attach a photo" disabled>📷</button>
       <input id="file" type="file" accept="image/*" multiple hidden />
@@ -154,7 +162,11 @@
   // Read-only viewer mode: opened via a "?share=<token>" view-only link. The
   // viewer watches a session but the relay drops any control frames it sends.
   const shareToken = new URLSearchParams(location.search).get('share');
-  const readOnlyView = !!shareToken;
+  let readOnlyView = !!shareToken;
+  // A helper link ("Invite a helper") lets its holder chat with the owner's
+  // agent: the composer works, the terminal and New agent stay off. Known once
+  // the share token is redeemed (permission 'drive').
+  let helperView = false;
 
   let ws = null, currentHost = null, queryId = null, sseBuf = '', curAssistantEl = null;
   let mode = 'agent';          // 'agent' (new session) | 'live' (mirror an open tab)
@@ -167,6 +179,9 @@
   let termFit = null;          // xterm FitAddon — fits the grid to the page
   let liveAwaitingList = false; // true while waiting for the host's session list
   let pendingNew = null;       // first payload {text,attachments,thumbs} once a "New agent" tab is live
+  let pendingNewRequestId = null; // echoed by newer Mac builds on the spawned tab's first lc-agent-state
+  let newExcludeIds = new Set();  // tabs that already existed when "New agent" was sent — never adopt these
+  const seenDocIds = new Set();   // every session this page has attached to or adopted
   const pending = new Map(); // requestId → perm element
   const promptQueue = [];      // follow-up payloads typed while the session is busy
   let lastStreaming = false;   // last snapshot's streaming state (to detect idle edge)
@@ -234,7 +249,7 @@
 
   // ── connect to a host's serve tunnel over the collab relay ─────────────────
   function setComposerEnabled(on) {
-    for (const id of ['input', 'send', 'provider', 'photo', 'mic']) $(id).disabled = !on;
+    for (const id of ['input', 'send', 'provider', 'model', 'photo', 'mic']) $(id).disabled = !on;
   }
 
   // User-initiated connect (picking a host). Tears down any prior connection and
@@ -268,18 +283,33 @@
       if (!readOnlyView) scheduleReconnect(); // a dead share link shouldn't retry forever
       return;
     }
-    if (readOnlyView && j.host) {
+    if (shareToken) {
+      helperView = j.readOnly === false;
+      readOnlyView = !helperView;
+    }
+    if (shareToken && j.host) {
       currentHostObj = j.host;
-      $('viewbanner-text').textContent = 'Viewing ' + (j.host.name || 'host') + ' · read-only';
+      $('viewbanner-text').textContent = helperView
+        ? 'Helping on ' + (j.host.name || 'their computer') + ' · you can chat with their AI agent (link ends ' + new Date(j.expires_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ')'
+        : 'Viewing ' + (j.host.name || 'host') + ' · read-only';
     }
     currentHost = (currentHostObj && currentHostObj.id) || host.id;
-    if (!isReconnect && !readOnlyView) loadHosts();
+    if (!isReconnect && !shareToken) loadHosts();
     ws = new WebSocket(j.wsUrl);
     ws.binaryType = 'arraybuffer';
     ws.onopen = () => {
       reconnectAttempts = 0;
       $('conn').textContent = '● connected';
       $('modebar').style.display = 'flex';
+      if (helperView) {
+        // Helper: chat with the owner's open agent session; no New agent, no
+        // terminal, no sharing.
+        document.querySelector('.composer').style.display = '';
+        setComposerEnabled(true);
+        if (isReconnect && attachedDocId) sendFrame({ type: 'lc-agent-attach', documentId: attachedDocId });
+        else setMode('live');
+        return;
+      }
       if (readOnlyView) {
         // Watch-only: composer hidden, no "New agent". Resume the watched session
         // on reconnect, else show the live-session list to pick one.
@@ -289,6 +319,7 @@
       }
       setComposerEnabled(true);
       $('share').style.display = ''; // owner: offer a view-only share link
+      $('invite').style.display = '';
       // On a reconnect with a live session, re-attach silently so the transcript
       // resumes; otherwise (fresh connect, or browsing) (re)enter the mode.
       if (isReconnect && attachedDocId) sendFrame({ type: 'lc-agent-attach', documentId: attachedDocId });
@@ -330,6 +361,41 @@
 
   function sendFrame(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
 
+  // ── model picker ───────────────────────────────────────────────────────────
+  // The options come from the Mac (lc-agent-models) and are never hardcoded
+  // here: a model id this Mac's bundled Claude Code doesn't know is a hard 400
+  // on the first message, not a graceful fallback.
+  let modelCatalog = [];
+  let lastSnapshotModel = null;
+
+  // Only meaningful for Claude sessions — Codex selects models its own way, so
+  // showing this catalogue there would offer picks that quietly do nothing.
+  function syncModelPicker() {
+    const sel = $('model'); if (!sel) return;
+    // Show nothing until the Mac has sent its catalogue. An older Mac never
+    // does, and it also ignores `provider`/`model` on the new-agent frame — so
+    // offering the controls there would let someone pick Codex and silently
+    // get Claude. No catalogue, no controls, exactly the previous UI.
+    const ready = modelCatalog.length > 0;
+    $('provider').style.display = ready ? '' : 'none';
+    const isCodex = attachedDocId ? attachedProvider === 'codex' : $('provider').value === 'codex';
+    sel.style.display = (ready && !isCodex) ? '' : 'none';
+    // Mirror what the session reports, so the picker never claims a model the
+    // Mac isn't running — including when it's changed on the Mac itself. Don't
+    // fight the user mid-choice: the select keeps focus from open to pick.
+    if (lastSnapshotModel != null && document.activeElement !== sel
+        && modelCatalog.some((m) => m.id === lastSnapshotModel)) {
+      sel.value = lastSnapshotModel;
+    }
+  }
+
+  function onModelPicked() {
+    const sel = $('model');
+    // Attached: switch the running session. Not attached: this is simply what
+    // "New agent" will start with, so there is nothing to send yet.
+    if (attachedDocId && sel.value !== lastSnapshotModel) liveCmd('setModel', { model: sel.value });
+  }
+
   // ── serve-tunnel frames → SSE events ───────────────────────────────────────
   function onFrame(f) {
     switch (f.type) {
@@ -352,17 +418,44 @@
       // Host live-pushes this on tab open/close/rename/state change. Only re-render
       // the list when the user is actually viewing it — never clobber an attached
       // session's transcript or "New agent" mode.
+      case 'lc-agent-models': {
+        // The Mac's own list, so the two can never disagree about what runs.
+        modelCatalog = f.models || [];
+        const sel = $('model');
+        if (sel && modelCatalog.length) {
+          const keep = sel.value;
+          sel.innerHTML = '';
+          for (const m of modelCatalog) {
+            const o = document.createElement('option');
+            o.value = m.id; o.textContent = m.label || m.displayName || m.id;
+            sel.appendChild(o);
+          }
+          // Codex sessions don't use this catalogue, so the picker is Claude-only.
+          if (keep && modelCatalog.some((m) => m.id === keep)) sel.value = keep;
+        }
+        syncModelPicker();
+        break;
+      }
       case 'lc-agent-list-result': liveAgents = f.sessions || []; if (mode === 'live' && !attachedDocId && !attachedTermId) renderLiveList(); break;
       case 'lc-term-list-result': liveTerms = f.terminals || []; if (mode === 'live' && !attachedDocId && !attachedTermId) renderLiveList(); break;
       case 'lc-term-output': if (term && f.terminalId === attachedTermId && f.dataB64) term.write(b64ToBytes(f.dataB64)); break;
       case 'lc-term-size': break;  // informational only — the browser drives size via fitTerm()
       case 'lc-term-detached': if (f.terminalId === attachedTermId) { addMsg('', 'Terminal closed.', 'tool'); detachTerminalView(); } break;
       case 'lc-agent-state':
-        if (!attachedDocId && pendingNew && f.documentId) {
+        if (!attachedDocId && pendingNew && f.documentId &&
+            (f.requestId ? f.requestId === pendingNewRequestId : !newExcludeIds.has(f.documentId))) {
           // Our "New agent" tab just opened on the Mac — adopt it and send the
           // first prompt (with any photos); from here it behaves like a live session.
+          // Match on the echoed requestId; older Mac builds don't send one, so fall
+          // back to "a tab that didn't exist yet". Adopting the first frame of ANY
+          // tab picked up a still-streaming earlier session instead (it pushes
+          // state ~6 Hz), queued the prompt behind its run and orphaned the new tab.
           attachedDocId = f.documentId;
+          seenDocIds.add(f.documentId);
+          pendingNewRequestId = null;
           attachedProvider = f.provider || (f.snapshot && f.snapshot.provider) || 'claude';
+          if (f.snapshot && typeof f.snapshot.model === 'string') lastSnapshotModel = f.snapshot.model;
+          syncModelPicker();
           renderSnapshot(f.snapshot || {});
           liveCmd('send', { text: pendingNew.text, attachments: pendingNew.attachments });
           showSent(pendingNew.text, pendingNew.thumbs);
@@ -371,6 +464,8 @@
           // Snapshot or state-frame carries the provider so the renderer can
           // branch (Codex reasoning/tool shapes + answer encoding differ).
           attachedProvider = f.provider || (f.snapshot && f.snapshot.provider) || attachedProvider;
+          if (f.snapshot && typeof f.snapshot.model === 'string') lastSnapshotModel = f.snapshot.model;
+          syncModelPicker();
           renderSnapshot(f.snapshot || {});
         }
         break;
@@ -380,8 +475,16 @@
   }
 
   // ── live-session mode: discover / attach / render / drive ────────────────────
+  // Stop mirroring the attached session. The tab keeps running on the Mac; this
+  // only tells the host to stop pushing its state, so a busy earlier session can't
+  // keep flooding the page (or be mistaken for the next "New agent" tab).
+  function detachAgentSession() {
+    if (attachedDocId) sendFrame({ type: 'lc-agent-detach', documentId: attachedDocId });
+    attachedDocId = null;
+  }
+
   function setMode(m) {
-    mode = m; attachedDocId = null; pendingNew = null;
+    mode = m; detachAgentSession(); pendingNew = null; pendingNewRequestId = null;
     detachTerminalView();
     liveAgents = []; liveTerms = [];
     promptQueue.length = 0; lastStreaming = false;
@@ -390,7 +493,6 @@
     $('mode-live').style.fontWeight = m === 'live' ? '700' : '400';
     // Provider no longer applies — "New agent" drives your IDE's Claude Code
     // session (using the IDE's auth), so the picker is always hidden now.
-    if ($('provider')) $('provider').style.display = 'none';
     clearTranscript();
     if (m === 'live') {
       $('mode-hint').textContent = '';
@@ -415,7 +517,7 @@
   // Driven by liveAgents / liveTerms, which the two list-result frames populate.
   function renderLiveList() {
     liveAwaitingList = false;
-    attachedDocId = null;
+    detachAgentSession();
     attachedTermId = null;
     clearTranscript();
     if (!liveAgents.length && !liveTerms.length) {
@@ -451,7 +553,9 @@
 
   function attachSession(docId, name, provider) {
     detachTerminalView();   // leaving terminal mode → stop its stream, restore composer
+    if (attachedDocId && attachedDocId !== docId) detachAgentSession();
     attachedDocId = docId;
+    seenDocIds.add(docId);
     attachedProvider = provider || 'claude';
     promptQueue.length = 0; lastStreaming = false;
     clearTranscript();
@@ -484,7 +588,7 @@
     if (typeof Terminal === 'undefined') { addMsg('', 'Terminal viewer failed to load (offline?). Try again on a connection.', 'error'); return; }
     detachTerminalView();
     attachedTermId = termId;
-    attachedDocId = null;
+    detachAgentSession();
     clearTranscript();
     $('mode-hint').textContent = (name || 'terminal');
     // Hide the agent composer — terminal input comes from the xterm grid itself.
@@ -495,13 +599,13 @@
     transcript.appendChild(hostEl);
     term = new Terminal({
       fontSize: 13, cursorBlink: true, convertEol: false,
-      disableStdin: !!readOnlyView,
+      disableStdin: !!(readOnlyView || helperView),
       theme: { background: '#0d1117', foreground: '#e6edf3' },
     });
     termFit = (typeof FitAddon !== 'undefined') ? new FitAddon.FitAddon() : null;
     if (termFit) { try { term.loadAddon(termFit); } catch (_) { termFit = null; } }
     term.open(hostEl);
-    if (!readOnlyView) {
+    if (!readOnlyView && !helperView) {
       // Forward every keystroke / paste to the host PTY.
       term.onData((d) => { if (attachedTermId) sendFrame({ type: 'lc-term-input', terminalId: attachedTermId, dataB64: b64FromStr(d) }); });
     }
@@ -516,7 +620,7 @@
   function fitTerm() {
     if (!term || !attachedTermId) return;
     if (termFit) { try { termFit.fit(); } catch (_) {} }
-    if (!readOnlyView) {
+    if (!readOnlyView && !helperView) {
       sendFrame({ type: 'lc-term-resize', terminalId: attachedTermId, cols: term.cols, rows: term.rows });
     }
   }
@@ -803,10 +907,21 @@
     // Mac's open project; once it's live we adopt it (see 'lc-agent-state') and
     // replay this payload. Follow-ups drive the same session like live mode.
     pendingNew = payload;
+    pendingNewRequestId = 'new-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    newExcludeIds = new Set([...seenDocIds, ...liveAgents.map((a) => a.documentId)]);
     addMsg('', 'Starting a new session in your project…', 'tool');
-    sendFrame({ type: 'lc-agent-cmd', cmd: 'new' });
+    sendFrame({
+      type: 'lc-agent-cmd', cmd: 'new', requestId: pendingNewRequestId,
+      provider: $('provider').value,
+      // An older Mac ignores both of these and starts Claude on the configured
+      // model — exactly what it did before this existed.
+      model: $('provider').value === 'codex' ? undefined : $('model').value,
+    });
   }
   $('send').onclick = ask;
+  $('model').onchange = onModelPicked;
+  // Switching provider changes whether the model picker applies at all.
+  $('provider').onchange = syncModelPicker;
   $('input').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); ask(); } });
 
   // ── photo attachments ───────────────────────────────────────────────────────
@@ -918,10 +1033,22 @@
     $('unshare').style.display = '';
     alert('View-only link copied (expires in 24h):\n\n' + j.url + '\n\nAnyone with it can WATCH this session read-only — they cannot type, approve tools, or stop it. Tap “Stop sharing” to revoke.');
   };
+  $('invite').onclick = async () => {
+    if (!currentHost) return;
+    if (!confirm('A helper can chat with this computer\'s AI agent, which can change files and run commands here. Only invite someone you trust. The link works for 2 hours. Continue?')) return;
+    const r = await api('/api/remote/hosts/' + currentHost + '/share', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ permission: 'drive' }),
+    });
+    if (!r.ok) { alert('Could not create a helper link.'); return; }
+    const j = await r.json();
+    if (navigator.clipboard) { try { await navigator.clipboard.writeText(j.url); } catch (_) {} }
+    $('unshare').style.display = '';
+    alert('Helper link copied (works for 2 hours):\n\n' + j.url + '\n\nSend it to your helper. Tap “Stop sharing” to end it early.');
+  };
   $('unshare').onclick = async () => {
     if (!currentHost) return;
     const r = await api('/api/remote/hosts/' + currentHost + '/shares', { method: 'DELETE' });
-    if (r.ok) { $('unshare').style.display = 'none'; alert('All view-only links for this host are now revoked.'); }
+    if (r.ok) { $('unshare').style.display = 'none'; alert('All share and helper links for this host are now revoked.'); }
   };
 
   // ── boot ─────────────────────────────────────────────────────────────────

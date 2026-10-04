@@ -299,7 +299,7 @@ function handleServeTunnelFrame(ws, docName, parsed) {
   // Read-only viewers may receive host→client frames but cannot drive the host:
   // drop request/stdin (and never let them register as a host). Claim the frame
   // as handled so it isn't forwarded.
-  if (ws._readOnly && (parsed.type === 'lc-serve-request' || parsed.type === 'lc-serve-stdin' || parsed.type === 'lc-serve-host-hello')) {
+  if ((ws._readOnly || ws._helper) && (parsed.type === 'lc-serve-request' || parsed.type === 'lc-serve-stdin' || parsed.type === 'lc-serve-host-hello')) {
     return true;
   }
   switch (parsed.type) {
@@ -374,6 +374,9 @@ function handleAgentFrame(ws, docName, parsed) {
   // drive it: lc-agent-cmd carries send/approve/deny/stop, and lc-term-input
   // injects keystrokes into the host PTY — drop both for viewers.
   if (ws._readOnly && (parsed.type === 'lc-agent-cmd' || parsed.type === 'lc-term-input' || parsed.type === 'lc-term-resize')) return true;
+  // A helper (drive share link) may chat with the agent, never type into the
+  // host's terminal or impersonate a host.
+  if (ws._helper && (parsed.type === 'lc-term-input' || parsed.type === 'lc-term-resize' || parsed.type === 'lc-term-attach')) return true;
   switch (parsed.type) {
     // Client→host requests (lc-agent-* and the interactive terminal lc-term-*).
     case 'lc-agent-list':
@@ -401,6 +404,7 @@ function handleAgentFrame(ws, docName, parsed) {
     case 'lc-agent-state':
     case 'lc-agent-detached':
     case 'lc-agent-error':
+    case 'lc-agent-models':
     case 'lc-term-list-result':
     case 'lc-term-output':
     case 'lc-term-size':
@@ -445,7 +449,7 @@ function countPrototypeMembers(prototypeId) {
  * @param {import('ws').WebSocket} ws
  * @param {import('http').IncomingMessage} req
  * @param {{ id: string, email: string, [k: string]: any }} user
- * @param {'owner'|'editor'|'viewer'} role
+ * @param {'owner'|'editor'|'viewer'|'helper'} role
  * @param {string} prototypeId
  * @param {string} fileId
  */
@@ -459,6 +463,7 @@ function handleCollabConnection(ws, req, user, role, prototypeId, fileId) {
   // serve/agent stream but their control frames are dropped (see the frame
   // handlers). Only ever set true via a validated ?share token in the upgrade.
   ws._readOnly = !!req._collabReadOnly;
+  ws._helper = !!req._collabHelper;
 
   const docName = makeDocName(prototypeId, fileId);
 
@@ -468,7 +473,9 @@ function handleCollabConnection(ws, req, user, role, prototypeId, fileId) {
   // Viewer write guard: wrap the y-websocket message listener to block client
   // sync-update messages (outer type 0, inner sub-type 2 in the sync protocol).
   // Awareness (outer type 1) is always allowed so presence still works.
-  if (role === 'viewer') {
+  // A helper (drive share link) drives the agent chat over lc-agent-* frames
+  // only; for the shared document it is a viewer.
+  if (role === 'viewer' || role === 'helper') {
     const listeners = ws.rawListeners('message');
     const ywsListener = listeners[listeners.length - 1];
     ws.removeAllListeners('message');
@@ -584,9 +591,11 @@ function initCollabServer(httpServer, db, sessionMiddleware) {
     } catch (_) { /* ignore malformed query */ }
     if (shareToken) {
       let valid = false;
+      let shareDrive = false;
       try {
-        const sh = db.prepare('SELECT host_id, expires_at, revoked FROM remote_host_shares WHERE token = ?').get(shareToken);
+        const sh = db.prepare('SELECT host_id, permission, expires_at, revoked FROM remote_host_shares WHERE token = ?').get(shareToken);
         valid = !!(sh && !sh.revoked && sh.host_id === prototypeId && (!sh.expires_at || sh.expires_at > Date.now()));
+        shareDrive = !!(valid && sh.permission === 'drive');
       } catch (_) { valid = false; }
       if (!valid) {
         socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
@@ -594,10 +603,12 @@ function initCollabServer(httpServer, db, sessionMiddleware) {
         return;
       }
       req._collabUser = { id: 'share:' + shareToken };
-      req._collabRole = 'viewer';
+      // A helper link drives the agent chat only; a view link only watches.
+      req._collabRole = shareDrive ? 'helper' : 'viewer';
       req._collabProtoId = prototypeId;
       req._collabFileId = fileId;
-      req._collabReadOnly = true;
+      req._collabReadOnly = !shareDrive;
+      req._collabHelper = shareDrive;
       wss.handleUpgrade(req, socket, head, (ws) => { wss.emit('connection', ws, req); });
       return;
     }

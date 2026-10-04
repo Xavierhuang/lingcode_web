@@ -13,6 +13,9 @@ const { isServeHostOnline } = require('./collab-server');
 
 const NAME_MAX = 120;
 const SHARE_TTL_MS = 24 * 60 * 60 * 1000; // view-only share links auto-expire in 24h
+// A helper link lets someone else drive this computer's AI agent, which runs
+// commands on it, so it lives for one support session, not a day.
+const DRIVE_SHARE_TTL_MS = 2 * 60 * 60 * 1000;
 
 function publicOrigin() {
   return String(process.env.PUBLIC_ORIGIN || '').replace(/\/$/, '') || 'https://lingcode.dev';
@@ -118,26 +121,31 @@ function registerRemoteRoutes(app, db) {
     if (!u) return;
     const host = db.prepare('SELECT id, owner_id FROM remote_hosts WHERE id = ?').get(req.params.id);
     if (!host || host.owner_id !== u.id) return res.status(404).json({ ok: false, error: 'not_found' });
+    // permission 'drive' = "Invite a helper": the holder may send messages,
+    // stop and answer questions in the agent chat (never the terminal).
+    const permission = req.body && req.body.permission === 'drive' ? 'drive' : 'view';
     const token = crypto.randomBytes(24).toString('base64url');
     const now = Date.now();
-    const expiresAt = now + SHARE_TTL_MS;
+    const expiresAt = now + (permission === 'drive' ? DRIVE_SHARE_TTL_MS : SHARE_TTL_MS);
     db.prepare('INSERT INTO remote_host_shares (token, host_id, owner_id, permission, created_at, expires_at, revoked) VALUES (?, ?, ?, ?, ?, ?, 0)')
-      .run(token, host.id, u.id, 'view', now, expiresAt);
-    res.json({ ok: true, token, url: `${publicOrigin()}/remote/?share=${encodeURIComponent(token)}`, expires_at: expiresAt });
+      .run(token, host.id, u.id, permission, now, expiresAt);
+    res.json({ ok: true, token, permission, url: `${publicOrigin()}/remote/?share=${encodeURIComponent(token)}`, expires_at: expiresAt });
   });
 
   // GET /api/remote/share/:token — redeem a share link. NO auth: the token IS the
   // credential. Returns the read-only wsUrl + host name + online status.
   app.get('/api/remote/share/:token', (req, res) => {
     const token = String(req.params.token || '');
-    const sh = db.prepare('SELECT host_id, expires_at, revoked FROM remote_host_shares WHERE token = ?').get(token);
+    const sh = db.prepare('SELECT host_id, permission, expires_at, revoked FROM remote_host_shares WHERE token = ?').get(token);
     if (!sh || sh.revoked) return res.status(404).json({ ok: false, error: 'invalid_token' });
     if (sh.expires_at && Date.now() > sh.expires_at) return res.status(410).json({ ok: false, error: 'expired' });
     const host = db.prepare('SELECT id, name FROM remote_hosts WHERE id = ?').get(sh.host_id);
     if (!host) return res.status(404).json({ ok: false, error: 'not_found' });
     const wsBase = wsBaseOrigin();
     const wsUrl = `${wsBase}/ws/collab/${host.id}/__serve?share=${encodeURIComponent(token)}`;
-    res.json({ ok: true, host: { id: host.id, name: host.name }, wsUrl, readOnly: true, online: isServeHostOnline(host.id) });
+    const drive = sh.permission === 'drive';
+    res.json({ ok: true, host: { id: host.id, name: host.name }, wsUrl, readOnly: !drive, permission: drive ? 'drive' : 'view',
+      expires_at: sh.expires_at, online: isServeHostOnline(host.id) });
   });
 
   // DELETE /api/remote/hosts/:id/shares — revoke all view-only links (owner-only).
