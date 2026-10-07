@@ -36,7 +36,14 @@ const SESSION_TTL_MS = 60 * 60 * 1000;   // GC idle sessions after 1h
 const MAX_FILES = 600;
 const MAX_FILE_BYTES = 512 * 1024;       // per file we'll hand the agent / accept back
 const MAX_STEPS = 12;                    // tool-loop iterations per run (runaway guard)
-const MAX_TOKENS = 8192;                 // a whole page is often written in one tool call
+// A whole page is often written in one tool call (5–15K tokens). The proxy clamps
+// this to the caller's plan (free 24,576 by default). Thinking is capped
+// separately: LingModel's reasoning models otherwise take up to max_tokens - 512
+// for thinking, which left ~500 tokens for the page and cut it off mid-file.
+const MAX_TOKENS = 24000;
+const THINKING_BUDGET = 4000;
+// While the model writes a file, its partial content is streamed at most this often.
+const PROGRESS_INTERVAL_MS = 400;
 const MAX_HISTORY_TURNS = 12;            // prompt/reply pairs carried into the next run
 const MAX_PROMPT_CHARS = 8000;
 const MAX_UNDO = 10;                     // earlier file states kept per session
@@ -156,6 +163,24 @@ function systemPrompt(session) {
   return [...intro, '', 'Current files:', tree || '(empty)'].join('\n');
 }
 
+// The value of a JSON string field in a tool call's partial input, decoded as
+// far as it has arrived ("content":"<h1>Hel → "<h1>Hel"). Null until the field
+// has started. Used to show a file while the model is still writing it.
+function partialStringField(json, field) {
+  const m = new RegExp('"' + field + '"\\s*:\\s*"').exec(json);
+  if (!m) return null;
+  let raw = json.slice(m.index + m[0].length);
+  // Stop at the closing quote if it has arrived.
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] === '\\') { i++; continue; }
+    if (raw[i] === '"') { raw = raw.slice(0, i); break; }
+  }
+  // Drop a half-received escape at the end ("\\" or "\\u00").
+  raw = raw.replace(/\\u[0-9a-fA-F]{0,3}$/, '');
+  if (/(^|[^\\])(\\\\)*\\$/.test(raw)) raw = raw.slice(0, -1);
+  try { return JSON.parse('"' + raw + '"'); } catch (_) { return null; }
+}
+
 // One streamed upstream turn. Parses the Anthropic SSE, streams text deltas to the
 // browser, and assembles the assistant message (text + tool_use blocks). Resolves
 // { content, stopReason } where content is the Anthropic content array.
@@ -163,7 +188,11 @@ async function streamTurn(req, res, messages, signal) {
   const upstream = await selfFetch(req, '/api/inference/anthropic/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, stream: true, system: messages.system, tools: TOOLS, messages: messages.turns }),
+    body: JSON.stringify({
+      model: MODEL, max_tokens: MAX_TOKENS, stream: true,
+      thinking: { type: 'enabled', budget_tokens: THINKING_BUDGET },
+      system: messages.system, tools: TOOLS, messages: messages.turns,
+    }),
     signal,
   });
   if (!upstream.ok || !upstream.body) {
@@ -199,20 +228,56 @@ async function streamTurn(req, res, messages, signal) {
       } else if (ev.type === 'content_block_delta') {
         const b = blocks[ev.index]; if (!b) continue;
         if (ev.delta.type === 'text_delta' && ev.delta.text) { b.text += ev.delta.text; sse(res, 'text', { text: ev.delta.text }); }
-        else if (ev.delta.type === 'input_json_delta' && ev.delta.partial_json) { b._json += ev.delta.partial_json; }
+        else if (ev.delta.type === 'input_json_delta' && ev.delta.partial_json) {
+          b._json += ev.delta.partial_json;
+          announceProgress(res, b);
+        }
       } else if (ev.type === 'content_block_stop') {
         const b = blocks[ev.index];
-        if (b && b.type === 'tool_use') { try { b.input = JSON.parse(b._json || '{}'); } catch (_) { b.input = {}; } delete b._json; sse(res, 'tool', { name: b.name, input: b.input }); }
+        if (b && b.type === 'tool_use') {
+          try { b.input = JSON.parse(b._json || '{}'); } catch (_) { b.input = {}; b.truncated = true; }
+          delete b._json;
+          sse(res, 'tool', { name: b.name, input: b.input });
+        }
       } else if (ev.type === 'message_delta' && ev.delta && ev.delta.stop_reason) {
         stopReason = ev.delta.stop_reason;
       }
+    }
+  }
+  // A tool call still open when the stream ended was cut off (out of tokens).
+  for (const b of blocks) {
+    if (b && b.type === 'tool_use' && b._json !== undefined) {
+      try { b.input = JSON.parse(b._json || '{}'); } catch (_) { b.input = {}; b.truncated = true; }
+      delete b._json;
     }
   }
   // Clean content array for the next request (drop empty text blocks).
   const content = blocks.filter(Boolean).map((b) => b.type === 'tool_use'
     ? { type: 'tool_use', id: b.id, name: b.name, input: b.input || {} }
     : { type: 'text', text: b.text || '' }).filter((b) => b.type !== 'text' || b.text);
-  return { content, stopReason };
+  const truncated = new Set(blocks.filter((b) => b && b.truncated).map((b) => b.id));
+  return { content, stopReason, truncated };
+}
+
+// While a write_file call streams in: say which file once its path is known
+// (`tool_start`), then send its content so far (`file_progress`), throttled.
+function announceProgress(res, b) {
+  if (b.name !== 'write_file' && b.name !== 'edit_file') return;
+  if (!b._path) {
+    const path = partialStringField(b._json, 'path');
+    // Only a finished path: the closing quote has arrived.
+    if (path && new RegExp('"path"\\s*:\\s*"(?:[^"\\\\]|\\\\.)*"').test(b._json)) {
+      b._path = path;
+      sse(res, 'tool_start', { name: b.name, path });
+    }
+  }
+  if (b.name !== 'write_file' || !b._path) return;
+  const now = Date.now();
+  if (b._lastProgress && now - b._lastProgress < PROGRESS_INTERVAL_MS) return;
+  const content = partialStringField(b._json, 'content');
+  if (content === null) return;
+  b._lastProgress = now;
+  sse(res, 'file_progress', { path: b._path, content });
 }
 
 function sse(res, event, data) {
@@ -252,7 +317,11 @@ async function runAgent(req, res, session, prompt, signal) {
     if (!toolUses.length) return finish();
     const toolResults = [];
     for (const tu of toolUses) {
-      const r = runTool(session, tu.name, tu.input);
+      // Cut off mid-call: don't run half a file; tell the model to write less at once.
+      const r = turn.truncated.has(tu.id)
+        ? { content: 'This tool call was cut off because it was too long, and nothing was written. Write the file in smaller pieces: a shorter first version with write_file, then add sections with edit_file, or move CSS and JavaScript into separate files.', isError: true }
+        : runTool(session, tu.name, tu.input);
+      if (turn.truncated.has(tu.id)) sse(res, 'tool_cut_off', { name: tu.name });
       if (r.changedPath) { changed.add(r.changedPath); sse(res, 'file_update', { path: r.changedPath, content: session.files[r.changedPath] }); }
       toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: String(r.content || ''), is_error: !!r.isError });
     }

@@ -92,7 +92,7 @@ async function harness() {
     const next = fake.inferenceQueue.shift() || { text: 'Done.' };
     if (next.status) return res.status(next.status).json(next.json);
     res.set('Content-Type', 'text/event-stream');
-    res.end(anthropicSSE(next));
+    res.end(next.raw || anthropicSSE(next));
   });
   app.post('/api/projects', (req, res) => {
     const u = getUserFromRequest(db, req);
@@ -297,4 +297,60 @@ test('undo puts back the files from before the last change, and saves them', asy
   await h.run(h.tokens.a, open.sessionId, 'again');
   const turns = h.fake.inference.at(-1).body.messages;
   assert.ok(turns.some((m) => m.role === 'user' && /undid/.test(m.content)));
+});
+
+// A write_file call whose JSON arrives in pieces; `cut` ends the stream
+// mid-call, as when the model runs out of output tokens.
+function chunkedWriteSSE(path, content, { cut = false } = {}) {
+  const json = JSON.stringify({ path, content });
+  const pieces = [];
+  for (let i = 0; i < json.length; i += 7) pieces.push(json.slice(i, i + 7));
+  const out = [];
+  const ev = (o) => out.push(`data: ${JSON.stringify(o)}\n\n`);
+  ev({ type: 'content_block_start', index: 0, content_block: { type: 'tool_use', id: 'tu_w', name: 'write_file' } });
+  for (const p of (cut ? pieces.slice(0, Math.floor(pieces.length / 2)) : pieces)) {
+    ev({ type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: p } });
+  }
+  if (cut) { ev({ type: 'message_delta', delta: { stop_reason: 'max_tokens' } }); return out.join(''); }
+  ev({ type: 'content_block_stop', index: 0 });
+  ev({ type: 'message_delta', delta: { stop_reason: 'tool_use' } });
+  return out.join('');
+}
+
+test('a file being written streams in before it is finished', async (t) => {
+  const h = await harness();
+  t.after(h.close);
+  const page = '<h1>Willow & Bean</h1>\n<p>Coffee "and" cake</p>';
+  h.fake.inferenceQueue.push({ raw: chunkedWriteSSE('index.html', page) }, { text: 'Built it.' });
+  const open = await (await h.call(h.tokens.a, 'POST', '/api/cloud-editor/sessions', { mode: 'build' })).json();
+  const { events } = await h.run(h.tokens.a, open.sessionId, 'a cafe site');
+  const names = events.map((e) => e.event);
+  assert.ok(names.indexOf('tool_start') >= 0 && names.indexOf('tool_start') < names.indexOf('file_update'), 'the file is announced before it is written');
+  assert.deepEqual(events.find((e) => e.event === 'tool_start').data, { name: 'write_file', path: 'index.html' });
+  const progress = events.filter((e) => e.event === 'file_progress');
+  assert.ok(progress.length >= 1, 'partial content is streamed');
+  assert.ok(page.startsWith(progress[0].data.content), 'partial content is a prefix of the file');
+  assert.deepEqual(events.find((e) => e.event === 'file_update').data, { path: 'index.html', content: page });
+  // The model is asked for room to write and a bounded amount of thinking.
+  const body = h.fake.inference[0].body;
+  assert.ok(body.max_tokens >= 16000);
+  assert.deepEqual(body.thinking, { type: 'enabled', budget_tokens: 4000 });
+});
+
+test('a file cut off mid-write is not saved and the model is told to split it', async (t) => {
+  const h = await harness();
+  t.after(h.close);
+  h.fake.inferenceQueue.push(
+    { raw: chunkedWriteSSE('index.html', '<h1>' + 'x'.repeat(200) + '</h1>', { cut: true }) },
+    { tools: [{ name: 'write_file', input: { path: 'index.html', content: '<h1>short</h1>' } }] },
+    { text: 'Done in smaller pieces.' },
+  );
+  const open = await (await h.call(h.tokens.a, 'POST', '/api/cloud-editor/sessions', { mode: 'build' })).json();
+  const { events } = await h.run(h.tokens.a, open.sessionId, 'a long page');
+  assert.ok(events.some((e) => e.event === 'tool_cut_off'));
+  const updates = events.filter((e) => e.event === 'file_update');
+  assert.deepEqual(updates.map((e) => e.data.content), ['<h1>short</h1>'], 'only the complete write is saved');
+  const toolResult = h.fake.inference[1].body.messages.at(-1).content[0];
+  assert.equal(toolResult.is_error, true);
+  assert.match(toolResult.content, /cut off/);
 });
