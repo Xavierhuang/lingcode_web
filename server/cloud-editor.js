@@ -1,30 +1,83 @@
 'use strict';
 
-// cloud-editor.js — server-side agent for the in-browser project editor.
+// cloud-editor.js — server-side agent for building and editing web projects
+// without a Mac: the in-browser project editor (/try.html?edit=<projectId>) and
+// the iPhone app's Build screen.
 //
-// The browser opens a deployed project (/try.html?edit=<projectId>, source loaded
-// via GET /api/projects/:id/source/files). When the user prompts, the browser
-// streams the request here: we run an Anthropic Messages tool-use loop SERVER-SIDE
-// over an in-memory copy of the project's files, and stream text + file changes
-// back over SSE. The browser applies `file_update` events to its preview.
+// A client opens a session on a project (an existing one, or a new one created
+// here for a "build" session), then streams prompts to it: we run an Anthropic
+// Messages tool-use loop SERVER-SIDE over an in-memory copy of the project's
+// files and stream text + file changes back over SSE.
 //
 // Phase 0 = static projects: the agent edits TEXT files only (no shell/build), so
 // an in-memory { path: content } map is enough and keeps untrusted execution off
 // the box entirely. (SSR build runs in a Cloudflare Sandbox later — see plan.)
 //
-// LLM access reuses the LingModel Anthropic-shape proxy (same key/URL/model as the
-// rest of the server) via inference-anthropic helpers.
+// Everything that costs money or touches storage goes through this server's own
+// public routes on loopback, carrying the caller's credentials, so it is billed,
+// capped and validated exactly as if the client had called it directly:
+//   • model calls → /api/inference/anthropic/v1/messages (LingModel plan limits,
+//     credits, burst; tool-loop continuations don't count as new prompts)
+//   • new project  → POST /api/projects
+//   • load / save  → GET|POST /api/projects/:id/source[/files] (every changed run
+//     is saved as a snapshot, so a server restart loses no work)
+//   • deploy       → POST|PUT /api/account/cloud-apps (deploy rate limits, app cap,
+//     <slug>.lingcode.app address)
 
+const crypto = require('crypto');
+const zlib = require('zlib');
+const tar = require('tar-stream');
 const { getUserFromRequest } = require('./auth-helpers');
 const { projectRole, roleAtLeast } = require('./project-access');
-const { lingmodelAnthropicMessagesUrl, lingmodelUpstreamApiKey, loadLingModelConfig } = require('./inference-anthropic');
+const { PUBLIC_APEX } = require('./cloud-apps');
 
-const SESSIONS = new Map();              // sessionId -> { projectId, userId, files, createdAt, lastActive }
+const SESSIONS = new Map();              // sessionId -> { projectId, userId, mode, files, history, appId, ... }
 const SESSION_TTL_MS = 60 * 60 * 1000;   // GC idle sessions after 1h
 const MAX_FILES = 600;
 const MAX_FILE_BYTES = 512 * 1024;       // per file we'll hand the agent / accept back
 const MAX_STEPS = 12;                    // tool-loop iterations per run (runaway guard)
-const MAX_TOKENS = 4096;
+const MAX_TOKENS = 8192;                 // a whole page is often written in one tool call
+const MAX_HISTORY_TURNS = 12;            // prompt/reply pairs carried into the next run
+const MAX_PROMPT_CHARS = 8000;
+// `auto` = the LingModel default the proxy is configured with.
+const MODEL = process.env.CLOUD_EDITOR_MODEL || 'auto';
+
+// This process, reached directly (index.js listens on 127.0.0.1:PORT).
+function selfOrigin() {
+  return (process.env.CLOUD_EDITOR_SELF_ORIGIN || `http://127.0.0.1:${parseInt(process.env.PORT || '3000', 10)}`).replace(/\/$/, '');
+}
+
+// Call one of this server's own routes as the requesting user: same bearer token
+// or session cookie, so the route authenticates, bills and limits them.
+function selfFetch(req, path, init = {}) {
+  const headers = Object.assign({}, init.headers || {});
+  if (req.headers.authorization) headers.authorization = req.headers.authorization;
+  if (req.headers.cookie) headers.cookie = req.headers.cookie;
+  return fetch(selfOrigin() + path, Object.assign({}, init, { headers }));
+}
+
+async function readJson(r) {
+  try { return await r.json(); } catch (_) { return {}; }
+}
+
+// Pack a { path: content } map as a .tar.gz (what the source and deploy routes take).
+function packFiles(files) {
+  return new Promise((resolve, reject) => {
+    const pack = tar.pack();
+    const gz = zlib.createGzip();
+    const chunks = [];
+    gz.on('data', (c) => chunks.push(c));
+    gz.on('end', () => resolve(Buffer.concat(chunks)));
+    gz.on('error', reject);
+    pack.pipe(gz);
+    for (const p of Object.keys(files).sort()) pack.entry({ name: p, mode: 0o644 }, files[p]);
+    pack.finalize();
+  });
+}
+
+function appUrl(slug, id) {
+  return slug ? `https://${slug}.${PUBLIC_APEX}/` : `${String(process.env.PUBLIC_ORIGIN || 'https://lingcode.dev').replace(/\/$/, '')}/apps/${id}/`;
+}
 
 function gcSessions() {
   const now = Date.now();
@@ -80,34 +133,46 @@ function runTool(session, name, input) {
 
 function systemPrompt(session) {
   const tree = Object.keys(session.files).sort().join('\n');
-  return [
-    'You are LingCode\'s in-browser project editor agent. You edit the source files of a',
-    'user\'s DEPLOYED web project. Make the change the user asks for, using the tools.',
-    'Keep changes focused and minimal; do not rewrite unrelated files. Prefer edit_file for',
-    'small changes and write_file for new files or full rewrites. After making the change,',
-    'briefly say what you did. The project is live — be careful.',
-    '',
-    'Current files:',
-    tree || '(empty)',
-  ].join('\n');
+  const intro = session.mode === 'build'
+    ? [
+      'You are LingCode\'s website builder. You build and change a small static website',
+      '(HTML, CSS and JavaScript) from the user\'s plain-English requests, using the tools.',
+      'The entry point is index.html at the project root; keep the site working when opened',
+      'directly in a browser. No build step and no server: plain files only. Tailwind via',
+      '<script src="https://cdn.tailwindcss.com"></script> and other libraries from a CDN are',
+      'fine. Make it look polished and work on a phone screen first. Use real-sounding copy,',
+      'not lorem ipsum. Prefer one index.html plus a few files over many. For a change,',
+      'prefer edit_file; use write_file for new files or full rewrites. When done, say in one',
+      'or two sentences what you made or changed — the user is not a developer.',
+    ]
+    : [
+      'You are LingCode\'s in-browser project editor agent. You edit the source files of a',
+      'user\'s DEPLOYED web project. Make the change the user asks for, using the tools.',
+      'Keep changes focused and minimal; do not rewrite unrelated files. Prefer edit_file for',
+      'small changes and write_file for new files or full rewrites. After making the change,',
+      'briefly say what you did. The project is live — be careful.',
+    ];
+  return [...intro, '', 'Current files:', tree || '(empty)'].join('\n');
 }
 
 // One streamed upstream turn. Parses the Anthropic SSE, streams text deltas to the
 // browser, and assembles the assistant message (text + tool_use blocks). Resolves
 // { content, stopReason } where content is the Anthropic content array.
-async function streamTurn(db, res, messages, signal) {
-  const url = lingmodelAnthropicMessagesUrl(db);
-  const key = lingmodelUpstreamApiKey(db);
-  const model = (loadLingModelConfig(db) || {}).defaultModel || 'kimi-k2.7';
-  const upstream = await fetch(url, {
+async function streamTurn(req, res, messages, signal) {
+  const upstream = await selfFetch(req, '/api/inference/anthropic/v1/messages', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-api-key': key, 'authorization': 'Bearer ' + key, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model, max_tokens: MAX_TOKENS, stream: true, system: messages.system, tools: TOOLS, messages: messages.turns }),
+    headers: { 'content-type': 'application/json', 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, stream: true, system: messages.system, tools: TOOLS, messages: messages.turns }),
     signal,
   });
   if (!upstream.ok || !upstream.body) {
-    let detail = ''; try { detail = (await upstream.text()).slice(0, 300); } catch (_) {}
-    throw new Error(`upstream ${upstream.status}: ${detail}`);
+    // The proxy's plan-limit and auth errors are user-facing JSON; pass them on
+    // with their status so a client can offer sign-in or an upgrade.
+    const body = await readJson(upstream);
+    const err = new Error(body.message || body.error || `Model request failed (HTTP ${upstream.status}).`);
+    err.status = upstream.status;
+    err.code = typeof body.error === 'string' && /^[a-z_]+$/.test(body.error) ? body.error : null;
+    throw err;
   }
   const blocks = [];
   let stopReason = null;
@@ -153,19 +218,37 @@ function sse(res, event, data) {
   try { res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); } catch (_) {}
 }
 
-async function runAgent(db, res, session, prompt, signal) {
-  const turns = [{ role: 'user', content: prompt }];
+async function runAgent(req, res, session, prompt, signal) {
+  // Earlier prompts and replies, text only: the files themselves are the state,
+  // and the agent reads what it needs.
+  const turns = [];
+  for (const h of session.history) {
+    turns.push({ role: 'user', content: h.prompt });
+    turns.push({ role: 'assistant', content: h.reply || '(done)' });
+  }
+  turns.push({ role: 'user', content: prompt });
   const messages = { system: systemPrompt(session), turns };
   const changed = new Set();
+  let reply = '';
+  const finish = (extra) => {
+    session.history.push({ prompt, reply: reply.trim().slice(0, 2000) });
+    if (session.history.length > MAX_HISTORY_TURNS) session.history.splice(0, session.history.length - MAX_HISTORY_TURNS);
+    return Object.assign({ changed: Array.from(changed) }, extra || {});
+  };
   for (let step = 0; step < MAX_STEPS; step++) {
-    if (signal.aborted) return;
+    if (signal.aborted) return finish();
     let turn;
-    try { turn = await streamTurn(db, res, messages, signal); }
-    catch (e) { if (!signal.aborted) sse(res, 'error', { message: String((e && e.message) || e).slice(0, 300) }); return; }
-    if (signal.aborted) return;
+    try { turn = await streamTurn(req, res, messages, signal); }
+    catch (e) {
+      if (!signal.aborted) sse(res, 'error', { message: String((e && e.message) || e).slice(0, 300), status: (e && e.status) || null, code: (e && e.code) || null });
+      return changed.size ? finish() : null;
+    }
+    if (signal.aborted) return finish();
+    const text = turn.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
+    if (text) reply = text;
     turns.push({ role: 'assistant', content: turn.content.length ? turn.content : [{ type: 'text', text: '' }] });
     const toolUses = turn.content.filter((b) => b.type === 'tool_use');
-    if (!toolUses.length) { sse(res, 'done', { changed: Array.from(changed) }); return; }
+    if (!toolUses.length) return finish();
     const toolResults = [];
     for (const tu of toolUses) {
       const r = runTool(session, tu.name, tu.input);
@@ -174,52 +257,126 @@ async function runAgent(db, res, session, prompt, signal) {
     }
     turns.push({ role: 'user', content: toolResults });
   }
-  sse(res, 'done', { changed: Array.from(changed), note: 'Reached step limit.' });
+  return finish({ note: 'Reached step limit.' });
+}
+
+// Save the session's files as a new project source snapshot. Returns the version,
+// or null (logged) — a failed save must not fail the run the user just watched.
+async function saveSnapshot(req, session) {
+  if (!Object.keys(session.files).length) return null;
+  try {
+    const r = await selfFetch(req, `/api/projects/${encodeURIComponent(session.projectId)}/source`, {
+      method: 'POST', headers: { 'content-type': 'application/gzip' }, body: await packFiles(session.files),
+    });
+    const body = await readJson(r);
+    if (!r.ok) { console.warn('[cloud-editor] snapshot save failed', r.status, body.error); return null; }
+    session.dirty = false;
+    return body.version || null;
+  } catch (e) {
+    console.warn('[cloud-editor] snapshot save failed', e && e.message);
+    return null;
+  }
+}
+
+function sessionFor(db, req, res) {
+  const u = getUserFromRequest(db, req);
+  if (!u) { res.status(401).json({ ok: false, error: 'unauthorized' }); return null; }
+  const session = SESSIONS.get(String(req.params.id || ''));
+  if (!session || session.userId !== u.id) { res.status(404).json({ ok: false, error: 'session_not_found' }); return null; }
+  session.lastActive = Date.now();
+  return session;
+}
+
+function cleanFiles(incoming) {
+  const files = {};
+  let n = 0;
+  for (const k of Object.keys(incoming || {})) {
+    if (n >= MAX_FILES) break;
+    const v = incoming[k];
+    if (typeof v !== 'string') continue;
+    if (Buffer.byteLength(v, 'utf8') > MAX_FILE_BYTES) continue;
+    files[String(k)] = v; n++;
+  }
+  return files;
 }
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 function registerCloudEditorRoutes(app, db) {
-  // Open an edit session: auth editor+ on the project, take the browser's current
-  // files as the working copy. Returns a session id used for /run.
-  app.post('/api/cloud-editor/sessions', (req, res) => {
+  const gcTimer = setInterval(gcSessions, 5 * 60 * 1000);
+  if (gcTimer.unref) gcTimer.unref();
+
+  // Open a session. Three shapes:
+  //   { projectId, files }          — the browser editor's working copy (as before)
+  //   { projectId }                 — reopen: files load from the latest snapshot
+  //   { mode: 'build', name }       — a new site: creates the project first
+  // `mode` is 'edit' (default, a deployed project) or 'build' (making a site).
+  // Responds with the session id, project id, files, and the site it deploys to.
+  app.post('/api/cloud-editor/sessions', async (req, res) => {
     const u = getUserFromRequest(db, req);
     if (!u) return res.status(401).json({ ok: false, error: 'unauthorized' });
-    const projectId = String((req.body && req.body.projectId) || '');
-    const role = projectRole(db, projectId, u.id);
-    if (!role) return res.status(404).json({ ok: false, error: 'not_found' });
-    if (!roleAtLeast(role, 'editor')) return res.status(403).json({ ok: false, error: 'forbidden' });
-    const incoming = (req.body && req.body.files) || {};
-    const files = {};
-    let n = 0;
-    for (const k of Object.keys(incoming)) {
-      if (n >= MAX_FILES) break;
-      const v = incoming[k];
-      if (typeof v !== 'string') continue;
-      if (Buffer.byteLength(v, 'utf8') > MAX_FILE_BYTES) continue;
-      files[String(k)] = v; n++;
+    const body = req.body || {};
+    const mode = body.mode === 'build' ? 'build' : 'edit';
+    let projectId = String(body.projectId || '');
+    let files;
+
+    if (!projectId) {
+      if (mode !== 'build') return res.status(400).json({ ok: false, error: 'missing_project' });
+      const name = String(body.name || 'New site').trim().slice(0, 120) || 'New site';
+      const r = await selfFetch(req, '/api/projects', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }),
+      });
+      const created = await readJson(r);
+      if (!r.ok || !created.project) return res.status(r.status || 500).json({ ok: false, error: created.error || 'project_create_failed' });
+      projectId = created.project.id;
+      files = {};
+    } else {
+      const role = projectRole(db, projectId, u.id);
+      if (!role) return res.status(404).json({ ok: false, error: 'not_found' });
+      if (!roleAtLeast(role, 'editor')) return res.status(403).json({ ok: false, error: 'forbidden' });
+      if (body.files && typeof body.files === 'object') {
+        files = cleanFiles(body.files);
+      } else {
+        const r = await selfFetch(req, `/api/projects/${encodeURIComponent(projectId)}/source/files`);
+        const snap = await readJson(r);
+        if (r.ok) files = cleanFiles(snap.files);
+        else if (r.status === 404 && snap.error === 'no_snapshot') files = {};
+        else return res.status(r.status || 500).json({ ok: false, error: snap.error || 'source_load_failed' });
+      }
     }
+
+    // The site this project already deploys to, so Deploy updates it in place.
+    let site = null;
+    try {
+      site = db.prepare('SELECT id, slug, title FROM cloud_apps WHERE project_id = ? ORDER BY updated_at DESC LIMIT 1').get(projectId) || null;
+    } catch (_) {}
+
     gcSessions();
-    const id = require('crypto').randomUUID();
-    SESSIONS.set(id, { projectId, userId: u.id, files, createdAt: Date.now(), lastActive: Date.now() });
-    res.json({ ok: true, sessionId: id, files: n });
+    const id = crypto.randomUUID();
+    SESSIONS.set(id, {
+      projectId, userId: u.id, mode, files, history: [], appId: site ? site.id : null,
+      running: false, dirty: false, createdAt: Date.now(), lastActive: Date.now(),
+    });
+    res.json({
+      ok: true, sessionId: id, projectId, mode, files,
+      site: site ? { id: site.id, title: site.title, url: appUrl(site.slug, site.id) } : null,
+    });
   });
 
   // Run one prompt against the session. SSE: text / tool / file_update / done / error.
+  // `done` carries { changed, saved } — saved is the snapshot version written.
   app.post('/api/cloud-editor/sessions/:id/run', async (req, res) => {
-    const u = getUserFromRequest(db, req);
-    if (!u) return res.status(401).json({ ok: false, error: 'unauthorized' });
-    const session = SESSIONS.get(String(req.params.id || ''));
-    if (!session || session.userId !== u.id) return res.status(404).json({ ok: false, error: 'session_not_found' });
-    const prompt = String((req.body && req.body.prompt) || '').trim();
+    const session = sessionFor(db, req, res);
+    if (!session) return;
+    const prompt = String((req.body && req.body.prompt) || '').trim().slice(0, MAX_PROMPT_CHARS);
     if (!prompt) return res.status(400).json({ ok: false, error: 'empty_prompt' });
+    if (session.running) return res.status(409).json({ ok: false, error: 'busy', message: 'This project is already working on a request.' });
     // Optional: sync the browser's latest hand-edits before the run.
     if (req.body && req.body.files && typeof req.body.files === 'object') {
       for (const k of Object.keys(req.body.files)) {
         const v = req.body.files[k];
-        if (typeof v === 'string' && Buffer.byteLength(v, 'utf8') <= MAX_FILE_BYTES) session.files[String(k)] = v;
+        if (typeof v === 'string' && Buffer.byteLength(v, 'utf8') <= MAX_FILE_BYTES) { session.files[String(k)] = v; session.dirty = true; }
       }
     }
-    session.lastActive = Date.now();
 
     res.set('Content-Type', 'text/event-stream');
     res.set('Cache-Control', 'no-cache, no-transform');
@@ -227,27 +384,101 @@ function registerCloudEditorRoutes(app, db) {
     res.set('X-Accel-Buffering', 'no');
     if (typeof res.flushHeaders === 'function') res.flushHeaders();
 
+    // Keep going if the client disconnects (a phone locking mid-run): the work
+    // is saved and the client picks it up from /files. Only an explicit
+    // /cancel stops the run.
     const ac = new AbortController();
-    req.on('close', () => ac.abort());
-    await runAgent(db, res, session, prompt, ac.signal);
-    session.lastActive = Date.now();
-    try { res.end(); } catch (_) {}
+    session.abort = ac;
+    session.running = true;
+    const heartbeat = setInterval(() => { try { res.write(': ping\n\n'); } catch (_) {} }, 15000);
+    try {
+      const result = await runAgent(req, res, session, prompt, ac.signal);
+      if (result) {
+        if (result.changed.length) session.dirty = true;
+        const saved = session.dirty ? await saveSnapshot(req, session) : null;
+        sse(res, 'done', Object.assign(result, { saved }));
+      }
+    } finally {
+      clearInterval(heartbeat);
+      session.running = false;
+      session.abort = null;
+      session.lastActive = Date.now();
+      try { res.end(); } catch (_) {}
+    }
   });
 
-  // Return the session's current files (post-run sync / save source).
+  app.post('/api/cloud-editor/sessions/:id/cancel', (req, res) => {
+    const session = sessionFor(db, req, res);
+    if (!session) return;
+    if (session.abort) session.abort.abort();
+    res.json({ ok: true });
+  });
+
+  // The session's current files and state (post-run sync, or a client catching
+  // up after its stream dropped).
   app.get('/api/cloud-editor/sessions/:id/files', (req, res) => {
-    const u = getUserFromRequest(db, req);
-    if (!u) return res.status(401).json({ ok: false, error: 'unauthorized' });
-    const session = SESSIONS.get(String(req.params.id || ''));
-    if (!session || session.userId !== u.id) return res.status(404).json({ ok: false, error: 'session_not_found' });
-    session.lastActive = Date.now();
-    res.json({ ok: true, files: session.files });
+    const session = sessionFor(db, req, res);
+    if (!session) return;
+    res.json({
+      ok: true, files: session.files, running: session.running,
+      history: session.history.map((h) => ({ prompt: h.prompt, reply: h.reply })),
+    });
+  });
+
+  // Publish the session's files as a static site: the first deploy creates it at
+  // <slug>.lingcode.app, later ones update the same site. Body: { title?, slug? }.
+  app.post('/api/cloud-editor/sessions/:id/deploy', async (req, res) => {
+    const session = sessionFor(db, req, res);
+    if (!session) return;
+    if (session.running) return res.status(409).json({ ok: false, error: 'busy', message: 'Wait for the current request to finish.' });
+    if (!('index.html' in session.files)) {
+      return res.status(400).json({ ok: false, error: 'missing_index', message: 'The site needs an index.html before it can be published.' });
+    }
+    if (session.dirty) await saveSnapshot(req, session);
+    const title = String((req.body && req.body.title) || '').trim().slice(0, 120);
+    const slug = String((req.body && req.body.slug) || '').trim().toLowerCase();
+    const headers = { 'content-type': 'application/gzip', 'x-lingcode-project-id': session.projectId };
+    if (title) headers['x-app-title'] = encodeURIComponent(title);
+    if (slug) headers['x-app-slug'] = encodeURIComponent(slug);
+    const path = session.appId ? `/api/account/cloud-apps/${encodeURIComponent(session.appId)}` : '/api/account/cloud-apps';
+    let r = await selfFetch(req, path, { method: session.appId ? 'PUT' : 'POST', headers, body: await packFiles(session.files) });
+    let body = await readJson(r);
+    // The linked site was deleted since: publish a new one.
+    if (session.appId && r.status === 404) {
+      session.appId = null;
+      r = await selfFetch(req, '/api/account/cloud-apps', { method: 'POST', headers, body: await packFiles(session.files) });
+      body = await readJson(r);
+    }
+    if (!r.ok) return res.status(r.status).json(Object.assign({ ok: false }, body));
+    session.appId = body.id || session.appId;
+    res.json({ ok: true, id: body.id, url: body.url, slug: body.slug || null });
   });
 
   app.post('/api/cloud-editor/sessions/:id/close', (req, res) => {
-    SESSIONS.delete(String(req.params.id || ''));
+    const session = sessionFor(db, req, res);
+    if (!session) return;
+    if (session.abort) session.abort.abort();
+    SESSIONS.delete(String(req.params.id));
     res.json({ ok: true });
+  });
+
+  // The caller's published static sites, with the project each one is built
+  // from (so a client can reopen it in a session). Newest first.
+  app.get('/api/cloud-editor/sites', (req, res) => {
+    const u = getUserFromRequest(db, req);
+    if (!u) return res.status(401).json({ ok: false, error: 'unauthorized' });
+    const rows = db.prepare(`
+      SELECT DISTINCT ca.id, ca.title, ca.slug, ca.project_id, ca.updated_at
+      FROM cloud_apps ca
+      LEFT JOIN project_members pm ON ca.project_id = pm.project_id AND pm.user_id = @uid
+      WHERE ca.user_id = @uid OR (pm.user_id IS NOT NULL AND pm.role IN ('owner', 'editor'))
+      ORDER BY ca.updated_at DESC
+      LIMIT 100
+    `).all({ uid: u.id });
+    res.json({ ok: true, items: rows.map((r) => ({
+      id: r.id, title: r.title, projectId: r.project_id || null, updatedAt: r.updated_at, url: appUrl(r.slug, r.id),
+    })) });
   });
 }
 
-module.exports = { registerCloudEditorRoutes };
+module.exports = { registerCloudEditorRoutes, _sessions: SESSIONS, _packFiles: packFiles, _systemPrompt: systemPrompt };
