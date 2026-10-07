@@ -29,6 +29,7 @@ const zlib = require('zlib');
 const tar = require('tar-stream');
 const { getUserFromRequest } = require('./auth-helpers');
 const { projectRole, roleAtLeast } = require('./project-access');
+const express = require('express');
 const { PUBLIC_APEX } = require('./cloud-apps');
 
 const SESSIONS = new Map();              // sessionId -> { projectId, userId, mode, files, history, appId, ... }
@@ -47,6 +48,16 @@ const PROGRESS_INTERVAL_MS = 400;
 const MAX_HISTORY_TURNS = 12;            // prompt/reply pairs carried into the next run
 const MAX_PROMPT_CHARS = 8000;
 const MAX_UNDO = 10;                     // earlier file states kept per session
+// The user's own documents (product brief, notes) and images (logo, photos).
+// Documents live under DOCS_DIR: the agent reads them, they are saved with the
+// project, and they are never published. Images are published with the site.
+const DOCS_DIR = '.lingcode/docs/';
+const PRIVATE_PREFIX = '.lingcode/';
+const MAX_DOC_BYTES = 200 * 1024;
+const MAX_DOCS = 10;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_ASSET_TOTAL = 25 * 1024 * 1024;
+const IMAGE_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', ico: 'image/x-icon' };
 // `auto` = the LingModel default the proxy is configured with.
 const MODEL = process.env.CLOUD_EDITOR_MODEL || 'auto';
 
@@ -68,8 +79,9 @@ async function readJson(r) {
   try { return await r.json(); } catch (_) { return {}; }
 }
 
-// Pack a { path: content } map as a .tar.gz (what the source and deploy routes take).
-function packFiles(files) {
+// Pack a { path: content } map, plus binary assets, as a .tar.gz (what the
+// source and deploy routes take). `forDeploy` leaves out the private folder.
+function packFiles(files, assets = {}, { forDeploy = false } = {}) {
   return new Promise((resolve, reject) => {
     const pack = tar.pack();
     const gz = zlib.createGzip();
@@ -78,8 +90,42 @@ function packFiles(files) {
     gz.on('end', () => resolve(Buffer.concat(chunks)));
     gz.on('error', reject);
     pack.pipe(gz);
-    for (const p of Object.keys(files).sort()) pack.entry({ name: p, mode: 0o644 }, files[p]);
+    const keep = (p) => !(forDeploy && p.startsWith(PRIVATE_PREFIX));
+    for (const p of Object.keys(files).sort()) if (keep(p)) pack.entry({ name: p, mode: 0o644 }, files[p]);
+    for (const p of Object.keys(assets).sort()) if (keep(p)) pack.entry({ name: p, mode: 0o644 }, assets[p]);
     pack.finalize();
+  });
+}
+
+function isImagePath(p) {
+  return Object.prototype.hasOwnProperty.call(IMAGE_TYPES, String(p).split('.').pop().toLowerCase());
+}
+
+// A .tar.gz back into text files and binary assets (images, and anything that
+// isn't UTF-8 text). The inverse of packFiles.
+function unpackFiles(tgz) {
+  return new Promise((resolve, reject) => {
+    const files = {};
+    const assets = {};
+    const ex = tar.extract();
+    ex.on('entry', (h, stream, next) => {
+      const chunks = [];
+      stream.on('data', (c) => chunks.push(c));
+      stream.on('end', () => {
+        const name = String(h.name || '').replace(/^\.\//, '');
+        if (h.type === 'file' && name && !name.split('/').includes('..')) {
+          const buf = Buffer.concat(chunks);
+          const text = buf.toString('utf8');
+          const isText = !isImagePath(name) && !text.includes('\uFFFD') && buf.length <= MAX_FILE_BYTES;
+          if (isText) files[name] = text; else assets[name] = buf;
+        }
+        next();
+      });
+      stream.resume();
+    });
+    ex.on('finish', () => resolve({ files, assets }));
+    ex.on('error', reject);
+    try { ex.end(zlib.gunzipSync(tgz)); } catch (e) { reject(e); }
   });
 }
 
@@ -124,9 +170,22 @@ const TOOLS = [
 // { content: <string for tool_result>, isError?, changedPath? }.
 function runTool(session, name, input) {
   const files = session.files;
+  const assets = session.assets || {};
   input = input || {};
   if (name === 'list_files') {
-    return { content: Object.keys(files).sort().join('\n') || '(empty project)' };
+    const lines = Object.keys(files).sort()
+      .concat(Object.keys(assets).sort().map((p) => `${p} (image, ${Math.ceil(assets[p].length / 1024)} KB)`));
+    return { content: lines.join('\n') || '(empty project)' };
+  }
+  const p0 = String(input.path || '');
+  if (p0 in assets) {
+    if (name === 'read_file') {
+      return { content: `${p0} is an image the user uploaded (${Math.ceil(assets[p0].length / 1024)} KB). Use it by its path, e.g. <img src="${p0}" alt="…">.` };
+    }
+    return { content: `${p0} is an image and can't be edited. Reference it by its path instead.`, isError: true };
+  }
+  if ((name === 'write_file' || name === 'edit_file') && p0.startsWith(PRIVATE_PREFIX)) {
+    return { content: `${PRIVATE_PREFIX} holds the user's own documents and is read-only.`, isError: true };
   }
   if (name === 'read_file') {
     const p = String(input.path || '');
@@ -176,7 +235,19 @@ function systemPrompt(session) {
       'small changes and write_file for new files or full rewrites. After making the change,',
       'briefly say what you did. The project is live — be careful.',
     ];
-  return [...intro, '', 'Current files:', tree || '(empty)'].join('\n');
+  const docs = Object.keys(session.files).filter((p) => p.startsWith(DOCS_DIR)).sort();
+  const images = Object.keys(session.assets || {}).sort();
+  const extra = [];
+  if (docs.length) {
+    extra.push('', 'The user attached these documents (their product brief, notes or copy). Read them with',
+      'read_file before building and use their facts: names, features, prices, tone. They are private:',
+      'never link to or copy the files themselves into the site.', ...docs.map((p) => `- ${p}`));
+  }
+  if (images.length) {
+    extra.push('', 'The user uploaded these images. Use them where they fit (a logo in the header, photos',
+      'in sections) by their paths, e.g. <img src="images/logo.png">:', ...images.map((p) => `- ${p}`));
+  }
+  return [...intro, '', 'Current files:', tree || '(empty)', ...extra].join('\n');
 }
 
 // The value of a JSON string field in a tool call's partial input, decoded as
@@ -349,10 +420,10 @@ async function runAgent(req, res, session, prompt, signal) {
 // Save the session's files as a new project source snapshot. Returns the version,
 // or null (logged) — a failed save must not fail the run the user just watched.
 async function saveSnapshot(req, session) {
-  if (!Object.keys(session.files).length) return null;
+  if (!Object.keys(session.files).length && !Object.keys(session.assets || {}).length) return null;
   try {
     const r = await selfFetch(req, `/api/projects/${encodeURIComponent(session.projectId)}/source`, {
-      method: 'POST', headers: { 'content-type': 'application/gzip' }, body: await packFiles(session.files),
+      method: 'POST', headers: { 'content-type': 'application/gzip' }, body: await packFiles(session.files, session.assets),
     });
     const body = await readJson(r);
     if (!r.ok) { console.warn('[cloud-editor] snapshot save failed', r.status, body.error); return null; }
@@ -382,6 +453,15 @@ function sessionFor(db, req, res) {
   if (!session || session.userId !== u.id) { res.status(404).json({ ok: false, error: 'session_not_found' }); return null; }
   session.lastActive = Date.now();
   return session;
+}
+
+// The image type from its first bytes (not the name the client sent).
+function imageExtension(b) {
+  if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'png';
+  if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'jpg';
+  if (b.length >= 6 && b.slice(0, 6).toString('latin1').startsWith('GIF8')) return 'gif';
+  if (b.length >= 12 && b.slice(0, 4).toString('latin1') === 'RIFF' && b.slice(8, 12).toString('latin1') === 'WEBP') return 'webp';
+  return null;
 }
 
 function cleanFiles(incoming) {
@@ -416,6 +496,7 @@ function registerCloudEditorRoutes(app, db) {
     const mode = body.mode === 'build' ? 'build' : 'edit';
     let projectId = String(body.projectId || '');
     let files;
+    let assets = {};
 
     if (!projectId) {
       if (mode !== 'build') return res.status(400).json({ ok: false, error: 'missing_project' });
@@ -437,11 +518,22 @@ function registerCloudEditorRoutes(app, db) {
       if (body.files && typeof body.files === 'object') {
         files = cleanFiles(body.files);
       } else {
-        const r = await selfFetch(req, `/api/projects/${encodeURIComponent(projectId)}/source/files`);
-        const snap = await readJson(r);
-        if (r.ok) files = cleanFiles(snap.files);
-        else if (r.status === 404 && snap.error === 'no_snapshot') files = {};
-        else return res.status(r.status || 500).json({ ok: false, error: snap.error || 'source_load_failed' });
+        // The whole saved archive, so images come back too (the /source/files
+        // view is text-only).
+        const r = await selfFetch(req, `/api/projects/${encodeURIComponent(projectId)}/source`);
+        if (r.ok) {
+          try {
+            const unpacked = await unpackFiles(Buffer.from(await r.arrayBuffer()));
+            files = cleanFiles(unpacked.files);
+            assets = unpacked.assets;
+          } catch (_) {
+            return res.status(500).json({ ok: false, error: 'source_unreadable' });
+          }
+        } else {
+          const snap = await readJson(r);
+          if (r.status === 404 && snap.error === 'no_snapshot') files = {};
+          else return res.status(r.status || 500).json({ ok: false, error: snap.error || 'source_load_failed' });
+        }
       }
     }
 
@@ -454,11 +546,11 @@ function registerCloudEditorRoutes(app, db) {
     gcSessions();
     const id = crypto.randomUUID();
     SESSIONS.set(id, {
-      projectId, userId: u.id, mode, files, history: [], undo: [], appId: site ? site.id : null,
+      projectId, userId: u.id, mode, files, assets, history: [], undo: [], appId: site ? site.id : null,
       running: false, dirty: false, createdAt: Date.now(), lastActive: Date.now(),
     });
     res.json({
-      ok: true, sessionId: id, projectId, mode, files,
+      ok: true, sessionId: id, projectId, mode, files, assets: Object.keys(assets).sort(),
       site: site ? { id: site.id, title: site.title, url: appUrl(site.slug, site.id) } : null,
     });
   });
@@ -492,7 +584,7 @@ function registerCloudEditorRoutes(app, db) {
     session.abort = ac;
     session.running = true;
     const heartbeat = setInterval(() => { try { res.write(': ping\n\n'); } catch (_) {} }, 15000);
-    const before = Object.assign({}, session.files);
+    const before = { files: Object.assign({}, session.files), assets: Object.assign({}, session.assets) };
     try {
       const result = await runAgent(req, res, session, prompt, ac.signal);
       if (result) {
@@ -527,7 +619,7 @@ function registerCloudEditorRoutes(app, db) {
     const session = sessionFor(db, req, res);
     if (!session) return;
     res.json({
-      ok: true, files: session.files, running: session.running, canUndo: session.undo.length > 0,
+      ok: true, files: session.files, assets: Object.keys(session.assets).sort(), running: session.running, canUndo: session.undo.length > 0,
       history: session.history.map((h) => ({ prompt: h.prompt, reply: h.reply })),
     });
   });
@@ -539,12 +631,76 @@ function registerCloudEditorRoutes(app, db) {
     if (!session) return;
     if (session.running) return res.status(409).json({ ok: false, error: 'busy', message: 'Wait for the current request to finish.' });
     if (!session.undo.length) return res.status(400).json({ ok: false, error: 'nothing_to_undo', message: 'There is nothing to undo.' });
-    session.files = session.undo.pop();
+    const previous = session.undo.pop();
+    session.files = previous.files;
+    session.assets = previous.assets;
     session.dirty = true;
     // The model should know the last change is gone.
     session.history.push({ prompt: '(The user undid the last change.)', reply: 'Reverted the files to how they were before that change.' });
     const saved = await saveSnapshot(req, session);
-    res.json({ ok: true, files: session.files, saved, canUndo: session.undo.length > 0 });
+    res.json({ ok: true, files: session.files, assets: Object.keys(session.assets).sort(), saved, canUndo: session.undo.length > 0 });
+  });
+
+  // Attach a document or an image. Raw body; ?kind=doc|image&name=<file name>.
+  // A document is UTF-8 text (the app extracts a PDF's text first) and is saved
+  // under .lingcode/docs/; an image is saved under images/. Responds { path }.
+  // Both are saved with the project; an attachment can be undone like a change.
+  app.post('/api/cloud-editor/sessions/:id/attach', express.raw({ type: () => true, limit: MAX_IMAGE_BYTES + 1024 }), async (req, res) => {
+    const session = sessionFor(db, req, res);
+    if (!session) return;
+    if (session.running) return res.status(409).json({ ok: false, error: 'busy', message: 'Wait for the current request to finish.' });
+    const kind = String(req.query.kind || '');
+    const bytes = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    if (!bytes.length) return res.status(400).json({ ok: false, error: 'empty', message: 'The file is empty.' });
+    const rawName = String(req.query.name || '').split(/[\\/]/).pop();
+    const stem = rawName.replace(/\.[^.]*$/, '').toLowerCase()
+      .normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || (kind === 'doc' ? 'brief' : 'image');
+    const unique = (dir, ext, taken) => {
+      let path = `${dir}${stem}.${ext}`;
+      for (let i = 2; taken(path); i++) path = `${dir}${stem}-${i}.${ext}`;
+      return path;
+    };
+    const before = { files: Object.assign({}, session.files), assets: Object.assign({}, session.assets) };
+    let path;
+    if (kind === 'doc') {
+      if (bytes.length > MAX_DOC_BYTES) return res.status(413).json({ ok: false, error: 'too_large', message: 'Documents can be up to 200 KB of text.' });
+      const text = bytes.toString('utf8');
+      if (text.includes('\uFFFD')) return res.status(400).json({ ok: false, error: 'not_text', message: 'Only text documents can be attached (Markdown, text, or a PDF\'s text).' });
+      if (Object.keys(session.files).filter((p) => p.startsWith(DOCS_DIR)).length >= MAX_DOCS) {
+        return res.status(409).json({ ok: false, error: 'too_many', message: `A site can have up to ${MAX_DOCS} documents.` });
+      }
+      path = unique(DOCS_DIR, 'md', (p) => p in session.files);
+      session.files[path] = text;
+    } else if (kind === 'image') {
+      const ext = imageExtension(bytes);
+      if (!ext) return res.status(400).json({ ok: false, error: 'not_image', message: 'Upload a PNG, JPEG, GIF or WebP image.' });
+      if (bytes.length > MAX_IMAGE_BYTES) return res.status(413).json({ ok: false, error: 'too_large', message: 'Images can be up to 5 MB.' });
+      const total = Object.values(session.assets).reduce((n, b) => n + b.length, 0);
+      if (total + bytes.length > MAX_ASSET_TOTAL) return res.status(413).json({ ok: false, error: 'too_large', message: 'A site can hold up to 25 MB of images.' });
+      path = unique('images/', ext, (p) => p in session.assets || p in session.files);
+      session.assets[path] = bytes;
+    } else {
+      return res.status(400).json({ ok: false, error: 'bad_kind' });
+    }
+    session.undo.push(before);
+    if (session.undo.length > MAX_UNDO) session.undo.shift();
+    session.dirty = true;
+    const saved = await saveSnapshot(req, session);
+    // Lists the draft; its name still comes from the first request.
+    if (saved) noteBuildSiteSaved(db, session.projectId, '');
+    res.json({ ok: true, path, kind, bytes: bytes.length, saved, canUndo: true });
+  });
+
+  // One uploaded image, for the client's preview.
+  app.get('/api/cloud-editor/sessions/:id/asset', (req, res) => {
+    const session = sessionFor(db, req, res);
+    if (!session) return;
+    const path = String(req.query.path || '');
+    const buf = session.assets[path];
+    if (!buf) return res.status(404).json({ ok: false, error: 'not_found' });
+    res.set('Content-Type', IMAGE_TYPES[path.split('.').pop().toLowerCase()] || 'application/octet-stream');
+    res.set('Cache-Control', 'private, max-age=3600');
+    res.send(buf);
   });
 
   // Publish the session's files as a static site: the first deploy creates it at
@@ -563,12 +719,12 @@ function registerCloudEditorRoutes(app, db) {
     if (title) headers['x-app-title'] = encodeURIComponent(title);
     if (slug) headers['x-app-slug'] = encodeURIComponent(slug);
     const path = session.appId ? `/api/account/cloud-apps/${encodeURIComponent(session.appId)}` : '/api/account/cloud-apps';
-    let r = await selfFetch(req, path, { method: session.appId ? 'PUT' : 'POST', headers, body: await packFiles(session.files) });
+    let r = await selfFetch(req, path, { method: session.appId ? 'PUT' : 'POST', headers, body: await packFiles(session.files, session.assets, { forDeploy: true }) });
     let body = await readJson(r);
     // The linked site was deleted since: publish a new one.
     if (session.appId && r.status === 404) {
       session.appId = null;
-      r = await selfFetch(req, '/api/account/cloud-apps', { method: 'POST', headers, body: await packFiles(session.files) });
+      r = await selfFetch(req, '/api/account/cloud-apps', { method: 'POST', headers, body: await packFiles(session.files, session.assets, { forDeploy: true }) });
       body = await readJson(r);
     }
     if (!r.ok) return res.status(r.status).json(Object.assign({ ok: false }, body));

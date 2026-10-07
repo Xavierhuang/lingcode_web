@@ -82,7 +82,7 @@ async function harness() {
     a: issueToken(db, 'u_a', { pepper, scope: 'account' }).token,
     b: issueToken(db, 'u_b', { pepper, scope: 'account' }).token,
   };
-  const fake = { inference: [], inferenceQueue: [], snapshots: {}, deploys: [], projectSeq: 0 };
+  const fake = { inference: [], inferenceQueue: [], snapshots: {}, rawSnapshots: {}, deploys: [], projectSeq: 0 };
   const app = express();
   app.use(express.json({ limit: '128kb' }));
 
@@ -101,10 +101,17 @@ async function harness() {
     db.prepare('INSERT INTO project_members VALUES (?,?,?,?)').run(`m_${id}`, id, u.id, 'owner');
     res.status(201).json({ ok: true, project: { id, name: req.body.name, role: 'owner' } });
   });
-  app.post('/api/projects/:id/source', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
+  app.post('/api/projects/:id/source', express.raw({ type: '*/*', limit: '30mb' }), async (req, res) => {
     const list = (fake.snapshots[req.params.id] ||= []);
     list.push(await untar(req.body));
+    (fake.rawSnapshots[req.params.id] ||= []).push(Buffer.from(req.body));
     res.status(201).json({ ok: true, version: list.length });
+  });
+  app.get('/api/projects/:id/source', (req, res) => {
+    const list = fake.rawSnapshots[req.params.id];
+    if (!list || !list.length) return res.status(404).json({ ok: false, error: 'no_snapshot' });
+    res.set('Content-Type', 'application/gzip');
+    res.send(list[list.length - 1]);
   });
   app.get('/api/projects/:id/source/files', (req, res) => {
     const list = fake.snapshots[req.params.id];
@@ -116,14 +123,15 @@ async function harness() {
     if (!u) return res.status(401).json({ ok: false, error: 'unauthorized' });
     const chunks = [];
     for await (const c of req) chunks.push(c);
-    const files = await untar(Buffer.concat(chunks));
+    const raw = Buffer.concat(chunks);
+    const files = await untar(raw);
     let id = req.params.id;
     if (mode === 'update' && !db.prepare('SELECT 1 FROM cloud_apps WHERE id = ?').get(id)) return res.status(404).json({ ok: false, error: 'app_not_found' });
     if (mode === 'create') {
       id = `app_${fake.deploys.length + 1}`;
       db.prepare('INSERT INTO cloud_apps VALUES (?,?,?,?,?,?)').run(id, u.id, decodeURIComponent(req.headers['x-app-title'] || 'Untitled'), `site-${id}`, req.headers['x-lingcode-project-id'] || null, Date.now());
     }
-    fake.deploys.push({ mode, id, user: u.id, files, projectHeader: req.headers['x-lingcode-project-id'] });
+    fake.deploys.push({ mode, id, user: u.id, files, raw, projectHeader: req.headers['x-lingcode-project-id'] });
     res.status(mode === 'create' ? 201 : 200).json({ ok: true, id, url: `https://site-${id}.lingcode.app/`, slug: `site-${id}` });
   };
   app.post('/api/account/cloud-apps', deploy('create'));
@@ -136,6 +144,11 @@ async function harness() {
   const origin = `http://127.0.0.1:${server.address().port}`;
   process.env.CLOUD_EDITOR_SELF_ORIGIN = origin;
 
+  const upload = (token, path, bytes) => fetch(origin + path, {
+    method: 'POST',
+    headers: Object.assign({ 'content-type': 'application/octet-stream' }, token ? { authorization: `Bearer ${token}` } : {}),
+    body: bytes,
+  });
   const call = (token, method, path, body) => fetch(origin + path, {
     method,
     headers: Object.assign({ 'content-type': 'application/json' }, token ? { authorization: `Bearer ${token}` } : {}),
@@ -154,7 +167,7 @@ async function harness() {
     return { status: r.status, events };
   };
   const close = () => new Promise((resolve) => { server.closeAllConnections(); server.close(resolve); });
-  return { db, tokens, fake, call, run, close };
+  return { db, tokens, fake, call, upload, run, close };
 }
 
 test('a build session creates a project, writes the site, and saves it', async (t) => {
@@ -372,4 +385,87 @@ test('unpublished Build sites are listed as drafts, named after their first requ
 
   await h.call(h.tokens.a, 'POST', `/api/cloud-editor/sessions/${open.sessionId}/deploy`, {});
   assert.deepEqual((await list(h.tokens.a)).map((d) => d.published), [true], 'publishing moves it out of drafts');
+});
+
+// Smallest valid PNG header bytes plus padding — enough for the type sniff.
+const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(300, 7)]);
+
+test('an attached brief is read by the agent, saved, and never published', async (t) => {
+  const h = await harness();
+  t.after(h.close);
+  const open = await (await h.call(h.tokens.a, 'POST', '/api/cloud-editor/sessions', { mode: 'build' })).json();
+  const brief = '# Willow & Bean\nSpecialty coffee in Bristol. Flat white £3.20.';
+  const att = await (await h.upload(h.tokens.a, `/api/cloud-editor/sessions/${open.sessionId}/attach?kind=doc&name=Product%20Brief.pdf`, Buffer.from(brief))).json();
+  assert.equal(att.ok, true);
+  assert.equal(att.path, '.lingcode/docs/product-brief.md');
+  assert.equal(h.fake.snapshots[open.projectId].at(-1)['.lingcode/docs/product-brief.md'], brief, 'saved with the project');
+
+  h.fake.inferenceQueue.push(
+    { tools: [{ name: 'read_file', input: { path: att.path } }] },
+    { tools: [{ name: 'write_file', input: { path: '.lingcode/docs/product-brief.md', content: 'overwritten' } },
+              { name: 'write_file', input: { path: 'index.html', content: '<h1>Willow & Bean</h1>' } }] },
+    { text: 'Built from your brief.' },
+  );
+  await h.run(h.tokens.a, open.sessionId, 'build a landing page from my brief');
+  const first = h.fake.inference[0].body;
+  assert.match(first.system, /attached these documents/);
+  assert.match(first.system, /\.lingcode\/docs\/product-brief\.md/);
+  const readResult = h.fake.inference[1].body.messages.at(-1).content[0];
+  assert.equal(readResult.content, brief, 'the agent can read the brief');
+  const writes = h.fake.inference[2].body.messages.at(-1).content;
+  assert.equal(writes[0].is_error, true, 'the brief is read-only');
+
+  await h.call(h.tokens.a, 'POST', `/api/cloud-editor/sessions/${open.sessionId}/deploy`, {});
+  assert.deepEqual(Object.keys(h.fake.deploys[0].files), ['index.html'], 'the brief is not published');
+
+  assert.equal((await h.upload(h.tokens.a, `/api/cloud-editor/sessions/${open.sessionId}/attach?kind=doc&name=x`, Buffer.from([0xff, 0xfe, 0x00, 0xd8]))).status, 400, 'binary is not a document');
+});
+
+test('an uploaded image is offered to the agent, served for preview, published, and survives reopening', async (t) => {
+  const h = await harness();
+  t.after(h.close);
+  const open = await (await h.call(h.tokens.a, 'POST', '/api/cloud-editor/sessions', { mode: 'build' })).json();
+  const base = `/api/cloud-editor/sessions/${open.sessionId}`;
+  assert.equal((await h.upload(h.tokens.a, `${base}/attach?kind=image&name=logo.png`, Buffer.from('not an image'))).status, 400);
+  const img = await (await h.upload(h.tokens.a, `${base}/attach?kind=image&name=My%20Logo.PNG`, PNG)).json();
+  assert.equal(img.path, 'images/my-logo.png');
+  const again = await (await h.upload(h.tokens.a, `${base}/attach?kind=image&name=My%20Logo.PNG`, PNG)).json();
+  assert.equal(again.path, 'images/my-logo-2.png', 'a second upload with the same name gets its own path');
+
+  const served = await h.call(h.tokens.a, 'GET', `${base}/asset?path=images/my-logo.png`);
+  assert.equal(served.headers.get('content-type'), 'image/png');
+  assert.deepEqual(Buffer.from(await served.arrayBuffer()), PNG);
+  assert.equal((await h.call(h.tokens.b, 'GET', `${base}/asset?path=images/my-logo.png`)).status, 404, 'private to the session owner');
+
+  h.fake.inferenceQueue.push(
+    { tools: [{ name: 'read_file', input: { path: 'images/my-logo.png' } }, { name: 'edit_file', input: { path: 'images/my-logo.png', old_string: 'a', new_string: 'b' } }] },
+    { tools: [{ name: 'write_file', input: { path: 'index.html', content: '<img src="images/my-logo.png">' } }] },
+    { text: 'ok' },
+  );
+  await h.run(h.tokens.a, open.sessionId, 'use my logo');
+  assert.match(h.fake.inference[0].body.system, /uploaded these images/);
+  const [read, edit] = h.fake.inference[1].body.messages.at(-1).content;
+  assert.match(read.content, /is an image/);
+  assert.equal(edit.is_error, true);
+
+  await h.call(h.tokens.a, 'POST', `${base}/deploy`, {});
+  const deployed = await new Promise((resolve) => {
+    const names = [];
+    const ex = tar.extract();
+    ex.on('entry', (hd, st, next) => { names.push(hd.name); st.resume(); st.on('end', next); });
+    ex.on('finish', () => resolve(names.sort()));
+    ex.end(zlib.gunzipSync(h.fake.deploys[0].raw));
+  });
+  assert.deepEqual(deployed, ['images/my-logo-2.png', 'images/my-logo.png', 'index.html']);
+
+  // Reopen from the saved archive: the image comes back as an image.
+  const reopened = await (await h.call(h.tokens.a, 'POST', '/api/cloud-editor/sessions', { projectId: open.projectId, mode: 'build' })).json();
+  assert.deepEqual(reopened.assets, ['images/my-logo-2.png', 'images/my-logo.png']);
+  assert.deepEqual(Object.keys(reopened.files), ['index.html']);
+  const back = await h.call(h.tokens.a, 'GET', `/api/cloud-editor/sessions/${reopened.sessionId}/asset?path=images/my-logo.png`);
+  assert.deepEqual(Buffer.from(await back.arrayBuffer()), PNG, 'the bytes survive the round trip');
+
+  // Undo removes the last upload.
+  const before = await (await h.call(h.tokens.a, 'POST', `${base}/undo`, {})).json();
+  assert.equal(before.ok, true);
 });
