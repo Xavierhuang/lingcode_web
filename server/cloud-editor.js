@@ -83,6 +83,22 @@ function packFiles(files) {
   });
 }
 
+// Projects started from the Build screen, so the unpublished ones can be listed
+// and reopened ("drafts"). Published ones are found through cloud_apps.
+function migrateBuildSites(db) {
+  db.exec(`CREATE TABLE IF NOT EXISTS cloud_editor_sites (
+    project_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    has_files INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  )`);
+  db.exec('CREATE INDEX IF NOT EXISTS idx_cloud_editor_sites_user ON cloud_editor_sites (user_id, updated_at)');
+}
+
+const DEFAULT_SITE_TITLE = 'New site';
+
 function appUrl(slug, id) {
   return slug ? `https://${slug}.${PUBLIC_APEX}/` : `${String(process.env.PUBLIC_ORIGIN || 'https://lingcode.dev').replace(/\/$/, '')}/apps/${id}/`;
 }
@@ -348,6 +364,17 @@ async function saveSnapshot(req, session) {
   }
 }
 
+// A Build-screen draft got saved files: list it, and name it after its first
+// request if it still has the default name.
+function noteBuildSiteSaved(db, projectId, prompt) {
+  try {
+    const title = String(prompt || '').replace(/\s+/g, ' ').trim().slice(0, 60) || DEFAULT_SITE_TITLE;
+    db.prepare(`UPDATE cloud_editor_sites SET has_files = 1, updated_at = ?,
+      title = CASE WHEN title = ? THEN ? ELSE title END WHERE project_id = ?`)
+      .run(Date.now(), DEFAULT_SITE_TITLE, title, projectId);
+  } catch (_) { /* listing is a convenience; never fail a run over it */ }
+}
+
 function sessionFor(db, req, res) {
   const u = getUserFromRequest(db, req);
   if (!u) { res.status(401).json({ ok: false, error: 'unauthorized' }); return null; }
@@ -372,6 +399,7 @@ function cleanFiles(incoming) {
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 function registerCloudEditorRoutes(app, db) {
+  migrateBuildSites(db);
   const gcTimer = setInterval(gcSessions, 5 * 60 * 1000);
   if (gcTimer.unref) gcTimer.unref();
 
@@ -391,7 +419,7 @@ function registerCloudEditorRoutes(app, db) {
 
     if (!projectId) {
       if (mode !== 'build') return res.status(400).json({ ok: false, error: 'missing_project' });
-      const name = String(body.name || 'New site').trim().slice(0, 120) || 'New site';
+      const name = String(body.name || DEFAULT_SITE_TITLE).trim().slice(0, 120) || DEFAULT_SITE_TITLE;
       const r = await selfFetch(req, '/api/projects', {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }),
       });
@@ -399,6 +427,9 @@ function registerCloudEditorRoutes(app, db) {
       if (!r.ok || !created.project) return res.status(r.status || 500).json({ ok: false, error: created.error || 'project_create_failed' });
       projectId = created.project.id;
       files = {};
+      const now = Date.now();
+      db.prepare('INSERT OR IGNORE INTO cloud_editor_sites (project_id, user_id, title, created_at, updated_at) VALUES (?,?,?,?,?)')
+        .run(projectId, u.id, name, now, now);
     } else {
       const role = projectRole(db, projectId, u.id);
       if (!role) return res.status(404).json({ ok: false, error: 'not_found' });
@@ -471,6 +502,7 @@ function registerCloudEditorRoutes(app, db) {
           if (session.undo.length > MAX_UNDO) session.undo.shift();
         }
         const saved = session.dirty ? await saveSnapshot(req, session) : null;
+        if (saved) noteBuildSiteSaved(db, session.projectId, prompt);
         sse(res, 'done', Object.assign(result, { saved, canUndo: session.undo.length > 0 }));
       }
     } finally {
@@ -565,9 +597,23 @@ function registerCloudEditorRoutes(app, db) {
       ORDER BY ca.updated_at DESC
       LIMIT 100
     `).all({ uid: u.id });
-    res.json({ ok: true, items: rows.map((r) => ({
-      id: r.id, title: r.title, projectId: r.project_id || null, updatedAt: r.updated_at, url: appUrl(r.slug, r.id),
-    })) });
+    // Unpublished Build-screen sites the user can still open (editor+).
+    const drafts = db.prepare(`
+      SELECT s.project_id, s.title, s.updated_at FROM cloud_editor_sites s
+      JOIN project_members pm ON pm.project_id = s.project_id AND pm.user_id = @uid AND pm.role IN ('owner', 'editor')
+      WHERE s.has_files = 1
+        AND NOT EXISTS (SELECT 1 FROM cloud_apps ca WHERE ca.project_id = s.project_id)
+      ORDER BY s.updated_at DESC
+      LIMIT 100
+    `).all({ uid: u.id });
+    res.json({ ok: true, items: [
+      ...rows.map((r) => ({
+        id: r.id, title: r.title, projectId: r.project_id || null, updatedAt: r.updated_at, url: appUrl(r.slug, r.id), published: true,
+      })),
+      ...drafts.map((d) => ({
+        id: `draft:${d.project_id}`, title: d.title, projectId: d.project_id, updatedAt: d.updated_at, url: null, published: false,
+      })),
+    ] });
   });
 }
 

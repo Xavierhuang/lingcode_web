@@ -248,7 +248,8 @@ test('reopening a project loads its saved files and its site', async (t) => {
   assert.equal(again.site.id, 'app_1');
 
   const sites = await (await h.call(h.tokens.a, 'GET', '/api/cloud-editor/sites')).json();
-  assert.deepEqual(sites.items.map((s) => [s.id, s.projectId]), [['app_1', first.projectId]]);
+  assert.deepEqual(sites.items.map((s) => [s.id, s.projectId, s.published]), [['app_1', first.projectId, true]],
+    'a published site is not also listed as a draft');
 });
 
 test('a session belongs to the user who opened it', async (t) => {
@@ -353,4 +354,22 @@ test('a file cut off mid-write is not saved and the model is told to split it', 
   const toolResult = h.fake.inference[1].body.messages.at(-1).content[0];
   assert.equal(toolResult.is_error, true);
   assert.match(toolResult.content, /cut off/);
+});
+
+test('unpublished Build sites are listed as drafts, named after their first request', async (t) => {
+  const h = await harness();
+  t.after(h.close);
+  const list = async (token) => (await (await h.call(token, 'GET', '/api/cloud-editor/sites')).json()).items;
+  const open = await (await h.call(h.tokens.a, 'POST', '/api/cloud-editor/sessions', { mode: 'build' })).json();
+  assert.deepEqual(await list(h.tokens.a), [], 'an opened site with no files is not listed');
+
+  h.fake.inferenceQueue.push({ tools: [{ name: 'write_file', input: { path: 'index.html', content: 'x' } }] }, { text: 'ok' });
+  await h.run(h.tokens.a, open.sessionId, 'A page for my   bakery');
+  const drafts = await list(h.tokens.a);
+  assert.deepEqual(drafts.map((d) => [d.id, d.projectId, d.title, d.url, d.published]),
+    [[`draft:${open.projectId}`, open.projectId, 'A page for my bakery', null, false]]);
+  assert.deepEqual(await list(h.tokens.b), [], 'drafts are private');
+
+  await h.call(h.tokens.a, 'POST', `/api/cloud-editor/sessions/${open.sessionId}/deploy`, {});
+  assert.deepEqual((await list(h.tokens.a)).map((d) => d.published), [true], 'publishing moves it out of drafts');
 });
