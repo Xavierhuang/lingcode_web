@@ -39,6 +39,7 @@ const MAX_STEPS = 12;                    // tool-loop iterations per run (runawa
 const MAX_TOKENS = 8192;                 // a whole page is often written in one tool call
 const MAX_HISTORY_TURNS = 12;            // prompt/reply pairs carried into the next run
 const MAX_PROMPT_CHARS = 8000;
+const MAX_UNDO = 10;                     // earlier file states kept per session
 // `auto` = the LingModel default the proxy is configured with.
 const MODEL = process.env.CLOUD_EDITOR_MODEL || 'auto';
 
@@ -353,7 +354,7 @@ function registerCloudEditorRoutes(app, db) {
     gcSessions();
     const id = crypto.randomUUID();
     SESSIONS.set(id, {
-      projectId, userId: u.id, mode, files, history: [], appId: site ? site.id : null,
+      projectId, userId: u.id, mode, files, history: [], undo: [], appId: site ? site.id : null,
       running: false, dirty: false, createdAt: Date.now(), lastActive: Date.now(),
     });
     res.json({
@@ -391,12 +392,17 @@ function registerCloudEditorRoutes(app, db) {
     session.abort = ac;
     session.running = true;
     const heartbeat = setInterval(() => { try { res.write(': ping\n\n'); } catch (_) {} }, 15000);
+    const before = Object.assign({}, session.files);
     try {
       const result = await runAgent(req, res, session, prompt, ac.signal);
       if (result) {
-        if (result.changed.length) session.dirty = true;
+        if (result.changed.length) {
+          session.dirty = true;
+          session.undo.push(before);
+          if (session.undo.length > MAX_UNDO) session.undo.shift();
+        }
         const saved = session.dirty ? await saveSnapshot(req, session) : null;
-        sse(res, 'done', Object.assign(result, { saved }));
+        sse(res, 'done', Object.assign(result, { saved, canUndo: session.undo.length > 0 }));
       }
     } finally {
       clearInterval(heartbeat);
@@ -420,9 +426,24 @@ function registerCloudEditorRoutes(app, db) {
     const session = sessionFor(db, req, res);
     if (!session) return;
     res.json({
-      ok: true, files: session.files, running: session.running,
+      ok: true, files: session.files, running: session.running, canUndo: session.undo.length > 0,
       history: session.history.map((h) => ({ prompt: h.prompt, reply: h.reply })),
     });
+  });
+
+  // Put the files back as they were before the last change that changed them,
+  // and save that as a new snapshot. Responds with the files.
+  app.post('/api/cloud-editor/sessions/:id/undo', async (req, res) => {
+    const session = sessionFor(db, req, res);
+    if (!session) return;
+    if (session.running) return res.status(409).json({ ok: false, error: 'busy', message: 'Wait for the current request to finish.' });
+    if (!session.undo.length) return res.status(400).json({ ok: false, error: 'nothing_to_undo', message: 'There is nothing to undo.' });
+    session.files = session.undo.pop();
+    session.dirty = true;
+    // The model should know the last change is gone.
+    session.history.push({ prompt: '(The user undid the last change.)', reply: 'Reverted the files to how they were before that change.' });
+    const saved = await saveSnapshot(req, session);
+    res.json({ ok: true, files: session.files, saved, canUndo: session.undo.length > 0 });
   });
 
   // Publish the session's files as a static site: the first deploy creates it at

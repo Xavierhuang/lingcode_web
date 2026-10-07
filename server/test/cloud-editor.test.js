@@ -270,3 +270,31 @@ test('a session belongs to the user who opened it', async (t) => {
   // An edit session needs a project.
   assert.equal((await h.call(h.tokens.a, 'POST', '/api/cloud-editor/sessions', {})).status, 400);
 });
+
+test('undo puts back the files from before the last change, and saves them', async (t) => {
+  const h = await harness();
+  t.after(h.close);
+  const open = await (await h.call(h.tokens.a, 'POST', '/api/cloud-editor/sessions', { mode: 'build' })).json();
+  const undo = () => h.call(h.tokens.a, 'POST', `/api/cloud-editor/sessions/${open.sessionId}/undo`, {});
+  assert.equal((await undo()).status, 400, 'nothing to undo yet');
+
+  h.fake.inferenceQueue.push({ tools: [{ name: 'write_file', input: { path: 'index.html', content: 'v1' } }] }, { text: 'ok' });
+  await h.run(h.tokens.a, open.sessionId, 'build it');
+  h.fake.inferenceQueue.push({ tools: [{ name: 'write_file', input: { path: 'index.html', content: 'v2' } }] }, { text: 'ok' });
+  const { events } = await h.run(h.tokens.a, open.sessionId, 'change it');
+  assert.equal(events.find((e) => e.event === 'done').data.canUndo, true);
+
+  const first = await (await undo()).json();
+  assert.deepEqual(first.files, { 'index.html': 'v1' });
+  assert.equal(first.canUndo, true);
+  assert.deepEqual(h.fake.snapshots[open.projectId].at(-1), { 'index.html': 'v1' }, 'the undo is saved');
+  const second = await (await undo()).json();
+  assert.deepEqual(second.files, {});
+  assert.equal(second.canUndo, false);
+
+  // The next prompt is told about the undo.
+  h.fake.inferenceQueue.push({ text: 'ok' });
+  await h.run(h.tokens.a, open.sessionId, 'again');
+  const turns = h.fake.inference.at(-1).body.messages;
+  assert.ok(turns.some((m) => m.role === 'user' && /undid/.test(m.content)));
+});
