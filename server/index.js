@@ -1368,13 +1368,16 @@ app.get('/metrics', metrics.handler);
 // touches the Cloud Postgres (short SELECT 1) and returns pool stats, so an
 // orchestrator/monitor can tell when the data plane is unreachable. 503 on fail.
 app.get('/api/health/deep', async (req, res) => {
+  // Informational only: activate-cloud-data-role.sh reverts on a non-200 here,
+  // so object storage must not change the status code.
+  const storage = require('./cloud-storage').isConfigured() ? 'spaces' : 'not_configured';
   const dataPlane = require('./cloud-data-plane');
-  if (!dataPlane.isConfigured()) return res.json({ ok: true, cloud: 'not_configured' });
+  if (!dataPlane.isConfigured()) return res.json({ ok: true, cloud: 'not_configured', storage });
   try {
     const r = await dataPlane.probe();
-    res.json({ ok: true, cloud: 'up', pool: r.pool });
+    res.json({ ok: true, cloud: 'up', pool: r.pool, storage });
   } catch (err) {
-    res.status(503).json({ ok: false, cloud: 'down', error: err && err.message });
+    res.status(503).json({ ok: false, cloud: 'down', error: err && err.message, storage });
   }
 });
 

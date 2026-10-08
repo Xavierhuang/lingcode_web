@@ -186,8 +186,12 @@ function sendErr(res, err, route) {
   // a duplicate key surfaced as an opaque 500 and broke that idempotency (e.g. a
   // repeat follow 500'd instead of no-op'ing).
   if (status === 500 && err && (err.code === '23505' || /duplicate key value/i.test(err.message || ''))) status = 409;
-  const httpStatus = status >= 400 && status < 500 ? status : 500;
-  res.status(httpStatus).json({ ok: false, error: 'cloud_error', message: err?.message || `error during ${route}`, status });
+  // 503 passes through so clients know to retry (storage_unavailable); every
+  // other 5xx collapses to 500.
+  const httpStatus = status >= 400 && status < 500 ? status : (status === 503 ? 503 : 500);
+  const body = { ok: false, error: 'cloud_error', message: err?.message || `error during ${route}`, status };
+  if (httpStatus === 503 && err && typeof err.code === 'string' && /^[a-z][a-z_]*$/.test(err.code)) body.code = err.code;
+  res.status(httpStatus).json(body);
 }
 
 // Provision (or return the existing live) backend. Two ownership modes share
@@ -2184,12 +2188,49 @@ function purchasedStorageBytesForBackend(db, backendId) {
   } catch (_) { return 0; }
 }
 
-// Persist an uploaded blob + its metadata row. When Spaces is configured the
-// bytes go to object storage and data_b64 is stored empty (keeping data.db
-// small); otherwise they fall back to inline base64 in SQLite. Shared by the
-// app-facing and owner-console upload routes so both behave identically.
+// Inline base64 in SQLite is a dev/test fallback only. Prod ran on it without
+// anyone noticing until 2026-10-08 (SPACES_* was never set): app uploads grew
+// data.db to 2.5 GB at ~0.5 GB/day and filled the disk. So in production a
+// missing Spaces config fails the upload loudly instead.
+// CLOUD_STORAGE_ALLOW_INLINE=1 is the escape hatch for a box with no Spaces.
+function inlineStorageAllowed() {
+  return process.env.NODE_ENV !== 'production' || process.env.CLOUD_STORAGE_ALLOW_INLINE === '1';
+}
+
+const STORAGE_ALERT_EVERY_MS = 6 * 60 * 60 * 1000;
+let _lastStorageAlertAt = 0;
+function alertStorageUnconfigured(context) {
+  console.error(`[cloud-storage] SPACES_* is not configured in production; ${context}. Set SPACES_KEY, SPACES_SECRET, SPACES_ENDPOINT and SPACES_BUCKET in .env.`);
+  const to = String(process.env.CLOUD_OPS_ALERT_EMAIL || '').trim();
+  if (!to || Date.now() - _lastStorageAlertAt < STORAGE_ALERT_EVERY_MS) return;
+  _lastStorageAlertAt = Date.now();
+  try {
+    const { sendResendEmail } = require('./mail-resend');
+    Promise.resolve(sendResendEmail({
+      to,
+      subject: 'LingCode Cloud: file uploads are failing (Spaces not configured)',
+      html: `<p>The API server has no Spaces config (SPACES_KEY, SPACES_SECRET, SPACES_ENDPOINT, SPACES_BUCKET in /opt/lingcode-api/.env), so app file uploads are being rejected (${context}).</p>`
+        + '<p>Restore the settings and run <code>systemctl restart lingcode-api</code>. Uploads are refused rather than stored in data.db, which is what filled the disk on 2026-10-08.</p>',
+    })).catch(() => {});
+  } catch (_) { /* never let alerting break the request */ }
+}
+
+if (!storage.isConfigured() && !inlineStorageAllowed()) alertStorageUnconfigured('detected at startup');
+
+// Persist an uploaded blob + its metadata row. Bytes go to Spaces and data_b64
+// is stored empty (keeping data.db small). Without Spaces they fall back to
+// inline base64 in SQLite, outside production only (see inlineStorageAllowed).
+// Shared by the app-facing and owner-console upload routes so both behave
+// identically.
 async function persistObject(db, backendId, bucket, path, contentType, data_b64, bytes, ownerUserId) {
   let spacesKey = null, etag = null, storedB64 = data_b64;
+  if (!storage.isConfigured() && !inlineStorageAllowed()) {
+    alertStorageUnconfigured(`upload to backend ${backendId} refused`);
+    const err = new Error('File storage is temporarily unavailable. Please try again later.');
+    err.status = 503;
+    err.code = 'storage_unavailable';
+    throw err;
+  }
   if (storage.isConfigured()) {
     const buf = Buffer.from(data_b64, 'base64');
     const r = await storage.putObject(backendId, bucket, path, buf, contentType || 'application/octet-stream');
@@ -2220,4 +2261,4 @@ function objectUrl(req, backendId, bucket, path) {
   return `${req.protocol}://${req.get('host')}/api/cloud/be/${backendId}/storage/object?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}`;
 }
 
-module.exports = { registerCloudBackendRoutes, teardownBackend, provisionForPrototype, provisionBackend, reconcileByProjectId, getAccountBackend, getAnyBackendById, ownedPath, purchasedStorageBytesForBackend };
+module.exports = { registerCloudBackendRoutes, teardownBackend, provisionForPrototype, provisionBackend, reconcileByProjectId, getAccountBackend, getAnyBackendById, ownedPath, purchasedStorageBytesForBackend, persistObject };
