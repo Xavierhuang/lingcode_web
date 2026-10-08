@@ -896,8 +896,16 @@ function createHostedAppRunner(opts) {
     return { ok: true };
   }
 
-  async function enqueueDeploy({ appId, userId, sourceSha256, requirementsSha } = {}) {
+  async function enqueueDeploy({ appId, deployId: existingDeployId, userId, sourceSha256, requirementsSha } = {}) {
     if (!appId) throw new Error('appId required');
+    // The upload and redeploy routes insert the queued row themselves and call
+    // this only as a nudge. Inserting a second row here failed NOT NULL on
+    // source_sha256 (dozens of journal errors a night) and still emitted a
+    // deploy_queued event for a deploy that never existed.
+    if (existingDeployId) {
+      if (!stopping) _pollTick().catch(() => {});
+      return { deployId: existingDeployId };
+    }
     const deployId = _uuid();
     _safeRun(db,
       `INSERT INTO hosted_app_deploys

@@ -988,3 +988,27 @@ test('poll: existing exception path still marks deploy as runner_exception', asy
   assert.notEqual(dep.error_code, 'runner_timeout',
     'ENOENT on docker should surface as build_failed (or runner_exception), not runner_timeout');
 });
+
+test('enqueueDeploy with an existing deployId only nudges: no second row, no SQL error', async () => {
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lc-hosted-nudge-'));
+  const fakeDocker = writeFakeDocker(workDir);
+  const db = makeFakeDb();
+  const inserts = [];
+  const origPrepare = db.prepare.bind(db);
+  db.prepare = (sql) => {
+    if (/INSERT INTO hosted_app_deploys/i.test(sql)) inserts.push(sql);
+    return origPrepare(sql);
+  };
+  const origErr = console.error;
+  const captured = [];
+  console.error = (...a) => captured.push(a.join(' '));
+  try {
+    const r = createHostedAppRunner({ db, dockerBin: fakeDocker.path, stateDir: workDir, envDir: workDir, wildcardZone: 'apps.test' });
+    const out = await r.enqueueDeploy({ appId: 'app-nudge', deployId: 'hdep-existing' });
+    assert.deepEqual(out, { deployId: 'hdep-existing' });
+  } finally {
+    console.error = origErr;
+  }
+  assert.equal(inserts.length, 0, 'a nudge must not insert a deploy row');
+  assert.equal(captured.filter((l) => /source_sha256/.test(l)).length, 0, captured.join('\n'));
+});
